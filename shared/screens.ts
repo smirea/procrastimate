@@ -1,6 +1,6 @@
 import type { AccessRow } from './db/schema.ts';
-import { addDays, type DateKey, type Task } from './task.ts';
-import { placeKey, scheduledDue } from './triggers.ts';
+import { addDays, type DateKey, type Label, type Task } from './task.ts';
+import { pickedLabels, placeKey, scheduledDue } from './triggers.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 import { weekEnd } from './views.ts';
 
@@ -23,7 +23,7 @@ export type Screen =
 export type ListDefaults = {
 	projectId: string | null;
 	sectionId: string | null;
-	labelId: string | null;
+	labelIds: readonly string[];
 	location: TaskLocation | null;
 	event: TaskEvent | null;
 	date: DateKey | null;
@@ -32,7 +32,7 @@ export type ListDefaults = {
 export const NO_DEFAULTS: ListDefaults = {
 	projectId: null,
 	sectionId: null,
-	labelId: null,
+	labelIds: [],
 	location: null,
 	event: null,
 	date: null,
@@ -89,7 +89,7 @@ export function screenDefaults(
 		case 'project':
 			return { ...NO_DEFAULTS, projectId: screen.id, sectionId: screen.sectionId ?? null };
 		case 'label':
-			return { ...NO_DEFAULTS, labelId: screen.id };
+			return { ...NO_DEFAULTS, labelIds: [screen.id] };
 		case 'place': {
 			const location = earliest(tasks, t => t.location !== null && placeKey(t.location) === screen.key)?.location;
 			return { ...NO_DEFAULTS, location: location ?? null };
@@ -101,6 +101,22 @@ export function screenDefaults(
 			return never;
 		}
 	}
+}
+
+/**
+ * What quick add reuses after saving `task`, while the list it saved from stays open: where the task went (its project,
+ * section, labels, place, and event), never its date or priority, which belong to one task. A saved place goes back
+ * among the labels, since quick add picks one there.
+ */
+export function reusedDefaults(task: Task, labels: readonly Label[]): ListDefaults {
+	return {
+		projectId: task.projectId,
+		sectionId: task.sectionId,
+		labelIds: pickedLabels(labels, task),
+		location: task.location,
+		event: task.event,
+		date: null,
+	};
 }
 
 /** Whether `task` shows on `screen`, so saving it from there keeps the screen open. */

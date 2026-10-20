@@ -4,11 +4,12 @@ import type { AccessRow } from './db/schema.ts';
 import type { DateKey, Task } from './task.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 import { describe, recorded, test } from './vectors/record.ts';
-import { task as base } from './testing.ts';
+import { label, task as base } from './testing.ts';
 
 const screenDefaults = recorded('screens', screens.screenDefaults);
 const screenHolds = recorded('screens', screens.screenHolds);
 const canAddTo = recorded('screens', screens.canAddTo);
+const reusedDefaults = recorded('screens', screens.reusedDefaults);
 
 const today = '2026-10-14';
 
@@ -47,7 +48,7 @@ const standup = (minutes: number): TaskEvent => ({
 const none = {
 	projectId: null,
 	sectionId: null,
-	labelId: null,
+	labelIds: [],
 	location: null,
 	event: null,
 	date: null,
@@ -87,7 +88,7 @@ describe('screenDefaults', () => {
 	});
 
 	test('a label starts with the label', () => {
-		expect(screenDefaults({ kind: 'label', id: 'errands' }, [], null, today)).toEqual({ ...none, labelId: 'errands' });
+		expect(screenDefaults({ kind: 'label', id: 'errands' }, [], null, today)).toEqual({ ...none, labelIds: ['errands'] });
 	});
 
 	test('a place starts at the place, as its earliest open task names it', () => {
@@ -142,7 +143,7 @@ describe('screenDefaults', () => {
 			...none,
 			projectId: 'garden',
 		});
-		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space, today)).toEqual({ ...none, labelId: 'weekend' });
+		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space, today)).toEqual({ ...none, labelIds: ['weekend'] });
 	});
 });
 
@@ -217,5 +218,36 @@ describe('screenHolds', () => {
 	test('Completed and no screen hold no new task', () => {
 		expect(screenHolds({ kind: 'completed' }, task('a'), today)).toBe(false);
 		expect(screenHolds(null, task('a'), today)).toBe(false);
+	});
+});
+
+describe('reusedDefaults', () => {
+	test('keeps where the task went and drops its date and priority', () => {
+		const saved = task('a', {
+			projectId: 'home',
+			sectionId: 'kitchen',
+			labelIds: ['errands', 'calls'],
+			location: rewe('Rewe'),
+			due: { date: today, time: '09:00' },
+			priority: 1,
+		});
+		expect(reusedDefaults(saved, [])).toEqual({
+			projectId: 'home',
+			sectionId: 'kitchen',
+			labelIds: ['errands', 'calls'],
+			location: rewe('Rewe'),
+			event: null,
+			date: null,
+		});
+	});
+
+	test('a saved place goes back among the labels', () => {
+		const place = label('l-rewe', { place: { address: null, latitude: 52.5, longitude: 13.4, radius: 150 } });
+		const saved = task('a', { labelIds: ['errands'], location: rewe('rewe') });
+		expect(reusedDefaults(saved, [place]).labelIds).toEqual(['errands', 'l-rewe']);
+	});
+
+	test('keeps the event', () => {
+		expect(reusedDefaults(task('a', { event: standup(0) }), []).event).toEqual(standup(0));
 	});
 });

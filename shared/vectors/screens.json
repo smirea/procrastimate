@@ -17,7 +17,7 @@
 			"output": {
 				"date": "2026-10-15",
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -37,7 +37,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -57,7 +57,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -77,7 +77,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -95,7 +95,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -116,7 +116,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": "home",
 				"sectionId": null
@@ -138,7 +138,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": "home",
 				"sectionId": "kitchen"
@@ -158,7 +158,7 @@
 			"output": {
 				"date": "2026-10-15",
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -178,7 +178,7 @@
 			"output": {
 				"date": "2026-10-14",
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -199,7 +199,7 @@
 			"output": {
 				"date": "2026-10-17",
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -220,7 +220,9 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": "errands",
+				"labelIds": [
+					"errands"
+				],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -329,7 +331,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": {
 					"address": null,
 					"latitude": 52.5,
@@ -444,7 +446,7 @@
 					"series": true,
 					"title": "Standup"
 				},
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -552,7 +554,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": {
 					"address": null,
 					"latitude": 52.5,
@@ -681,7 +683,7 @@
 					"series": true,
 					"title": "Standup"
 				},
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -702,7 +704,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -723,7 +725,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -764,7 +766,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -804,7 +806,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -844,7 +846,7 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": null,
+				"labelIds": [],
 				"location": null,
 				"projectId": "garden",
 				"sectionId": null
@@ -884,7 +886,9 @@
 			"output": {
 				"date": null,
 				"event": null,
-				"labelId": "weekend",
+				"labelIds": [
+					"weekend"
+				],
 				"location": null,
 				"projectId": null,
 				"sectionId": null
@@ -2255,6 +2259,200 @@
 				"2026-10-14"
 			],
 			"output": false
+		},
+		{
+			"fn": "reusedDefaults",
+			"test": "reusedDefaults › keeps where the task went and drops its date and priority",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 22,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": "09:00"
+					},
+					"event": null,
+					"id": "a",
+					"images": [],
+					"labelIds": [
+						"errands",
+						"calls"
+					],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": "kitchen",
+					"title": "a"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelIds": [
+					"errands",
+					"calls"
+				],
+				"location": {
+					"address": null,
+					"latitude": 52.5,
+					"longitude": 13.4,
+					"name": "Rewe",
+					"radius": 150,
+					"trigger": "arrive"
+				},
+				"projectId": "home",
+				"sectionId": "kitchen"
+			}
+		},
+		{
+			"fn": "reusedDefaults",
+			"test": "reusedDefaults › a saved place goes back among the labels",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 23,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"id": "a",
+					"images": [],
+					"labelIds": [
+						"errands"
+					],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				[
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "l-rewe",
+						"name": "l-rewe",
+						"place": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"radius": 150
+						}
+					}
+				]
+			],
+			"output": {
+				"date": null,
+				"event": null,
+				"labelIds": [
+					"errands",
+					"l-rewe"
+				],
+				"location": {
+					"address": null,
+					"latitude": 52.5,
+					"longitude": 13.4,
+					"name": "rewe",
+					"radius": 150,
+					"trigger": "arrive"
+				},
+				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "reusedDefaults",
+			"test": "reusedDefaults › keeps the event",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 24,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "before",
+						"id": "standup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1791991800000,
+								"original": 1791990000000,
+								"start": 1791990000000
+							}
+						],
+						"series": true,
+						"title": "Standup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				[]
+			],
+			"output": {
+				"date": null,
+				"event": {
+					"allDay": false,
+					"edge": "before",
+					"id": "standup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1791991800000,
+							"original": 1791990000000,
+							"start": 1791990000000
+						}
+					],
+					"series": true,
+					"title": "Standup"
+				},
+				"labelIds": [],
+				"location": null,
+				"projectId": null,
+				"sectionId": null
+			}
 		}
 	]
 }

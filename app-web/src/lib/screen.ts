@@ -1,6 +1,7 @@
 import { page } from '$app/state';
-import { canAddTo, screenDefaults, type Screen } from 'shared/screens.ts';
+import { canAddTo, reusedDefaults, screenDefaults, type ListDefaults, type Screen } from 'shared/screens.ts';
 import type { ListEntry } from 'shared/lists.ts';
+import type { Task } from 'shared/task.ts';
 import { store } from './store.svelte.ts';
 import { clock } from './ui.svelte.ts';
 
@@ -41,9 +42,36 @@ function spaceOf(screen: Screen | null) {
 /** Whether `screen` takes new tasks. A project or label shared with this user to view only takes none. */
 export const canAddHere = (screen: Screen) => canAddTo(screen, spaceOf(screen));
 
-/** What quick add starts with on `screen`, the open one unless a section's add row names its own. */
-export const quickAddDefaults = (screen: Screen | null = currentScreen()) =>
-	screenDefaults(screen, store.own.tasks, spaceOf(screen), clock.today);
+/**
+ * The projects and labels a new task may land on, in every space, which quick add offers. One shared to view only is
+ * left out, because the server refuses a task there.
+ */
+export const addableProjects = () => store.projects.filter(p => canAddHere({ kind: 'project', id: p.id }));
+export const addableLabels = () => store.labels.filter(l => canAddHere({ kind: 'label', id: l.id }));
+
+/** Where the last quick add saved to, reused while the list it saved from stays open. */
+let reused: { path: string; defaults: ListDefaults } | null = null;
+
+/**
+ * What quick add starts with: the open list's defaults, or what the last quick add saved while the list it saved
+ * from, and showed the task on, is still open.
+ * A group's own `Add task` row names its screen and always starts with that screen's own.
+ */
+export function quickAddDefaults(screen?: Screen) {
+	if (!screen && reused?.path === page.url.pathname) return reused.defaults;
+	const target = screen ?? currentScreen();
+	return screenDefaults(target, store.own.tasks, spaceOf(target), clock.today);
+}
+
+/** Quick add just saved `task` and showed it on `path`, the list it opened on. */
+export function reuseAdded(path: string, task: Task) {
+	reused = { path, defaults: reusedDefaults(task, store.labels) };
+}
+
+/** Leaving the list ends the reuse. */
+export function forgetAdded(path: string) {
+	if (reused?.path !== path) reused = null;
+}
 
 /** Where a top-level list from the catalog opens. */
 export function listHref(entry: Pick<ListEntry, 'kind' | 'id'>): string {

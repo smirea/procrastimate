@@ -52,23 +52,25 @@ struct NameMatch: Equatable {
     var projectId: String?
 
     @MainActor
-    /// Suggests only the space's own names. A guest cannot create projects or labels in someone else's space. `/`
-    /// suggests the sections of `projectId`, the project in effect, and only in the user's own space.
+    /// Suggests only `space`'s names, or every space's when it is nil, as in quick add. A guest cannot create projects
+    /// or labels in someone else's space, so creating happens in the user's own. `/` suggests the sections of
+    /// `projectId`, the project in effect, and creates one only when that project is the user's own.
     static func at(
         _ caret: Int,
         in text: String,
         store: Store,
-        space: SpaceKey,
+        space: SpaceKey?,
         kinds: [NameKind],
         projectId: String? = nil
     ) -> NameMatch? {
-        let data = store.data(in: space)
+        let data = space.map { store.data(in: $0) } ?? store.everySpace
         let sections = projectId.map { StoreRules.sectionsOf(data.sections, $0) } ?? []
+        let projectSpace = projectId.flatMap(store.space(ofProject:)) ?? .own
         var closest: (kind: NameKind, fragment: NameSearch.Fragment)?
         for kind in kinds {
             let found = switch kind {
             case .project: NameSearch.sigilFragment(text, caret, kind.sigil, data.projects)
-            case .section: space == .own && projectId != nil ? NameSearch.sigilFragment(text, caret, kind.sigil, sections) : nil
+            case .section: (space ?? projectSpace) == .own && projectId != nil ? NameSearch.sigilFragment(text, caret, kind.sigil, sections) : nil
             case .label: NameSearch.sigilFragment(text, caret, kind.sigil, data.labels)
             }
             if let found, found.start > closest?.fragment.start ?? -1 { closest = (kind, found) }
@@ -85,7 +87,8 @@ struct NameMatch: Equatable {
             NameSearch.suggest(data.labels, NameSearch.lastUsed(data.tasks, NameSearch.labelIdsOf), fragment.query)
                 .map(Suggestion.init)
         }
-        let allowed = space == .own ? suggestions : suggestions.filter { if case .create = $0 { false } else { true } }
+        let canCreate = space.map { $0 == .own } ?? (kind != .section || projectSpace == .own)
+        let allowed = canCreate ? suggestions : suggestions.filter { if case .create = $0 { false } else { true } }
         return NameMatch(kind: kind, fragment: fragment, suggestions: allowed, projectId: projectId)
     }
 

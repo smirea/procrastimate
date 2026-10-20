@@ -67,7 +67,9 @@
 				{
 					"date": "2026-10-14",
 					"event": null,
-					"labelId": "errands",
+					"labelIds": [
+						"errands"
+					],
 					"location": null,
 					"projectId": "list-project",
 					"sectionId": null
@@ -118,7 +120,7 @@
 				{
 					"date": "2026-10-14",
 					"event": null,
-					"labelId": null,
+					"labelIds": [],
 					"location": null,
 					"projectId": null,
 					"sectionId": null
@@ -198,7 +200,7 @@
 				{
 					"date": null,
 					"event": null,
-					"labelId": null,
+					"labelIds": [],
 					"location": null,
 					"projectId": "home",
 					"sectionId": "kitchen"
@@ -240,7 +242,7 @@
 				{
 					"date": null,
 					"event": null,
-					"labelId": null,
+					"labelIds": [],
 					"location": null,
 					"projectId": "home",
 					"sectionId": "kitchen"
@@ -282,7 +284,7 @@
 				{
 					"date": null,
 					"event": null,
-					"labelId": null,
+					"labelIds": [],
 					"location": null,
 					"projectId": "home",
 					"sectionId": "kitchen"
@@ -324,7 +326,7 @@
 				{
 					"date": null,
 					"event": null,
-					"labelId": null,
+					"labelIds": [],
 					"location": {
 						"address": null,
 						"latitude": 52.5,
@@ -382,7 +384,9 @@
 				{
 					"date": null,
 					"event": null,
-					"labelId": "home",
+					"labelIds": [
+						"home"
+					],
 					"location": null,
 					"projectId": null,
 					"sectionId": null
@@ -523,7 +527,7 @@
 						"series": true,
 						"title": "Standup"
 					},
-					"labelId": null,
+					"labelIds": [],
 					"location": null,
 					"projectId": null,
 					"sectionId": null

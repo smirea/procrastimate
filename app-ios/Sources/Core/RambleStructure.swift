@@ -132,8 +132,7 @@ extension Ramble {
     /// add. Subtasks take none, since they live in their parent's project. A saved place among the labels becomes the
     /// task's place, as in quick add.
     public static func newTask(_ task: RambleTask, defaults: QuickAddDraft.Defaults?, labels: [Label]) -> NewTask {
-        var labelIds = task.labelIds
-        if let labelId = defaults?.labelId, !labelIds.contains(labelId) { labelIds.insert(labelId, at: 0) }
+        let labelIds = (defaults?.labelIds.filter { !task.labelIds.contains($0) } ?? []) + task.labelIds
         let placed = Triggers.applyPickedLabels(labels, labelIds, defaults?.location)
         let event = defaults?.event
         let ownProject = task.projectId == nil || task.projectId == defaults?.projectId

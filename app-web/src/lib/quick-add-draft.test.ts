@@ -29,7 +29,7 @@ const labels: Label[] = [
 		createdAt: 3,
 	},
 ];
-const defaults = { projectId: 'home', sectionId: 'next', labelId: null, location: null, event: null, date: null };
+const defaults = { projectId: 'home', sectionId: 'next', labelIds: [], location: null, event: null, date: null };
 const parse = (text: string, picked = initialPicked(defaults)) =>
 	parseQuickAdd(text, {
 		now,

@@ -50,7 +50,7 @@ describe('rambleNewTask', () => {
 			{
 				...NO_DEFAULTS,
 				projectId: 'list-project',
-				labelId: 'errands',
+				labelIds: ['errands'],
 				date: '2026-10-14',
 			},
 			[],
@@ -126,7 +126,7 @@ describe('rambleNewTask', () => {
 			place: { address: null, latitude: 52.52, longitude: 13.405, radius: 500 },
 			createdAt: 0,
 		};
-		const saved = rambleNewTask(task('Water plants', { labelIds: ['calls'] }), { ...NO_DEFAULTS, labelId: 'home' }, [
+		const saved = rambleNewTask(task('Water plants', { labelIds: ['calls'] }), { ...NO_DEFAULTS, labelIds: ['home'] }, [
 			home,
 		]);
 		expect(saved.labelIds).toEqual(['calls']);

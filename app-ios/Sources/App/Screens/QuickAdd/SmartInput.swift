@@ -9,6 +9,7 @@ import UIKit
 struct SmartInput: View {
     @Environment(Store.self) private var store
     @Environment(\.space) private var space
+    @Environment(\.namesFromEverySpace) private var everySpace
 
     @Binding var text: String
     let tokens: [QuickAdd.Token]
@@ -122,7 +123,7 @@ struct SmartInput: View {
             caret,
             in: text,
             store: store,
-            space: space,
+            space: everySpace ? nil : space,
             kinds: suggestProjects ? [.project, .section, .label] : [.label],
             projectId: projectId
         )

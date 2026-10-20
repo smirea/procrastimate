@@ -26,7 +26,7 @@ export const initialPicked = (defaults: ListDefaults): Picked => ({
 	priority: null,
 	projectId: defaults.projectId,
 	sectionId: defaults.sectionId,
-	labelIds: defaults.labelId ? [defaults.labelId] : [],
+	labelIds: [...defaults.labelIds],
 	reminders: [],
 	recurrence: null,
 	location: defaults.location,

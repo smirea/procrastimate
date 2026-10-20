@@ -12,6 +12,7 @@ import {
 	shownLabelIds,
 	type Picked,
 } from './quick-add-draft.ts';
+import { addableLabels, addableProjects } from './screen.ts';
 import { store } from './store.svelte.ts';
 import { clock } from './ui.svelte.ts';
 
@@ -19,19 +20,24 @@ import { clock } from './ui.svelte.ts';
 export class QuickAddDraft {
 	text = $state('');
 	picked: Picked = $state(
-		initialPicked({ projectId: null, sectionId: null, labelId: null, location: null, event: null, date: null }),
+		initialPicked({ projectId: null, sectionId: null, labelIds: [], location: null, event: null, date: null }),
 	);
 
 	constructor(readonly defaults: ListDefaults) {
 		this.picked = initialPicked(defaults);
 	}
 
+	/** Every space's projects and labels a new task may land on. Picking one moves the task into its space. */
+	projects = $derived(addableProjects());
+	labels = $derived(addableLabels());
+	sections = $derived(store.sections.filter(s => this.projects.some(p => p.id === s.projectId)));
+
 	parsed = $derived(
 		parseQuickAdd(this.text, {
 			now: new Date(clock.now),
-			projects: store.projects,
-			sections: store.sections,
-			labels: store.labels,
+			projects: this.projects,
+			sections: this.sections,
+			labels: this.labels,
 			projectId: this.picked.projectId,
 			due: this.picked.due,
 		}),

@@ -4,6 +4,7 @@
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { page } from '$app/state';
+	import { afterNavigate } from '$app/navigation';
 	import List from 'phosphor-svelte/lib/List';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import Sidebar from '#lib/components/Sidebar.svelte';
@@ -17,7 +18,7 @@
 	import RowMenu from '#lib/components/RowMenu.svelte';
 	import ImageViewer from '#lib/components/ImageViewer.svelte';
 	import { store } from '#lib/store.svelte.ts';
-	import { quickAddDefaults } from '#lib/screen.ts';
+	import { forgetAdded, quickAddDefaults } from '#lib/screen.ts';
 	import { clock, sheets, trackKeyboardInset, motion } from '#lib/ui.svelte.ts';
 	import { keepCaretInView } from '#lib/caret.ts';
 	import { notifyDueReminders } from '#lib/reminders.ts';
@@ -38,6 +39,8 @@
 	$effect(() => {
 		if (sheets.current.kind === 'task' && store.loaded && !openTask) untrack(() => sheets.close());
 	});
+
+	afterNavigate(({ to }) => forgetAdded(to?.url.pathname ?? ''));
 
 	function openQuickAdd() {
 		menuOpen = false;

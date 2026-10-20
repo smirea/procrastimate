@@ -83,7 +83,12 @@ struct QuickAddMenu: View {
                 SwiftUI.Label("Customize row", systemImage: "pin")
             }
         } label: {
-            Chip(systemImage: "plus", text: "")
+            Image(systemName: "plus")
+                .imageScale(.small)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.muted)
+                .frame(width: QuickAddMetrics.cornerButton, height: QuickAddMetrics.cornerButton)
+                .background(Color.ink.opacity(0.06), in: .circle)
                 .contentShape(.rect.inset(by: -6))
         }
         .menuOrder(.fixed)

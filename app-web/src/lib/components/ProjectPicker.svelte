@@ -4,14 +4,17 @@
 	import Rows from 'phosphor-svelte/lib/Rows';
 	import Check from 'phosphor-svelte/lib/Check';
 	import Plus from 'phosphor-svelte/lib/Plus';
-	import { projectsInOrder, sectionsOf } from 'shared/store.ts';
+	import { sectionsOf } from 'shared/store.ts';
 	import type { Project, Section } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
 	import { store } from '../store.svelte.ts';
 
 	type Place = { projectId: string | null; sectionId: string | null };
 
-	/** A shared task passes its space's projects and sections, and its "Inbox" is the owner's, since nothing moves between spaces. */
+	/**
+	 * A shared task passes its space's projects and sections, and its "Inbox" is the owner's, since nothing moves between
+	 * spaces. Quick add passes the projects a new task may land on, already in order.
+	 */
 	let {
 		projectId,
 		sectionId = null,
@@ -35,7 +38,7 @@
 	const allSections = $derived(sections ?? store.sections);
 	const options = $derived([
 		{ place: { projectId: null, sectionId: null }, name: 'Inbox', nested: false, project: null },
-		...(projects ? projectsInOrder(projects) : store.projects).flatMap((p) => [
+		...(projects ?? store.projects).flatMap((p) => [
 			{ place: { projectId: p.id, sectionId: null }, name: p.name, nested: false, project: p },
 			...sectionsOf(allSections, p.id).map((s) => ({ place: { projectId: p.id, sectionId: s.id }, name: s.name, nested: true, project: null })),
 		]),

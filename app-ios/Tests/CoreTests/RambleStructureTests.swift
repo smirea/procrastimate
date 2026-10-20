@@ -81,7 +81,7 @@ import Testing
     }
 
     @Test func listDefaultsFillWhatTheSpeechLeftEmpty() {
-        let defaults = QuickAddDraft.Defaults(projectId: "p-work", labelId: "l-calls", date: "2026-10-14")
+        let defaults = QuickAddDraft.Defaults(projectId: "p-work", labelIds: ["l-calls"], date: "2026-10-14")
         let spoken = Ramble.newTask(
             RambleTask(segment: RambleSpan(start: 0, end: 8), title: "Call Ana", notes: "", projectId: "p-home"),
             defaults: defaults,

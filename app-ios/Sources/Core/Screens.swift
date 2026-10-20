@@ -54,12 +54,25 @@ public enum Screens {
         case let .project(id, sectionId)?:
             QuickAddDraft.Defaults(projectId: id, sectionId: sectionId)
         case let .label(id)?:
-            QuickAddDraft.Defaults(labelId: id)
+            QuickAddDraft.Defaults(labelIds: [id])
         case let .place(key)?:
             QuickAddDraft.Defaults(location: earliest(tasks) { $0.location.map(Triggers.placeKey) == key }?.location)
         case let .event(id)?:
             QuickAddDraft.Defaults(event: earliest(tasks) { $0.event?.id == id }?.event)
         }
+    }
+
+    /// What quick add reuses after saving `task`, while the list it saved from stays open: where the task went (its
+    /// project, section, labels, place, and event), never its date or priority, which belong to one task. A saved place
+    /// goes back among the labels, since quick add picks one there.
+    public static func reusedDefaults(_ task: TaskItem, _ labels: [Label]) -> QuickAddDraft.Defaults {
+        QuickAddDraft.Defaults(
+            projectId: task.projectId,
+            sectionId: task.sectionId,
+            labelIds: Triggers.pickedLabels(labels, task),
+            location: task.location,
+            event: task.event
+        )
     }
 
     /// Whether `task` shows on `screen`, so saving it from there keeps the screen open.
