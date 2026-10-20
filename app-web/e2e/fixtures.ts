@@ -11,6 +11,25 @@ export const NOW = new Date('2026-10-14T10:00:00Z');
 
 export const E2E_PASSWORD = 'e2e-password-1';
 
+/**
+ * How long a page may take to open its local database and show its first heading. A fresh WebKit context builds its
+ * SQLite database on IndexedDB from nothing: 0.3 to 0.5 s with one worker, but 2 to 15 s with eight WebKit workers at
+ * once on a Mac shared with other agents, against Chromium's 1.6 s. PowerSync's open of its IndexedDB database after
+ * an account switch took up to 11.4 s in CI's Linux WebKit (#185). Assertions after it keep the default.
+ */
+export const BOOT_TIMEOUT = 30_000;
+
+/**
+ * Opens a page with `open` and waits for its first heading. The boot is setup, so the time it took is added to the
+ * test's own limit: a test that booted for 15 s under load still has its whole budget for what it checks.
+ */
+async function boot(page: Page, open: () => Promise<unknown>, heading?: string) {
+	const started = Date.now();
+	await open();
+	await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible({ timeout: BOOT_TIMEOUT });
+	test.setTimeout(test.info().timeout + Date.now() - started);
+}
+
 /** Each worker process's own, so a test's account is new on every run of a database that outlives the run. */
 const RUN = crypto.randomUUID().slice(0, 8);
 
@@ -169,9 +188,7 @@ export class Devices {
 		}
 		const page = await context.newPage();
 		await page.clock.setFixedTime(NOW);
-		await page.goto(path);
-		// WebKit on the mobile project takes longer to bring the first page up.
-		await expect(page.getByRole('heading', { name: heading })).toBeVisible({ timeout: 30_000 });
+		await boot(page, () => page.goto(path), heading);
 		return { app: new App(page), page, context, email, name: person ?? 'E2E' };
 	}
 
@@ -190,8 +207,7 @@ export const test = quietTest.extend<{ app: App; devices: Devices }>({
 	},
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);
-		await page.goto('/inbox');
-		await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
+		await boot(page, () => page.goto('/inbox'), 'Inbox');
 		// Until the web font arrives, text wraps in the much wider fallback, and specs measure layout.
 		await page.evaluate(() => document.fonts.ready.then(() => undefined));
 		await use(new App(page));
@@ -218,6 +234,11 @@ function rowValues(kind: Kind, fields: Record<string, unknown>) {
 
 export class App {
 	constructor(readonly page: Page) {}
+
+	/** Reloads and waits for the page to open its local database again, which is a boot like the first load. */
+	reload() {
+		return boot(this.page, () => this.page.reload());
+	}
 
 	quickAdd = () => this.page.getByRole('dialog', { name: 'Quick add' });
 	taskInput = () => this.quickAdd().getByRole('textbox', { name: 'Task name' });
@@ -454,8 +475,7 @@ export class App {
 			}).observe(document, { childList: true, subtree: true });
 		});
 		await this.page.evaluate(() => sessionStorage.removeItem('first-paint'));
-		await this.page.reload();
-		await expect(this.page.getByRole('heading', { level: 1 })).toBeVisible();
+		await this.reload();
 		expect(JSON.parse((await this.page.evaluate(() => sessionStorage.getItem('first-paint')))!)).toEqual({
 			theme,
 			colorScheme: theme,

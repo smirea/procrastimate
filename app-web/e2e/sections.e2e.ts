@@ -75,7 +75,7 @@ test('sections group a project, take tasks from quick add and details, and renam
 	await name.press('Enter');
 	await expect(page.getByRole('region', { name: 'Someday' })).toBeVisible();
 
-	await page.reload();
+	await app.reload();
 	await expect(sectionHeadings()).toHaveText([/^Next up/, /^Someday/]);
 
 	await page.getByRole('button', { name: 'Someday actions' }).click();

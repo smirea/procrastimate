@@ -1,5 +1,6 @@
 import { strToU8, zipSync } from 'fflate';
 import {
+	BOOT_TIMEOUT,
 	App,
 	type Device,
 	deviceContext,
@@ -99,7 +100,7 @@ test('changes made offline apply at once, survive a reload, and upload when the 
 
 	// The page itself has to load, so only the sync routes stay refused.
 	await a.context.setOffline(false);
-	await a.page.reload();
+	await a.app.reload();
 	await expect(a.app.row(later)).toBeVisible();
 	await expect(a.app.row(`${kept} renamed`)).toBeVisible();
 	await expect(b.app.row(later)).toHaveCount(0);
@@ -388,9 +389,7 @@ test('signing out keeps this device’s data, and signing in as someone else sta
 	await signOut();
 	await signIn(`other-${crypto.randomUUID().slice(0, 8)}@procrastimate.test`, true);
 	await a.page.goto('/no-date');
-	// After a switch, PowerSync's own open of its IndexedDB database on the next load took up to 11.4 s in CI's Linux
-	// WebKit and milliseconds in macOS WebKit (#185), so these loads get longer than the default wait.
-	await expect(a.page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: 30_000 });
+	await expect(a.page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: BOOT_TIMEOUT });
 	await expect(a.app.row(title)).toHaveCount(0);
 	const other = unique('Theirs');
 	await a.app.add(other);
@@ -400,7 +399,7 @@ test('signing out keeps this device’s data, and signing in as someone else sta
 	await signOut();
 	await signIn(e2eEmail(), false);
 	await a.page.goto('/no-date');
-	await expect(a.app.row(title)).toBeVisible({ timeout: 30_000 });
+	await expect(a.app.row(title)).toBeVisible({ timeout: BOOT_TIMEOUT });
 	await expect(a.app.row(other)).toHaveCount(0);
 });
 

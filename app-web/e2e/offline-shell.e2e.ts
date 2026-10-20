@@ -24,7 +24,7 @@ test('a cold launch offline opens the app from the cached shell', async ({ app, 
 	await app.go('No date');
 	await clearHttpCache(context, page);
 	await context.setOffline(true);
-	await page.reload();
+	await app.reload();
 	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible();
 	await expect(app.row('Water the plants')).toBeVisible();
 	await context.setOffline(false);

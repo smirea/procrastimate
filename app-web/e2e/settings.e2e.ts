@@ -20,7 +20,7 @@ test('settings keep the dictation choice and the pinned quick add buttons across
 	await page.keyboard.press('Escape');
 	await expect(app.settings()).toBeHidden();
 
-	await page.reload();
+	await app.reload();
 	await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible();
 	await app.openQuickAdd();
 	await expect(app.quickAdd().getByRole('button', { name: 'Add labels' })).toBeVisible();
@@ -53,7 +53,7 @@ test('dragging a shown quick add button reorders the row', async ({ app, page })
 	await expect.poll(pressed).toEqual(['Subtasks', 'Date', 'Reminders', 'Priority']);
 	await page.keyboard.press('Escape');
 
-	await page.reload();
+	await app.reload();
 	await app.openQuickAdd();
 	const row = app.quickAdd().getByRole('group', { name: 'Task attributes' }).locator('[data-button]');
 	await expect
