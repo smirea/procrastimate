@@ -122,3 +122,36 @@ test('Add subtask keeps its caret above the keyboard while each Return inserts a
 		await expect.poll(hidden).toBeLessThanOrEqual(0);
 	}
 });
+
+test('scrolling the caret away stops Add subtask following it, even when a row lands in the same frame', async ({
+	app,
+	page,
+}) => {
+	await page.setViewportSize({ width: 393, height: 852 });
+	await app.add('Pack for trip');
+	await app
+		.row('Pack for trip')
+		.getByRole('button', { name: /^Pack for trip/ })
+		.click();
+	const add = app.details().getByRole('textbox', { name: 'Add subtask' });
+	for (let i = 1; i <= 25; i++) {
+		await add.fill(`Item ${i}`);
+		await add.press('Enter');
+	}
+	await expect(app.details().getByRole('button', { name: /^Item 25/ })).toBeVisible();
+	await app.settle();
+	await expect(add).toBeInViewport();
+	const body = app.details().locator('.overflow-y-auto').first();
+	// The page waits frames, not time: the caret keeper checks a scroll once a frame, and a resize observer runs before it.
+	const scrolledTo = await body.evaluate(async el => {
+		el.scrollTop = 0;
+		el.querySelector('li')!.style.paddingTop = '4px';
+		for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
+		return el.scrollTop;
+	});
+	expect(scrolledTo).toBe(0);
+	await expect(add).not.toBeInViewport();
+
+	await page.keyboard.type('x');
+	await expect(add).toBeInViewport();
+});

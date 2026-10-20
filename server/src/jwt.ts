@@ -2,14 +2,7 @@ const encoder = new TextEncoder();
 
 export const utf8 = (text: string): Uint8Array<ArrayBuffer> => encoder.encode(text);
 
-/** Spreading a whole image into `fromCharCode` overflows the call stack past about 125 KB on V8, so it goes in slices. */
-export function base64Encode(bytes: Uint8Array): string {
-	let binary = '';
-	for (let offset = 0; offset < bytes.length; offset += 0x8000) {
-		binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-	}
-	return btoa(binary);
-}
+export const base64Encode = (bytes: Uint8Array): string => bytes.toBase64();
 
 export const base64Decode = (text: string): Uint8Array<ArrayBuffer> =>
 	Uint8Array.from(atob(text), char => char.charCodeAt(0));

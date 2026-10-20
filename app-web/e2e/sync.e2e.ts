@@ -617,6 +617,20 @@ test('an edit reads back only the row it changed, on this device and the other',
 			timeout: 10_000,
 		});
 	await has(b, 'Imported 150').toBe(true);
+	// The import's own rows stream back to this device too, once the server stamps who made them, and a copy that
+	// landed after the count below read as the edit's: 153 rows.
+	await expect
+		.poll(
+			() =>
+				a.page.evaluate(
+					() =>
+						Array.from({ length: 150 }, (_, i) => window.procrastimate.taskId(`Imported ${i + 1}`)).filter(
+							id => !id || !(window.procrastimate.entity('task', id) as { createdBy: string | null }).createdBy,
+						).length,
+				),
+			{ timeout: 15_000 },
+		)
+		.toBe(0);
 	await a.app.openNavigation();
 	await a.app.nav('Big').click();
 	await expect(a.app.row('Imported 1')).toBeVisible();

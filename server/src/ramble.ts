@@ -181,10 +181,10 @@ function dayOf(ramble: Ramble, usage: RambleUsage, userId: string, key: DateKey)
 
 const liveSeconds = (day: Day) => [...day.live].reduce((sum, tally) => sum + tally.seconds, 0);
 
-function charge(usage: RambleUsage, day: Day, seconds: number) {
-	if (seconds <= 0) return;
+function charge(usage: RambleUsage, day: Day, seconds: number): Promise<void> {
+	if (seconds <= 0) return Promise.resolve();
 	day.stored += seconds;
-	day.loaded
+	return day.loaded
 		.catch(() => {})
 		.then(() => usage.add(day.key, seconds))
 		.catch(reportError);
@@ -295,9 +295,10 @@ function session({
 		ended = true;
 		for (const timer of timers) clearTimeout(timer);
 		day.live.delete(tally);
-		charge(usage, day, tally.seconds);
+		const recorded = charge(usage, day, tally.seconds);
 		attempt(() => upstream?.close());
 		if (!reason) return;
+		await recorded;
 		send({ type: 'ended', seconds: Math.round(sessionSeconds * 10) / 10, reason });
 		attempt(() => client.close(1000, 'Ramble ended'));
 	}
@@ -404,7 +405,7 @@ function session({
 		const today = zonedDateKey(Date.now(), zone);
 		if (today === day.key) return;
 		day.live.delete(tally);
-		charge(usage, day, tally.seconds);
+		void charge(usage, day, tally.seconds);
 		tally.seconds = 0;
 		day = dayOf(ramble, usage, userId, today);
 		day.live.add(tally);

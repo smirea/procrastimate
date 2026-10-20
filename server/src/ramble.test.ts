@@ -19,7 +19,8 @@ const upstream: ConnectUpstream = async (_session, events) => {
 	};
 };
 
-type Opened = { sent: { type: string; reason?: string; seconds?: number; code?: string }[]; events: StreamEvents };
+type Sent = { type: string; reason?: string; seconds?: number; code?: string };
+type Opened = { sent: Sent[]; events: StreamEvents; received(type: string | null): Promise<Sent> };
 
 let app: TestApp;
 let me: Session;
@@ -39,31 +40,42 @@ beforeAll(async () => {
 });
 afterAll(() => app.close());
 
+/** Resolves once the session has sent its first message: `started`, or the refusal of a used-up day. */
 async function open(person = me.person): Promise<Opened> {
 	pending = null;
 	const request = new Request('https://procrastimate.test/api/ramble/socket', { headers: { Upgrade: 'websocket' } });
 	await route(request, person);
 	if (!pending) throw new Error('the route did not open a session');
-	const sent: Opened['sent'] = [];
+	const sent: Sent[] = [];
+	const waiting: { type: string | null; resolve(message: Sent): void }[] = [];
 	const events = (pending as (socket: Socket) => StreamEvents)({
-		send: text => sent.push(JSON.parse(text)),
+		send(text) {
+			const message: Sent = JSON.parse(text);
+			sent.push(message);
+			for (const waiter of waiting.splice(0)) {
+				if (waiter.type === null || waiter.type === message.type) waiter.resolve(message);
+				else waiting.push(waiter);
+			}
+		},
 		close() {},
 	});
-	await Bun.sleep(5);
-	return { sent, events };
+	const received = async (type: string | null) =>
+		sent.find(message => type === null || message.type === type) ??
+		new Promise<Sent>(resolve => waiting.push({ type, resolve }));
+	await received(null);
+	return { sent, events, received };
 }
 
 const second = new Uint8Array(RAMBLE_BYTES_PER_SECOND);
-async function stream(session: Opened, seconds: number) {
+function stream(session: Opened, seconds: number) {
 	for (let i = 0; i < seconds; i++) session.events.message(second);
-	await Bun.sleep(20);
-	return session.sent.find(message => message.type === 'ended');
 }
 
 describe('the Ramble caps', () => {
 	test('a frame past the session cap is cut at it and the session ends', async () => {
 		const session = await open();
-		expect(await stream(session, RAMBLE_SESSION_SECONDS + 1)).toEqual({
+		stream(session, RAMBLE_SESSION_SECONDS + 1);
+		expect(await session.received('ended')).toEqual({
 			type: 'ended',
 			seconds: RAMBLE_SESSION_SECONDS,
 			reason: 'session-limit',
@@ -75,12 +87,14 @@ describe('the Ramble caps', () => {
 		let streamed = RAMBLE_SESSION_SECONDS;
 		while (streamed < RAMBLE_DAILY_SECONDS) {
 			const session = await open();
-			const ended = await stream(session, RAMBLE_SESSION_SECONDS);
-			streamed += ended?.seconds ?? 0;
+			stream(session, RAMBLE_SESSION_SECONDS);
+			streamed += (await session.received('ended')).seconds!;
 			session.events.close();
 		}
 		expect(streamed).toBe(RAMBLE_DAILY_SECONDS);
-		expect(await stream(stale, 1)).toEqual({ type: 'ended', seconds: 0, reason: 'daily-limit' });
+		stream(stale, 1);
+		stale.events.message(JSON.stringify({ type: 'stop' }));
+		expect(await stale.received('ended')).toEqual({ type: 'ended', seconds: 0, reason: 'daily-limit' });
 		const refused = await open();
 		expect(refused.sent.map(message => message.code)).toEqual(['daily-limit']);
 	});
@@ -99,7 +113,7 @@ describe('a Ramble session', () => {
 		session.events.message(second);
 		jest.advanceTimersByTime(60_000);
 		jest.advanceTimersByTime(1);
-		expect(session.sent.at(-1)).toEqual({ type: 'ended', seconds: 1, reason: 'idle' });
+		expect(await session.received('ended')).toEqual({ type: 'ended', seconds: 1, reason: 'idle' });
 	});
 
 	test('a session open across midnight stores the seconds before it on that day and the rest on the next', async () => {
@@ -111,12 +125,11 @@ describe('a Ramble session', () => {
 		).toEqual([]);
 		setSystemTime(new Date(Date.UTC(2026, 9, 20, 3, 59, 59)));
 		const session = await open(night.person);
-		await stream(session, 1);
+		stream(session, 1);
 		setSystemTime(new Date(Date.UTC(2026, 9, 20, 4, 0, 1)));
-		await stream(session, 1);
+		stream(session, 1);
 		session.events.message(JSON.stringify({ type: 'stop' }));
-		await Bun.sleep(20);
-		expect(session.sent.at(-1)).toEqual({ type: 'ended', seconds: 2, reason: 'stopped' });
+		expect(await session.received('ended')).toEqual({ type: 'ended', seconds: 2, reason: 'stopped' });
 		const days = await app.db
 			.select({ day: rambleUsage.day, seconds: rambleUsage.seconds })
 			.from(rambleUsage)
