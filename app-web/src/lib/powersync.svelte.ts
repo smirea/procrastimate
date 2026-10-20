@@ -123,7 +123,10 @@ const viewOf = () => ({
 	comments: store.comments,
 });
 
-/** An empty search lists everyone the user shared with, the owners sharing with them, and their AI accounts. */
+/**
+ * An empty search lists everyone the user shared with, the owners sharing with them, their AI accounts, and whoever
+ * made or finished a task they see.
+ */
 async function refreshPeople() {
 	const [me, people] = await Promise.all([
 		api.me().catch(() => null),

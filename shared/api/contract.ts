@@ -471,8 +471,8 @@ export const contract = {
 	},
 	people: {
 		/**
-		 * An exact email match over every user, plus the caller's AI accounts and the people its space has met,
-		 * matched on a name prefix. There is no prefix search over every user, so nobody can list them.
+		 * An exact email match over every user, plus the caller's AI accounts, the people its space has met, and
+		 * whoever made or finished a task it sees, matched on a name prefix. There is no prefix search over every user, so nobody can list them.
 		 */
 		search: signedIn
 			.meta(openapi({ method: 'GET', path: '/api/people', inputStructure: 'detailed' }))

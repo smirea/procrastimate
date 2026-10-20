@@ -123,8 +123,8 @@ export const router = os.router({
 	},
 	people: {
 		/**
-		 * The people the caller knows: everyone they shared with, the owners of the spaces shared with them, and their
-		 * AI accounts, all read from Better Auth's users. An empty query lists them all, which is how a guest's device
+		 * The people the caller knows: everyone they shared with, the owners of the spaces shared with them, their AI
+		 * accounts, and whoever made or finished a task they see, all read from Better Auth's users. An empty query lists them all, which is how a guest's device
 		 * learns an owner's name; a query filters on a name prefix and adds an exact email match over every user.
 		 */
 		search: os.people.search.handler(async ({ input, context }) => {

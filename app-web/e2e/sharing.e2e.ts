@@ -89,6 +89,29 @@ test('a guest completes a task in a project shared with them, and the owner sees
 	).toBeVisible();
 });
 
+test('a guest names a task another guest added to the shared project', async ({ devices }) => {
+	const viewer = await devices.open({ person: 'Vera', path: '/inbox', heading: 'Inbox' });
+	const adder = await devices.open({ person: 'Gus', path: '/inbox', heading: 'Inbox' });
+	const { owner, project } = await ownerWithProject(devices);
+	await shareWith(owner, adder);
+	await shareWith(owner, viewer, 'Can view');
+
+	const theirs = unique('Oat milk');
+	await (await sharedWithMe(adder)).getByRole('link', { name: new RegExp(project) }).click({ timeout: 15_000 });
+	await expect(adder.page.getByRole('heading', { level: 1, name: project })).toBeVisible();
+	await adder.app.add(theirs);
+	await expect(adder.app.row(theirs)).toBeVisible();
+
+	await (await sharedWithMe(viewer)).getByRole('link', { name: new RegExp(project) }).click({ timeout: 15_000 });
+	await expect(viewer.app.row(theirs)).toContainText(/by\s*Gus/, { timeout: 10_000 });
+	await viewer.page.screenshot({ path: 'test-results/sharing/co-guest-named.png' });
+	await viewer.page.getByRole('button', { name: 'Filters', exact: true }).click();
+	// Creators with equal counts sort by user id, so each is checked on its own.
+	const creators = viewer.page.getByRole('dialog', { name: 'Filters' }).getByRole('group', { name: 'Created by' });
+	await expect(creators.getByRole('menuitemcheckbox', { name: /Gus/ })).toHaveText(/Gus\s*1/);
+	await expect(creators.getByRole('menuitemcheckbox', { name: /Olive/ })).toHaveText(/Olive\s*1/);
+});
+
 test('a guest who can only view a shared project gets no add row, and quick add there starts in Inbox', async ({
 	devices,
 }) => {

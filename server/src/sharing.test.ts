@@ -364,6 +364,44 @@ describe('sharing a task', () => {
 		expect(none.people).toEqual([]);
 	});
 
+	test('a guest names whoever made or finished a task it sees, and nobody acting only elsewhere', async () => {
+		const coGuest = await signUp(app, 'Coguest');
+		const elsewhere = await signUp(app, 'Elsewhere');
+		const id = await newTask('Party');
+		const other = await newTask('Unrelated');
+		await share({ kind: 'task', id }, guest, 'view');
+		const coShare = await share({ kind: 'task', id }, coGuest, 'edit');
+		await share({ kind: 'task', id: other }, elsewhere, 'edit');
+		const sub = crypto.randomUUID();
+		const hidden = crypto.randomUUID();
+		expect(
+			await upload(app, coGuest, [
+				{ op: 'put', table: 'tasks', id: sub, values: taskRow(sub, owner.person.id, 'Cake', { parentId: id }) },
+			]),
+		).toEqual([]);
+		expect(
+			await upload(app, elsewhere, [
+				{
+					op: 'put',
+					table: 'tasks',
+					id: hidden,
+					values: taskRow(hidden, owner.person.id, 'Hidden', { parentId: other }),
+				},
+				{ op: 'patch', table: 'tasks', id: other, values: { completedAt: 1 } },
+			]),
+		).toEqual([]);
+		const names = async (session: Session) =>
+			(await json<{ people: Person[] }>(call(session, 'GET', '/api/people?q='))).people.map(person => person.name);
+		expect(await names(guest)).toContain('Coguest');
+		expect(await names(guest)).not.toContain('Elsewhere');
+		expect(await json<{ people: Person[] }>(call(guest, 'GET', '/api/people?q=co'))).toEqual({
+			people: [{ id: coGuest.person.id, name: 'Coguest', kind: 'human', ownerId: null }],
+		});
+
+		expect((await call(owner, 'DELETE', `/api/shares?id=${coShare.id}`)).status).toBe(200);
+		expect(await names(owner)).toContain('Coguest');
+	});
+
 	test('a stranger is turned away from the space', async () => {
 		const stranger = await signUp(app, 'Stranger');
 		expect((await call(stranger, 'GET', `/api/view?space=${owner.person.id}`)).status).toBe(403);
