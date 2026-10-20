@@ -55,6 +55,7 @@ export function applyTheme(next: Theme, accent: AccentChoice) {
 		(root.dataset.theme !== next || root.dataset.accent !== accent) &&
 		'startViewTransition' in document &&
 		!matchMedia('(prefers-reduced-motion: reduce)').matches;
-	if (animate) document.startViewTransition(paint);
+	// A second change mid-crossfade skips the first, which rejects its `ready` with an AbortError.
+	if (animate) document.startViewTransition(paint).ready.catch(() => {});
 	else paint();
 }

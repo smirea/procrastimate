@@ -10,7 +10,7 @@ Every new feature that someone can do from outside the app ships its intents, ph
 - `intent-complete` completes the open task with that title.
 - `intent-reopen` reopens a completed task.
 - `intent-open-view` opens Inbox, No date, or Browse.
-- `intent-open-project` opens a project.
+- `intent-open-project` opens a project. Siri and the Shortcuts picker show each project with its icon, or `#` when it has none.
 - `intent-open-task` opens a task.
 - `intent-search` searches tasks, opens Browse with the query in its search field, and shows the matches.
 - `intent-today` lists tasks due today.

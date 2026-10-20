@@ -61,14 +61,16 @@ struct ProjectEntity: AppEntity {
 
     var id: String
     var name: String
+    var systemImage: String
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(name)", image: .init(systemName: "number"))
+        DisplayRepresentation(title: "\(name)", image: .init(systemName: systemImage))
     }
 
-    init(id: String, name: String) {
-        self.id = id
-        self.name = name
+    init(_ project: Project) {
+        id = project.id
+        name = project.name
+        systemImage = project.systemImage
     }
 }
 
