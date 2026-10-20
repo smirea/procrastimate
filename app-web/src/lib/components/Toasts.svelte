@@ -17,6 +17,10 @@
 			animate:flip={motion({ duration: 200 })}
 			in:fly={motion({ y: 16, duration: 220, easing: cubicOut })}
 			out:fly={motion({ y: 8, duration: 160, opacity: 0 })}
+			onpointerenter={() => toasts.hold(toast.id)}
+			onpointerleave={() => toasts.release(toast.id)}
+			onfocusin={() => toasts.hold(toast.id)}
+			onfocusout={() => toasts.release(toast.id)}
 		>
 			<span class="max-w-[28rem] min-w-0 truncate">{toast.message}</span>
 			{#if toast.action}
