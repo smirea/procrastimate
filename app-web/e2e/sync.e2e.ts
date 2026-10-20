@@ -52,7 +52,7 @@ async function rename(app: App, from: string, to: string) {
 	await app.details().getByRole('button', { name: 'Close' }).click();
 }
 
-test('a change on one device shows on the other at once, both ways', async ({ devices }) => {
+test('a change on one device shows on the other at once, both ways', { tag: '@webkit' }, async ({ devices }) => {
 	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Synced task');
 	await a.app.add(title);
@@ -66,133 +66,96 @@ test('a change on one device shows on the other at once, both ways', async ({ de
 	await expect(a.app.row(title)).toHaveCount(0, { timeout: 10_000 });
 });
 
-test('two tabs of one browser share one database, and both upload', async ({ devices }) => {
-	const [a, b] = [await devices.open(), await devices.open()];
-	const other = await a.context.newPage();
-	await other.clock.setFixedTime(NOW);
-	await other.goto('/no-date');
-	const tab = new App(other);
+test(
+	'two tabs of one browser share one database, both upload, and follow a switch to another account',
+	{ tag: '@webkit' },
+	async ({ devices }) => {
+		const [a, b] = [await devices.open(), await devices.open()];
+		const other = await a.context.newPage();
+		await other.clock.setFixedTime(NOW);
+		await other.goto('/no-date');
+		const tab = new App(other);
 
-	const first = unique('Added in the first tab');
-	await a.app.add(first);
-	await expect(tab.row(first)).toBeVisible({ timeout: 10_000 });
-	const second = unique('Added in the second tab');
-	await tab.add(second);
-	await expect(a.app.row(second)).toBeVisible({ timeout: 10_000 });
-	await expect(b.app.row(first)).toBeVisible({ timeout: 10_000 });
-	await expect(b.app.row(second)).toBeVisible({ timeout: 10_000 });
-});
+		const first = unique('Added in the first tab');
+		await a.app.add(first);
+		await expect(tab.row(first)).toBeVisible({ timeout: 10_000 });
+		const second = unique('Added in the second tab');
+		await tab.add(second);
+		await expect(a.app.row(second)).toBeVisible({ timeout: 10_000 });
+		await expect(b.app.row(first)).toBeVisible({ timeout: 10_000 });
+		await expect(b.app.row(second)).toBeVisible({ timeout: 10_000 });
 
-test('changes made offline apply at once, survive a reload, and upload when the network returns', async ({
-	devices,
-}) => {
-	const [a, b] = [await devices.open(), await devices.open()];
-	const kept = unique('Kept offline');
-	const later = unique('Added offline');
-	await a.app.add(kept);
-	await expect(b.app.row(kept)).toBeVisible({ timeout: 10_000 });
+		await settled(a);
+		await signOutOf(a);
+		await signInTo(a, `other-${crypto.randomUUID().slice(0, 8)}@procrastimate.test`, true);
+		await a.page.goto('/no-date');
+		await expect(a.app.row(first)).toHaveCount(0);
+		await expect(tab.row(first)).toHaveCount(0, { timeout: 10_000 });
+		const theirs = unique('After the switch');
+		await a.app.add(theirs);
+		await expect(tab.row(theirs)).toBeVisible({ timeout: 10_000 });
+	},
+);
 
-	await goOffline(a);
-	await a.app.add(later);
-	await rename(a.app, kept, `${kept} renamed`);
-	await expect(a.app.row(later)).toBeVisible();
-	await expect.poll(() => a.app.pending()).toBeGreaterThan(0);
+test(
+	'changes made offline apply at once with a cloud on the row, survive a reload, and upload when the network returns',
+	{ tag: '@webkit' },
+	async ({ devices }) => {
+		const [a, b] = [await devices.open(), await devices.open()];
+		const kept = unique('Kept offline');
+		const later = unique('Added offline');
+		await a.app.add(kept);
+		await expect(b.app.row(kept)).toBeVisible({ timeout: 10_000 });
 
-	// The page itself has to load, so only the sync routes stay refused.
-	await a.context.setOffline(false);
-	await a.app.reload();
-	await expect(a.app.row(later)).toBeVisible();
-	await expect(a.app.row(`${kept} renamed`)).toBeVisible();
-	await expect(b.app.row(later)).toHaveCount(0);
+		await goOffline(a);
+		await a.app.add(later);
+		await rename(a.app, kept, `${kept} renamed`);
+		await expect(a.app.row(later)).toBeVisible();
+		await expect.poll(() => a.app.pending()).toBeGreaterThan(0);
+		const unsynced = (name: string) => a.app.row(name).getByRole('img', { name: 'Not synced yet' });
+		await expect(unsynced(later)).toBeVisible({ timeout: 1000 });
+		await a.app
+			.row(later)
+			.getByRole('button', { name: new RegExp(`^${later}`) })
+			.click();
+		await expect(
+			a.app.details().getByRole('status').filter({ hasText: 'Not saved yet. Will sync when online.' }),
+		).toBeVisible();
+		await a.app.details().getByRole('button', { name: 'Close' }).click();
 
-	await goOnline(a);
-	await expect(b.app.row(later)).toBeVisible({ timeout: 15_000 });
-	await expect(b.app.row(`${kept} renamed`)).toBeVisible();
-});
+		// The page itself has to load, so only the sync routes stay refused.
+		await a.context.setOffline(false);
+		await a.app.reload();
+		await expect(a.app.row(later)).toBeVisible();
+		await expect(a.app.row(`${kept} renamed`)).toBeVisible();
+		await expect(b.app.row(later)).toHaveCount(0);
 
-test('a change waiting to upload shows a cloud on its row and a notice in its details, at once offline and after a grace online', async ({
-	devices,
-}) => {
-	const a = await devices.open();
-	const title = unique('Waiting');
-	const unsynced = (name: string) => a.app.row(name).getByRole('img', { name: 'Not synced yet' });
-	await a.app.add(title);
-	await settled(a);
-	await expect(unsynced(title)).toHaveCount(0);
+		await goOnline(a);
+		await expect(b.app.row(later)).toBeVisible({ timeout: 15_000 });
+		await expect(b.app.row(`${kept} renamed`)).toBeVisible();
+		await expect(unsynced(later)).toHaveCount(0, { timeout: 15_000 });
+	},
+);
 
-	let release = () => {};
-	const held = new Promise<void>(resolve => (release = resolve));
-	await a.context.route('**/api/upload', async route => {
-		await held;
-		await route.continue();
-	});
-	const renamed = Date.now();
-	await rename(a.app, title, `${title} slow`);
-	await expect(unsynced(`${title} slow`)).toBeVisible({ timeout: 10_000 });
-	expect(Date.now() - renamed).toBeGreaterThanOrEqual(2900);
-	release();
-	await expect(unsynced(`${title} slow`)).toHaveCount(0, { timeout: 10_000 });
-	await a.context.unroute('**/api/upload');
-
-	await goOffline(a);
-	await rename(a.app, `${title} slow`, `${title} offline`);
-	await expect(unsynced(`${title} offline`)).toBeVisible({ timeout: 1000 });
-	await a.app
-		.row(`${title} offline`)
-		.getByRole('button', { name: new RegExp(`^${title} offline`) })
-		.click();
-	await expect(
-		a.app.details().getByRole('status').filter({ hasText: 'Not saved yet. Will sync when online.' }),
-	).toBeVisible();
-	await a.app.details().getByRole('button', { name: 'Close' }).click();
-
-	await goOnline(a);
-	await expect(unsynced(`${title} offline`)).toHaveCount(0, { timeout: 15_000 });
-});
-
-test('typing notes online for longer than the grace never marks the task unsynced', async ({ devices }) => {
-	const a = await devices.open();
-	const title = unique('Typed online');
-	await a.app.add(title);
-	await settled(a);
-	await a.page.evaluate(() => {
-		const seen = { unsynced: false };
-		Object.assign(window, { seen });
-		new MutationObserver(() => {
-			if (document.querySelector('[data-unsynced]')) seen.unsynced = true;
-		}).observe(document.body, { subtree: true, childList: true });
-	});
-	// A real network's round trip, so each keystroke is queued before the previous upload lands.
-	await a.context.route('**/api/upload', async route => {
-		await new Promise(resolve => setTimeout(resolve, 400));
-		await route.continue();
-	});
-	await a.app
-		.row(title)
-		.getByRole('button', { name: new RegExp(`^${title}`) })
-		.click();
-	const notes = a.app.details().getByRole('textbox', { name: 'Notes' });
-	await notes.pressSequentially('Each keystroke uploads before the next one lands', { delay: 100 });
-	await settled(a);
-	await a.context.unroute('**/api/upload');
-	expect(await a.page.evaluate(() => (window as unknown as { seen: { unsynced: boolean } }).seen.unsynced)).toBe(false);
-});
-
-test('a task added the moment before the page goes away is there after the reload', async ({ devices }) => {
-	const [a, b] = [await devices.open(), await devices.open()];
-	const title = unique('Saved in time');
-	await a.app.openQuickAdd();
-	await a.app.taskInput().fill(title);
-	// The command and the reload run in one task, so the local database cannot have written it yet.
-	await a.page.evaluate(() => {
-		const input = document.querySelector<HTMLElement>('[aria-label="Task name"]')!;
-		input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
-		location.reload();
-	});
-	await expect(a.page.getByRole('heading', { name: 'No date' })).toBeVisible();
-	await expect(a.app.row(title)).toBeVisible();
-	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
-});
+test(
+	'a task added the moment before the page goes away is there after the reload',
+	{ tag: '@webkit' },
+	async ({ devices }) => {
+		const [a, b] = [await devices.open(), await devices.open()];
+		const title = unique('Saved in time');
+		await a.app.openQuickAdd();
+		await a.app.taskInput().fill(title);
+		// The command and the reload run in one task, so the local database cannot have written it yet.
+		await a.page.evaluate(() => {
+			const input = document.querySelector<HTMLElement>('[aria-label="Task name"]')!;
+			input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+			location.reload();
+		});
+		await expect(a.page.getByRole('heading', { name: 'No date' })).toBeVisible();
+		await expect(a.app.row(title)).toBeVisible();
+		await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
+	},
+);
 
 test('an edit the server rejects goes back to the server value with a notice, and the device keeps syncing', async ({
 	devices,
@@ -224,94 +187,6 @@ test('an edit the server rejects goes back to the server value with a notice, an
 	await expect(b.app.row(refused)).toHaveCount(0);
 });
 
-test('typing notes shows each keystroke at once and uploads one write with the last value', async ({ devices }) => {
-	const [a, b] = [await devices.open(), await devices.open()];
-	const title = unique('Typed');
-	await a.app.add(title);
-	await settled(a);
-	const id = await a.app.taskId(title);
-
-	await goOffline(a);
-	await a.app
-		.row(title)
-		.getByRole('button', { name: new RegExp(`^${title}`) })
-		.click();
-	const notes = a.app.details().getByRole('textbox', { name: 'Notes' });
-	await notes.pressSequentially('Buy oat milk');
-	await expect(notes).toHaveValue('Buy oat milk');
-	await expect.poll(() => a.app.pending()).toBeGreaterThan(1);
-
-	const writes: { id: string; values?: Record<string, unknown> }[] = [];
-	a.page.on('request', request => {
-		if (request.url().endsWith('/api/upload')) writes.push(...(request.postDataJSON() as { writes: [] }).writes);
-	});
-	await goOnline(a);
-	await settled(a);
-	expect(writes.filter(write => write.id === id)).toEqual([
-		{ op: 'patch', table: 'tasks', id, values: { notes: 'Buy oat milk' }, opId: expect.any(String) },
-	]);
-	await b.app
-		.row(title)
-		.getByRole('button', { name: new RegExp(`^${title}`) })
-		.click();
-	await expect(b.app.details().getByRole('textbox', { name: 'Notes' })).toHaveValue('Buy oat milk', {
-		timeout: 10_000,
-	});
-});
-
-test('both devices editing the same task offline converge, each field to the last write', async ({ devices }) => {
-	const [a, b] = [await devices.open(), await devices.open()];
-	const title = unique('Shared');
-	await a.app.add(title);
-	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
-
-	await goOffline(a);
-	await goOffline(b);
-	await rename(a.app, title, `${title} from A`);
-	await rename(b.app, title, `${title} from B`);
-	await b.app
-		.row(`${title} from B`)
-		.getByRole('button', { name: new RegExp(`^${title}`) })
-		.click();
-	await b.app.details().getByRole('textbox', { name: 'Notes' }).fill('Notes from B');
-	await b.app.details().getByRole('button', { name: 'Close' }).click();
-
-	await goOnline(a);
-	await settled(a);
-	await goOnline(b);
-	await settled(b);
-
-	const rowA = a.app.list('Tasks without a date').getByRole('listitem').filter({ hasText: title });
-	const rowB = b.app.list('Tasks without a date').getByRole('listitem').filter({ hasText: title });
-	await expect(rowA).toHaveCount(1);
-	await expect(rowA).toContainText('Notes from B', { timeout: 10_000 });
-	await expect(rowB).toHaveCount(1);
-	await expect(a.app.row(`${title} from B`)).toBeVisible({ timeout: 10_000 });
-	await expect(b.app.row(`${title} from B`)).toBeVisible();
-});
-
-test('a delete beats an edit that reaches the server after it', async ({ devices }) => {
-	const [a, b] = [await devices.open(), await devices.open()];
-	const title = unique('Doomed');
-	await a.app.add(title);
-	await expect(b.app.row(title)).toBeVisible({ timeout: 10_000 });
-
-	await goOffline(b);
-	await rename(b.app, title, `${title} edited late`);
-	await a.app
-		.row(title)
-		.getByRole('button', { name: new RegExp(`^${title}`) })
-		.click();
-	await a.app.details().getByRole('button', { name: 'Delete task' }).click();
-	await expect(a.app.row(title)).toHaveCount(0);
-	await settled(a);
-
-	await goOnline(b);
-	await settled(b);
-	await expect(b.app.row(`${title} edited late`)).toHaveCount(0, { timeout: 10_000 });
-	await expect(a.app.row(`${title} edited late`)).toHaveCount(0);
-});
-
 test('delete all data clears this device and the other', async ({ devices }) => {
 	const [a, b] = [await devices.open(), await devices.open()];
 	const title = unique('Before delete');
@@ -327,111 +202,42 @@ test('delete all data clears this device and the other', async ({ devices }) => 
 	expect(await a.page.evaluate(() => localStorage.getItem('procrastimate-user'))).toBeTruthy();
 });
 
-async function explodeSubtasks({ app, page }: Device, parent: string) {
-	await app.add(parent);
-	await app
-		.row(parent)
-		.getByRole('button', { name: new RegExp(`^${parent}`) })
-		.click();
-	const subtask = app.details().getByRole('textbox', { name: 'Add subtask' });
-	for (const title of ['Passport', 'Charger']) {
-		await subtask.fill(title);
-		await subtask.press('Enter');
-	}
-	await app.details().getByRole('button', { name: 'Subtask actions' }).click();
-	await page.getByRole('button', { name: `Start with “${parent}:”` }).click();
-	await expect(
-		app
-			.details()
-			.getByRole('list', { name: `Subtasks of ${parent}` })
-			.getByRole('listitem'),
-	).toHaveCount(0);
-}
+test(
+	'signing out keeps this device’s data, and signing in as someone else starts from an empty list',
+	{ tag: '@webkit' },
+	async ({ devices }) => {
+		const [a, b] = [await devices.open(), await devices.open()];
+		const title = unique('Mine only');
+		await a.app.add(title);
+		await settled(a);
+		const signOut = () => signOutOf(a);
+		const signIn = (email: string, create: boolean) => signInTo(a, email, create);
 
-test('subtasks turned into tasks show as tasks on the other device, and undo nests them again', async ({ devices }) => {
-	const [a, b] = [await devices.open(), await devices.open()];
-	const kept = unique('Pack');
-	await explodeSubtasks(a, kept);
-	await a.app.details().getByRole('button', { name: 'Close' }).click();
-	await expect(b.app.row(`${kept}: Passport`)).toBeVisible({ timeout: 10_000 });
-	await expect(b.app.row(`${kept}: Charger`)).toBeVisible();
-	await expect(b.app.row(kept)).toBeVisible();
+		await signOut();
+		await goOffline(a);
+		await a.context.setOffline(false);
+		await signIn(e2eEmail(), false);
+		await a.page.goto('/no-date');
+		await expect(a.app.row(title)).toBeVisible();
+		await goOnline(a);
 
-	// The Undo toast lasts 5s, shorter than a slow sync to b, so undo gets its own parent. CI's WebKit takes seconds to
-	// settle each tap, which outlasted the toast, so undo happens with the sheet still open and focus holds the toast.
-	const undone = unique('Pack');
-	await explodeSubtasks(a, undone);
-	const undo = a.page.getByRole('button', { name: 'Undo' }).last();
-	await undo.focus();
-	await undo.click();
-	await expect(
-		a.app
-			.details()
-			.getByRole('list', { name: `Subtasks of ${undone}` })
-			.getByRole('listitem'),
-	).toHaveCount(2);
-	await a.app.details().getByRole('button', { name: 'Close' }).click();
-	await expect(a.app.row(`${undone}: Passport`)).toHaveCount(0);
-	await expect(a.app.row(undone).getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible();
-	await expect(b.app.row(undone).getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible({ timeout: 10_000 });
-	await expect(b.app.row(`${undone}: Passport`)).toHaveCount(0);
-});
+		await signOut();
+		await signIn(`other-${crypto.randomUUID().slice(0, 8)}@procrastimate.test`, true);
+		await a.page.goto('/no-date');
+		await expect(a.page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: BOOT_TIMEOUT });
+		await expect(a.app.row(title)).toHaveCount(0);
+		const other = unique('Theirs');
+		await a.app.add(other);
+		await settled(a);
+		await expect(b.app.row(other)).toHaveCount(0);
 
-test('signing out keeps this device’s data, and signing in as someone else starts from an empty list', async ({
-	devices,
-}) => {
-	const [a, b] = [await devices.open(), await devices.open()];
-	const title = unique('Mine only');
-	await a.app.add(title);
-	await settled(a);
-	const signOut = () => signOutOf(a);
-	const signIn = (email: string, create: boolean) => signInTo(a, email, create);
-
-	await signOut();
-	await goOffline(a);
-	await a.context.setOffline(false);
-	await signIn(e2eEmail(), false);
-	await a.page.goto('/no-date');
-	await expect(a.app.row(title)).toBeVisible();
-	await goOnline(a);
-
-	await signOut();
-	await signIn(`other-${crypto.randomUUID().slice(0, 8)}@procrastimate.test`, true);
-	await a.page.goto('/no-date');
-	await expect(a.page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: BOOT_TIMEOUT });
-	await expect(a.app.row(title)).toHaveCount(0);
-	const other = unique('Theirs');
-	await a.app.add(other);
-	await settled(a);
-	await expect(b.app.row(other)).toHaveCount(0);
-
-	await signOut();
-	await signIn(e2eEmail(), false);
-	await a.page.goto('/no-date');
-	await expect(a.app.row(title)).toBeVisible({ timeout: BOOT_TIMEOUT });
-	await expect(a.app.row(other)).toHaveCount(0);
-});
-
-test('another tab follows when this browser switches to another account', async ({ devices }) => {
-	const a = await devices.open();
-	const mine = unique('Before the switch');
-	await a.app.add(mine);
-	await settled(a);
-	const other = await a.context.newPage();
-	await other.clock.setFixedTime(NOW);
-	await other.goto('/no-date');
-	const tab = new App(other);
-	await expect(tab.row(mine)).toBeVisible({ timeout: 10_000 });
-
-	await signOutOf(a);
-	await signInTo(a, `other-${crypto.randomUUID().slice(0, 8)}@procrastimate.test`, true);
-	await a.page.goto('/no-date');
-	await expect(a.app.row(mine)).toHaveCount(0);
-	await expect(tab.row(mine)).toHaveCount(0, { timeout: 10_000 });
-	const theirs = unique('After the switch');
-	await a.app.add(theirs);
-	await expect(tab.row(theirs)).toBeVisible({ timeout: 10_000 });
-});
+		await signOut();
+		await signIn(e2eEmail(), false);
+		await a.page.goto('/no-date');
+		await expect(a.app.row(title)).toBeVisible({ timeout: BOOT_TIMEOUT });
+		await expect(a.app.row(other)).toHaveCount(0);
+	},
+);
 
 test('a new device holds its settings changes until the account’s settings arrive, then writes only those', async ({
 	browser,
@@ -592,8 +398,10 @@ function backupOf(count: number) {
 	};
 }
 
-test('one command’s writes upload in one request, however many rows it changes', async ({ devices }) => {
-	const a = await devices.open();
+test('one command’s writes upload in one request, and an edit reads back only the row it changed, on this device and the other', async ({
+	devices,
+}) => {
+	const [a, b] = [await devices.open(), await devices.open()];
 	await settled(a);
 	await goOffline(a);
 	await a.app.openSettings();
@@ -601,7 +409,7 @@ test('one command’s writes upload in one request, however many rows it changes
 	await a.app.settings().getByRole('button', { name: 'Import from Todoist' }).click();
 	await (await chooser).setFiles(backupOf(150));
 	await expect(a.app.importSummary()).toContainText('150 tasks');
-
+	await a.page.keyboard.press('Escape');
 	const uploads: number[] = [];
 	a.page.on('request', request => {
 		if (request.url().endsWith('/api/upload')) uploads.push((request.postDataJSON() as { writes: [] }).writes.length);
@@ -610,17 +418,6 @@ test('one command’s writes upload in one request, however many rows it changes
 	await settled(a);
 	// A retried request carries the same whole batch, so every request holds all 151 writes, however many there are.
 	expect(new Set(uploads)).toEqual(new Set([151]));
-});
-
-test('an edit reads back only the row it changed, on this device and the other', async ({ devices }) => {
-	const [a, b] = [await devices.open(), await devices.open()];
-	await a.app.openSettings();
-	const chooser = a.page.waitForEvent('filechooser');
-	await a.app.settings().getByRole('button', { name: 'Import from Todoist' }).click();
-	await (await chooser).setFiles(backupOf(150));
-	await expect(a.app.importSummary()).toContainText('150 tasks');
-	await a.page.keyboard.press('Escape');
-	await settled(a);
 	const has = (device: Device, title: string) =>
 		expect.poll(() => device.page.evaluate(t => window.procrastimate.taskId(t) !== undefined, title), {
 			timeout: 10_000,

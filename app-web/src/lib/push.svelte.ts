@@ -4,6 +4,7 @@ import { pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.t
 import { api, isUnauthorized } from './api.ts';
 import { DEVICE_KEYS, installId } from './device.ts';
 import { forgetInstallId, rememberInstallId } from './install-cache.ts';
+import { isPushRefusal, refusalOver, refusedRecently } from './push-refusal.ts';
 import { reportError } from './sentry.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
@@ -86,7 +87,7 @@ class Push {
 		const subscription = await registration?.pushManager.getSubscription();
 		const rekeying = localStorage.getItem(REKEY_KEY) !== null;
 		const current = subscription && sameKey(subscription.options.applicationServerKey, key) ? subscription : null;
-		if (!current && refusedRecently()) return { kind: 'off' };
+		if (!current && refusedRecently(localStorage.getItem(REFUSED_KEY), Date.now())) return { kind: 'off' };
 		if (!registration || (!subscription && !rekeying)) {
 			await this.#subscribe(Promise.resolve('granted' as NotificationPermission), key);
 			return this.state;
@@ -160,8 +161,8 @@ class Push {
 	}
 
 	#retry() {
-		const refusalOver = this.state.kind === 'off' && localStorage.getItem(REFUSED_KEY) !== null && !refusedRecently();
-		if (this.state.kind === 'unavailable' || this.state.kind === 'error' || refusalOver) void this.detect();
+		const askAgain = this.state.kind === 'off' && refusalOver(localStorage.getItem(REFUSED_KEY), Date.now());
+		if (this.state.kind === 'unavailable' || this.state.kind === 'error' || askAgain) void this.detect();
 		else if (this.state.kind === 'on') void this.#register(this.state.subscription);
 	}
 }
@@ -219,27 +220,16 @@ async function rekey(
 }
 
 const REFUSED_KEY = DEVICE_KEYS.pushRefusedAt;
-const REFUSED_BACKOFF_MS = 24 * 60 * 60 * 1000;
 
-/**
- * Chrome answers `AbortError: Registration failed - push service error` when its push service will not register the
- * browser, which no retry from the page fixes. Launches and tab switches then wait a day before asking again, instead
- * of failing and reporting on each one.
- */
 async function subscribe(registration: ServiceWorkerRegistration, key: Uint8Array<ArrayBuffer>) {
 	try {
 		const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
 		localStorage.removeItem(REFUSED_KEY);
 		return subscription;
 	} catch (error) {
-		if (error instanceof DOMException && error.name === 'AbortError')
-			localStorage.setItem(REFUSED_KEY, String(Date.now()));
+		if (isPushRefusal(error)) localStorage.setItem(REFUSED_KEY, String(Date.now()));
 		throw error;
 	}
-}
-
-function refusedRecently() {
-	return Date.now() - Number(localStorage.getItem(REFUSED_KEY)) < REFUSED_BACKOFF_MS;
 }
 
 function sameKey(current: ArrayBuffer | null, key: Uint8Array) {

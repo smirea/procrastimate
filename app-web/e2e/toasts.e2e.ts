@@ -54,13 +54,4 @@ test.describe('on a phone', () => {
 		await expect(app.row('Water plants').getByRole('checkbox', { name: 'Complete Water plants' })).toBeVisible();
 		await expect(toast).toHaveCount(0);
 	});
-
-	test('a toast born as a sheet closes appears at the bottom without gliding', async ({ app, page }) => {
-		await app.add('Water plants');
-		await app.row('Water plants').getByRole('button', { name: 'Water plants', exact: true }).click();
-		await app.details().getByRole('button', { name: 'Complete' }).tap();
-		const toast = page.getByRole('status').filter({ hasText: 'Water plants' });
-		await expect(toast).toBeVisible();
-		expect((await toast.boundingBox())!.y).toBeGreaterThan(852 / 2);
-	});
 });

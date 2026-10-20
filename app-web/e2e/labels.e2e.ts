@@ -12,7 +12,7 @@ test('a label view lists its tasks across projects, and the label renames and de
 	await app.nav('calls').click();
 	await expect(page.getByRole('heading', { level: 1, name: 'calls' })).toBeVisible();
 	const list = app.list('calls tasks');
-	await expect(list.locator('[data-task]')).toHaveText([/Fix sink.*Home/, /Call bank/]);
+	await expect(list.locator('[data-task]')).toHaveText([/Fix sink.*Home/, /Call bank.*Inbox/]);
 
 	const rename = async (name: string) => {
 		await page.getByRole('button', { name: 'Label actions' }).click();
@@ -42,10 +42,4 @@ test('a label view lists its tasks across projects, and the label renames and de
 	await expect(app.row('Call bank')).toContainText('phone');
 	await app.nav('phone').click();
 	await expect(app.list('phone tasks').locator('[data-task]')).toHaveText([/Fix sink.*phone/, /Call bank.*phone/]);
-});
-
-test('a label view names Inbox on an Inbox task that has no date', async ({ app }) => {
-	await app.addCreating('@calls Call bank');
-	await app.nav('calls').click();
-	await expect(app.list('calls tasks').locator('[data-task="Call bank"]')).toContainText('Inbox');
 });

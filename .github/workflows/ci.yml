@@ -75,7 +75,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    # Desktop Chromium takes about 6 minutes and mobile WebKit on one worker about 8, so 15 left no room.
+    # Desktop Chromium on two workers and the nine @webkit tests on one worker each take a few minutes.
     timeout-minutes: 25
     name: e2e
     steps:
@@ -123,7 +123,7 @@ jobs:
         env:
           E2E_WORKER: '1'
 
-      # One worker: each WebKit spec drives two or three pages, and Linux WebKit on two cores beside a second worker's
+      # One worker: each WebKit test drives two or three pages, and Linux WebKit on two cores beside a second worker's
       # pages rendered so slowly that the longest specs crossed their limits in 3 of 3 runs, a different spec each time.
       - name: End to end against the Worker, mobile WebKit
         if: success() || failure()

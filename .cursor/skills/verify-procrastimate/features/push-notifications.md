@@ -10,7 +10,7 @@ Stefan gets a system notification at each task's due time and at each reminder, 
 - `push-deliver` sends each scheduled moment once at its time to every subscribed device, as a notification titled with the task and the due day and time as its body, such as `Today 3:00 PM`. iOS notifications are time-sensitive and show their banner in the foreground too.
 - `push-nudge` does not exist. Saving a timed task shows no `Turn on` toast.
 - `push-open` opens a task's details when its notification is tapped.
-- `push-refused` waits a day after the push service refuses to subscribe (Chrome's `push service error`) before trying again on a launch or tab switch. `e2e/push.e2e.ts`.
+- `push-refused` waits a day after the push service refuses to subscribe (Chrome's `push service error`) before trying again on a launch or tab switch. Unit test: `a push service refusal holds for a day, then asks once more` in `app-web/src/lib/push-refusal.test.ts`.
 - `push-rekey` moves a subscription made for an old server key to the current one on launch, with no prompt, so a VAPID rotation leaves push `On`.
 
 ## How to get to it (user POV)

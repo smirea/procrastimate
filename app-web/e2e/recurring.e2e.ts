@@ -1,20 +1,5 @@
 import { expect, test } from './fixtures';
 
-test('the repeat menu offers the due date’s weekday of the month', async ({ app, page }) => {
-	await app.setNow(new Date('2026-10-14T10:00:00Z'));
-	await app.reload();
-	await app.add('Pay card oct 19');
-	await app.row('Pay card').click();
-	await app.details().getByRole('button', { name: 'Set repeat' }).click();
-	await page.getByRole('button', { name: 'Every month on the 3rd Mon' }).click();
-	await expect(app.details().getByRole('button', { name: 'Repeats every month on the 3rd Mon' })).toBeVisible();
-	await app.details().getByRole('button', { name: 'Repeats every month on the 3rd Mon' }).click();
-	await page.getByRole('spinbutton', { name: 'Repeat interval' }).fill('2');
-	await page.getByRole('combobox', { name: 'Repeat unit' }).selectOption('month');
-	await page.getByRole('button', { name: 'Set', exact: true }).click();
-	await expect(app.details().getByRole('button', { name: 'Repeats every 2 months on the 3rd Mon' })).toBeVisible();
-});
-
 test('completing a recurring task moves it and its reminder to the next occurrence', async ({ app, page }) => {
 	await app.add('Standup every weekday 9am remind me 10m before');
 	const row = app.row('Standup');

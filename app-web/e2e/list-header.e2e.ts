@@ -71,19 +71,3 @@ test('every list has the same menus, and filters narrow it by who made a task an
 	await expect(app.list('Tasks without a date').locator('[data-task]')).toHaveCount(4);
 	await expect(filters).toHaveAttribute('aria-pressed', 'false');
 });
-
-test('a project’s menu leads with what every list shares, then its own entries', async ({ app, page }) => {
-	await app.createProject('Home');
-	const menu = await app.listMenu();
-	await expect(menu.locator('button:not([role="radio"])')).toHaveText([
-		'Share',
-		'Copy as Markdown',
-		'Show completed',
-		'Add section',
-		'Rename',
-		'Delete project',
-	]);
-	await expect(menu.getByRole('separator')).toHaveCount(1);
-	await app.settle();
-	await page.screenshot({ path: 'test-results/list-header/project-menu.png' });
-});

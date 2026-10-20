@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 
-test('a Todoist backup imports once, a second import skips every task, and a wrong file changes nothing', async ({
+test('a Todoist backup imports once with its sections, a second import skips every task, and a wrong file changes nothing', async ({
 	app,
 	page,
 }) => {
@@ -36,4 +36,9 @@ test('a Todoist backup imports once, a second import skips every task, and a wro
 	await expect(app.row('Water plants')).toContainText('home');
 	await app.go('No date');
 	await expect(rows).toHaveText([/Fix bike Todoist date: every! 3 days/]);
+	await app.nav('Long Term').click();
+	await expect(page.getByRole('list', { name: 'Someday tasks' }).locator('[data-task]')).toHaveText([/Visit Japan/]);
+	await expect(page.getByRole('list', { name: 'Reading tasks' }).locator('[data-task]')).toHaveCount(2);
+	await app.settle();
+	await page.screenshot({ path: 'test-results/sections/import.png' });
 });

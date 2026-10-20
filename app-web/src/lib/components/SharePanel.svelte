@@ -7,11 +7,12 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import LinkSimple from 'phosphor-svelte/lib/LinkSimple';
 	import UserPlus from 'phosphor-svelte/lib/UserPlus';
-	import { namePrefixed, type Person, type ShareAudience, type ShareTarget, type ShareView } from 'shared/sharing.ts';
+	import { type Person, type ShareAudience, type ShareTarget, type ShareView } from 'shared/sharing.ts';
 	import type { Role } from 'shared/values.ts';
 	import PersonName from './PersonName.svelte';
 	import { api } from '../api.ts';
 	import { OptimisticList, type Row } from '../optimistic.svelte.ts';
+	import { shareSuggestions } from '../share-suggestions.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { settled } from '../powersync.svelte.ts';
@@ -33,14 +34,15 @@
 	const people = $derived(
 		shares.rows.filter((row): row is Row<ShareView & { grantee: Person }> => row.value.grantee !== null),
 	);
-	const suggestions = $derived.by(() => {
-		const q = query.trim();
-		if (!q) return [];
-		const known = store.people.filter((p) => p.id !== session.userId && namePrefixed(p.name, q));
-		const remote = found?.q === q ? found.people : [];
-		const all = [...known, ...remote.filter((p) => !known.some((k) => k.id === p.id))];
-		return all.filter((p) => !people.some((row) => row.value.grantee.id === p.id));
-	});
+	const suggestions = $derived(
+		shareSuggestions({
+			q: query.trim(),
+			me: session.userId,
+			known: store.people,
+			found,
+			granted: people.map((row) => row.value.grantee.id),
+		}),
+	);
 	const searching = $derived(found?.q !== query.trim());
 
 	onMount(async () => {
