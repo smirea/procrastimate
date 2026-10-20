@@ -104,12 +104,15 @@ function follow(field: Field) {
 	// Only an edit scrolls inside the field, so text the user scrolled up to read inside it stays put.
 	const edited = () => {
 		following = true;
+		placed = outer?.scrollTop ?? 0;
 		if (field instanceof HTMLTextAreaElement) scrollInside(field);
 		reveal();
 	};
 	// Only a scroll this code didn't make is the user's, and one that leaves the caret out of view stops the following.
 	const noticeScroll = () => {
-		if (outer && Math.abs(outer.scrollTop - placed) > 1) following = overflow(field, outer) === 0;
+		if (!outer || Math.abs(outer.scrollTop - placed) <= 1) return;
+		following = overflow(field, outer) === 0;
+		placed = outer.scrollTop;
 	};
 	// Measuring the caret lays out a copy of the text, so it runs at most once a frame while the page scrolls.
 	let frame = 0;
