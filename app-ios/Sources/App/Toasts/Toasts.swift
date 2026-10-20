@@ -86,7 +86,9 @@ private struct ToastView: View {
     @Environment(Toasts.self) private var toasts
     @GestureState private var touched = false
     @State private var hovered = false
-    @AccessibilityFocusState private var voiceOverFocused: Bool
+    @AccessibilityFocusState private var voiceOverFocus: Part?
+
+    private enum Part { case message, action }
 
     var body: some View {
         HStack(spacing: 8) {
@@ -95,6 +97,7 @@ private struct ToastView: View {
                 .foregroundStyle(.ink)
                 .lineLimit(1)
                 .truncationMode(.middle)
+                .accessibilityFocused($voiceOverFocus, equals: .message)
             if let action = toast.action {
                 Button(action.label) {
                     action.run()
@@ -106,7 +109,7 @@ private struct ToastView: View {
                 .frame(minHeight: 36)
                 .background(.ink.opacity(0.06), in: .capsule)
                 .contentShape(.capsule)
-                .accessibilityFocused($voiceOverFocused)
+                .accessibilityFocused($voiceOverFocus, equals: .action)
             }
         }
         .padding(.leading, 16)
@@ -119,7 +122,7 @@ private struct ToastView: View {
         .accessibilityElement(children: .contain)
         .onChange(of: touched) { hold($1) }
         .onChange(of: hovered) { hold($1) }
-        .onChange(of: voiceOverFocused) { hold($1) }
+        .onChange(of: voiceOverFocus != nil) { hold($1) }
     }
 
     private func hold(_ held: Bool) {
