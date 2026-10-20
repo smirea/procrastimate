@@ -124,10 +124,11 @@ final class Session {
             self.error = ErrorReport("Could not sign in", detail: "POST \(path): not an HTTP response")
             return
         }
-        guard http.statusCode == 200,
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard http.statusCode == 200, let object else {
+            let refusal = object?["code"] as? String == "REGISTRATION_CLOSED" ? object?["message"] as? String : nil
             self.error = ErrorReport(
-                http.statusCode == 401 ? "Wrong email or password" : "Could not sign in",
+                refusal ?? (http.statusCode == 401 ? "Wrong email or password" : "Could not sign in"),
                 detail: "POST \(path) → \(http.statusCode): \(body)"
             )
             return

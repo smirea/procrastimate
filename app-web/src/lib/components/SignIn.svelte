@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import { replaceState } from '$app/navigation';
+	import { page } from '$app/state';
 	import { session } from '../session.svelte.ts';
 
 	let email = $state('');
@@ -9,6 +11,17 @@
 	let opening = $state<'google' | 'apple' | null>(null);
 
 	$effect(() => untrack(() => void session.loadMethods()));
+	$effect(() => untrack(showRefusedSignUp));
+
+	/** Better Auth sends a refused Google or Apple sign-up back here with the reason in the query. */
+	function showRefusedSignUp() {
+		if (page.url.searchParams.get('error') !== 'REGISTRATION_CLOSED') return;
+		session.error = page.url.searchParams.get('error_description') ?? '';
+		const url = new URL(page.url.href);
+		url.searchParams.delete('error');
+		url.searchParams.delete('error_description');
+		replaceState(url, page.state);
+	}
 
 	const submitLabel = $derived(
 		busy ? (creating ? 'Creating account…' : 'Signing in…') : creating ? 'Create account' : 'Sign in',
