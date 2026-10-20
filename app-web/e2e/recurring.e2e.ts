@@ -2,7 +2,7 @@ import { expect, test } from './fixtures';
 
 test('the repeat menu offers the due date’s weekday of the month', async ({ app, page }) => {
 	await app.setNow(new Date('2026-10-14T10:00:00Z'));
-	await page.reload();
+	await app.reload();
 	await app.add('Pay card oct 19');
 	await app.row('Pay card').click();
 	await app.details().getByRole('button', { name: 'Set repeat' }).click();
@@ -46,7 +46,7 @@ test('completing a recurring task moves it and its reminder to the next occurren
 		} as unknown as typeof Notification;
 	});
 	await app.setNow(new Date('2026-10-16T08:51:00Z'));
-	await page.reload();
+	await app.reload();
 	await expect
 		.poll(() => page.evaluate(() => (window as unknown as { shownNotifications: string[] }).shownNotifications))
 		.toEqual(['Standup: Today 9:00 AM']);

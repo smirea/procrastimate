@@ -9,7 +9,7 @@ test('single-origin: no request leaves the page’s origin, sync included', asyn
 		origins.add(url.origin.replace(/^ws/, 'http'));
 		paths.add(url.pathname);
 	});
-	await page.reload();
+	await app.reload();
 	await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
 	const title = unique('Stays home');
 	await app.add(title);

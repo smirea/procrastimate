@@ -59,7 +59,7 @@ test('a theme color recolors the accent in both themes, survives a reload, and p
 			);
 		}).observe(document, { childList: true, subtree: true });
 	});
-	await page.reload();
+	await app.reload();
 	await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 	expect(await page.evaluate(() => sessionStorage.getItem('first-paint-accent'))).toBe('#ff6fb1');
 	await app.openSettings();

@@ -42,7 +42,7 @@ test('task details edit the title, notes, date, priority, and labels, and keep t
 	await expect(details.getByRole('button', { name: 'Labels errands' })).toBeVisible();
 	await app.closeDetails();
 
-	await page.reload();
+	await app.reload();
 	await app.go('Inbox');
 	await expect(row).toContainText('Friday 6pm');
 	await expect(row).toContainText('errands');

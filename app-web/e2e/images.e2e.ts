@@ -63,7 +63,7 @@ test('an image picked in details shows as a thumbnail and on the row, opens full
 	await page.getByRole('button', { name: 'Undo' }).click();
 	await expect(thumbnails(app)).toHaveCount(1);
 
-	await page.reload();
+	await app.reload();
 	await openDetails(app, title);
 	await expect(thumbnails(app).first().locator('img')).toHaveAttribute('src', /^blob:/);
 });

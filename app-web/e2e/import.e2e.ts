@@ -22,7 +22,7 @@ test('a Todoist backup imports once, a second import skips every task, and a wro
 	await page.keyboard.press('Escape');
 	await expect(app.settings()).toBeHidden();
 
-	await page.reload();
+	await app.reload();
 	const rows = page.getByRole('main').locator('[data-task]');
 	await expect(rows).toHaveText([
 		/Call the dentist/,

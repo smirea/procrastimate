@@ -35,7 +35,7 @@ test('quick add parses a date, priority, reminder, #project, and @label and save
 	await expect(row).toContainText('Tomorrow 5pm');
 	await expect(row).toContainText('phone');
 
-	await page.reload();
+	await app.reload();
 	await row.getByRole('button', { name: 'Call mom', exact: true }).click();
 	const details = app.details();
 	await expect(details.getByRole('textbox', { name: 'Title' })).toHaveValue('Call mom');

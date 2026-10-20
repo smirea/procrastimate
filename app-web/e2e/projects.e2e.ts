@@ -50,7 +50,7 @@ test('dragging a project reorders the sidebar, survives a reload, and a plain cl
 	await page.mouse.up();
 	await expect(sidebarProjects(page)).toHaveText(['Work', 'Home', 'Errands']);
 
-	await page.reload();
+	await app.reload();
 	await expect(sidebarProjects(page)).toHaveText(['Work', 'Home', 'Errands']);
 	await app.openQuickAdd();
 	await app.quickAdd().getByRole('button', { name: 'Project Work' }).click();
@@ -255,7 +255,7 @@ test('Show completed is per project, and a completed task deletes with undo', as
 	await toast.getByRole('button', { name: 'Undo' }).click();
 	await expect(done).toBeVisible();
 
-	await page.reload();
+	await app.reload();
 	await expect((await app.listMenu()).getByRole('menuitemcheckbox', { name: 'Show completed' })).toHaveAttribute(
 		'aria-checked',
 		'true',

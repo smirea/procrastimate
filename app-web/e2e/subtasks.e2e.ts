@@ -41,7 +41,7 @@ test('subtasks are added, checked, and the parent row shows progress after a rel
 	await expect(parent).toContainText('1/3');
 	await expect(app.row('Passport')).toHaveCount(0);
 
-	await page.reload();
+	await app.reload();
 	await expect(parent.getByRole('img', { name: '1 of 3 subtasks done' })).toBeVisible();
 	await parent.getByRole('button', { name: 'Pack for trip', exact: true }).click();
 	await expect(subtaskCheckbox(app, 'Passport')).toHaveAttribute('aria-checked', 'true');

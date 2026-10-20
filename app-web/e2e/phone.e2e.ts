@@ -39,7 +39,7 @@ test('the settings sheet floats at the bottom edge and keeps a theme across a re
 
 	await app.themeOption('Light').tap();
 	await app.expectTheme('light');
-	await page.reload();
+	await app.reload();
 	await app.expectTheme('light');
 	await app.openNavigation();
 	await page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'Settings' }).tap();
@@ -66,7 +66,7 @@ test('subtasks are added and checked by touch in the task sheet, and the row sho
 	const row = app.row('Pack for trip');
 	await expect(row.getByRole('img', { name: '1 of 3 subtasks done' })).toBeVisible();
 	await expect(row).toContainText('1/3');
-	await page.reload();
+	await app.reload();
 	await expect(row.getByRole('img', { name: '1 of 3 subtasks done' })).toBeVisible();
 });
 

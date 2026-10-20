@@ -60,7 +60,7 @@ test('every list has the same menus, and filters narrow it by who made a task an
 	await app.settle();
 	await page.screenshot({ path: 'test-results/list-header/filters.png' });
 
-	await page.reload();
+	await app.reload();
 	await expect(app.list('Tasks without a date').locator('[data-task]')).toHaveText([/Buy milk/]);
 	await expect(filters).toHaveAttribute('aria-pressed', 'true');
 	await app.go('Inbox');
