@@ -1,7 +1,8 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, exists, or, sql } from 'drizzle-orm';
+import type { PgColumn } from 'drizzle-orm/pg-core';
 import { base64Encode } from './jwt';
 import type { Actor } from '../../shared/auth';
-import { labels, projects, rambleUsage, tasks } from '../../shared/db/schema';
+import { access, labels, projects, rambleUsage, tasks, type AccessRow } from '../../shared/db/schema';
 import { labelIdsOf, lastUsed, projectIdsOf, type Named } from '../../shared/name-search';
 import {
 	RAMBLE_BYTES_PER_SECOND,
@@ -61,14 +62,41 @@ export type KeytermSource = {
 	labels: readonly Named[];
 };
 
-export async function loadKeytermSource(db: Db, owner: string): Promise<KeytermSource> {
+/**
+ * The names a new task of the user's may land on, the rule quick add follows: their own space's, and every project and
+ * label shared to them whose `access` row says `edit`, which the server writes exactly when it admits a new task there.
+ * View-only shares are left out. Recency reads the user's own tasks and every shared task they can see. A whole-space
+ * share makes a manager with no rows, but only AI accounts hold one, and Ramble refuses them.
+ */
+export async function loadKeytermSource(db: Db, userId: string): Promise<KeytermSource> {
+	const sharedTo = (kind: AccessRow['kind'], id: PgColumn, owner: PgColumn, role?: AccessRow['role']) =>
+		exists(
+			db
+				.select({ one: sql`1` })
+				.from(access)
+				.where(
+					and(
+						eq(access.grantee, userId),
+						eq(access.owner, owner),
+						eq(access.kind, kind),
+						eq(access.entityId, id),
+						role && eq(access.role, role),
+					),
+				),
+		);
 	const [taskRows, projectRows, labelRows] = await Promise.all([
 		db
 			.select({ projectId: tasks.projectId, labelIds: tasks.labelIds, createdAt: tasks.createdAt })
 			.from(tasks)
-			.where(eq(tasks.userId, owner)),
-		db.select({ id: projects.id, name: projects.name }).from(projects).where(eq(projects.userId, owner)),
-		db.select({ id: labels.id, name: labels.name }).from(labels).where(eq(labels.userId, owner)),
+			.where(or(eq(tasks.userId, userId), sharedTo('task', tasks.id, tasks.userId))),
+		db
+			.select({ id: projects.id, name: projects.name })
+			.from(projects)
+			.where(or(eq(projects.userId, userId), sharedTo('project', projects.id, projects.userId, 'edit'))),
+		db
+			.select({ id: labels.id, name: labels.name })
+			.from(labels)
+			.where(or(eq(labels.userId, userId), sharedTo('label', labels.id, labels.userId, 'edit'))),
 	]);
 	return { tasks: taskRows, projects: projectRows, labels: labelRows };
 }

@@ -4,10 +4,12 @@ import { rambleUsage } from '../../shared/db/schema';
 import { RAMBLE_BYTES_PER_SECOND, RAMBLE_DAILY_SECONDS, RAMBLE_SESSION_SECONDS } from '../../shared/ramble/protocol';
 import { rambleRoute, type ConnectUpstream, type RambleRoute } from './ramble';
 import type { Socket, StreamEvents } from './sockets';
-import { signUp, testApp, upload, type Session, type TestApp } from './test-app';
+import { shareWith, signUp, testApp, upload, type Session, type TestApp } from './test-app';
 
 /** An upstream that starts at once and commits with no text, so a session ends as soon as it is asked to. */
-const upstream: ConnectUpstream = async (_session, events) => {
+let keyterms: string[] = [];
+const upstream: ConnectUpstream = async (session, events) => {
+	keyterms = session.keyterms;
 	setTimeout(() => events.message(JSON.stringify({ message_type: 'session_started' })), 0);
 	return {
 		send(text) {
@@ -139,5 +141,29 @@ describe('a Ramble session', () => {
 			{ day: '2026-10-19', seconds: 1 },
 			{ day: '2026-10-20', seconds: 1 },
 		]);
+	});
+});
+
+describe('the Ramble keyterms', () => {
+	test('take the names of projects and labels shared to edit, never those shared to view', async () => {
+		const owner = await signUp(app, 'Sharer');
+		const guest = await signUp(app, 'Guest');
+		const row = (name: string) => ({ id: crypto.randomUUID(), user_id: owner.person.id, name, created_at: 1 });
+		const [garden, attic, chores, secret] = [row('Garden'), row('Attic'), row('Chores'), row('Secret')];
+		const mine = { id: crypto.randomUUID(), user_id: guest.person.id, name: 'Errands', created_at: 1 };
+		expect(
+			await upload(app, owner, [
+				...[garden, attic].map(values => ({ op: 'put', table: 'projects', id: values.id, values })),
+				...[chores, secret].map(values => ({ op: 'put', table: 'labels', id: values.id, values })),
+			]),
+		).toEqual([]);
+		expect(await upload(app, guest, [{ op: 'put', table: 'projects', id: mine.id, values: mine }])).toEqual([]);
+		await shareWith(app, owner, { kind: 'project', id: garden.id }, guest.person.id, 'edit');
+		await shareWith(app, owner, { kind: 'project', id: attic.id }, guest.person.id, 'view');
+		await shareWith(app, owner, { kind: 'label', id: chores.id }, guest.person.id, 'edit');
+		await shareWith(app, owner, { kind: 'label', id: secret.id }, guest.person.id, 'view');
+
+		await open(guest.person);
+		expect(keyterms).toEqual(['subtask', 'priority', 'remind', 'project', 'label', 'Chores', 'Errands', 'Garden']);
 	});
 });
