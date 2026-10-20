@@ -5,6 +5,7 @@
  *   - shuts down claimed simulators unused for 15 minutes that no running process names
  *   - deletes Xcode DerivedData of the App project at paths that no longer exist
  *   - removes PowerSync containers and drops databases of worktrees that no longer exist
+ *   - prints load, booted simulators, and worktree count
  *   - lists worktrees whose PR merged, for teardown-worktree.ts
  */
 import { existsSync, readdirSync, rmSync } from 'node:fs';
@@ -66,6 +67,13 @@ if (dockerRunning()) {
 		await act(`Dropping database ${database}; its worktree ${worktree} is gone.`, () => dropDatabases(database));
 	}
 }
+
+const booted = devices()
+	.filter(device => device.state === 'Booted')
+	.map(device => device.name);
+console.log(
+	`Load ${tryRun(['sysctl', '-n', 'vm.loadavg']).replaceAll(/[{}]/g, '').trim()} on ${navigator.hardwareConcurrency} cores; ${booted.length} booted simulators${booted.length ? ` (${booted.join(', ')})` : ''}; ${known.length - 1} worktrees.`,
+);
 
 for (const { path, branch } of known.slice(1)) {
 	if (!branch) continue;

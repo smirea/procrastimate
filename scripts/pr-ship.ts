@@ -44,8 +44,9 @@ type Pr = {
 	comments: { author: { login: string }; body: string }[];
 };
 
+// The last line names the code, so a `| tail` that swallows the exit status still shows it.
 function exit(code: number, message: string): never {
-	console.log(message);
+	console.log(`${message}\npr-ship exit ${code}`);
 	process.exit(code);
 }
 

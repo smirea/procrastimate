@@ -26,7 +26,7 @@
 
 # Testing
 
-- `./scripts/test` runs `Core` unit tests, including `VectorTests`. There is no XCUITest suite. In an agent worktree, `./sim test <file.swift>` runs throwaway XCUITests against the installed app (see `scripts/sim-uitest.ts`).
+- `./scripts/test` runs `Core` unit tests, including `VectorTests`. There is no XCUITest suite. In an agent worktree, `./sim build` compiles the app without booting a simulator, and `./sim test <file.swift>` runs throwaway XCUITests against the installed app (see `scripts/sim-uitest.ts`).
 
 # Environment
 
