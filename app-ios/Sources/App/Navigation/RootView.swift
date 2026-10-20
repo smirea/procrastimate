@@ -8,6 +8,7 @@ struct RootView: View {
     @Environment(SyncClient.self) private var sync
     @Environment(TaskActions.self) private var actions
     @Environment(\.today) private var todayKey
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Group {
@@ -55,11 +56,14 @@ struct RootView: View {
         }
         .overlay(alignment: .bottom) { QuickAddOverlay() }
         .overlay { RambleOverlay() }
-        .overlay(alignment: navigator.quickAdd == nil ? .bottom : .top) {
-            // Quick add covers the bottom of the screen, so toasts move to the top while it is open, as on the web.
+        .overlay {
+            // Quick add covers the bottom of the screen, so toasts move to the top while it is open, as on the web. They
+            // glide there rather than jump, so a toast doesn't leave from under a finger reaching for Undo.
             ToastStack()
                 .padding(.top, navigator.quickAdd == nil ? 0 : 8)
                 .tabBarClearance()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: navigator.quickAdd == nil ? .bottom : .top)
+                .animation(reduceMotion ? nil : .snappy(duration: 0.3), value: navigator.quickAdd == nil)
         }
         .sensoryFeedback(.success, trigger: actions.completions)
         .searchShortcuts()

@@ -3,11 +3,40 @@
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { sheets, toasts, motion } from '../ui.svelte.ts';
+
+	const overSheet = $derived(sheets.current.kind !== 'none');
+
+	let stack: HTMLDivElement;
+	let from: { top: number; shown: boolean } | undefined;
+	let glide: Animation | undefined;
+
+	$effect.pre(() => {
+		void overSheet;
+		if (stack) from = { top: stack.getBoundingClientRect().top, shown: stack.childElementCount > 0 };
+	});
+
+	/**
+	 * On phones the stack jumps between the top and the bottom as a sheet opens or closes, so it glides there instead of
+	 * teleporting a toast out from under a finger reaching for Undo. A toast born with the move just appears at its spot.
+	 */
+	$effect(() => {
+		void overSheet;
+		if (!from?.shown) return;
+		glide?.cancel();
+		const offset = from.top - stack.getBoundingClientRect().top;
+		const { duration } = motion({ duration: 260 });
+		if (offset && duration)
+			glide = stack.animate([{ transform: `translateY(${offset}px)` }, { transform: 'none' }], {
+				duration,
+				easing: 'cubic-bezier(0.32, 0.72, 0, 1)',
+			});
+	});
 </script>
 
 <div
+	bind:this={stack}
 	class="toasts pointer-events-none fixed inset-x-3 z-[60] flex flex-col items-center gap-2"
-	data-over-sheet={sheets.current.kind !== 'none'}
+	data-over-sheet={overSheet}
 	aria-live="polite"
 >
 	{#each toasts.items as toast (toast.id)}
