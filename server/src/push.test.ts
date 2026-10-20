@@ -103,6 +103,12 @@ describe('push', () => {
 	});
 
 	test('the cron sends what is due, settles it, retries a failure, and drops a gone subscription', async () => {
+		const subscribed = await app.fetch('/api/push/subscription', {
+			method: 'PUT',
+			headers: owner.headers,
+			body: JSON.stringify({ subscription: subscription('https://push.example/a') }),
+		});
+		expect(subscribed.status).toBe(200);
 		const id = crypto.randomUUID();
 		const due = { date: '2026-10-14', time: '18:45' };
 		await upload(app, owner, [

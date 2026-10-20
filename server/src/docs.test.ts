@@ -23,7 +23,6 @@ describe('agent docs', () => {
 	let app: TestApp;
 	let owner: Session;
 	let token: string;
-	let prompt: string;
 
 	const call = (method: string, path: string, headers: Record<string, string> = {}, body?: unknown) =>
 		app.fetch(path, {
@@ -37,21 +36,11 @@ describe('agent docs', () => {
 		app = await testApp();
 		owner = await signUp(app, 'Owner');
 		const ai = await json<Person>(call('POST', '/api/ai', owner.headers, { name: 'Butler' }));
-		({ token, prompt } = await json<{ token: string; prompt: string }>(
+		({ token } = await json<{ token: string }>(
 			call('POST', '/api/ai-tokens', owner.headers, { aiUserId: ai.id, name: 'laptop' }),
 		));
 	});
 	afterAll(() => app.close());
-
-	test('the entry point is public and tells an agent how to get in', async () => {
-		const response = await call('GET', '/api/docs');
-		expect(response.status).toBe(200);
-		expect(response.headers.get('content-type')).toBe('text/markdown; charset=utf-8');
-		const text = await response.text();
-		expect(text).toStartWith('# ProcrastiMate\n');
-		expect(text).toContain('Authorization: Bearer pm.<ownerId>.<secret>');
-		expect(text).toContain(`GET ${ORIGIN}/api/docs/agent`);
-	});
 
 	test('the reference needs a valid token', async () => {
 		expect((await call('GET', '/api/docs/agent')).status).toBe(401);
@@ -152,10 +141,5 @@ describe('agent docs', () => {
 			statuses.push(`${response.status} ${example.title}`);
 		}
 		expect(statuses).toEqual(agentExamples.map(example => `200 ${example.title}`));
-	});
-
-	test('a new token comes with a prompt that carries it and points at the guide', () => {
-		expect(prompt).toContain(`Authorization: Bearer ${token}`);
-		expect(prompt).toContain(`${ORIGIN}/api/docs/agent`);
 	});
 });

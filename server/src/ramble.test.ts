@@ -74,6 +74,8 @@ function stream(session: Opened, seconds: number) {
 }
 
 describe('the Ramble caps', () => {
+	afterEach(() => setSystemTime());
+
 	test('a frame past the session cap is cut at it and the session ends', async () => {
 		const session = await open();
 		stream(session, RAMBLE_SESSION_SECONDS + 1);
@@ -85,10 +87,13 @@ describe('the Ramble caps', () => {
 	});
 
 	test('the daily cap holds for a session opened before the sessions that used the day up', async () => {
-		const stale = await open();
-		let streamed = RAMBLE_SESSION_SECONDS;
+		// Its own person and a pinned noon, so the day starts empty whatever ran before and no midnight passes mid-test.
+		setSystemTime(new Date(Date.UTC(2026, 9, 20, 16)));
+		const capped = (await signUp(app, 'Capped')).person;
+		const stale = await open(capped);
+		let streamed = 0;
 		while (streamed < RAMBLE_DAILY_SECONDS) {
-			const session = await open();
+			const session = await open(capped);
 			stream(session, RAMBLE_SESSION_SECONDS);
 			streamed += (await session.received('ended')).seconds!;
 			session.events.close();
@@ -97,7 +102,7 @@ describe('the Ramble caps', () => {
 		stream(stale, 1);
 		stale.events.message(JSON.stringify({ type: 'stop' }));
 		expect(await stale.received('ended')).toEqual({ type: 'ended', seconds: 0, reason: 'daily-limit' });
-		const refused = await open();
+		const refused = await open(capped);
 		expect(refused.sent.map(message => message.code)).toEqual(['daily-limit']);
 	});
 });

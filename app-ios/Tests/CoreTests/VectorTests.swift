@@ -54,7 +54,8 @@ struct VectorFile: Decodable, Sendable, CustomTestStringConvertible {
         .standardized
 
     static let all: [VectorFile] = {
-        let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        // A missing directory would replay nothing and pass, so it crashes the run instead.
+        let names = try! FileManager.default.contentsOfDirectory(atPath: directory.path)
         return names.filter { $0.hasSuffix(".json") }.sorted().map { name in
             let data = try! Data(contentsOf: directory.appending(path: name))
             return try! JSONDecoder().decode(VectorFile.self, from: data)

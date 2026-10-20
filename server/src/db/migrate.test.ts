@@ -4,10 +4,11 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
 import { migrations } from './generated/migrations';
 import { migrate, MigrationHistoryError, pending } from './migrate';
+import { emptySnapshot } from './pglite-snapshot';
 
 describe('migrate', () => {
 	test('applies every bundled migration once, including the publication, and is a no-op after', async () => {
-		const client = new PGlite();
+		const client = new PGlite({ loadDataDir: emptySnapshot() });
 		const db = drizzle(client);
 		expect(await migrate(db)).toEqual(migrations.map(migration => migration.tag));
 		expect(await migrate(db)).toEqual([]);
@@ -21,7 +22,7 @@ describe('migrate', () => {
 	});
 
 	test('refuses a database whose history is not a prefix of ours, without touching it', async () => {
-		const client = new PGlite();
+		const client = new PGlite({ loadDataDir: emptySnapshot() });
 		const db = drizzle(client);
 		await db.execute(sql`CREATE TABLE stranger (id text)`);
 		await expect(migrate(db)).rejects.toBeInstanceOf(MigrationHistoryError);

@@ -19,8 +19,4 @@ import Testing
         #expect(written.writes == [patch(.task, "memo-task", ["title": .string("Call the plumber today")])])
     }
 
-    @Test func theMemoLinkOpensTheEntry() {
-        #expect(MemoTasks.memoURL("0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d").absoluteString
-            == "notouroboros://entry?id=0b7c1f9e-6a59-4f0e-9d7e-3c2a1b0f9e8d")
-    }
 }

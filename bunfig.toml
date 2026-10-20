@@ -1,2 +1,7 @@
 [test]
-preload = ["./scripts/test-guard.ts", "./scripts/generate/preload.ts", "./scripts/pglite-snapshot.ts"]
+preload = [
+	"./scripts/test-timezone.ts",
+	"./scripts/test-guard.ts",
+	"./scripts/generate/preload.ts",
+	"./scripts/pglite-snapshot.ts",
+]

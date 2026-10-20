@@ -96,7 +96,7 @@ describe('GET /api/activity', () => {
 		expect(await activity(id)).toEqual(['Owner created: added this task']);
 	});
 
-	test('a delete and a re-put read as deleted and restored, and a stranger gets 404', async () => {
+	test('a delete and a re-put read as deleted and restored, and a stranger gets 403', async () => {
 		const id = crypto.randomUUID();
 		await upload(app, owner, [{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Gone') }]);
 		later(COALESCE_WINDOW + 1000);

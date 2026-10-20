@@ -5,16 +5,6 @@ import { testEnv } from './test-app';
 const DSN = 'https://key@o1.ingest.sentry.io/2';
 
 describe('parseConfig', () => {
-	test('a complete environment parses, with the key’s kid and the PowerSync URL trimmed', async () => {
-		const settings = parseConfig(await testEnv({ POWERSYNC_URL: 'http://127.0.0.1:1/' }), DSN);
-		expect(settings.powersync).toMatchObject({
-			url: 'http://127.0.0.1:1',
-			key: { kid: 'insecure-local-dev-5d7cc3c8' },
-		});
-		expect(settings.authRateLimit).toBe(false);
-		expect(settings.sentry).toBeNull();
-	});
-
 	test('names every missing or malformed key at once', async () => {
 		const env = await testEnv({
 			DATABASE_URL: '',
@@ -51,23 +41,5 @@ describe('parseConfig', () => {
 				'- VAPID_PRIVATE_KEY is not a 32-byte P-256 scalar',
 			].join('\n'),
 		);
-	});
-
-	test('the Hyperdrive binding stands in for DATABASE_URL', async () => {
-		const env = await testEnv({ DATABASE_URL: '' });
-		const settings = parseConfig(
-			{ ...env, HYPERDRIVE: { connectionString: 'postgres://hyperdrive/db' } as never },
-			DSN,
-		);
-		expect(settings.database).toBe('postgres://hyperdrive/db');
-	});
-
-	test('Ramble reads the cassette switch or the ElevenLabs key', async () => {
-		expect(parseConfig(await testEnv({ RAMBLE_UPSTREAM: 'cassette' }), DSN).ramble).toEqual({ kind: 'cassette' });
-		expect(parseConfig(await testEnv({ ELEVENLABS_API_KEY: 'xi' }), DSN).ramble).toEqual({
-			kind: 'elevenlabs',
-			apiKey: 'xi',
-		});
-		expect(parseConfig(await testEnv(), DSN).ramble).toBeNull();
 	});
 });

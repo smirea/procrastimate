@@ -52,13 +52,15 @@ describe('/api/memo-tasks', () => {
 	});
 
 	test('a deleted memo task never comes back, even when the memo is sent again', async () => {
-		const { tasks } = await list();
+		const memo = { ...request([{ key: crypto.randomUUID(), title: 'Book flights' }]), memoId: crypto.randomUUID() };
+		const listed = () =>
+			json<MemoTasks>(app.fetch(`/api/memo-tasks?memoId=${memo.memoId}`, { headers: owner.headers }));
+		expect((await put(memo)).tasks).toHaveLength(1);
 		expect(
-			(await app.fetch(`/api/memo-tasks?memoId=${memoId}`, { method: 'DELETE', headers: owner.headers })).status,
+			(await app.fetch(`/api/memo-tasks?memoId=${memo.memoId}`, { method: 'DELETE', headers: owner.headers })).status,
 		).toBe(200);
-		expect((await list()).tasks).toEqual([]);
-		expect((await put(request([{ key: keys[0]!, title: 'Buy bread' }]))).tasks).toEqual([]);
-		expect(tasks).toHaveLength(2);
+		expect((await listed()).tasks).toEqual([]);
+		expect((await put(memo)).tasks).toEqual([]);
 	});
 
 	test('a task the user deleted from the app stays gone too', async () => {

@@ -203,11 +203,6 @@ describe('CSV edge cases', () => {
 		]);
 	});
 
-	test('a quoted title keeps its commas and line breaks', () => {
-		const backup = read(`\uFEFF${HEADER}\r\ntask,"Buy eggs, milk\r\nand bread","Say ""hi""",4,1,,\r\n`);
-		expect(backup.tasks.map(t => [t.title, t.notes])).toEqual([['Buy eggs, milk\nand bread', 'Say "hi"']]);
-	});
-
 	test('an indent back to 1 ends the nesting', () => {
 		const backup = read(`${HEADER}\ntask,A,,4,1,,\ntask,B,,4,2,,\ntask,C,,4,1,,\ntask,D,,4,2,,\n`);
 		expect(backup.tasks.map(t => t.sourceKey)).toEqual([

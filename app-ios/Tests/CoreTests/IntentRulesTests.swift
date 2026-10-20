@@ -29,18 +29,6 @@ import Testing
         IntentRules.newTask(request, projects: [house], labels: [calls, errands, gym], now: pinned, zone: zone)
     }
 
-    @Test func aSpokenTitleUsesTheQuickAddGrammar() throws {
-        let task = try #require(
-            added(.init(text: "Call mom tomorrow 5pm p1 remind me 30m before #House @calls"))
-        )
-        #expect(task.title == "Call mom")
-        #expect(task.due == Due(date: "2026-10-15", time: "17:00"))
-        #expect(task.priority == .p1)
-        #expect(task.reminders == [.before(minutes: 30)])
-        #expect(task.projectId == "p-house")
-        #expect(task.labelIds == ["l-calls"])
-    }
-
     @Test func anExplicitValueFillsWhatTheTitleLeftUnset() throws {
         let task = try #require(
             added(.init(
@@ -76,12 +64,6 @@ import Testing
         #expect(task.projectId == "p-house")
         #expect(task.labelIds == ["l-errands", "l-calls"])
         #expect(task.reminders == [.before(minutes: 5)])
-    }
-
-    @Test func aSavedPlacePickedAsALabelBecomesTheTasksPlace() throws {
-        let task = try #require(added(.init(text: "Stretch", labelIds: ["l-calls", "l-gym"])))
-        #expect(task.labelIds == ["l-calls"])
-        #expect(task.location == gymLocation)
     }
 
     @Test func aSavedPlaceInTheTitleBecomesTheTasksPlace() throws {

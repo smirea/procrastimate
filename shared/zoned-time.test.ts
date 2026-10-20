@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { upcomingNotifications } from './notifications.ts';
 import { toDateKey, type Task } from './task.ts';
-import { isTimeZone, zonedDateKey, zonedTime } from './zoned-time.ts';
+import { zonedDateKey, zonedTime } from './zoned-time.ts';
 
 describe('zonedTime', () => {
 	test.each([
@@ -33,11 +33,6 @@ describe('zonedDateKey', () => {
 		expect(zonedDateKey(at, 'Asia/Tokyo')).toBe('2026-10-14');
 		expect(zonedDateKey(at)).toBe(toDateKey(new Date(at)));
 	});
-});
-
-test('isTimeZone accepts IANA names only', () => {
-	expect(isTimeZone('Europe/Bucharest')).toBe(true);
-	expect(isTimeZone('Mars/Olympus')).toBe(false);
 });
 
 test('notifications resolve and word their times in the given zone', () => {

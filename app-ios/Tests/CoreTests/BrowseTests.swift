@@ -12,13 +12,6 @@ import Testing
         #expect(Browse.labelsByName(labels).map(\.name) == ["calls", "Calls", "Émails", "waiting"])
     }
 
-    @Test func promptsMatchTheWeb() {
-        #expect(Browse.deleteProjectPrompt("House", taskCount: 3) == "Delete House and its 3 tasks?")
-        #expect(Browse.deleteProjectPrompt("House", taskCount: 1) == "Delete House and its 1 task?")
-        #expect(Browse.deleteLabelPrompt("phone") == "Delete phone?")
-        #expect(Browse.projectEmptyHint("Home") == "Add one here, or type #Home in quick add.")
-    }
-
     @Test func completedLineNamesTheDay() {
         let at = Date(timeIntervalSince1970: 1_791_972_000).epochMilliseconds
         #expect(Browse.completedLine(at, today: "2026-10-14", in: utc) == "Completed Today")

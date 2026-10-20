@@ -1,10 +1,11 @@
 name: iOS
 
 # Separate from ci.yml so it never slows the web checks or blocks the Worker deploy.
-# The macOS `core` and `app` jobs run on a pull request that can change the app, and on a manual
-# workflow_dispatch. Master skips them, since TestFlight archives every such merge. Skipping with
-# `if` still reports the check (a skip counts as success), so a required check of that name does not
-# stay pending the way a workflow-level path filter would. `core-linux` runs every time.
+# Every job runs on a pull request that can change the app, and on a manual workflow_dispatch. Master
+# skips them, since the pull request already ran them and TestFlight archives every such merge. Skipping
+# with `if` still reports the check (a skip counts as success), so a required check of that name does
+# not stay pending the way a workflow-level path filter would. A web-only change runs none of them:
+# `scripts/app-paths.txt` includes `shared/`, so every change the Swift tests replay still runs them.
 on:
   pull_request:
   push:
@@ -49,6 +50,8 @@ jobs:
   # API.swift is git-ignored, so every Swift job builds against the one this job writes.
   # core-linux's Swift container has no bun, which is why this is an artifact rather than a step per job.
   generate:
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -91,7 +94,8 @@ jobs:
         run: swift test
 
   core-linux:
-    needs: generate
+    needs: [changes, generate]
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container: swift:6.4.1

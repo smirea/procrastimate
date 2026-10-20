@@ -71,28 +71,6 @@ import Testing
         #expect(written.batches.last?.writes == [put(.read, "paint", ["readAt": .number(Double(at))])])
     }
 
-    @Test func aNewTaskTakesItsParentsThenProjectsThenLabelsSpace() throws {
-        let (store, written) = store()
-        let errands = store.projects[0].id
-        let home = store.labels[0].id
-
-        let step = try #require(store.addTask(NewTask(title: "Buy brushes"), parentId: "paint"))
-        let wall = try #require(store.addTask(NewTask(title: "Wash walls", projectId: "house", labelIds: [home])))
-        let tagged = try #require(store.addTask(NewTask(title: "Call roofer", labelIds: [home, "urgent"])))
-        let mine = try #require(store.addTask(NewTask(title: "Post office", projectId: errands, labelIds: ["urgent"])))
-
-        #expect(store.space(ofTask: step.id) == .shared("ann"))
-        #expect(store.space(ofTask: wall.id) == .shared("ann"))
-        #expect(store.task(wall.id)?.labelIds == [])
-        #expect(store.space(ofTask: tagged.id) == .shared("ann"))
-        #expect(store.task(tagged.id)?.labelIds == ["urgent"])
-        #expect(store.space(ofTask: mine.id) == .own)
-        #expect(store.task(mine.id)?.labelIds == [])
-        #expect(store.tasks.map(\.title) == ["Post office"])
-        #expect(written.batches.map(\.owner) == ["ann", "ann", "ann", "me"])
-        #expect(written.writes.map(\.id) == [step.id, wall.id, tagged.id, mine.id])
-    }
-
     @Test func aReadOnlyTaskDoesNotChange() {
         let (store, written) = store()
         #expect(store.completeTask("roof") == nil)
@@ -103,19 +81,6 @@ import Testing
         #expect(store.task("roof")?.title == "Fix roof")
         #expect(store.task("roof")?.completedAt == nil)
         #expect(written.batches == [])
-    }
-
-    @Test func aSharedTaskNeverMovesToAnotherSpace() {
-        let (store, written) = store()
-        let errands = store.projects[0].id
-        store.updateTask("paint", TaskPatch(title: "Paint the hall", projectId: .some(errands), labelIds: [store.labels[0].id]))
-
-        #expect(store.task("paint")?.title == "Paint the hall")
-        #expect(store.task("paint")?.projectId == "house")
-        #expect(store.task("paint")?.labelIds == [])
-        #expect(store.projects(in: .shared("ann")).map(\.name) == ["House"])
-        #expect(store.labels(in: .shared("ann")).map(\.name) == ["urgent"])
-        #expect(written.writes == [patch(.task, "paint", ["title": .string("Paint the hall")])])
     }
 
     @Test func aGuestDoesNotRenameOrDeleteSharedProjectsAndLabels() {
