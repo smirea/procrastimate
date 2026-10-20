@@ -88,7 +88,9 @@ if (dockerRunning()) {
 		if (slot.active || replicated.has(slot.database)) continue;
 		await act(
 			`Dropping replication slot ${slot.name} of ${slot.database}, holding ${slot.held} of WAL; no PowerSync replicates it.`,
-			() => dropInactiveSlot(slot.name),
+			async () => {
+				if (!(await dropInactiveSlot(slot.name))) console.log(`Kept ${slot.name}; a PowerSync took it up meanwhile.`);
+			},
 		);
 	}
 }

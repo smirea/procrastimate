@@ -118,12 +118,21 @@ export async function replicationSlots(): Promise<ReplicationSlot[]> {
 	);
 }
 
-/** Skips the slot if a PowerSync took it up since it was listed: Postgres refuses to drop an active slot anyway. */
-export async function dropInactiveSlot(name: string): Promise<void> {
-	await withAdmin(
-		sql =>
-			sql`SELECT pg_drop_replication_slot(slot_name) FROM pg_replication_slots WHERE slot_name = ${name} AND NOT active`,
-	);
+/**
+ * A PowerSync can take the slot up between listing and dropping, and Postgres then refuses with `object_in_use`. That
+ * slot is live again, so it stays.
+ */
+export async function dropInactiveSlot(name: string): Promise<boolean> {
+	return withAdmin(async sql => {
+		try {
+			const dropped =
+				await sql`SELECT pg_drop_replication_slot(slot_name) FROM pg_replication_slots WHERE slot_name = ${name} AND NOT active`;
+			return dropped.length > 0;
+		} catch (error) {
+			if ((error as { code?: string }).code === '55006') return false;
+			throw error;
+		}
+	});
 }
 
 function writeServiceConfig(worktree: string, database: string): string {
