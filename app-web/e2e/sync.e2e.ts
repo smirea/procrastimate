@@ -346,22 +346,31 @@ async function explodeSubtasks({ app, page }: Device, parent: string) {
 			.getByRole('list', { name: `Subtasks of ${parent}` })
 			.getByRole('listitem'),
 	).toHaveCount(0);
-	await app.details().getByRole('button', { name: 'Close' }).click();
-	await expect(app.row(`${parent}: Passport`)).toBeVisible();
 }
 
 test('subtasks turned into tasks show as tasks on the other device, and undo nests them again', async ({ devices }) => {
 	const [a, b] = [await devices.open(), await devices.open()];
 	const kept = unique('Pack');
 	await explodeSubtasks(a, kept);
+	await a.app.details().getByRole('button', { name: 'Close' }).click();
 	await expect(b.app.row(`${kept}: Passport`)).toBeVisible({ timeout: 10_000 });
 	await expect(b.app.row(`${kept}: Charger`)).toBeVisible();
 	await expect(b.app.row(kept)).toBeVisible();
 
-	// The Undo toast lasts 5s, shorter than a slow sync to b, so undo gets its own parent.
+	// The Undo toast lasts 5s, shorter than a slow sync to b, so undo gets its own parent. CI's WebKit takes seconds to
+	// settle each tap, which outlasted the toast, so undo happens with the sheet still open and focus holds the toast.
 	const undone = unique('Pack');
 	await explodeSubtasks(a, undone);
-	await a.page.getByRole('button', { name: 'Undo' }).last().click();
+	const undo = a.page.getByRole('button', { name: 'Undo' }).last();
+	await undo.focus();
+	await undo.click();
+	await expect(
+		a.app
+			.details()
+			.getByRole('list', { name: `Subtasks of ${undone}` })
+			.getByRole('listitem'),
+	).toHaveCount(2);
+	await a.app.details().getByRole('button', { name: 'Close' }).click();
 	await expect(a.app.row(`${undone}: Passport`)).toHaveCount(0);
 	await expect(a.app.row(undone).getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible();
 	await expect(b.app.row(undone).getByRole('img', { name: '0 of 2 subtasks done' })).toBeVisible({ timeout: 10_000 });
