@@ -64,9 +64,12 @@ final class SyncClient {
         // check that names the owner leaves a token without one. Signing in again is simpler than filing rows under no one.
         if SessionToken.read() != nil, Session.userID == nil { SessionToken.clear() }
         let me = Session.userID ?? Self.localOwner
-        // The views exist from the last launch, so the first frame shows the data. A fresh file has none yet.
+        // The views exist from the last launch, so the first frame shows the data. A fresh file has none yet, and after a
+        // schema change they lack its new columns until `ready`, so the first read waits for it then.
         let rows = LocalRows(me: me)
-        if let read = try? database.pool.read({ try LocalDatabase.read(since: nil, $0) }) {
+        if let read = try? database.pool.read({ db in
+            try LocalDatabase.viewsMatchSchema(db) ? try LocalDatabase.read(since: nil, db) : nil
+        }) {
             rows.apply(read.changes)
             cursor = read.cursor
             loaded = true

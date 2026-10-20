@@ -33,6 +33,17 @@ final class LocalDatabase: Sendable {
         }
     }
 
+    /// Until `ready` returns, the views keep the columns of the schema the last launch opened with, and GRDB traps on a
+    /// column a row lacks. A read before then checks this first, so a schema change skips the early read instead of
+    /// crashing the launch.
+    static func viewsMatchSchema(_ db: Database) throws -> Bool {
+        for type in syncedValues.values {
+            let present = Set(try db.columns(in: type.layout.table).map(\.name))
+            if type.layout.columns.contains(where: { !present.contains($0.name) }) { return false }
+        }
+        return true
+    }
+
     /// The local-only log the generated triggers fill with every synced row a local write or a sync touches.
     private enum Change: TableRecord {
         static let databaseTableName = changeLogTable
