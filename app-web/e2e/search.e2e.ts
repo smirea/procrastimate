@@ -8,6 +8,7 @@ test('search matches titles, notes, projects, and labels, needs every word, and 
 	await app.go('Inbox');
 	await app.addCreating('@calls Plumber');
 	await app.addCreating('@waiting @calls Dentist');
+	await app.go('Inbox');
 	await app.add('Call bank');
 	await app.row('Call bank').getByRole('button', { name: 'Call bank', exact: true }).click();
 	await app.details().getByRole('textbox', { name: 'Notes' }).fill('Ask about the home loan');
