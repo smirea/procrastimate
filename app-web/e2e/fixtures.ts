@@ -197,6 +197,32 @@ export class Devices {
 	}
 }
 
+export async function shareWith(owner: Device, guest: Device, role: 'Can edit' | 'Can view' = 'Can edit') {
+	await (await owner.app.listMenu()).getByRole('button', { name: 'Share' }).click();
+	const sheet = owner.page.getByRole('dialog', { name: 'Share' });
+	await sheet.getByRole('textbox', { name: 'Email or name' }).fill(guest.email);
+	await sheet.getByRole('radiogroup', { name: 'Access' }).getByRole('radio', { name: role }).click();
+	const created = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'POST');
+	await sheet
+		.getByRole('list', { name: 'People found' })
+		.getByRole('button', { name: new RegExp(guest.name) })
+		.click();
+	await expect(sheet.getByRole('region', { name: 'People with access' })).toContainText(guest.name);
+	expect((await created).ok()).toBe(true);
+	await sheet.getByRole('button', { name: 'Close share' }).click();
+}
+
+/** Olive, another person, with a project of her own and one task in it. */
+export async function ownerWithProject(devices: Devices) {
+	const owner = await devices.open({ person: 'Olive', path: '/inbox', heading: 'Inbox' });
+	const project = unique('Groceries');
+	const task = unique('Buy milk');
+	await owner.app.createProject(project);
+	await owner.app.add(task);
+	await expect(owner.app.row(task)).toBeVisible();
+	return { owner, project, task };
+}
+
 export const test = quietTest.extend<{ app: App; devices: Devices }>({
 	context: async ({ context, sentryOff }, use) => {
 		sentryOff(context);
