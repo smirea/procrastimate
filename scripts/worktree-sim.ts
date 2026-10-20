@@ -1,6 +1,7 @@
 /**
  * `./sim`, the git-ignored wrapper setup-worktree.ts writes, calls this with the worktree's simulator name.
  *
+ *   ./sim build [n]                    compile the app for the simulator without booting it
  *   ./sim [n] [launcher args]          build and run the app headless; --show opens Device Hub
  *   ./sim test [n] <file.swift>... [opts]  run throwaway XCUITests against the app (see sim-uitest.ts)
  *   ./sim stop                         shut down every simulator of this worktree
@@ -17,7 +18,7 @@ import { runUITests } from './sim-uitest';
 const [base, ...args] = process.argv.slice(2);
 if (!base) throw new Error('Usage: worktree-sim.ts <simulator name> [command] [n] [args]');
 const root = process.cwd();
-const command = ['test', 'stop', 'udid'].includes(args[0] ?? '') ? args.shift()! : 'run';
+const command = ['build', 'test', 'stop', 'udid'].includes(args[0] ?? '') ? args.shift()! : 'run';
 const extra = args[0] && /^\d+$/.test(args[0]) ? args.shift() : undefined;
 const name = extra ? `${base}-${extra}` : base;
 const find = () => devices().find(device => device.name === name);
@@ -60,6 +61,9 @@ if (command === 'stop') {
 	if (!own.some(device => device.state !== 'Shutdown')) console.log('No simulator of this worktree is running.');
 } else if (command === 'udid') {
 	console.log(ensure().udid);
+} else if (command === 'build') {
+	process.exitCode =
+		spawnSync('bun', ['app-ios/scripts/run', '-t', ensure().udid, '--build-only'], { stdio: 'inherit' }).status ?? 1;
 } else if (command === 'test') {
 	process.exitCode = await runUITests(ensure(), root, args);
 } else if (args.some(arg => ['-h', '--help', '--targets'].includes(arg))) {
