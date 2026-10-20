@@ -4,7 +4,11 @@ import UIKit
 import UniformTypeIdentifiers
 
 /// Where a new image comes from. Task details and quick add offer the same three.
-enum ImageSource { case library, camera, paste }
+enum ImageSource: Equatable {
+    case library, camera
+    /// The items of the user's paste, which come without the pasteboard prompt.
+    case paste([NSItemProvider])
+}
 
 /// Reads the images a source gave. A source hands this over as soon as it is chosen, so the receiver can show a
 /// placeholder, and quick add can hold the save, while slow bytes such as an iCloud photo load.
@@ -19,8 +23,9 @@ struct ImageSourceButtons: View {
         if UIImagePickerController.isSourceTypeAvailable(.camera) {
             Button("Take Photo", systemImage: "camera") { pick(.camera) }
         }
-        // Not disabled by `hasImages`: the menu is built before the user copies, so it would stay stale.
-        Button("Paste", systemImage: "doc.on.clipboard") { pick(.paste) }
+        // The system paste control: the user's tap grants access, so it shows no "Allow Paste" prompt. A plain button
+        // reading `UIPasteboard` showed one on every paste. It also disables itself while the pasteboard has no image.
+        PasteButton(supportedContentTypes: [.image]) { pick(.paste($0)) }
     }
 }
 
@@ -36,10 +41,6 @@ extension View {
 /// the app for seconds on a full-size photo; `ImageEncoder` does that work off it.
 @MainActor
 enum PastedImages {
-    static func fromPasteboard() async -> [Data] {
-        await load(UIPasteboard.general.itemProviders)
-    }
-
     static func load(_ providers: [NSItemProvider]) async -> [Data] {
         var sources: [Data] = []
         for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
@@ -72,13 +73,9 @@ private struct ImageSourcePresenter: ViewModifier {
                     .ignoresSafeArea()
             }
             .onChange(of: source) {
-                guard source == .paste else { return }
+                guard case let .paste(providers) = source else { return }
                 source = nil
-                guard UIPasteboard.general.hasImages else {
-                    toasts.show("No image to paste", for: .seconds(2))
-                    return
-                }
-                onImages { await PastedImages.fromPasteboard() }
+                onImages { await PastedImages.load(providers) }
             }
             .onChange(of: picked) {
                 let items = picked
