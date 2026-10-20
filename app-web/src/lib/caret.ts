@@ -108,26 +108,35 @@ function follow(field: Field) {
 		reveal();
 	};
 	// Only a scroll this code didn't make is the user's, and one that leaves the caret out of view stops the following.
+	const noticeScroll = () => {
+		if (outer && Math.abs(outer.scrollTop - placed) > 1) following = overflow(field, outer) === 0;
+	};
 	// Measuring the caret lays out a copy of the text, so it runs at most once a frame while the page scrolls.
 	let frame = 0;
 	const scrolled = () => {
 		frame ||= requestAnimationFrame(() => {
 			frame = 0;
-			if (outer && Math.abs(outer.scrollTop - placed) > 1) following = overflow(field, outer) === 0;
+			noticeScroll();
 		});
 	};
-	const resized = new ResizeObserver(reveal);
+	// Resize observers run before that frame's check, so a row landing just after the user scrolled away pulled the
+	// page back to the field.
+	const relaid = () => {
+		noticeScroll();
+		reveal();
+	};
+	const resized = new ResizeObserver(relaid);
 	resized.observe(field);
 	if (outer) for (const child of outer.children) resized.observe(child);
 	field.addEventListener('input', edited);
 	outer?.addEventListener('scroll', scrolled);
-	window.visualViewport?.addEventListener('resize', reveal);
+	window.visualViewport?.addEventListener('resize', relaid);
 	function stop() {
 		resized.disconnect();
 		cancelAnimationFrame(frame);
 		field.removeEventListener('input', edited);
 		outer?.removeEventListener('scroll', scrolled);
-		window.visualViewport?.removeEventListener('resize', reveal);
+		window.visualViewport?.removeEventListener('resize', relaid);
 	}
 	return stop;
 }
