@@ -22,7 +22,8 @@ struct SmartInput: View {
     /// The height it grows to before it scrolls: about eight lines of body text.
     var maxHeight: CGFloat = 200
     var focused: FocusState<Bool>.Binding
-    /// Images pasted into the text. Without it a pasted image is dropped, since a title holds only text.
+    /// Images pasted into the text, through `ImagePaste`. Without it a pasted image is dropped, since a title holds only
+    /// text.
     var onPasteImages: ((@escaping ImageLoad) -> Void)?
     let onSubmit: () -> Void
 
@@ -37,6 +38,7 @@ struct SmartInput: View {
     /// The text this editor last wrote or showed. Typing can run ahead of rendering, so `onChange(of: text)` may
     /// still report an older keystroke, which must not overwrite the newer editor contents.
     @State private var written = ""
+    @State private var pasteOwner = UUID()
     #if DEBUG
     @State private var rendered = ""
     #endif
@@ -97,6 +99,8 @@ struct SmartInput: View {
             attributed = AttributedString(text)
             written = text
         }
+        .onChange(of: focused.wrappedValue, initial: true) { claimPaste() }
+        .onDisappear { ImagePaste.shared.release(pasteOwner) }
         .onChange(of: attributed) { typed() }
         .onChange(of: text) { replaceIfNeeded() }
         .onChange(of: Styled(text: text, tokens: tokens), initial: true) { restyle() }
@@ -194,9 +198,17 @@ struct SmartInput: View {
 
     private static let attachment: Character = "\u{FFFC}"
 
-    /// A pasted image reaches the editor as a bare U+FFFC: the text view keeps the character and drops the image. The
-    /// character and any spacing the paste put around it leave the text, and the image is read from the pasteboard the
-    /// paste came from.
+    private func claimPaste() {
+        if focused.wrappedValue, let onPasteImages {
+            ImagePaste.shared.claim(pasteOwner, handler: onPasteImages)
+        } else {
+            ImagePaste.shared.release(pasteOwner)
+        }
+    }
+
+    /// An image `ImagePaste` doesn't take, such as one pasted into a field without `onPasteImages`, reaches the editor as
+    /// a bare U+FFFC: the text view keeps the character and drops the image. The character and any spacing the paste put
+    /// around it leave the text.
     private func takeImages(_ plain: String) {
         let before = plain.prefix { $0 != Self.attachment }.filter { $0 != Self.attachment }
         var stripped = plain.filter { $0 != Self.attachment }
@@ -208,7 +220,6 @@ struct SmartInput: View {
         }
         write(stripped)
         replace(with: stripped, caret: caret)
-        onPasteImages? { await PastedImages.fromPasteboard() }
     }
 
     /// Return inserts one line break right before the caret; anything else that brings one is a paste.

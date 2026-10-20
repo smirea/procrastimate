@@ -37,8 +37,12 @@ extension View {
 @MainActor
 enum PastedImages {
     static func fromPasteboard() async -> [Data] {
+        await load(UIPasteboard.general.itemProviders)
+    }
+
+    static func load(_ providers: [NSItemProvider]) async -> [Data] {
         var sources: [Data] = []
-        for provider in UIPasteboard.general.itemProviders where provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+        for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
             let data: Data? = await withCheckedContinuation { continuation in
                 _ = provider.loadDataRepresentation(for: .image) { data, _ in continuation.resume(returning: data) }
             }
