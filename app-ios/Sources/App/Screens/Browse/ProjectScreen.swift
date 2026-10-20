@@ -8,30 +8,50 @@ struct ProjectScreen: View {
     let projectID: String
 
     @AppStorage private var showCompleted: Bool
+    @StoredFilter private var filter: ListFilter
 
     init(projectID: String) {
         self.projectID = projectID
         _showCompleted = .showCompleted(API.ShareTarget(kind: .project, id: projectID))
+        _filter = StoredFilter(.project(id: projectID))
     }
 
     var body: some View {
         if let project = store.project(projectID) {
             let space = store.space(ofProject: project.id) ?? .own
             let data = store.data(in: space)
-            let groups = Views.projectGroups(data.tasks, data.sections, project.id, in: store.timeZone)
+            let allGroups = Views.projectGroups(data.tasks, data.sections, project.id, in: store.timeZone)
+            let shown = { (tasks: [TaskItem]) in ListFilters.filterTasks(tasks, filter, me: store.me) }
+            let groups = allGroups.map { Views.ProjectGroup(section: $0.section, tasks: shown($0.tasks)) }
+            let total = allGroups.reduce(0) { $0 + $1.tasks.count }
             let sections = groups.dropFirst().compactMap { group in group.section.map { (section: $0, tasks: group.tasks) } }
             let count = groups.reduce(0) { $0 + $1.tasks.count }
             let done = showCompleted ? Views.projectCompleted(data.tasks, data.sections, project.id, in: store.timeZone) : nil
-            let doneIn = { (id: String?) in done?.groups.first { $0.section?.id == id }?.tasks ?? [] }
-            let anyDone = done.map { !$0.gone.isEmpty || $0.groups.contains { !$0.tasks.isEmpty } } ?? false
+            let doneIn = { (id: String?) in shown(done?.groups.first { $0.section?.id == id }?.tasks ?? []) }
+            let gone = shown(done?.gone ?? [])
+            let anyDone = done.map { done in !gone.isEmpty || done.groups.contains { !$0.tasks.isEmpty } } ?? false
             let canAdd = store.canAdd(to: .project(id: project.id))
             TaskListScreen(
                 title: project.name,
-                isEmpty: count == 0 && sections.isEmpty && !showCompleted,
+                isEmpty: total == 0 && sections.isEmpty && !showCompleted,
                 emptyTitle: "No tasks yet",
                 emptyHint: Browse.projectEmptyHint(project.name),
                 projectIcon: project.icon,
-                open: count
+                open: count,
+                header: ListHeaders.listHeader(.project(own: space == .own)),
+                actions: ListActions(
+                    noun: "project",
+                    name: project.name,
+                    copy: { actions.copyAsMarkdown(Markdown.projectDocument(project, groups)) },
+                    share: API.ShareTarget(kind: .project, id: project.id),
+                    showCompleted: $showCompleted,
+                    addSection: { _ = store.addSection(project.id, $0) },
+                    rename: { store.renameProject(project.id, $0) },
+                    icon: Binding(get: { project.icon }, set: { store.setProjectIcon(project.id, $0) }),
+                    delete: .init(prompt: Browse.deleteProjectPrompt(project.name, taskCount: total)) { store.deleteProject(project.id) }
+                ),
+                filter: $filter,
+                unfiltered: allGroups.flatMap(\.tasks)
             ) {
                 ForEach(groups.first?.tasks ?? []) { TaskRow(task: $0) }
                 ForEach(doneIn(nil)) { CompletedRow(task: $0) }
@@ -57,25 +77,13 @@ struct ProjectScreen: View {
                         )
                     }
                 }
-                if let done, !done.gone.isEmpty || !anyDone { CompletedSection(tasks: done.gone) }
+                if done != nil, !gone.isEmpty || !anyDone { CompletedSection(tasks: gone) }
             }
             .animation(.snappy, value: showCompleted)
             .animation(.snappy, value: sections.map(\.section))
+            .animation(.snappy, value: filter)
+            .navigationSubtitle(store.owner(of: space).map { "Shared by \($0.name)" } ?? "")
             .environment(\.space, space)
-            .nameActions(
-                noun: "project",
-                name: project.name,
-                space: space,
-                share: API.ShareTarget(kind: .project, id: project.id),
-                deletePrompt: Browse.deleteProjectPrompt(project.name, taskCount: count),
-                copy: { actions.copyAsMarkdown(project: project) },
-                rename: { store.renameProject(project.id, $0) },
-                icon: project.icon,
-                setIcon: { store.setProjectIcon(project.id, $0) },
-                delete: { store.deleteProject(project.id) },
-                addSection: { _ = store.addSection(project.id, $0) },
-                showCompleted: $showCompleted
-            )
         } else {
             Color.clear.task { navigator.drop(.project(id: projectID)) }
         }

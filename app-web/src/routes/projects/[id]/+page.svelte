@@ -5,35 +5,42 @@
 	import { fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import RowsPlusBottom from 'phosphor-svelte/lib/RowsPlusBottom';
-	import ShareNetwork from 'phosphor-svelte/lib/ShareNetwork';
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import AddTaskButton from '#lib/components/AddTaskButton.svelte';
 	import ProjectSection from '#lib/components/ProjectSection.svelte';
-	import EntityActions from '#lib/components/EntityActions.svelte';
+	import ListMenu from '#lib/components/ListMenu.svelte';
 	import InlineEdit from '#lib/components/InlineEdit.svelte';
 	import ProjectGlyph from '#lib/components/ProjectGlyph.svelte';
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
-	import CompletedToggle from '#lib/components/CompletedToggle.svelte';
 	import { store } from '#lib/store.svelte.ts';
+	import { listFilters } from '#lib/list-filters.svelte.ts';
+	import { session } from '#lib/session.svelte.ts';
 	import { toastDeleted } from '#lib/completion.ts';
 	import { leaving, motion, sheets } from '#lib/ui.svelte.ts';
 	import { projectDocument } from 'shared/markdown.ts';
-	import { PROJECT_ICONS } from 'shared/project-icons.ts';
-	import { projectIconGlyph, projectIconName } from '#lib/project-icon.ts';
 	import { completed } from '#lib/completed.svelte.ts';
 	import { canAddHere } from '#lib/screen.ts';
 	import { projectCompleted, projectGroups } from 'shared/views.ts';
+	import type { Task } from 'shared/task.ts';
 	import CompletedList from '#lib/components/CompletedList.svelte';
+	import { filterKey, filterTasks } from 'shared/list-filters.ts';
+	import { listHeader } from 'shared/list-header.ts';
 
 	const project = $derived(store.project(page.params.id ?? null));
-	const groups = $derived(project ? projectGroups(store.tasks, store.sections, project.id) : []);
+	const list = $derived(filterKey({ kind: 'project', id: page.params.id ?? '' }));
+	const filter = $derived(listFilters.get(list));
+	const shown = (tasks: Task[]) => filterTasks(tasks, filter, session.userId ?? '');
+	const allGroups = $derived(project ? projectGroups(store.tasks, store.sections, project.id) : []);
+	const groups = $derived(allGroups.map((g) => ({ ...g, tasks: shown(g.tasks) })));
 	const loose = $derived(groups[0]?.tasks ?? []);
 	const sections = $derived(groups.slice(1).map((g) => ({ section: g.section!, tasks: g.tasks })));
 	const tasks = $derived(groups.flatMap((g) => g.tasks));
+	const total = $derived(allGroups.reduce((n, g) => n + g.tasks.length, 0));
 	const done = $derived(project && completed.shown(`project:${project.id}`) ? projectCompleted(store.tasks, store.sections, project.id) : null);
-	const doneIn = (id: string | null) => done?.groups.find((g) => (g.section?.id ?? null) === id)?.tasks ?? [];
-	const anyDone = $derived(!!done && (done.gone.length > 0 || done.groups.some((g) => g.tasks.length > 0)));
+	const doneIn = (id: string | null) => shown(done?.groups.find((g) => (g.section?.id ?? null) === id)?.tasks ?? []);
+	const gone = $derived(shown(done?.gone ?? []));
+	const anyDone = $derived(!!done && (gone.length > 0 || done.groups.some((g) => g.tasks.length > 0)));
 	const home = $derived(project ? store.homeOf(project.id) : null);
 	const owner = $derived(home ? store.ownerOf(home) : undefined);
 
@@ -51,16 +58,22 @@
 
 <svelte:head><title>{project?.name ?? 'Project'} · ProcrastiMate</title></svelte:head>
 
+{#snippet deletePrompt()}
+	{#if project}
+		Delete <strong>{project.name}</strong> and its {total} task{total === 1 ? '' : 's'}?
+	{/if}
+{/snippet}
+
 {#if project}
 	<View
 		name={project.name}
 		open={tasks.length}
-		empty={tasks.length === 0 && sections.length === 0 && !anyDone}
+		empty={total === 0 && sections.length === 0 && !anyDone}
 		emptyTitle="No tasks yet"
 		emptyHint={`Add one here, or type #${project.name} in quick add.`}
 		subtitle={owner ? `Shared by ${owner.name}` : undefined}
 		canAdd={false}
-		markdown={() => projectDocument(project, groups)}
+		filter={{ list, tasks: allGroups.flatMap((g) => g.tasks) }}
 	>
 		{#snippet title()}
 			{#if renaming}
@@ -78,38 +91,17 @@
 			{/if}
 		{/snippet}
 		{#snippet actions()}
-			<CompletedToggle list={`project:${project.id}`} />
-			{#if !home}
-				<div class="flex items-center gap-1">
-					<button type="button" class="icon-btn touch:size-11" aria-label="Share project" onclick={() => sheets.openShare({ kind: 'project', id: project.id }, project.name)}>
-						<ShareNetwork size={19} />
-					</button>
-					<EntityActions label="Project actions" triggerLabel="Project actions" deleteLabel="Delete project" ondelete={remove} onrename={() => (renaming = true)}>
-						{#snippet before()}
-							<div role="radiogroup" aria-label="Project icon" class="grid w-max grid-cols-7 gap-0.5 p-1">
-								{#each [null, ...PROJECT_ICONS] as icon (icon)}
-									{@const Icon = projectIconGlyph(icon)}
-									{@const checked = project.icon === icon}
-									<button
-										type="button"
-										role="radio"
-										aria-checked={checked}
-										aria-label={icon ? projectIconName(icon) : 'No icon'}
-										title={icon ? projectIconName(icon) : 'No icon'}
-										class="glyph press"
-										onclick={() => store.setProjectIcon(project.id, icon)}
-									>
-										<Icon size={18} weight={checked ? 'fill' : 'regular'} />
-									</button>
-								{/each}
-							</div>
-						{/snippet}
-						{#snippet confirm()}
-							Delete <strong>{project.name}</strong> and its {tasks.length} task{tasks.length === 1 ? '' : 's'}?
-						{/snippet}
-					</EntityActions>
-				</div>
-			{/if}
+			<ListMenu
+				header={listHeader({ kind: 'project', own: !home })}
+				label="Project actions"
+				markdown={() => projectDocument(project, groups)}
+				share={() => sheets.openShare({ kind: 'project', id: project.id }, project.name)}
+				showCompleted={`project:${project.id}`}
+				addSection={() => (addingSection = true)}
+				rename={() => (renaming = true)}
+				icon={{ value: project.icon, set: (icon) => store.setProjectIcon(project.id, icon) }}
+				remove={{ label: 'Delete project', confirm: deletePrompt, run: remove }}
+			/>
 		{/snippet}
 		<TaskList tasks={loose} label={`${project.name} tasks`} />
 		{#if doneIn(null).length}
@@ -144,39 +136,11 @@
 			{/if}
 		{/if}
 		{#snippet after()}
-			{#if done && (done.gone.length || !anyDone)}
-				<CompletedSection tasks={done.gone} list={`project:${project.id}`} />
+			{#if done && (gone.length || !anyDone)}
+				<CompletedSection tasks={gone} list={`project:${project.id}`} />
 			{/if}
 		{/snippet}
 	</View>
 {:else}
 	<p class="mt-16 text-center text-muted">This project no longer exists.</p>
 {/if}
-
-<style>
-	.glyph {
-		display: grid;
-		place-items: center;
-		width: 2.25rem;
-		height: 2.25rem;
-		border-radius: 9999px;
-		color: var(--color-muted);
-		transition: background-color 120ms, color 120ms;
-	}
-
-	.glyph:hover {
-		background: color-mix(in srgb, var(--color-ink) 6%, transparent);
-	}
-
-	.glyph[aria-checked='true'] {
-		color: var(--color-accent);
-		background: color-mix(in srgb, var(--color-accent) 14%, transparent);
-	}
-
-	@media (max-width: 767px), (pointer: coarse) {
-		.glyph {
-			width: 2.75rem;
-			height: 2.75rem;
-		}
-	}
-</style>

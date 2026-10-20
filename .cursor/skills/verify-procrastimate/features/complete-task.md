@@ -20,7 +20,7 @@ Complete a task lets Stefan check off a task with a short, satisfying animation,
 - Web: choose the checkbox next to a task. Its ring is tinted by priority.
 - Web: choose `Complete` in task details, or in a row's menu (right click, long press, or Shift+F10).
 - Web on a phone: tap the checkbox. Its tap target is 44 px even though the ring is smaller.
-- Web: choose `Completed` in the sidebar, under No date, or open `/completed`. `Show completed` is the check-circle button in a project or label header.
+- Web: choose `Completed` in the sidebar, under No date, or open `/completed`. `Show completed` is in the project or label `…` menu.
 - iOS: tap `Completed` at the very bottom of Browse. `Show completed` is in the project or label `…` menu.
 - Web: press `e` with a task selected. Planned: task selection by keyboard is not built yet.
 - iOS: tap the checkbox next to a task.

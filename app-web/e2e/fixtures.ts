@@ -290,6 +290,13 @@ export class App {
 		await expect(this.page.getByRole('heading', { level: 1, name: view })).toBeVisible();
 	}
 
+	/** Opens the open list's `…` menu and returns it. */
+	async listMenu(page = this.page) {
+		const name = /^(Inbox|Tomorrow|This week|No date|Completed|Project|Label|Place|Event) actions$/;
+		await page.getByRole('button', { name }).click();
+		return page.getByRole('dialog', { name });
+	}
+
 	async createProject(name: string) {
 		if (this.page.viewportSize()!.width < 768) await this.openNavigation();
 		await this.page.getByRole('button', { name: 'Add project' }).click();

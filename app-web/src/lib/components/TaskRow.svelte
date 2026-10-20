@@ -20,7 +20,9 @@
 	import LinkedText from './LinkedText.svelte';
 	import TitleFlow from './TitleFlow.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
+	import PersonName from './PersonName.svelte';
 	import { useLookup } from '../lookup.ts';
+	import { session } from '../session.svelte.ts';
 	import { clock, reveal, motion, sheets } from '../ui.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { addedAgo, dueTone, formatDue, formatTime, repeatLabel } from 'shared/format.ts';
@@ -68,6 +70,9 @@
 	const fromMemo = $derived(parseMemoSource(task.sourceKey) !== null);
 	const commentBadge = $derived(lookup.commentBadge(task.id));
 	const unsynced = $derived(lookup.unsynced(task.id));
+	/** Null `createdBy` is a task the user made before the server stamped it, or an import, so it names no one. */
+	const other = $derived(task.createdBy !== null && task.createdBy !== session.userId);
+	const by = $derived(other ? store.person(task.createdBy) : undefined);
 
 	const revealed = $derived(reveal.id === task.id);
 	let row: HTMLElement;
@@ -126,7 +131,7 @@
 					{/each}
 				</ul>
 			{/if}
-			{#if due || task.recurrence || task.reminders.length || task.images.length || task.location || progress || commentBadge || parent || fromMemo || showProject}
+			{#if due || task.recurrence || task.reminders.length || task.images.length || task.location || progress || commentBadge || parent || fromMemo || other || showProject}
 				<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
 					{#if task.event && event && due}
 						<span
@@ -191,6 +196,11 @@
 					{#if fromMemo}
 						<span class="flex items-center" role="img" aria-label="From Notouroboros">
 							<Waveform size={12} />
+						</span>
+					{/if}
+					{#if other}
+						<span class="flex min-w-0 items-center gap-1" aria-label={`Created by ${by?.name ?? 'someone else'}`}>
+							by <PersonName person={by} class="text-ink" />
 						</span>
 					{/if}
 					{#if parent}

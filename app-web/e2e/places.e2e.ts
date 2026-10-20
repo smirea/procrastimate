@@ -42,7 +42,7 @@ test('a place saved under a name lists with the labels, and @name or the labels 
 	});
 
 	await app.nav('Parkweg 1').click();
-	await page.getByRole('button', { name: 'Save' }).click();
+	await (await app.listMenu()).getByRole('button', { name: 'Save place' }).click();
 	await page.getByRole('textbox', { name: 'Place name' }).fill('Home');
 	await page.getByRole('button', { name: 'Save place' }).click();
 	await expect(page.getByRole('heading', { level: 1, name: 'Home' })).toBeVisible();

@@ -219,7 +219,7 @@ for (const [width, height] of [
 		await expect(app.settings()).toBeHidden();
 
 		await open('Trip to Lisbon');
-		await page.getByRole('button', { name: 'Share project' }).click();
+		await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
 		const share = page.getByRole('dialog', { name: 'Share' });
 		await expect(share).toBeVisible();
 		await check(page, findings, `${prefix}-share`);

@@ -5,6 +5,7 @@ import SwiftUI
 /// that follows today, or a custom pair of days.
 struct CompletedScreen: View {
     @Environment(Store.self) private var store
+    @Environment(TaskActions.self) private var actions
     @Environment(\.today) private var today
     @AppStorage("completedPreset") private var preset = Views.CompletedPreset.week.rawValue
     @AppStorage("completedFrom") private var from = ""
@@ -27,10 +28,13 @@ struct CompletedScreen: View {
             isEmpty: days.isEmpty,
             emptyTitle: "Nothing completed",
             emptyHint: range.from == nil && range.to == nil ? "Tasks you complete show up here." : "Pick a longer range to see more.",
-            markdown: Markdown.Document(
-                title: "Completed",
-                sections: days.map { .init(heading: Format.completedHeading($0.date, today), tasks: $0.tasks) }
-            )
+            header: ListHeaders.listHeader(.completed),
+            actions: ListActions(noun: "Completed", name: "Completed", copy: {
+                actions.copyAsMarkdown(Markdown.Document(
+                    title: "Completed",
+                    sections: days.map { .init(heading: Format.completedHeading($0.date, today), tasks: $0.tasks) }
+                ))
+            })
         ) {
             ForEach(days, id: \.date) { day in
                 let heading = Format.completedHeading(day.date, today)

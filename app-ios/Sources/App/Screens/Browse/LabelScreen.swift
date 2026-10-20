@@ -9,61 +9,63 @@ struct LabelScreen: View {
 
     @State private var editingPlace = false
     @AppStorage private var showCompleted: Bool
+    @StoredFilter private var filter: ListFilter
 
     init(labelID: String) {
         self.labelID = labelID
         _showCompleted = .showCompleted(API.ShareTarget(kind: .label, id: labelID))
+        _filter = StoredFilter(.label(id: labelID))
     }
 
     var body: some View {
         if let label = store.label(labelID) {
             let space = store.space(ofLabel: label.id) ?? .own
             let all = store.data(in: space).tasks
-            let tasks = Views.labelViewTasks(all, label, in: store.timeZone)
+            let unfiltered = Views.labelViewTasks(all, label, in: store.timeZone)
+            let shown = { (tasks: [TaskItem]) in ListFilters.filterTasks(tasks, filter, me: store.me) }
+            let tasks = shown(unfiltered)
             // A saved place lists the tasks at it, which never carry it as a label.
             let key = label.place.map(Triggers.placeKey)
             let done = showCompleted
-                ? Views.completedTasks(
+                ? shown(Views.completedTasks(
                     all.filter { key == nil ? $0.labelIds.contains(label.id) : $0.location.map(Triggers.placeKey) == key },
                     .init(),
                     in: store.timeZone
-                ) : []
+                )) : []
             TaskListScreen(
                 title: label.name,
-                isEmpty: tasks.isEmpty && !showCompleted,
+                isEmpty: unfiltered.isEmpty && !showCompleted,
                 emptyTitle: key == nil ? "No tasks with this label" : "No tasks at this place",
                 emptyHint: Browse.labelEmptyHint(label.name),
                 labelColor: label.color,
                 labelIcon: label.systemImage(filled: true),
-                open: tasks.count
+                open: tasks.count,
+                header: ListHeaders.listHeader(.label(own: space == .own, place: key != nil)),
+                actions: ListActions(
+                    noun: key == nil ? "label" : "place",
+                    name: label.name,
+                    copy: { actions.copyAsMarkdown(Markdown.Document(title: label.name, sections: [.init(tasks: tasks)])) },
+                    share: API.ShareTarget(kind: .label, id: label.id),
+                    showCompleted: $showCompleted,
+                    rename: { store.renameLabel(label.id, $0) },
+                    color: Binding(get: { label.color }, set: { store.setLabelColor(label.id, $0) }),
+                    editPlace: { editingPlace = true },
+                    delete: .init(
+                        prompt: Browse.deleteLabelPrompt(label.name),
+                        message: key == nil ? Browse.deleteLabelMessage : Browse.deletePlaceMessage
+                    ) { store.deleteLabel(label.id) }
+                ),
+                filter: $filter,
+                unfiltered: unfiltered
             ) {
                 ForEach(tasks) { TaskRow(task: $0, showProject: true) }
                 if showCompleted { CompletedSection(tasks: done, showProject: true) }
             }
             .animation(.snappy, value: showCompleted)
             .environment(\.space, space)
-            .toolbar {
-                if label.place != nil, space == .own {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button("Edit place", systemImage: "mappin.circle") { editingPlace = true }
-                    }
-                }
-            }
             .sheet(isPresented: $editingPlace) { PlaceSheet(mode: .edit(label)) }
-            .nameActions(
-                noun: label.place == nil ? "label" : "place",
-                name: label.name,
-                space: space,
-                share: label.place == nil ? API.ShareTarget(kind: .label, id: label.id) : nil,
-                deletePrompt: Browse.deleteLabelPrompt(label.name),
-                deleteMessage: label.place == nil ? Browse.deleteLabelMessage : Browse.deletePlaceMessage,
-                copy: { actions.copyAsMarkdown(Markdown.Document(title: label.name, sections: [.init(tasks: tasks)])) },
-                rename: { store.renameLabel(label.id, $0) },
-                color: label.color,
-                recolor: { store.setLabelColor(label.id, $0) },
-                delete: { store.deleteLabel(label.id) },
-                showCompleted: $showCompleted
-            )
+            .animation(.snappy, value: filter)
+            .navigationSubtitle(store.owner(of: space).map { "Shared by \($0.name)" } ?? "")
         } else {
             Color.clear.task { navigator.drop(.label(id: labelID)) }
         }

@@ -11,6 +11,7 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Lists](lists.md): the one catalog of top-level lists every menu reads, why empty lists stay, and the Tomorrow and This week views.
 - [Quick add and natural language](quick-add.md): the quick add parser, its phrases, guards, and autocomplete.
 - [Ramble](ramble.md): voice capture with ElevenLabs Scribe, the spoken grammar, precision rules, and the proxy. Its research, test plan, cost, and build slices are in [Ramble design](../ramble-design.md).
+- [List header and filters](list-header.md): one header for every list, the `…` menu's order, the filter menu by creator and priority, and its persistence.
 - [Labels UI](labels.md): how labels show and are edited in rows, the sidebar, and pickers.
 - [Settings](settings.md): the sidebar Settings row, its popover or sheet, and what it holds.
 - [Todoist import](todoist-import.md): importing a Todoist backup zip, field mapping, nesting, and re-runs.

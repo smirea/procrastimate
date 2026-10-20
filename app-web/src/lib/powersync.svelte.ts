@@ -145,11 +145,17 @@ export function startSync(userId: string): () => void {
 	const stopUnsynced = unsynced.start();
 	const asked = new Set<string>();
 	const stopEffects = $effect.root(() => {
-		// A space whose owner this device has not met yet needs their name for its byline.
+		// A space's owner, or whoever made or finished a task, names a byline, so someone this device has not met yet
+		// sends it to ask.
 		$effect(() => {
-			const unknown = Object.keys(store.spaces).filter(owner => !store.person(owner) && !asked.has(owner));
+			const ids = new Set(Object.keys(store.spaces));
+			for (const task of store.tasks) {
+				if (task.createdBy) ids.add(task.createdBy);
+				if (task.completedBy) ids.add(task.completedBy);
+			}
+			const unknown = [...ids].filter(id => !store.person(id) && !asked.has(id));
 			if (!unknown.length) return;
-			for (const owner of unknown) asked.add(owner);
+			for (const id of unknown) asked.add(id);
 			untrack(() => void refreshPeople());
 		});
 	});
