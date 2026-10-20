@@ -7,7 +7,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { readOverride, run, worktrees } from './lib';
-import { databaseOf, dockerRunning, dropDatabases, stopPowerSync } from './local-stack';
+import { databaseOf, dockerRunning, dropDatabases, stopPowerSync, worktreeDatabases } from './local-stack';
 import { devices, owner, remove } from './simulators';
 
 const args = process.argv.slice(2);
@@ -53,8 +53,15 @@ if (worktree) {
 		);
 	} else {
 		stopPowerSync(worktree);
-		if (database) await dropDatabases(databaseOf(database));
-		console.log(`Removed the PowerSync container${database ? ` and database ${databaseOf(database)}` : ''}.`);
+		// A renamed branch leaves the databases of its old name behind, each holding its replication slot's WAL.
+		const databases = new Set(
+			(await worktreeDatabases()).filter(row => row.worktree === worktree).map(row => row.database),
+		);
+		if (database) databases.add(databaseOf(database));
+		for (const name of databases) await dropDatabases(name);
+		console.log(
+			`Removed the PowerSync container and databases ${[...databases].join(', ') || '(none)'}, with their replication slots.`,
+		);
 	}
 
 	const sim = join(worktree, 'sim');

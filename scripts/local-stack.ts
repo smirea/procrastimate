@@ -107,6 +107,25 @@ export async function worktreeDatabases(): Promise<{ database: string; worktree:
 	});
 }
 
+export type ReplicationSlot = { name: string; database: string; active: boolean; held: string };
+
+export async function replicationSlots(): Promise<ReplicationSlot[]> {
+	return withAdmin(
+		sql => sql<ReplicationSlot[]>`
+			SELECT slot_name AS name, database, active,
+				pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn)) AS held
+			FROM pg_replication_slots ORDER BY slot_name`,
+	);
+}
+
+/** Skips the slot if a PowerSync took it up since it was listed: Postgres refuses to drop an active slot anyway. */
+export async function dropInactiveSlot(name: string): Promise<void> {
+	await withAdmin(
+		sql =>
+			sql`SELECT pg_drop_replication_slot(slot_name) FROM pg_replication_slots WHERE slot_name = ${name} AND NOT active`,
+	);
+}
+
 function writeServiceConfig(worktree: string, database: string): string {
 	const template = readFileSync(join(root, 'powersync/local/service.template.yaml'), 'utf8');
 	const dir = join(worktree, '.powersync');
