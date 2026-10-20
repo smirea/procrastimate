@@ -11,6 +11,7 @@ export const QUICK_ADD_BUTTONS = [
 	'repeat',
 	'labels',
 	'subtasks',
+	'images',
 	'location',
 	'event',
 ] as const;

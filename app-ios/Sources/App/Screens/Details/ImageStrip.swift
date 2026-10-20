@@ -1,20 +1,15 @@
 import Core
-import PhotosUI
 import SwiftUI
-import UIKit
 
 /// A task's images in details: thumbnails that open full screen, and an add tile with the photo library, the camera,
 /// and the pasteboard. A read-only task shows only the thumbnails.
 struct ImageStrip: View {
     @Environment(TaskImages.self) private var images
-    @Environment(Toasts.self) private var toasts
-    @Environment(\.space) private var space
+    @Environment(\.imageZoom) private var zoom
     let task: TaskItem
     let locked: Bool
 
-    @State private var picking = false
-    @State private var picked: [PhotosPickerItem] = []
-    @State private var shooting = false
+    @State private var source: ImageSource?
 
     private var adding: Int { images.adding[task.id] ?? 0 }
 
@@ -28,6 +23,7 @@ struct ImageStrip: View {
                         ImageThumb(image: image, size: .thumb)
                             .frame(width: 72, height: 72)
                             .clipShape(.rect(cornerRadius: 16))
+                            .zoomSource(image.id, in: zoom)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Open image \(index + 1) of \(task.images.count)")
@@ -49,41 +45,13 @@ struct ImageStrip: View {
             }
             .animation(.snappy, value: task.images)
             .animation(.snappy, value: adding)
-            .photosPicker(isPresented: $picking, selection: $picked, maxSelectionCount: 10, matching: .images)
-            .onChange(of: picked) {
-                let items = picked
-                picked = []
-                guard !items.isEmpty else { return }
-                Task {
-                    var sources: [Data] = []
-                    var failed = 0
-                    for item in items {
-                        do {
-                            if let data = try await item.loadTransferable(type: Data.self) { sources.append(data) } else { failed += 1 }
-                        } catch {
-                            ErrorReport.log("Could not load a picked photo", error: error)
-                            failed += 1
-                        }
-                    }
-                    if failed > 0 { toasts.show("Couldn’t add \(failed) image\(failed == 1 ? "" : "s")") }
-                    await images.attach(task.id, sources)
-                }
-            }
-            .fullScreenCover(isPresented: $shooting) {
-                CameraPicker { data in Task { await images.attach(task.id, [data]) } }
-                    .ignoresSafeArea()
-            }
+            .imageSource($source) { load in Task { await images.attach(task.id, await load()) } }
         }
     }
 
     private var addTile: some View {
         Menu {
-            Button("Photo Library", systemImage: "photo.on.rectangle") { picking = true }
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button("Take Photo", systemImage: "camera") { shooting = true }
-            }
-            // Not disabled by `hasImages`: the menu is built before the user copies, so it would stay stale.
-            Button("Paste", systemImage: "doc.on.clipboard") { paste() }
+            ImageSourceButtons { source = $0 }
         } label: {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(.ink.opacity(0.16), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
@@ -96,15 +64,6 @@ struct ImageStrip: View {
                 .contentShape(.rect(cornerRadius: 16))
         }
         .accessibilityLabel("Add image")
-    }
-
-    private func paste() {
-        let sources = (UIPasteboard.general.images ?? []).compactMap { $0.jpegData(compressionQuality: 0.95) }
-        guard !sources.isEmpty else {
-            toasts.show("No image to paste", for: .seconds(2))
-            return
-        }
-        Task { await images.attach(task.id, sources) }
     }
 }
 
@@ -134,37 +93,5 @@ struct ImageThumb: View {
                 try? await Task.sleep(for: TaskImages.retryMissing)
             }
         }
-    }
-}
-
-/// The system camera, which SwiftUI has no view for.
-private struct CameraPicker: UIViewControllerRepresentable {
-    let onShot: (Data) -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = context.coordinator
-        return picker
-    }
-
-    func updateUIViewController(_: UIImagePickerController, context _: Context) {}
-
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
-
-    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: CameraPicker
-
-        init(_ parent: CameraPicker) { self.parent = parent }
-
-        func imagePickerController(_: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let image = info[.originalImage] as? UIImage, let data = image.jpegData(compressionQuality: 0.95) {
-                parent.onShot(data)
-            }
-            parent.dismiss()
-        }
-
-        func imagePickerControllerDidCancel(_: UIImagePickerController) { parent.dismiss() }
     }
 }

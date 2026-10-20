@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { HTMLAttributes } from 'svelte/elements';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { mobile, motion, sheets } from '../ui.svelte.ts';
@@ -10,7 +11,11 @@
 		desktop,
 		class: classes,
 		children,
-	}: { label: string; desktop: 'scale' | 'slide' | 'fly'; class: string; children: Snippet } = $props();
+		...rest
+	}: { label: string; desktop: 'scale' | 'slide' | 'fly'; class: string; children: Snippet } & Pick<
+		HTMLAttributes<HTMLDivElement>,
+		'onpaste' | 'ondragover' | 'ondrop'
+	> = $props();
 
 	const enter = (node: Element) => {
 		if (mobile.current || desktop === 'fly') return fly(node, motion({ y: '100%', duration: 300, easing: cubicOut, opacity: 1 }));
@@ -20,6 +25,6 @@
 </script>
 
 <div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={motion({ duration: 160 })} onclick={() => sheets.close()} aria-hidden="true"></div>
-<div role="dialog" aria-label={label} class={`glass-strong sheet fixed z-50 flex ${classes}`} transition:enter>
+<div role="dialog" aria-label={label} class={`glass-strong sheet fixed z-50 flex ${classes}`} transition:enter {...rest}>
 	{@render children()}
 </div>

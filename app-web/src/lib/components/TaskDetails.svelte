@@ -38,7 +38,7 @@
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, sheets, motion, type Arrival } from '../ui.svelte.ts';
 	import { completeTask, deleteTask } from '../completion.ts';
-	import { images } from '../images/images.svelte.ts';
+	import { imageFiles, images } from '../images/images.svelte.ts';
 	import { unsynced } from '../unsynced.svelte.ts';
 
 	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
@@ -132,7 +132,6 @@
 		if (untrack(() => arrival) === 'back') body.scrollTop = sheets.scrollTops.get(id) ?? 0;
 	});
 
-	const imageFiles = (data: DataTransfer | null) => [...(data?.files ?? [])].filter(file => file.type.startsWith('image/'));
 	const carriesFiles = (event: DragEvent) => editable && !!event.dataTransfer?.types.includes('Files');
 
 	function onpaste(event: ClipboardEvent) {

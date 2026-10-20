@@ -12,6 +12,7 @@
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
+	import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
 	import { DEFAULT_PRIORITY } from 'shared/task.ts';
 	import Sheet from './Sheet.svelte';
@@ -38,6 +39,7 @@
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { NAME_SOURCES } from '../names.ts';
 	import { showAdded } from '../show-added.ts';
+	import { imageFiles, images } from '../images/images.svelte.ts';
 
 	let { defaults }: { defaults: ListDefaults } = $props();
 
@@ -56,6 +58,10 @@
 	let subtasksOpen = $state(false);
 	let subtaskKey = 0;
 	let listAt = $state<number | null>(null);
+	/** Images wait here until the task exists, then attach through task details' offline upload path. */
+	let drafted = $state<{ key: number; file: File; url: string }[]>([]);
+	let imageKey = 0;
+	let imagePicker = $state<HTMLInputElement>();
 
 	const showMic = $derived(!draft.text);
 	const subtaskParsed = $derived(parseSubtask(subtaskText));
@@ -72,6 +78,7 @@
 		...(recurrence && { repeat: formatRecurrence(recurrence, due) }),
 		...(draft.labelIds.length && { labels: store.labelsOf({ labelIds: draft.labelIds }).map((l) => l.name).join(', ') }),
 		...((subtasksOpen || subtasks.length) && { subtasks: subtasks.length ? `${subtasks.length}` : 'Open' }),
+		...(drafted.length && { images: `${drafted.length}` }),
 	});
 	/** An event stands in for the date and the repeat, as in task details. */
 	const buttons = $derived(
@@ -98,6 +105,7 @@
 	/** Runs a `+` menu action: the checklist opens its field, and every other button opens its picker in the row. */
 	async function run(button: WebButton) {
 		if (button === 'subtasks') return openSubtasks();
+		if (button === 'images') return imagePicker?.click();
 		if (!opened.includes(button)) opened.push(button);
 		await tick();
 		row?.querySelector(`[data-button="${button}"]`)?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
@@ -150,8 +158,48 @@
 		if (!task) return;
 		const typing = subtaskTask(subtaskParsed);
 		for (const child of [...subtasks.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
+		if (drafted.length) void images.attach(task.id, drafted.map((d) => d.file));
 		sheets.close();
 		showAdded(task);
+	}
+
+	function addImages(files: File[]) {
+		drafted.push(...files.map((file) => ({ key: imageKey++, file, url: URL.createObjectURL(file) })));
+	}
+
+	function removeImage(key: number) {
+		const removed = drafted.find((d) => d.key === key);
+		if (removed) URL.revokeObjectURL(removed.url);
+		drafted = drafted.filter((d) => d.key !== key);
+		input.focus();
+	}
+
+	$effect(() => () => {
+		for (const { url } of untrack(() => drafted)) URL.revokeObjectURL(url);
+	});
+
+	function onpaste(event: ClipboardEvent) {
+		const files = imageFiles(event.clipboardData);
+		if (!files.length) return;
+		event.preventDefault();
+		addImages(files);
+	}
+
+	function ondragover(event: DragEvent) {
+		if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
+	}
+
+	function ondrop(event: DragEvent) {
+		const files = imageFiles(event.dataTransfer);
+		if (!files.length) return;
+		event.preventDefault();
+		addImages(files);
+	}
+
+	function pickedImages(event: Event & { currentTarget: HTMLInputElement }) {
+		addImages([...(event.currentTarget.files ?? [])].filter((file) => file.type.startsWith('image/')));
+		event.currentTarget.value = '';
+		input.focus();
 	}
 
 	async function openSubtasks() {
@@ -216,7 +264,7 @@
 	</span>
 {/snippet}
 
-<Sheet label="Quick add" desktop="scale" class="flex-col md:top-[14vh] md:left-1/2 md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:rounded-panel">
+<Sheet label="Quick add" desktop="scale" {onpaste} {ondragover} {ondrop} class="flex-col md:top-[14vh] md:left-1/2 md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:rounded-panel">
 	<div class="px-4 pt-4 pb-2">
 		<div class="relative">
 			<SmartInput
@@ -248,6 +296,29 @@
 			{/if}
 		</div>
 	</div>
+	{#if drafted.length}
+		<ul class="flex gap-2 overflow-x-auto px-4 pt-1 pb-2" aria-label="Images to attach" transition:slide={motion({ duration: 180, easing: cubicOut })}>
+			{#each drafted as { key, url }, index (key)}
+				<li
+					class="relative shrink-0"
+					animate:flip={motion({ duration: 200, easing: cubicOut })}
+					in:scale={motion({ start: 0.85, duration: 200, easing: cubicOut })}
+					out:scale={motion({ start: 0.85, duration: 160, easing: cubicOut })}
+				>
+					<img src={url} alt={`Image ${index + 1} of ${drafted.length}`} class="size-14 rounded-xl object-cover ring-1 ring-ink/10" draggable="false" />
+					<button
+						type="button"
+						class="hit-area absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full bg-ink text-surface shadow-sm"
+						aria-label={`Remove image ${index + 1}`}
+						onmousedown={(e) => e.preventDefault()}
+						onclick={() => removeImage(key)}
+					>
+						<X size={10} weight="bold" />
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 	{#if subtasksOpen || subtasks.length}
 		<div class="mx-4 mb-2 ml-5 border-l border-ink/10 pl-3" transition:slide={motion({ duration: 180, easing: cubicOut })}>
 			<ul bind:this={subtaskList} class="max-h-48 overflow-y-auto" aria-label="Subtasks">
@@ -356,6 +427,19 @@
 							<ListChecks size={16} weight={subtasks.length ? 'bold' : 'regular'} />
 							{#if subtasks.length}<span class="tabular-nums">{subtasks.length}</span>{/if}
 						</button>
+					{:else if button === 'images'}
+						<button
+							type="button"
+							class="chip"
+							data-active={drafted.length > 0}
+							aria-label={drafted.length ? `Add image, ${drafted.length} added` : 'Add image'}
+							title="Add images, or paste or drop them here"
+							onmousedown={(e) => e.preventDefault()}
+							onclick={() => imagePicker?.click()}
+						>
+							<ImageSquare size={16} weight={drafted.length ? 'fill' : 'regular'} />
+							{#if drafted.length}<span class="tabular-nums">{drafted.length}</span>{/if}
+						</button>
 					{/if}
 				</div>
 			{/each}
@@ -382,6 +466,7 @@
 			<button type="button" class="btn btn-primary" disabled={!parsed.title} onclick={submit}>Add task</button>
 		</div>
 	</div>
+	<input bind:this={imagePicker} type="file" accept="image/*" multiple class="hidden" aria-hidden="true" tabindex="-1" onchange={pickedImages} />
 </Sheet>
 
 <style>

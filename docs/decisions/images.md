@@ -1,6 +1,11 @@
 # Task images
 
-Tasks can hold images. Web attaches them from a file picker, a paste, or a drop onto task details. iOS attaches them from the photo library, the camera, or the pasteboard. Details show thumbnails, the row shows a count, a tap opens the image full screen, and an image can be deleted with undo.
+Tasks can hold images. Web attaches them from a file picker, a paste, or a drop onto task details or quick add. iOS attaches them from the photo library, the camera, or the pasteboard, in details and in quick add, and from a paste into the title field of either. Details show thumbnails, the row shows a count, a tap opens the image full screen, and an image can be deleted with undo.
+
+## Quick add
+
+- **Images wait in the draft.** Quick add holds picked, pasted, or dropped images as the source bytes and shows them as small thumbnails under the title, each with a remove button. They attach only after the task is saved, through the same attach path details uses, so the bytes still go into the upload queue before the edit that lists them, and a task added offline uploads its images later. Encoding waits for the save, so an image removed from the draft costs nothing. The task's space is known only once it is saved, and the upload queue is keyed by space.
+- **An `Images` button.** It is a quick add button like the others (`images` in `QUICK_ADD_BUTTONS`), so it can be pinned and is always in the `+` menu. It is not in the default row. It shows on its own once the draft holds an image.
 
 ## Data
 
@@ -18,6 +23,15 @@ Tasks can hold images. Web attaches them from a file picker, a paste, or a drop 
 - **Reading is in the agent contract; uploading is not.** `GET /api/images?id=&size=&space=` is `agentContract.images.get`, so AI accounts read images and the agent docs show an example. `PUT /api/images` takes raw bytes with the image's `Content-Type`, which the JSON contract does not describe, so it stays outside it, like the WebSocket. `server/src/api.ts` answers both before the router. The owner of the space reads and writes with one row read or written. A guest or an AI account reads its grants, then the image in one select that also checks a task it may see lists the id, found through the `tasks_images` GIN index (`jsonb_path_ops`) rather than a scan of the space: a human guest's `access` rows say which tasks those are, a manager sees them all, and any other AI account has the space's links loaded for `scopeOf` (`sightOf` in `server/src/space.ts`). It uploads with any edit share, since an upload reaches the server before the write that lists it, often for a task the server has not seen; the write itself still goes through `guestRefusal`.
 - **Bytes are cached for good.** An id's bytes never change, so `GET` answers `Cache-Control: private, max-age=31536000, immutable`, and `PUT` of an existing id is a retry that keeps the stored bytes.
 - **Public links show the row count, not the images.** A link viewer has no session, and the image routes need one.
+
+## Pasting on iOS
+
+- **A paste into a title field attaches the image.** SwiftUI's `TextEditor` takes an image paste but keeps only an attachment character (U+FFFC) and drops the image. `SmartInput` removes the character and the space before it, then reads the image from the pasteboard the paste came from and hands it to the field's owner: quick add's draft or the task in details. Other smart inputs drop the character. `pasteDestination` never fires while the text view is first responder, and the text storage never holds the attachment, so reading the pasteboard is the only way to get the bytes.
+- **Nothing heavy on the main actor.** Pasted images are read as the bytes they were copied as, through the pasteboard's item providers, not through `UIPasteboard.images` and `jpegData`. Decoding and re-encoding a full-size photo on the main actor froze the app for 3 to 4 seconds (Sentry `PROCRASTIMATE-IOS-7`). `ImageEncoder` runs off it, and so do the camera's JPEG encode and quick add's thumbnails.
+
+## Viewer
+
+- **iOS zooms out of the thumbnail and swipes down to close.** The viewer is a full-screen cover with the zoom navigation transition from the tapped thumbnail, which also gives the system's interactive swipe-down dismiss, as in Photos.
 
 ## Order and offline
 

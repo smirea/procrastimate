@@ -1,4 +1,5 @@
 import Core
+import ImageIO
 import SwiftUI
 import UIKit
 
@@ -10,6 +11,7 @@ struct QuickAddSheet: View {
     @Environment(Navigator.self) private var navigator
     @Environment(\.clock) private var clock
     @Environment(\.space) private var space
+    @Environment(TaskImages.self) private var images
 
     /// Quick add from a shared project or label names only that space's projects and labels.
     private var spaceProjects: [Project] { store.projects(in: space) }
@@ -26,6 +28,11 @@ struct QuickAddSheet: View {
     @State private var openTriggers: [QuickAddButton: Int] = [:]
     @State private var scrollTarget: QuickAddButton?
     @State private var fade = RowFade()
+    /// Images wait here until the task exists, then attach through task details' offline upload path.
+    @State private var drafted: [DraftImage] = []
+    @State private var imageSource: ImageSource?
+    /// Images still loading or making their thumbnail. Saving waits for them, so none is lost.
+    @State private var loadingImages = 0
     @FocusState private var focused: Bool
     @FocusState private var subtaskFocused: Bool
 
@@ -53,6 +60,7 @@ struct QuickAddSheet: View {
                 // above the keyboard too, so the title goes back to four lines and the subtask field stays at three.
                 maxHeight: subtasksOpen || !subtasks.isEmpty ? 104 : 240,
                 focused: $focused,
+                onPasteImages: { addImages($0) },
                 onSubmit: { submit() }
             )
             .font(.body.weight(.medium))
@@ -61,13 +69,22 @@ struct QuickAddSheet: View {
                 if showMic { micButton.transition(.scale(scale: 0.6).combined(with: .opacity)) }
             }
             .animation(.snappy(duration: 0.16), value: showMic)
+            if !drafted.isEmpty || loadingImages > 0 {
+                draftedImages.transition(.opacity.combined(with: .move(edge: .top)))
+            }
             if subtasksOpen || !subtasks.isEmpty {
                 QuickAddSubtasks(spaceLabels: spaceLabels, subtasks: $subtasks, text: $subtaskText, focused: $subtaskFocused) { submit() }
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
             HStack(spacing: 6) {
                 chipRow(parsed, resolved)
-                QuickAddMenu(buttons: supported, priority: resolved.priority, onPriority: { draft.pick(priority: $0, context) }, run: { run($0) })
+                QuickAddMenu(
+                    buttons: supported,
+                    priority: resolved.priority,
+                    onPriority: { draft.pick(priority: $0, context) },
+                    onImage: { imageSource = $0 },
+                    run: { run($0) }
+                )
             }
             .animation(.snappy(duration: 0.16), value: parsed.tokens)
 
@@ -84,10 +101,12 @@ struct QuickAddSheet: View {
                 Button("Add task") { submit() }
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
-                    .disabled(parsed.title.isEmpty)
+                    .disabled(parsed.title.isEmpty || loadingImages > 0)
             }
         }
         .animation(.snappy(duration: 0.2), value: subtasksOpen)
+        .animation(.snappy(duration: 0.2), value: drafted)
+        .imageSource($imageSource) { addImages($0) }
         .padding(.horizontal, 16)
         .padding(.top, 20)
         .padding(.bottom, 8)
@@ -127,6 +146,78 @@ struct QuickAddSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(subtasks.isEmpty ? "Add subtask" : "Add subtask, \(subtasks.count) added")
+    }
+
+    private var imagesChip: some View {
+        Menu {
+            ImageSourceButtons { imageSource = $0 }
+        } label: {
+            Chip(systemImage: "photo", text: drafted.isEmpty ? "" : "\(drafted.count)", tone: drafted.isEmpty ? .muted : .ink)
+                .contentShape(.rect.inset(by: -6))
+        }
+        .accessibilityLabel(drafted.isEmpty ? "Add image" : "Add image, \(drafted.count) added")
+    }
+
+    private var draftedImages: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                ForEach(Array(drafted.enumerated()), id: \.element.id) { index, image in
+                    Group {
+                        if let preview = image.preview {
+                            Image(uiImage: preview).resizable().aspectRatio(contentMode: .fill)
+                        } else {
+                            Color.ink.opacity(0.06)
+                        }
+                    }
+                    .frame(width: 56, height: 56)
+                    .clipShape(.rect(cornerRadius: 12))
+                    .accessibilityElement()
+                    .accessibilityLabel("Image \(index + 1) of \(drafted.count)")
+                    .overlay(alignment: .topTrailing) {
+                        Button {
+                            drafted.removeAll { $0.id == image.id }
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.background)
+                                .frame(width: 20, height: 20)
+                                .background(.ink, in: .circle)
+                                .frame(width: 44, height: 44)
+                                .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain)
+                        .offset(x: 14, y: -14)
+                        .accessibilityLabel("Remove image \(index + 1)")
+                    }
+                    .transition(.scale(scale: 0.85).combined(with: .opacity))
+                }
+                ForEach(0 ..< loadingImages, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.ink.opacity(0.06))
+                        .frame(width: 56, height: 56)
+                        .overlay { ProgressView() }
+                        .accessibilityLabel("Adding image")
+                }
+            }
+            .padding(.vertical, 8)
+            .padding(.trailing, 8)
+        }
+        .scrollIndicators(.hidden)
+        .scrollClipDisabled()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Images to attach")
+    }
+
+    private func addImages(_ load: @escaping ImageLoad) {
+        focused = true
+        loadingImages += 1
+        Task {
+            defer { loadingImages -= 1 }
+            for data in await load() {
+                let preview = await Task.detached(priority: .userInitiated) { DraftImage.preview(data) }.value
+                drafted.append(DraftImage(data: data, preview: preview.map(UIImage.init)))
+            }
+        }
     }
 
     private var micButton: some View {
@@ -192,6 +283,7 @@ struct QuickAddSheet: View {
         if parsed.recurrence ?? draft.picked.recurrence != nil { buttons.append(.repeat) }
         if !resolved.labelIds.isEmpty { buttons.append(.labels) }
         if subtasksOpen || !subtasks.isEmpty { buttons.append(.subtasks) }
+        if !drafted.isEmpty { buttons.append(.images) }
         if (parsed.location ?? draft.picked.location) != nil { buttons.append(.location) }
         if draft.picked.event != nil { buttons.append(.event) }
         return buttons
@@ -250,6 +342,8 @@ struct QuickAddSheet: View {
             }
         case .subtasks:
             subtaskChip
+        case .images:
+            imagesChip
         case .location:
             LocationChip(location: parsed.location ?? draft.picked.location, openTrigger: trigger) { draft.pick(location: $0, context) }
         case .event:
@@ -284,6 +378,7 @@ struct QuickAddSheet: View {
     }
 
     private func submit() {
+        guard loadingImages == 0 else { return }
         guard let task = draft.resolve(draft.parse(context)) else { return }
         let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
         let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])
@@ -293,6 +388,8 @@ struct QuickAddSheet: View {
             return added
         }
         guard let added else { return }
+        let sources = drafted.map(\.data)
+        if !sources.isEmpty { Task { [images] in await images.attach(added.id, sources) } }
         close(revealing: added.id)
     }
 
@@ -302,6 +399,25 @@ struct QuickAddSheet: View {
     }
 }
 
+
+private struct DraftImage: Identifiable, Equatable {
+    let id = UUID()
+    let data: Data
+    let preview: UIImage?
+
+    /// Decoding a full-size photo on the main actor stalls the card, so callers run this off it.
+    nonisolated static func preview(_ data: Data) -> CGImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 336,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    }
+
+    static func == (a: DraftImage, b: DraftImage) -> Bool { a.id == b.id }
+}
 
 private struct RowFade: Equatable {
     var start = false
