@@ -2,8 +2,9 @@
 	import { untrack } from 'svelte';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Check from 'phosphor-svelte/lib/Check';
-	import { alignToRecurrence, monthlyWeekdayOf, sortWeekdays, weekdayOf, weeklyOn, type Due, type Recurrence, type RecurrenceUnit, type Weekday } from 'shared/task.ts';
+	import { alignToRecurrence, sortWeekdays, weekdayOf, weeklyOn, type Due, type Recurrence, type RecurrenceUnit, type Weekday } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
+	import { customRepeat, repeatPresets } from '../repeat-options.ts';
 	import { WEEKDAY_NAMES, formatRecurrence, repeatLabel } from 'shared/format.ts';
 	import { clock } from '../ui.svelte.ts';
 
@@ -20,13 +21,6 @@
 		open?: boolean;
 	} = $props();
 
-	const PRESETS: Recurrence[] = [
-		{ interval: 1, unit: 'day' },
-		{ interval: 1, unit: 'weekday' },
-		{ interval: 1, unit: 'week' },
-		{ interval: 1, unit: 'month' },
-		{ interval: 1, unit: 'year' },
-	];
 	const UNITS: RecurrenceUnit[] = ['day', 'weekday', 'week', 'month', 'year'];
 	const WEEK: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
 
@@ -37,12 +31,7 @@
 
 	/** Setting a repeat on an undated task dates it today, so presets read as they will apply. */
 	const anchor = $derived(due ?? { date: clock.today, time: null });
-	/** After `Every month`, the due date's weekday of the month, as in `Every month on the 3rd Mon`. */
-	const presets = $derived<Recurrence[]>([
-		...PRESETS.slice(0, 4),
-		{ interval: 1, unit: 'month', nth: monthlyWeekdayOf(anchor.date) },
-		...PRESETS.slice(4),
-	]);
+	const presets = $derived(repeatPresets(anchor.date));
 	let opened = $state<Due | null>(null);
 	$effect(() => {
 		if (open) opened = untrack(() => anchor);
@@ -71,16 +60,6 @@
 		!(a.unit === 'week' && a.days) &&
 		!(a.unit === 'month' && a.day) &&
 		nthOf(a) === nthOf(b);
-
-	/** A custom weekly interval keeps the weekday set, and a custom monthly one its day or weekday of the month. */
-	function custom(interval: number, unit: RecurrenceUnit): Recurrence {
-		if (unit === 'week' && recurrence?.unit === 'week' && recurrence.days) return { interval, unit, days: recurrence.days };
-		if (unit === 'month' && recurrence?.unit === 'month') {
-			if (recurrence.nth) return { interval, unit, nth: recurrence.nth };
-			if (recurrence.day) return { interval, unit, day: recurrence.day };
-		}
-		return { interval, unit };
-	}
 </script>
 
 <Popover label="Repeat" bind:open>
@@ -147,7 +126,7 @@
 				onsubmit={(e) => {
 					e.preventDefault();
 					if (!customValid) return;
-					set(custom(customInterval!, customUnit));
+					set(customRepeat(recurrence, customInterval!, customUnit));
 					close();
 				}}
 			>

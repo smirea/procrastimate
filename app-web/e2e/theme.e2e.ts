@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 
-test('System follows the device, and Light or Dark overrides it, survives a reload, and paints the first frame', async ({
+test('System follows the device, Light or Dark overrides it, a theme color recolors the accent, and both survive a reload and paint the first frame', async ({
 	app,
 	page,
 }) => {
@@ -29,13 +29,7 @@ test('System follows the device, and Light or Dark overrides it, survives a relo
 	await app.expectFirstPaintTheme('light');
 	await app.openSettings();
 	await expect(app.themeOption('System')).toHaveAttribute('aria-checked', 'true');
-});
 
-test('a theme color recolors the accent in both themes, survives a reload, and paints the first frame', async ({
-	app,
-	page,
-}) => {
-	await app.openSettings();
 	await expect(app.accentOption('Frost')).toHaveAttribute('aria-checked', 'true');
 	expect(await app.accent()).toBe('#0067bd');
 

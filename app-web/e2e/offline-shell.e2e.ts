@@ -18,18 +18,6 @@ async function clearHttpCache(context: BrowserContext, page: Page) {
 	await cdp.detach();
 }
 
-test('a cold launch offline opens the app from the cached shell', async ({ app, page, context }) => {
-	await app.add('Water the plants');
-	await controlled(page);
-	await app.go('No date');
-	await clearHttpCache(context, page);
-	await context.setOffline(true);
-	await app.reload();
-	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible();
-	await expect(app.row('Water the plants')).toBeVisible();
-	await context.setOffline(false);
-});
-
 /**
  * Makes every request the service worker sends wait `latency` ms. Playwright's routes never see them, so this goes
  * through the worker's own DevTools target.
@@ -52,14 +40,22 @@ async function slowServiceWorker(browser: Browser, latency: number) {
 	});
 }
 
-test('a launch on a connection that barely answers opens from the shell without waiting for it', async ({
+test('a cold launch offline, or on a connection that barely answers, opens the app from the cached shell', async ({
 	app,
 	page,
+	context,
 	browser,
 }) => {
 	await app.add('Water the plants');
 	await controlled(page);
 	await app.go('No date');
+	await clearHttpCache(context, page);
+	await context.setOffline(true);
+	await app.reload();
+	await expect(page.getByRole('heading', { name: 'No date' })).toBeVisible();
+	await expect(app.row('Water the plants')).toBeVisible();
+	await context.setOffline(false);
+
 	await slowServiceWorker(browser, 30_000);
 	const started = Date.now();
 	await page.reload();

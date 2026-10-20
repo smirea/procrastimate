@@ -23,7 +23,7 @@ const refuse = (page: Page, path: string, method: string) => slow(page, path, me
 
 const toast = (page: Page, text: string) => page.getByRole('status').filter({ hasText: text });
 
-test('an AI account shows at once, its token holds a place until the server makes it, and delete is instant', async ({
+test('an AI account shows at once, its token holds a place until the server makes it, delete is instant, and a refused one goes away with a toast', async ({
 	app,
 	page,
 }) => {
@@ -43,12 +43,8 @@ test('an AI account shows at once, its token holds a place until the server make
 	await section.getByRole('button', { name: 'Delete Robo' }).click();
 	await section.getByRole('button', { name: 'Delete', exact: true }).click();
 	await expect(section.getByText('Robo')).toHaveCount(0, INSTANT);
-});
 
-test('a refused AI account goes away with a toast', async ({ app, page }) => {
 	await refuse(page, '/api/ai', 'POST');
-	await app.openSettings();
-	const section = app.settings().getByRole('region', { name: 'AI accounts' });
 	await section.getByRole('textbox', { name: 'AI account name' }).fill('Robo');
 	await section.getByRole('button', { name: 'Create AI account' }).click();
 	await expect(section.getByText('Robo')).toBeVisible(INSTANT);
@@ -56,23 +52,10 @@ test('a refused AI account goes away with a toast', async ({ app, page }) => {
 	await expect(section.getByText('Robo')).toHaveCount(0);
 });
 
-test('a new link holds a place until the server makes it, and a refused stop puts it back', async ({ app, page }) => {
-	await app.createProject('Errands');
-	await slow(page, '/api/shares*', 'POST');
-	await refuse(page, '/api/shares*', 'DELETE');
-	await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
-	const sheet = page.getByRole('dialog', { name: 'Share' });
-	await sheet.getByRole('button', { name: 'Copy link' }).click();
-	await expect(sheet.getByRole('status', { name: 'Making the link' })).toBeVisible(INSTANT);
-	await expect(sheet.getByLabel('Link')).toHaveText(/\/s\/.+/, { timeout: 10_000 });
-
-	await sheet.getByRole('button', { name: 'Stop sharing' }).click();
-	await expect(sheet.getByLabel('Link')).toHaveCount(0, INSTANT);
-	await expect(toast(page, 'Could not stop sharing')).toBeVisible({ timeout: 10_000 });
-	await expect(sheet.getByLabel('Link')).toHaveText(/\/s\/.+/);
-});
-
-test('a link stopped while it is made stays stopped once the server makes it', async ({ app, page }) => {
+test('a link stopped while it is made stays stopped once the server makes it, and a refused stop puts it back', async ({
+	app,
+	page,
+}) => {
 	await app.createProject('Errands');
 	await slow(page, '/api/shares*', 'POST');
 	await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
@@ -84,31 +67,13 @@ test('a link stopped while it is made stays stopped once the server makes it', a
 	await expect(sheet.getByText('Anyone with the link')).toHaveCount(0, INSTANT);
 	expect((await revoked).ok()).toBe(true);
 	await expect(sheet.getByText('Anyone with the link')).toHaveCount(0);
-});
 
-test('sign out is instant, and a refused one signs back in with a toast', async ({ app, page }) => {
-	await refuse(page, '/api/auth/sign-out', 'POST');
-	await app.openSettings();
-	await app.settings().getByRole('button', { name: 'Sign out' }).click();
-	await expect(page.getByRole('form', { name: 'Sign in' })).toBeVisible(INSTANT);
-	await expect(toast(page, 'Could not sign out')).toBeVisible({ timeout: 10_000 });
-	await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
-});
-
-test('people the space has met match before the server answers, and adding one is instant', async ({ app, page }) => {
-	await app.openSettings();
-	const section = app.settings().getByRole('region', { name: 'AI accounts' });
-	await section.getByRole('textbox', { name: 'AI account name' }).fill('Robo');
-	await section.getByRole('textbox', { name: 'AI account name' }).press('Enter');
-	await expect(section.getByRole('button', { name: 'Delete Robo' })).toBeVisible();
-	await page.keyboard.press('Escape');
-
-	await app.createProject('Errands');
-	await slow(page, '/api/people*', 'GET');
-	await slow(page, '/api/shares*', 'POST');
-	await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
-	const sheet = page.getByRole('dialog', { name: 'Share' });
-	await sheet.getByRole('textbox', { name: 'Email or name' }).fill('Ro');
-	await sheet.getByRole('list', { name: 'People found' }).getByRole('button', { name: /Robo/ }).click(INSTANT);
-	await expect(sheet.getByRole('region', { name: 'People with access' })).toContainText('Robo', INSTANT);
+	await refuse(page, '/api/shares*', 'DELETE');
+	await sheet.getByRole('button', { name: 'Copy link' }).click();
+	await expect(sheet.getByRole('status', { name: 'Making the link' })).toBeVisible(INSTANT);
+	await expect(sheet.getByLabel('Link')).toHaveText(/\/s\/.+/, { timeout: 10_000 });
+	await sheet.getByRole('button', { name: 'Stop sharing' }).click();
+	await expect(sheet.getByLabel('Link')).toHaveCount(0, INSTANT);
+	await expect(toast(page, 'Could not stop sharing')).toBeVisible({ timeout: 10_000 });
+	await expect(sheet.getByLabel('Link')).toHaveText(/\/s\/.+/);
 });

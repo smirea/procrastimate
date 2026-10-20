@@ -32,6 +32,7 @@ test('task details edit the title, notes, date, priority, and labels, and keep t
 	await details.getByRole('button', { name: 'Add labels' }).click();
 	const labels = page.getByRole('dialog', { name: 'Labels' });
 	const find = labels.getByRole('textbox', { name: 'Find or create a label' });
+	await expect(find).toBeFocused();
 	for (const name of ['groceries', 'errands']) {
 		await find.fill(name);
 		await find.press('Enter');
@@ -39,7 +40,7 @@ test('task details edit the title, notes, date, priority, and labels, and keep t
 	await labels.getByRole('menuitemcheckbox', { name: 'groceries' }).click();
 	await expect(labels.getByRole('menuitemcheckbox', { name: 'groceries' })).toHaveAttribute('aria-checked', 'false');
 	await page.keyboard.press('Escape');
-	await expect(details.getByRole('button', { name: 'Labels errands' })).toBeVisible();
+	await expect(details.getByRole('button', { name: 'Labels errands' })).toBeFocused();
 	await app.closeDetails();
 
 	await app.reload();
@@ -53,21 +54,6 @@ test('task details edit the title, notes, date, priority, and labels, and keep t
 	await expect(details.getByRole('button', { name: 'Due Friday 6pm' })).toBeVisible();
 	await expect(details.getByRole('button', { name: 'Priority 1' })).toBeVisible();
 	await expect(details.getByRole('button', { name: 'Labels errands' })).toBeVisible();
-});
-
-test('Labels in task details opens with focus in its search field and gives it back to the chip on Escape', async ({
-	app,
-	page,
-}) => {
-	await app.add('Buy milk');
-	await app.row('Buy milk').getByRole('button', { name: 'Buy milk', exact: true }).click();
-	const chip = app.details().getByRole('button', { name: 'Add labels' });
-	await chip.click();
-	const field = page.getByRole('dialog', { name: 'Labels' }).getByRole('textbox', { name: 'Find or create a label' });
-	await expect(field).toBeFocused();
-	await field.press('Escape');
-	await expect(page.getByRole('dialog', { name: 'Labels' })).toBeHidden();
-	await expect(chip).toBeFocused();
 });
 
 test('a rename from another device reaches an open, untouched title field, and closing writes nothing back', async ({

@@ -8,7 +8,7 @@ Every top-level list has the same header: a filter menu at the top left and a `â
 - `header-filters` is the funnel at the top left (`Filters`, iOS `list-filters`). Its panel lists `Created by` (when someone else made a task) and `Priority`, each choice with its count at its right. Choices with no tasks hide. The group row picks every choice; each choice toggles alone. The icon fills in the accent color while a filter is on, and `Clear filters` ends the panel. Completed has none.
 - `header-filters-persist` keeps each list's filter on this device across reloads and relaunches. Another list starts unfiltered.
 - `header-filters-empty` reads `No tasks match the filters` with `Clear filters` when the filter hides every row.
-- `row-created-by` shows `by <name>`, with the `AI` badge for an AI account, on a row someone else made. A guest names another guest of the same space too, since the people route lists whoever made or finished a task the caller sees. Test: `a guest names a task another guest added to the shared project` in `app-web/e2e/sharing.e2e.ts`.
+- `row-created-by` shows `by <name>`, with the `AI` badge for an AI account, on a row someone else made. A guest names another guest of the same space too, since the people route lists whoever made or finished a task the caller sees.
 
 ## How to get to it (user POV)
 

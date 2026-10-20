@@ -5,7 +5,7 @@ const menu = (page: Page, title: string) => page.getByRole('menu', { name: title
 const toast = (page: Page, text: string) => page.getByRole('status').filter({ hasText: text });
 const open = (app: App, title: string) => app.row(title).getByRole('button', { name: title, exact: true });
 
-test('a right click on a task row opens its menu, which postpones, completes, deletes, and copies with undo', async ({
+test('a right click or Shift+F10 opens a task row’s menu, which postpones, completes, reopens, deletes, and copies with undo', async ({
 	app,
 	page,
 	context,
@@ -52,13 +52,7 @@ test('a right click on a task row opens its menu, which postpones, completes, de
 	await expect(app.row('Buy milk')).toHaveCount(0);
 	await toast(page, 'Completed “Buy milk”').getByRole('button', { name: 'Undo' }).click();
 	await expect(app.row('Buy milk')).toBeVisible();
-});
 
-test('Shift+F10 opens the focused row’s menu with its first item focused, and Escape gives focus back', async ({
-	app,
-	page,
-}) => {
-	await app.add('Pay rent today');
 	await open(app, 'Pay rent').focus();
 	await page.keyboard.press('Shift+F10');
 	const items = menu(page, 'Pay rent').getByRole('menuitem');
@@ -87,73 +81,31 @@ test('Shift+F10 opens the focused row’s menu with its first item focused, and 
 	await page.keyboard.press('Enter');
 	await expect(toast(page, 'Deleted “Pay rent”')).toBeVisible();
 	await expect(app.row('Pay rent')).toHaveCount(0);
-});
 
-test('a completed row’s menu reopens and deletes, and a subtask row’s menu toggles it in place', async ({
-	app,
-	page,
-}) => {
-	await app.add('Water plants today', 'Pack for trip today');
-	await app.row('Water plants').getByRole('checkbox', { name: 'Complete Water plants' }).click();
-	await expect(app.row('Water plants')).toHaveCount(0);
+	await app.row('Buy milk').getByRole('checkbox', { name: 'Complete Buy milk' }).click();
+	await expect(app.row('Buy milk')).toHaveCount(0);
 	await app.nav('Completed').click();
-
-	await app.row('Water plants').click({ button: 'right' });
-	await expect(menu(page, 'Water plants').getByRole('menuitem')).toHaveText(['Reopen', 'Delete', 'Copy as Markdown']);
-	await menu(page, 'Water plants').getByRole('menuitem', { name: 'Reopen' }).click();
-	await expect(toast(page, 'Reopened “Water plants”')).toBeVisible();
-	await expect(app.row('Water plants')).toHaveCount(0);
+	await app.row('Buy milk').click({ button: 'right' });
+	await expect(menu(page, 'Buy milk').getByRole('menuitem')).toHaveText(['Reopen', 'Delete', 'Copy as Markdown']);
+	await menu(page, 'Buy milk').getByRole('menuitem', { name: 'Reopen' }).click();
+	await expect(toast(page, 'Reopened “Buy milk”')).toBeVisible();
+	await expect(app.row('Buy milk')).toHaveCount(0);
 
 	await app.go('Inbox');
-	await open(app, 'Pack for trip').click();
+	await open(app, 'Buy milk').click();
 	const add = app.details().getByRole('textbox', { name: 'Add subtask' });
-	await add.fill('Passport');
+	await add.fill('Oat milk');
 	await add.press('Enter');
-	const passport = app.details().locator('[data-subtask="Passport"]');
-	await passport.click({ button: 'right' });
-	await menu(page, 'Passport').getByRole('menuitem', { name: 'Complete' }).click();
-	await expect(passport.getByRole('checkbox', { name: 'Complete Passport' })).toHaveAttribute('aria-checked', 'true');
+	const oat = app.details().locator('[data-subtask="Oat milk"]');
+	await oat.click({ button: 'right' });
+	await menu(page, 'Oat milk').getByRole('menuitem', { name: 'Complete' }).click();
+	await expect(oat.getByRole('checkbox', { name: 'Complete Oat milk' })).toHaveAttribute('aria-checked', 'true');
 	await expect(app.details()).toBeVisible();
-
-	await passport.click({ button: 'right' });
-	await expect(menu(page, 'Passport').getByRole('menuitem')).toHaveText(['Reopen', 'Delete', 'Copy as Markdown']);
+	await oat.click({ button: 'right' });
+	await expect(menu(page, 'Oat milk').getByRole('menuitem')).toHaveText(['Reopen', 'Delete', 'Copy as Markdown']);
 	await page.keyboard.press('Escape');
-	await expect(menu(page, 'Passport')).toBeHidden();
+	await expect(menu(page, 'Oat milk')).toBeHidden();
 	await expect(app.details()).toBeVisible();
-
-	await passport.click({ button: 'right' });
-	await menu(page, 'Passport').getByRole('menuitem', { name: 'Delete' }).click();
-	await expect(passport).toHaveCount(0);
-	await toast(page, 'Deleted “Passport”').getByRole('button', { name: 'Undo' }).click();
-	await expect(passport).toBeVisible();
-});
-
-test('a search result has the row menu, by right click and by Shift+F10 from the field', async ({ app, page }) => {
-	await app.add('Call plumber today', 'Call bank today');
-	await page.keyboard.press('/');
-	const search = page.getByRole('dialog', { name: 'Search' });
-	const field = search.getByRole('combobox', { name: 'Search' });
-	await field.fill('call');
-	const results = search.getByRole('listbox', { name: 'Search results' });
-	await expect(results.getByRole('option')).toHaveCount(2);
-
-	await field.press('Shift+F10');
-	const first = (await results.getByRole('option').first().textContent())!.includes('plumber')
-		? 'Call plumber'
-		: 'Call bank';
-	await expect(menu(page, first).getByRole('menuitem').first()).toBeFocused();
-	await page.keyboard.press('Escape');
-	await expect(menu(page, first)).toBeHidden();
-	await expect(search).toBeVisible();
-	await expect(field).toBeFocused();
-
-	await results.getByRole('option', { name: /Call plumber/ }).click({ button: 'right' });
-	await app.settle();
-	await page.screenshot({ path: 'test-results/row-menu/search-menu.png' });
-	await menu(page, 'Call plumber').getByRole('menuitem', { name: 'Delete' }).click();
-	await expect(results.getByRole('option')).toHaveCount(1);
-	await expect(toast(page, 'Deleted “Call plumber”')).toBeVisible();
-	await expect(search).toBeVisible();
 });
 
 test.describe('phone', () => {

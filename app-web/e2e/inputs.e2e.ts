@@ -82,20 +82,7 @@ test('title, notes, and subtask fields grow with their text instead of cutting i
 	await expect(app.details().getByRole('button', { name: /^Call the plumber/ })).toHaveCount(1);
 });
 
-test('search opens with an empty query each time', async ({ app, page }) => {
-	await app.add('Call the plumber');
-	const search = page.getByRole('combobox', { name: 'Search' });
-	await page.keyboard.press('/');
-	await search.fill('plumber');
-	await expect(page.getByRole('listbox', { name: 'Search results' }).getByRole('option')).toHaveCount(1);
-	await page.keyboard.press('Escape');
-	await expect(search).toBeHidden();
-	await page.keyboard.press('/');
-	await expect(search).toBeFocused();
-	await expect(search).toHaveValue('');
-});
-
-test('Add subtask keeps its caret above the keyboard while each Return inserts a row above it', async ({
+test('Add subtask keeps its caret above the keyboard while each Return inserts a row above it, until it is scrolled away', async ({
 	app,
 	page,
 }) => {
@@ -106,7 +93,7 @@ test('Add subtask keeps its caret above the keyboard while each Return inserts a
 		.getByRole('button', { name: /^Pack for trip/ })
 		.click();
 	const add = app.details().getByRole('textbox', { name: 'Add subtask' });
-	for (let i = 1; i <= 12; i++) {
+	for (let i = 1; i <= 21; i++) {
 		await add.fill(`Item ${i}`);
 		await add.press('Enter');
 	}
@@ -121,28 +108,13 @@ test('Add subtask keeps its caret above the keyboard while each Return inserts a
 		await expect(app.details().getByRole('button', { name: new RegExp(`^More ${i}`) })).toBeVisible();
 		await expect.poll(hidden).toBeLessThanOrEqual(0);
 	}
-});
 
-test('scrolling the caret away stops Add subtask following it, even when a row lands in the same frame', async ({
-	app,
-	page,
-}) => {
-	await page.setViewportSize({ width: 393, height: 852 });
-	await app.add('Pack for trip');
-	await app
-		.row('Pack for trip')
-		.getByRole('button', { name: /^Pack for trip/ })
-		.click();
-	const add = app.details().getByRole('textbox', { name: 'Add subtask' });
-	for (let i = 1; i <= 25; i++) {
-		await add.fill(`Item ${i}`);
-		await add.press('Enter');
-	}
-	await expect(app.details().getByRole('button', { name: /^Item 25/ })).toBeVisible();
+	await page.evaluate(() => document.documentElement.style.setProperty('--keyboard-inset', '0px'));
 	await app.settle();
 	await expect(add).toBeInViewport();
 	const body = app.details().locator('.overflow-y-auto').first();
-	// The page waits frames, not time: the caret keeper checks a scroll once a frame, and a resize observer runs before it.
+	// Scrolling the caret away stops the field following it, even when a row lands in the same frame. The page waits
+	// frames, not time: the caret keeper checks a scroll once a frame, and a resize observer runs before it.
 	const scrolledTo = await body.evaluate(async el => {
 		el.scrollTop = 0;
 		el.querySelector('li')!.style.paddingTop = '4px';

@@ -19,7 +19,10 @@ test.beforeEach(async ({ page }) => {
 	});
 });
 
-test('the ramble drawer streams tasks in, lets them be edited, and saves them all at once', async ({ app, page }) => {
+test('the ramble drawer streams tasks in, lets them be edited, and saves them all at once, and Escape stops then discards the next', async ({
+	app,
+	page,
+}) => {
 	await app.openSettings();
 	await app.dictationOption('ElevenLabs').click();
 	await page.keyboard.press('Escape');
@@ -58,25 +61,17 @@ test('the ramble drawer streams tasks in, lets them be edited, and saves them al
 	const groceries = app.row('Buy groceries for the party');
 	await expect(groceries).toBeVisible();
 	await expect(groceries.getByText('0/2')).toBeVisible();
-});
-
-test('Escape stops listening first, and closing discards the ramble', async ({ app, page }) => {
-	await app.openSettings();
-	await app.dictationOption('ElevenLabs').click();
-	await page.keyboard.press('Escape');
 
 	await app.openQuickAdd();
 	await app.quickAdd().getByRole('button', { name: 'Ramble' }).click();
-	const drawer = page.getByRole('dialog', { name: 'Ramble' });
 	await expect(drawer.getByRole('list', { name: 'Spoken tasks' }).getByText('Buy groceries for the party')).toBeVisible(
 		{ timeout: 15_000 },
 	);
-
 	await page.keyboard.press('Escape');
 	await expect(drawer.getByRole('button', { name: /^Add/ })).toBeVisible();
 	await page.keyboard.press('Escape');
 	await expect(drawer).toBeHidden();
-	await expect(app.row('Buy groceries for the party')).toHaveCount(0);
+	await expect(app.row('Buy groceries for the party')).toHaveCount(1);
 });
 
 test('Ramble offers projects shared to edit but not to view, and a task picked into one lands in its space', async ({

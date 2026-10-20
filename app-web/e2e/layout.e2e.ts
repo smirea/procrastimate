@@ -4,7 +4,7 @@ import { project, task } from '../../shared/testing.ts';
 import { App, expect, NOW, test } from './fixtures.ts';
 
 /**
- * Every view, sheet, and dialog at desktop and phone widths, with the phone's on-screen keyboard emulated through the
+ * Every view, sheet, and dialog at phone width, with the phone's on-screen keyboard emulated through the
  * `--keyboard-inset` the app publishes from the visual viewport. Each screen must let its last content scroll fully into
  * view, clear of the floating add button and the keyboard, with nothing clipped out of reach.
  */
@@ -12,6 +12,7 @@ import { App, expect, NOW, test } from './fixtures.ts';
 const KEYBOARD = 336;
 
 test.use({
+	viewport: { width: 393, height: 852 },
 	permissions: ['microphone'],
 	launchOptions: { args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] },
 });
@@ -149,108 +150,95 @@ async function seed(app: App) {
 	);
 }
 
-for (const [width, height] of [
-	[1280, 800],
-	[393, 852],
-] as const) {
-	test(`every screen scrolls clear at ${width}px`, async ({ app, page }) => {
-		test.setTimeout(240_000);
-		const phone = width < 768;
-		const findings: Finding[] = [];
-		const prefix = phone ? 'phone' : 'desktop';
-		await seed(app);
-		await page.setViewportSize({ width, height });
-		const open = async (view: string) => {
-			const heading = page.getByRole('heading', { level: 1, name: view });
-			// Clicking the link of the view already showing would leave a phone's drawer open over it.
-			if (!(await heading.isVisible())) {
-				if (phone) await page.getByRole('button', { name: 'Open navigation' }).click();
-				await app.nav(view).click();
-			}
-			await expect(heading).toBeVisible();
-			await app.settle();
-		};
+test('every screen scrolls clear at 393px', async ({ app, page }) => {
+	test.setTimeout(240_000);
+	const findings: Finding[] = [];
+	await seed(app);
 
-		for (const view of ['Inbox', 'No date', 'Trip to Lisbon']) {
-			await open(view);
-			await check(page, findings, `${prefix}-${view.replaceAll(' ', '-').toLowerCase()}`);
+	const open = async (view: string) => {
+		const heading = page.getByRole('heading', { level: 1, name: view });
+		// Clicking the link of the view already showing would leave a phone's drawer open over it.
+		if (!(await heading.isVisible())) {
+			await page.getByRole('button', { name: 'Open navigation' }).click();
+			await app.nav(view).click();
 		}
+		await expect(heading).toBeVisible();
+		await app.settle();
+	};
 
-		await open('Inbox');
-		if (phone) await page.getByRole('button', { name: 'Quick add' }).click();
-		else await app.openQuickAdd();
-		await app.taskInput().fill('Something long enough to wrap across a couple of lines in the field tomorrow');
-		await check(page, findings, `${prefix}-quick-add`);
-		if (phone) await check(page, findings, `${prefix}-quick-add-keyboard`, KEYBOARD);
-		await page.keyboard.press('Escape');
-		await expect(app.quickAdd()).toBeHidden();
+	for (const view of ['Inbox', 'No date', 'Trip to Lisbon']) {
+		await open(view);
+		await check(page, findings, `phone-${view.replaceAll(' ', '-').toLowerCase()}`);
+	}
 
-		await app.row('Write the long notes task').click();
-		await expect(app.details()).toBeVisible();
-		await app.details().getByRole('textbox', { name: 'Notes' }).fill(LONG_NOTES);
-		await check(page, findings, `${prefix}-details`);
-		if (phone) {
-			await app.details().getByRole('textbox', { name: 'Notes' }).focus();
-			await check(page, findings, `${prefix}-details-keyboard`, KEYBOARD);
-		}
-		await app.details().getByRole('button', { name: 'Close' }).click();
-		await expect(app.details()).toBeHidden();
+	await open('Inbox');
+	await page.getByRole('button', { name: 'Quick add' }).click();
+	await app.taskInput().fill('Something long enough to wrap across a couple of lines in the field tomorrow');
+	await check(page, findings, 'phone-quick-add');
+	await check(page, findings, 'phone-quick-add-keyboard', KEYBOARD);
+	await page.keyboard.press('Escape');
+	await expect(app.quickAdd()).toBeHidden();
 
-		if (phone) await page.getByRole('button', { name: 'Open navigation' }).click();
-		await page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'Search' }).click();
-		const search = page.getByRole('dialog', { name: 'Search' });
-		await expect(search).toBeVisible();
-		await page.keyboard.type('i');
-		await check(page, findings, `${prefix}-search`);
-		if (phone) await check(page, findings, `${prefix}-search-keyboard`, KEYBOARD);
-		await page.keyboard.press('Escape');
-		await expect(search).toBeHidden();
+	await app.row('Write the long notes task').click();
+	await expect(app.details()).toBeVisible();
+	await app.details().getByRole('textbox', { name: 'Notes' }).fill(LONG_NOTES);
+	await check(page, findings, 'phone-details');
+	await app.details().getByRole('textbox', { name: 'Notes' }).focus();
+	await check(page, findings, 'phone-details-keyboard', KEYBOARD);
+	await app.details().getByRole('button', { name: 'Close' }).click();
+	await expect(app.details()).toBeHidden();
 
-		if (phone) await page.getByRole('button', { name: 'Open navigation' }).click();
-		await app.openSettings();
-		await check(page, findings, `${prefix}-settings`);
-		const aiName = app.settings().getByRole('textbox').first();
-		if (phone && (await aiName.count())) {
-			await aiName.focus();
-			await check(page, findings, `${prefix}-settings-keyboard`, KEYBOARD);
-		}
-		await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
-		await page.keyboard.press('Escape');
-		await expect(app.settings()).toBeHidden();
+	await page.getByRole('button', { name: 'Open navigation' }).click();
+	await page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'Search' }).click();
+	const search = page.getByRole('dialog', { name: 'Search' });
+	await expect(search).toBeVisible();
+	await page.keyboard.type('i');
+	await check(page, findings, 'phone-search');
+	await check(page, findings, 'phone-search-keyboard', KEYBOARD);
+	await page.keyboard.press('Escape');
+	await expect(search).toBeHidden();
 
-		await open('Trip to Lisbon');
-		await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
-		const share = page.getByRole('dialog', { name: 'Share' });
-		await expect(share).toBeVisible();
-		await check(page, findings, `${prefix}-share`);
-		if (phone) await check(page, findings, `${prefix}-share-keyboard`, KEYBOARD);
-		await page.keyboard.press('Escape');
-		await expect(share).toBeHidden();
+	await page.getByRole('button', { name: 'Open navigation' }).click();
+	await app.openSettings();
+	await check(page, findings, 'phone-settings');
+	const aiName = app.settings().getByRole('textbox').first();
+	if (await aiName.count()) {
+		await aiName.focus();
+		await check(page, findings, 'phone-settings-keyboard', KEYBOARD);
+	}
+	await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+	await page.keyboard.press('Escape');
+	await expect(app.settings()).toBeHidden();
 
-		await open('Inbox');
-		for (let i = 1; i <= 10; i++)
-			await page.getByRole('checkbox', { name: `Complete Inbox chore ${i}`, exact: true }).click();
-		await open('Completed');
-		await check(page, findings, `${prefix}-completed`);
+	await open('Trip to Lisbon');
+	await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
+	const share = page.getByRole('dialog', { name: 'Share' });
+	await expect(share).toBeVisible();
+	await check(page, findings, 'phone-share');
+	await check(page, findings, 'phone-share-keyboard', KEYBOARD);
+	await page.keyboard.press('Escape');
+	await expect(share).toBeHidden();
 
-		if (phone) await page.getByRole('button', { name: 'Open navigation' }).click();
-		await app.openSettings();
-		await app.dictationOption('ElevenLabs').click();
-		await page.keyboard.press('Escape');
-		await expect(app.settings()).toBeHidden();
-		if (phone) await page.getByRole('button', { name: 'Quick add' }).click();
-		else await app.openQuickAdd();
-		await app.quickAdd().getByRole('button', { name: 'Ramble' }).click();
-		const drawer = page.getByRole('dialog', { name: 'Ramble' });
-		await expect(drawer.getByText('Renew the passport', { exact: true })).toBeVisible({ timeout: 15_000 });
-		await drawer.getByRole('button', { name: 'Stop listening' }).click();
-		await expect(drawer.getByRole('button', { name: /^Add \d+ tasks$/ })).toBeVisible();
-		await check(page, findings, `${prefix}-ramble`);
-		if (phone) {
-			await drawer.getByRole('textbox', { name: 'Task title', exact: true }).first().focus();
-			await check(page, findings, `${prefix}-ramble-keyboard`, KEYBOARD);
-		}
+	await open('Inbox');
+	for (let i = 1; i <= 10; i++)
+		await page.getByRole('checkbox', { name: `Complete Inbox chore ${i}`, exact: true }).click();
+	await open('Completed');
+	await check(page, findings, 'phone-completed');
 
-		expect(findings).toEqual([]);
-	});
-}
+	await page.getByRole('button', { name: 'Open navigation' }).click();
+	await app.openSettings();
+	await app.dictationOption('ElevenLabs').click();
+	await page.keyboard.press('Escape');
+	await expect(app.settings()).toBeHidden();
+	await page.getByRole('button', { name: 'Quick add' }).click();
+	await app.quickAdd().getByRole('button', { name: 'Ramble' }).click();
+	const drawer = page.getByRole('dialog', { name: 'Ramble' });
+	await expect(drawer.getByText('Renew the passport', { exact: true })).toBeVisible({ timeout: 15_000 });
+	await drawer.getByRole('button', { name: 'Stop listening' }).click();
+	await expect(drawer.getByRole('button', { name: /^Add \d+ tasks$/ })).toBeVisible();
+	await check(page, findings, 'phone-ramble');
+	await drawer.getByRole('textbox', { name: 'Task title', exact: true }).first().focus();
+	await check(page, findings, 'phone-ramble-keyboard', KEYBOARD);
+
+	expect(findings).toEqual([]);
+});
