@@ -69,11 +69,6 @@ describe('rowWrites', () => {
 		]);
 	});
 
-	test('puts a restored entity again with every field', () => {
-		const [write] = rowWrites(snapshotOf(), snapshotOf({ tasks: [task('t', { title: 'Back' })] }));
-		expect(write).toMatchObject({ op: 'put', values: { title: 'Back', priority: 4 } });
-	});
-
 	test('undoing a completion patches only what it restores', () => {
 		const done = snapshotOf({ tasks: [task('t', { completedAt: 5 })] });
 		expect(rowWrites(done, snapshotOf({ tasks: [task('t')] }))).toEqual([

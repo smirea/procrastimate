@@ -98,8 +98,17 @@ describe('statements per upload', () => {
 				values: { id: projectId, user_id: owner.person.id, name: 'Moved into', created_at: 1 },
 			},
 		]);
+		// Its own task and human grantee, so the test holds alone and not only after the guest's edit above.
+		const moved = crypto.randomUUID();
+		await upload(app, owner, [
+			{ op: 'put', table: 'tasks', id: moved, values: taskRow(moved, owner.person.id, 'Moved') },
+		]);
+		await shareWith(app, owner, { kind: 'project', id: projectId }, guest.person.id, 'view');
 		// The pre-check, the lock, the shares to humans and the stored rows, then the tree, then the changed rows.
-		expect(await statementsOf(owner, patch({ project_id: projectId }))).toEqual([
+		const move = [
+			{ op: 'patch', table: 'tasks', id: moved, values: { project_id: projectId }, opId: crypto.randomUUID() },
+		];
+		expect(await statementsOf(owner, move)).toEqual([
 			'update tasks',
 			'insert log',
 			'select shares',

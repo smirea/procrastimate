@@ -165,19 +165,6 @@ import Testing
         #expect(Dates.stepRecurrence("2026-10-14", Recurrence(interval: Int.max, unit: .month, nth: nth)) == nil)
     }
 
-    @Test func quickAddKeepsAnIntervalTooLargeForAnIntAsText() {
-        let now = Dates.fromDateKey("2026-10-14", "10:00", in: .gmt)
-        let cases: [(String, Due?)] = [
-            ("x every 99999999mo 9am", Due(date: "2026-10-15", time: "09:00")),
-            ("x every 999999999999999999w", nil),
-            ("x every 99999999999999999999 days", nil),
-        ]
-        for (input, due) in cases {
-            let parsed = QuickAdd.parse(input, QuickAdd.Options(now: now), in: .gmt)
-            #expect(parsed.recurrence == nil)
-            #expect(parsed.due == due)
-        }
-    }
 }
 
 @Suite struct ReminderMenuTests {

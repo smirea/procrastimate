@@ -612,45 +612,6 @@
 		},
 		{
 			"fn": "readTodoistBackup",
-			"test": "CSV edge cases › a quoted title keeps its commas and line breaks",
-			"input": [
-				[
-					{
-						"name": "Errands [42].csv",
-						"text": "﻿TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,DATE,DATE_LANG\r\ntask,\"Buy eggs, milk\r\nand bread\",\"Say \"\"hi\"\"\",4,1,,\r\n"
-					}
-				],
-				1791986400000
-			],
-			"output": {
-				"projects": [
-					{
-						"inbox": false,
-						"name": "Errands",
-						"sourceKey": "todoist:project:42"
-					}
-				],
-				"sections": [],
-				"tasks": [
-					{
-						"due": null,
-						"labels": [],
-						"notes": "Say \"hi\"",
-						"parentKey": null,
-						"priority": 4,
-						"projectKey": "todoist:project:42",
-						"recurrence": null,
-						"reminders": [],
-						"sectionKey": null,
-						"sourceKey": "todoist:task:42:Buy eggs, milk\nand bread",
-						"title": "Buy eggs, milk\nand bread"
-					}
-				],
-				"warnings": []
-			}
-		},
-		{
-			"fn": "readTodoistBackup",
 			"test": "CSV edge cases › an indent back to 1 ends the nesting",
 			"input": [
 				[

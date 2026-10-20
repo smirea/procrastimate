@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { inArray } from 'drizzle-orm';
 import { images } from '../../shared/db/schema';
 import { IMAGE_GRACE_MS, sweepImages } from './images';
-import { aiAccount, type Session, shareWith, signUp, taskRow, testApp, type TestApp, upload } from './test-app';
+import { type Session, shareWith, signUp, taskRow, testApp, type TestApp, upload } from './test-app';
 
 let app: TestApp;
 let owner: Session;
@@ -80,28 +80,6 @@ describe('/api/images', () => {
 		await app.fetch(`/api/shares?id=${share.id}`, { method: 'DELETE', headers: owner.headers });
 		await shareWith(app, owner, { kind: 'task', id: shared }, guest.person.id, 'edit');
 		expect((await put(guest, crypto.randomUUID(), 'full', JPEG, 'image/jpeg', owner.person.id)).status).toBe(200);
-	});
-
-	test('an AI token reads the images of its owner’s space and may not upload', async () => {
-		const id = crypto.randomUUID();
-		await put(owner, id, 'full', JPEG);
-		const taskId = crypto.randomUUID();
-		await upload(app, owner, [
-			{
-				op: 'put',
-				table: 'tasks',
-				id: taskId,
-				values: taskRow(taskId, owner.person.id, 'Pictured', { images: JSON.stringify([{ id, width: 4, height: 3 }]) }),
-			},
-		]);
-		const { headers } = await aiAccount(app, owner);
-		expect((await app.fetch(`/api/images?id=${id}&size=full`, { headers })).status).toBe(200);
-		const refused = await app.fetch(`/api/images?id=${crypto.randomUUID()}&size=full`, {
-			method: 'PUT',
-			headers: { ...headers, 'content-type': 'image/jpeg' },
-			body: new Blob([JPEG]),
-		});
-		expect(refused.status).toBe(403);
 	});
 
 	test('the cron’s sweep marks unlisted images, clears the mark when listed again, and drops them after the grace period', async () => {

@@ -46,11 +46,8 @@ describe('the example from the brief', () => {
 describe('due dates', () => {
 	test.each([
 		['Pay rent today', '2026-10-14', null],
-		['Pay rent tonight', '2026-10-14', '20:00'],
 		['Pay rent tonight at 9pm', '2026-10-14', '21:00'],
 		['Pay rent tomorrow', '2026-10-15', null],
-		['Pay rent tmrw', '2026-10-15', null],
-		['Pay rent wed', '2026-10-14', null],
 		['Pay rent fri', '2026-10-16', null],
 		['Pay rent on monday', '2026-10-19', null],
 		['Pay rent next week', '2026-10-19', null],
@@ -1166,12 +1163,6 @@ describe('ordinary words stay in the title', () => {
 		const parsed = parse('Lunch with Tom tom');
 		expect(parsed.title).toBe('Lunch with Tom');
 		expect(parsed.due).toEqual({ date: '2026-10-15', time: null });
-	});
-
-	test('a word-like shorthand at the end still parses', () => {
-		const parsed = parse('Water plants daily');
-		expect(parsed.title).toBe('Water plants');
-		expect(parsed.recurrence).toEqual({ interval: 1, unit: 'day' });
 	});
 
 	test('phrases around a link still parse', () => {

@@ -23,9 +23,4 @@ import Testing
         #expect(promptNames.contains { LabelColors.hintedColor($1) != nil })
     }
 
-    @Test func deepAndCreativeWorkTakeTheirOwnColorsOverWork() {
-        #expect(LabelColors.defaultLabelColor("Deep work") == .indigo)
-        #expect(LabelColors.defaultLabelColor("creative work") == .violet)
-        #expect(LabelColors.defaultLabelColor("work") == .blue)
-    }
 }

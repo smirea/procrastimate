@@ -34,7 +34,7 @@ Preconditions:
 - iOS only. Run the app with `bun run start:ios -t simulator`, then run each intent from the Shortcuts app.
 - Rule coverage: `swift test` in `app-ios/` runs `IntentRulesTests`.
 
-- **Add.** The intent adds `Call mom tomorrow 5pm p1 remind me 30m before`. Inbox shows `Call mom` with `Tomorrow 5pm`, one reminder, and a `Priority 1` checkbox. A title that is only `tomorrow` adds nothing. The rules are covered by `aSpokenTitleUsesTheQuickAddGrammar` and `aPhraseWithNoTitleSavesNothing`.
+- **Add.** The intent adds `Call mom tomorrow 5pm p1 remind me 30m before`. Inbox shows `Call mom` with `Tomorrow 5pm`, one reminder, and a `Priority 1` checkbox. A title that is only `tomorrow` adds nothing. The rules are covered by `aPhraseWithNoTitleSavesNothing`, and the grammar by the quick add vectors in `VectorTests`.
 - **Project, label, and fields.** With project `House` and label `calls` already created, the intent adds `Ping Ana #House @calls p2 tomorrow`, and `House` shows `Ping Ana` with `Tomorrow`, `calls`, and `Priority 2`. A second add sets the project, label, priority, due, and reminder as fields rather than words: `Submit report` shows `Tomorrow 5pm`, `calls`, one reminder, and `Priority 1`. The rules are covered by `anExplicitValueFillsWhatTheTitleLeftUnset` and `theTitleWinsOverAnExplicitValueForTheSameField`.
 - **Complete.** `Buy milk` leaves the list and `Call mom` stays. The rules are covered by `completeAndReopenHonorTheChosenStateThenTheOtherMatch`.
 - **Reopen.** After `Buy milk` is completed, reopening puts it back. The rules are covered by `completeAndReopenHonorTheChosenStateThenTheOtherMatch`.
@@ -48,7 +48,7 @@ Preconditions:
 
 - The phrases above only work when they include the app name, `ProcrastiMate`.
 - `#Project` and `@label` match records that already exist. They do not create one.
-- A saved place, typed as `@gym` or picked in the labels field, becomes the task's place instead of a label, as in quick add. The rules are covered by `aSavedPlacePickedAsALabelBecomesTheTasksPlace` and `aSavedPlaceInTheTitleBecomesTheTasksPlace`. Shortcuts and Spotlight show a saved place with a pin instead of a tag.
+- A saved place, typed as `@gym` or picked in the labels field, becomes the task's place instead of a label, as in quick add. The rules are covered by `aSavedPlaceInTheTitleBecomesTheTasksPlace`. `VectorTests` replays the picked-label rule from `shared/vectors/triggers.json`. Shortcuts and Spotlight show a saved place with a pin instead of a tag.
 - Words in the title win over a Shortcuts field for the same detail. A field applies only when the title did not set it.
 - A spoken title ignores case and accents. When several open tasks share it, the newest one is first.
 - Dates follow the device clock. With the clock at Wednesday, October 14 2026, 10:00 UTC, `Tomorrow 5pm` is October 15.

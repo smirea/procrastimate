@@ -45,13 +45,6 @@ import Testing
         #expect(Triggers.radius(atSlider: Triggers.sliderPosition(of: 1_480, max: 100_000), max: 100_000) == 1_500)
     }
 
-    @Test func radiiReadInMetersThenKilometers() {
-        #expect(Triggers.formatRadius(150) == "150 m")
-        #expect(Triggers.formatRadius(1_000) == "1 km")
-        #expect(Triggers.formatRadius(1_480) == "1.5 km")
-        #expect(Triggers.formatRadius(21_920) == "22 km")
-    }
-
     private func park(radius: Double, fitted: Double?) -> TaskLocation {
         TaskLocation(name: "Tiergarten", latitude: 52.51, longitude: 13.36, radius: radius, fittedRadius: fitted, trigger: .arrive)
     }

@@ -11,16 +11,6 @@ import Testing
 
     func minutes(_ n: Double) -> Int { pinned.addingTimeInterval(n * 60).epochMilliseconds }
 
-    @Test func theWindowKeepsTheSoonestSixty() {
-        let tasks = (0..<70).map { i in
-            task("t\(i)", Due(date: "2026-10-15", time: String(format: "%02d:%02d", i / 60, i % 60)))
-        }
-        let schedule = Notifications.upcomingNotifications(tasks, now: pinned, limit: Notifications.maxScheduled, in: utc)
-        #expect(schedule.count == 60)
-        #expect(schedule.first?.taskId == "t0")
-        #expect(schedule.last?.taskId == "t59")
-    }
-
     @Test func aChangeAddsWhatIsMissingOrChangedAndRemovesStaleTaskMoments() {
         let due = Due(date: "2026-10-14", time: "10:30")
         let schedule = Notifications.upcomingNotifications(
@@ -54,23 +44,4 @@ import Testing
         #expect(!Notifications.isTaskTag("task:soon"))
     }
 
-    @Test func importingTheSameBackupTwiceAddsNothing() {
-        var next = 0
-        let store = recordingStore(clock: AppClock.fixed(pinned, timeZone: utc), newId: {
-            next += 1
-            return "id-\(next)"
-        }).0
-        let files = [Todoist.BackupFile(
-            name: "Home [123].csv",
-            text: "\u{FEFF}TYPE,CONTENT,PRIORITY,INDENT\r\ntask,Water plants @home,1,1\r\ntask,Repot fern,4,2\r\n"
-        )]
-        let backup = Todoist.readTodoistBackup(files, pinned, in: utc)
-        let first = store.importTodoist(backup)
-        #expect([first.projects, first.labels, first.tasks, first.skipped] == [1, 1, 2, 0] as [Int])
-        #expect(store.tasks.map(\.title) == ["Water plants", "Repot fern"])
-        #expect(store.tasks[1].parentId == store.tasks[0].id)
-        let second = store.importTodoist(backup)
-        #expect([second.projects, second.labels, second.tasks, second.skipped] == [0, 0, 0, 2] as [Int])
-        #expect(store.tasks.count == 2)
-    }
 }

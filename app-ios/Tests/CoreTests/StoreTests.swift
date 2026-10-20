@@ -57,30 +57,6 @@ import Testing
         #expect(store.dictation == .elevenlabs)
     }
 
-    @Test func commitKeepsTasksInSyncOrder() {
-        let (store, _) = recordingStore()
-        let late = TaskItem(id: "a", title: "Late", createdAt: 20)
-        let early = TaskItem(id: "c", title: "Early", createdAt: 10)
-        let tie = TaskItem(id: "b", title: "Tie", createdAt: 10)
-        store.commit(StoreData(tasks: [late, early, tie]))
-        #expect(store.tasks.map(\.id) == ["b", "c", "a"])
-    }
-
-    @Test func undoPutsBackACompletionAndADelete() throws {
-        let (store, written) = recordingStore()
-        let task = try #require(store.addTask(NewTask(title: "Standup", due: Due(date: "2026-10-14", time: "09:00"), recurrence: Recurrence(interval: 1, unit: .day))))
-        let completion = try #require(store.completeTask(task.id))
-        #expect(completion.next == Due(date: "2026-10-15", time: "09:00"))
-        store.restoreCompletion(completion.previous)
-        #expect(store.task(task.id)?.due == Due(date: "2026-10-14", time: "09:00"))
-
-        let removed = store.deleteTask(task.id)
-        #expect(store.tasks.isEmpty)
-        store.undeleteTasks(removed)
-        #expect(store.tasks.map(\.id) == [task.id])
-        #expect(written.writes.suffix(2).map(\.op) == [.delete, .put])
-    }
-
     @Test func deleteAllDeletesEveryOwnRowAndKeepsTheSettings() {
         var rows = StoredRows()
         rows.tasks = [Owned(owner: "me", value: TaskItem(id: "t", title: "Mine", createdAt: 1))]

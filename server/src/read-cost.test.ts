@@ -250,6 +250,11 @@ describe('statements per read', () => {
 	});
 
 	test('the cron settles and replans a due user’s installs in one update each', async () => {
+		await app.fetch('/api/push/subscription', {
+			method: 'PUT',
+			headers: owner.headers,
+			body: JSON.stringify({ subscription }),
+		});
 		const due = new Date(Date.now() + 60_000).toISOString();
 		await upload(app, owner, [
 			{
