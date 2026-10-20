@@ -228,3 +228,31 @@ test('a public link opens read only for someone who is not signed in', async ({ 
 	await page.reload();
 	await expect(page.getByText('This link no longer works')).toBeVisible({ timeout: 15_000 });
 });
+
+test('sharing a second list while the first share sheet still leaves starts from that list’s own people', async ({
+	devices,
+}) => {
+	const guest = await devices.open({ person: 'Gus', path: '/inbox', heading: 'Inbox' });
+	const { owner, project: first } = await ownerWithProject(devices);
+	const second = unique('Hardware');
+	await owner.app.createProject(second);
+	await owner.page.goBack();
+	await expect(owner.page.getByRole('heading', { level: 1, name: first })).toBeVisible();
+	await shareWith(owner, guest);
+
+	// Frozen mid-outro, the first sheet is still on screen and its scrim takes the clicks, so these dispatch directly.
+	await owner.page.evaluate(() => document.getAnimations().forEach(animation => animation.pause()));
+	await owner.page.goForward();
+	await expect(owner.page.getByRole('heading', { level: 1, name: second })).toBeVisible();
+	await owner.page.getByRole('button', { name: 'Project actions' }).dispatchEvent('click');
+	await owner.page
+		.getByRole('dialog', { name: 'Project actions' })
+		.getByRole('button', { name: 'Share' })
+		.dispatchEvent('click');
+
+	const sheet = shareSheet(owner.page);
+	await expect(sheet).toContainText(second);
+	await expect(sheet.getByRole('region', { name: 'People with access' })).toHaveCount(0);
+	await sheet.getByRole('textbox', { name: 'Email or name' }).fill('Gus');
+	await expect(sheet.getByRole('list', { name: 'People found' }).getByRole('button', { name: /Gus/ })).toBeVisible();
+});
