@@ -1,6 +1,7 @@
 .build
 .swiftpm
 DerivedData
+SourcePackages
 xcuserdata/
 Config/LocalSecrets.xcconfig
 Config/Env.xcconfig

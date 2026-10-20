@@ -138,6 +138,20 @@ jobs:
       - name: Toolchain
         run: xcodebuild -version
 
+      # sentry-cocoa's xcframework zips (about 800 MB) download from GitHub releases on a cold resolve, and that download
+      # timed out a build. SwiftPM keeps them and every package's git clone in its shared cache, which resolves fully offline
+      # when warm. The key is Package.resolved, which pins every package. No restore-keys: the shared cache never prunes, so
+      # a dependency change downloads once instead of carrying the old versions forward. testflight.yml saves the same key
+      # on master, which every PR can read.
+      - uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: swiftpm-${{ runner.os }}-${{ hashFiles('app-ios/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+
+      # One clone directory for every xcodebuild below, so the packages extract once instead of once per call.
+      - name: Resolve packages
+        run: xcodebuild -resolvePackageDependencies -project App.xcodeproj -scheme App -clonedSourcePackagesDirPath SourcePackages
+
       # No AWS here. Debug gets the dev schema default; Release is pinned in Base.xcconfig.
       - name: Debug and Release env
         working-directory: ${{ github.workspace }}
@@ -145,8 +159,8 @@ jobs:
 
       - name: Debug calls dev and Release calls prod
         run: |
-          debug=$(xcodebuild -showBuildSettings -project App.xcodeproj -target App -configuration Debug | awk '$1 == "API_URL" { print $3 }')
-          release=$(xcodebuild -showBuildSettings -project App.xcodeproj -target App -configuration Release | awk '$1 == "API_URL" { print $3 }')
+          debug=$(xcodebuild -showBuildSettings -project App.xcodeproj -target App -configuration Debug -clonedSourcePackagesDirPath SourcePackages | awk '$1 == "API_URL" { print $3 }')
+          release=$(xcodebuild -showBuildSettings -project App.xcodeproj -target App -configuration Release -clonedSourcePackagesDirPath SourcePackages | awk '$1 == "API_URL" { print $3 }')
           echo "Debug API_URL=$debug"
           echo "Release API_URL=$release"
           test "$debug" = http://127.0.0.1:6121
@@ -154,7 +168,7 @@ jobs:
 
       - name: Only Release reports to Sentry, with dSYMs
         run: |
-          settings() { xcodebuild -showBuildSettings -project App.xcodeproj -target App -configuration "$1" | awk -v key="$2" '$1 == key { print $3 }'; }
+          settings() { xcodebuild -showBuildSettings -project App.xcodeproj -target App -configuration "$1" -clonedSourcePackagesDirPath SourcePackages | awk -v key="$2" '$1 == key { print $3 }'; }
           test -z "$(settings Debug SENTRY_ENVIRONMENT)"
           test "$(settings Release SENTRY_ENVIRONMENT)" = production
           test "$(settings Release DEBUG_INFORMATION_FORMAT)" = dwarf-with-dsym
@@ -162,7 +176,8 @@ jobs:
       - name: Build
         run: >
           xcodebuild build -quiet -project App.xcodeproj -scheme App
-          -destination 'generic/platform=iOS Simulator' -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO
+          -destination 'generic/platform=iOS Simulator' -derivedDataPath DerivedData -clonedSourcePackagesDirPath SourcePackages
+          CODE_SIGNING_ALLOWED=NO
 
       - name: App bundles its privacy manifest
         run: |
