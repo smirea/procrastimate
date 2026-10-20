@@ -120,7 +120,7 @@ merged)
 	;;
 new)
 	project=$2 session=$3
-	"$0" tasks "$project" | grep -E '^[0-9a-f-]{8,} ' | while read -r id _; do
+	"$0" tasks "$project" | { grep -E '^[0-9a-f-]{8,} ' || true; } | while read -r id _; do
 		grep -q "${id:0:8}" "$session" || echo "$id"
 	done
 	;;
