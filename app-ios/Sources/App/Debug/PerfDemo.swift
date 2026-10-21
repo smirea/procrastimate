@@ -2,7 +2,7 @@ import Core
 import Foundation
 import UIKit
 
-/// DEBUG-only. `PROCRASTIMATE_DEMO=bulk:<n>` seeds `n` tasks once, nine in ten completed, across 15 projects and 20
+/// DEBUG-only. `PROCRASTIMATE_DEMO=bulk:<n>` seeds `n` tasks into an empty store, nine in ten completed, across 15 projects and 20
 /// labels, with subtasks, comments, and two images on every twelfth open task, so lag can be measured at any size.
 /// `PROCRASTIMATE_PERF=<host path>` appends one line per main run loop pass longer than 8 ms to that file, and the word
 /// `script` then opens details, completes tasks, and switches tabs on a fixed schedule, marking each phase in
@@ -13,7 +13,8 @@ enum PerfDemo {
         #if DEBUG
         guard let path = ProcessInfo.processInfo.environment["PROCRASTIMATE_PERF"] else { return }
         StallMonitor.start(path)
-        if let count = PlacesDemo.value("bulk").flatMap(Int.init), store.tasks.count < count {
+        // The seed replaces the own space, so it only ever fills an empty one.
+        if let count = PlacesDemo.value("bulk").flatMap(Int.init), store.tasks.isEmpty {
             store.commit(data(count, today: clock.today, now: clock.now.epochMilliseconds))
         }
         if PlacesDemo.has("script") { await script(path, store: store, clock: clock, navigator: navigator, actions: actions) }
