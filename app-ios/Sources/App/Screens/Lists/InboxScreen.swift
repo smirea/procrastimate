@@ -16,7 +16,7 @@ struct DueScreen: View {
     }
 
     var body: some View {
-        let all = Views.dueDays(store.tasks, today, list, in: store.timeZone)
+        let all = Views.dueDays(store.openTasks, today, list, in: store.timeZone)
         let shown = { (tasks: [TaskItem]) in ListFilters.filterTasks(tasks, filter, me: store.me) }
         let due = (
             overdue: shown(all.overdue),
@@ -104,7 +104,7 @@ struct NoDateScreen: View {
     @StoredFilter(.noDate) private var filter
 
     var body: some View {
-        let all = Views.noDateTasks(store.tasks, today, newestFirst: newestFirst, in: store.timeZone)
+        let all = Views.noDateTasks(store.openTasks, today, newestFirst: newestFirst, in: store.timeZone)
         let tasks = ListFilters.filterTasks(all, filter, me: store.me)
         TaskListScreen(
             title: "No date",

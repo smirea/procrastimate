@@ -92,7 +92,7 @@ final class CalendarSync {
     func sync() {
         access = EKEventStore.authorizationStatus(for: .event)
         guard granted else { return }
-        let tasks = store.tasks.filter { $0.completedAt == nil && $0.event != nil }
+        let tasks = store.openTasks.filter { $0.event != nil }
         guard !tasks.isEmpty else { return }
         let upcoming = upcomingEvents()
         for task in tasks {

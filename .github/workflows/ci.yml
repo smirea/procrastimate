@@ -9,6 +9,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# The schema defaults the env readers require. Nothing here is secret; the deploy's secrets are repository secrets.
+env:
+  API_URL: http://127.0.0.1:6121
+  API_PORT: 6121
+  CLIENT_PORT: 6120
+
 jobs:
   checks:
     runs-on: ubuntu-latest
@@ -19,17 +25,6 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup
-
-      # Stefan's machine runs env-manager from a live checkout, so a reader-format change there dirties every worktree until the pin follows.
-      - name: Env readers match the pinned env-manager
-        run: |
-          drift=$(git status --porcelain)
-          if [ -n "$drift" ]; then
-            git status --short
-            git diff
-            echo "::error::env-manager gen --local changed tracked files. Bump the env-manager commit in .github/actions/setup/action.yml to the one you run locally ('git -C ~/code/env-manager rev-parse HEAD'), run 'env-manager gen --local', and commit the regenerated readers."
-            exit 1
-          fi
 
       # drizzle-kit writes a new migration when the schema has changed without one.
       - name: Migrations match the schema
@@ -164,7 +159,7 @@ jobs:
       - name: Sentry auth token
         if: env.HAS_CLOUDFLARE == 'true' && env.HAS_SENTRY != 'true'
         run: |
-          echo "::error::Add the SENTRY_AUTH_TOKEN repository secret: set it in env-manager prod, then run 'bun run secrets:github'. The deploy uploads source maps to Sentry with it."
+          echo "::error::Add the SENTRY_AUTH_TOKEN repository secret with 'bun run secrets:github'. The deploy uploads source maps to Sentry with it."
           exit 1
 
       # SENTRY_ENVIRONMENT turns reporting on; the build fails while shared/sentry.ts has no web DSN.

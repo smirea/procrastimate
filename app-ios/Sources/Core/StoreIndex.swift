@@ -13,6 +13,8 @@ struct StoreIndex {
     /// Every shared entity's owner, for `SpaceRouting`.
     private(set) var homes: SpaceRouting.Homes = [:]
     private(set) var allTasks: [TaskItem] = []
+    /// The user's own open tasks, which every list, count, and schedule reads, so none of them walks the completed history.
+    private(set) var openTasks: [TaskItem] = []
     /// The user's own projects first, then each shared space's, each in its order, as the web lists them.
     private(set) var allProjects: [Project] = []
     private(set) var allLabels: [Label] = []
@@ -23,6 +25,7 @@ struct StoreIndex {
 
     init(own: Snapshot, shared: [String: Snapshot]) {
         add(own, in: .own)
+        openTasks = own.tasks.filter { $0.completedAt == nil }
         for owner in shared.keys.sorted() {
             add(shared[owner]!, in: .shared(owner))
         }

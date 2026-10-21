@@ -123,6 +123,26 @@ final class TaskImages {
         try? FileManager.default.removeItem(at: Files.queue)
     }
 
+    #if DEBUG
+    /// Writes a full and a thumbnail JPEG for `id` into the cache, for `PerfDemo`.
+    nonisolated static func seedCached(_ id: String, hue: Double) {
+        for (size, edge) in [(Size.full, 2048.0), (.thumb, 320.0)] {
+            let url = Files.cached(key(id, size))
+            guard !FileManager.default.fileExists(atPath: url.path) else { continue }
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 1
+            let image = UIGraphicsImageRenderer(size: CGSize(width: edge, height: edge * 0.75), format: format).image { context in
+                for band in 0 ..< 24 {
+                    UIColor(hue: (hue + Double(band) / 48).truncatingRemainder(dividingBy: 1), saturation: 0.6, brightness: 0.9, alpha: 1)
+                        .setFill()
+                    context.fill(CGRect(x: 0, y: Double(band) * edge * 0.75 / 24, width: edge, height: edge * 0.75 / 24 + 1))
+                }
+            }
+            if let data = image.jpegData(compressionQuality: 0.8) { try? Files.write(data, to: url) }
+        }
+    }
+    #endif
+
     private nonisolated static func key(_ id: String, _ size: Size) -> String { "\(id)-\(size.rawValue)" }
 
     private nonisolated static func url(_ id: String, _ size: Size, space: SpaceKey) -> URL {

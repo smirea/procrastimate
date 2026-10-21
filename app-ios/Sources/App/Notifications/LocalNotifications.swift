@@ -138,7 +138,7 @@ final class LocalNotifications: NSObject {
         }
         let now = clock.now
         let schedule = Notifications.upcomingNotifications(
-            store.tasks, now: now, limit: Notifications.maxScheduled, in: clock.timeZone
+            store.openTasks, now: now, limit: Notifications.maxScheduled, in: clock.timeZone
         )
         let held = await center.pendingNotificationRequests().map {
             Notifications.Pending(id: $0.identifier, title: $0.content.title, body: $0.content.body)

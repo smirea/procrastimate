@@ -1,14 +1,12 @@
 import Core
 import SwiftUI
 
+/// Each value that changes on a tap (the tab, the open sheet, the store, the completion count) is read by the smallest
+/// view that shows it, never here: a read in this body made every sheet, tab switch, and completion rebuild the tabs.
 struct RootView: View {
     @Environment(Navigator.self) private var navigator
-    @Environment(Store.self) private var store
     @Environment(Session.self) private var session
     @Environment(SyncClient.self) private var sync
-    @Environment(TaskActions.self) private var actions
-    @Environment(\.today) private var todayKey
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Group {
@@ -21,7 +19,7 @@ struct RootView: View {
                     Button("Try again") { sync.retryRead() }.buttonStyle(.borderedProminent)
                 }
             } else if session.signedIn {
-                signedIn
+                SignedIn()
             } else {
                 SignInView()
             }
@@ -36,37 +34,72 @@ struct RootView: View {
             if !signedIn, navigator.sheet?.keepsWhenSignedOut != true { navigator.sheet = nil }
         }
     }
+}
 
-    private var signedIn: some View {
-        let today = Views.todayTasks(store.tasks, todayKey, in: store.timeZone)
-        return TabView(selection: Binding(get: { navigator.tab }, set: { navigator.tab = $0 })) {
+private struct SignedIn: View {
+    var body: some View {
+        Tabs()
+            // An overlay, not a `safeAreaInset`, so the bar floats over the lists; each tab's screens make room with
+            // `tabBarClearance()` instead.
+            .overlay(alignment: .bottom) { TabBar() }
+            .overlay(alignment: .bottom) { QuickAddOverlay() }
+            .overlay { RambleOverlay() }
+            .overlay { ToastLayer() }
+            .background { CompletionFeedback() }
+            .searchShortcuts()
+    }
+}
+
+/// Every tab stays in the window once visited, and switching only shows another. A `TabView` took each hidden tab out of
+/// the window, so every switch ran a view controller transition and rebuilt the visible rows of the list it brought
+/// back, for a system tab bar the app hides anyway.
+private struct Tabs: View {
+    @Environment(Navigator.self) private var navigator
+    @State private var visited: Set<AppTab> = []
+
+    var body: some View {
+        ZStack {
             ForEach(navigator.pins, id: \.self) { pin in
-                Tab(value: AppTab.pin(pin)) {
-                    TabStack(tab: .pin(pin)) { RouteView(route: pin.route) }
-                }
+                mounted(.pin(pin)) { TabStack(tab: .pin(pin)) { RouteView(route: pin.route) } }
             }
-            Tab(value: AppTab.browse) {
-                TabStack(tab: .browse) { BrowseScreen().tracedScreen("Browse") }
-            }
+            mounted(.browse) { TabStack(tab: .browse) { BrowseScreen().tracedScreen("Browse") } }
         }
-        // An overlay, not a `safeAreaInset`: the tab view hands its tabs a fresh safe area, so each tab's screens make room
-        // with `tabBarClearance()` instead.
-        .overlay(alignment: .bottom) {
-            TabBar(inboxBadge: today.overdue.count + today.today.count)
+    }
+
+    /// A tab mounts the first time it opens, as a `TabView`'s did.
+    @ViewBuilder private func mounted(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
+        let shown = navigator.tab == tab
+        if shown || visited.contains(tab) {
+            content()
+                .opacity(shown ? 1 : 0)
+                .allowsHitTesting(shown)
+                .accessibilityHidden(!shown)
+                .zIndex(shown ? 1 : 0)
+                .onAppear { visited.insert(tab) }
         }
-        .overlay(alignment: .bottom) { QuickAddOverlay() }
-        .overlay { RambleOverlay() }
-        .overlay {
-            // Quick add covers the bottom of the screen, so toasts move to the top while it is open, as on the web. They
-            // glide there rather than jump, so a toast doesn't leave from under a finger reaching for Undo.
-            ToastStack()
-                .padding(.top, navigator.quickAdd == nil ? 0 : 8)
-                .tabBarClearance()
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: navigator.quickAdd == nil ? .bottom : .top)
-                .animation(reduceMotion ? nil : .snappy(duration: 0.3), value: navigator.quickAdd == nil)
-        }
-        .sensoryFeedback(.success, trigger: actions.completions)
-        .searchShortcuts()
+    }
+}
+
+/// Quick add covers the bottom of the screen, so toasts move to the top while it is open, as on the web. They glide there
+/// rather than jump, so a toast doesn't leave from under a finger reaching for Undo.
+private struct ToastLayer: View {
+    @Environment(Navigator.self) private var navigator
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ToastStack()
+            .padding(.top, navigator.quickAdd == nil ? 0 : 8)
+            .tabBarClearance()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: navigator.quickAdd == nil ? .bottom : .top)
+            .animation(reduceMotion ? nil : .snappy(duration: 0.3), value: navigator.quickAdd == nil)
+    }
+}
+
+private struct CompletionFeedback: View {
+    @Environment(TaskActions.self) private var actions
+
+    var body: some View {
+        Color.clear.sensoryFeedback(.success, trigger: actions.completions)
     }
 }
 
@@ -135,12 +168,32 @@ private struct TabBarClearance: ViewModifier {
 /// and the role that gets a separate circle changed between iOS 26 (`.search`) and 27 (`.prominent`).
 private struct TabBar: View {
     @Environment(Navigator.self) private var navigator
+    @State private var keyboardShown = false
+
+    var body: some View {
+        let hidden = keyboardShown || navigator.quickAdd != nil
+        TabBarItems()
+            .opacity(hidden ? 0 : 1)
+            .allowsHitTesting(!hidden)
+            .animation(.snappy(duration: 0.2), value: hidden)
+            .onMessage(of: UIScreen.self, for: .keyboardWillShow) { _ in keyboardShown = true }
+            .onMessage(of: UIScreen.self, for: .keyboardWillHide) { _ in keyboardShown = false }
+    }
+}
+
+/// Apart from `TabBar`, which reads the open sheet to hide while quick add is up, so opening details never rebuilds the
+/// tabs and their menus.
+private struct TabBarItems: View {
+    @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
     @Environment(\.today) private var today
     @Namespace private var selection
-    @State private var keyboardShown = false
     @State private var width: CGFloat = 0
-    let inboxBadge: Int
+
+    private var inboxBadge: Int {
+        let due = Views.todayTasks(store.openTasks, today, in: store.timeZone)
+        return due.overdue.count + due.today.count
+    }
 
     var body: some View {
         // Every list keeps its tab while it is empty, so the bar never changes under the user. A place or an event stops
@@ -167,14 +220,7 @@ private struct TabBar: View {
         .ignoresSafeArea(.all, edges: .bottom)
         .frame(maxWidth: .infinity)
         .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
-        .opacity(hidden ? 0 : 1)
-        .allowsHitTesting(!hidden)
-        .animation(.snappy(duration: 0.2), value: hidden)
-        .onMessage(of: UIScreen.self, for: .keyboardWillShow) { _ in keyboardShown = true }
-        .onMessage(of: UIScreen.self, for: .keyboardWillHide) { _ in keyboardShown = false }
     }
-
-    private var hidden: Bool { keyboardShown || navigator.quickAdd != nil }
 
     private func tabs(_ pins: [Pin], swaps: [PinGroup]) -> some View {
         HStack(spacing: 0) {
@@ -346,7 +392,6 @@ private struct TabStack<Content: View>: View {
                 .tabBarClearance()
                 .navigationDestination(for: Route.self) { RouteView(route: $0).tabBarClearance() }
         }
-        .toolbarVisibility(.hidden, for: .tabBar)
     }
 }
 

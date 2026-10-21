@@ -139,7 +139,7 @@ struct TaskRow<Trailing: View>: View {
     private var subtasks: [TaskItem] { store.children(of: task.id) }
     private var progress: Subtasks.Progress? { Subtasks.progressOf(subtasks) }
     private var pending: [TaskItem] { subtasks.filter { $0.completedAt == nil } }
-    private var commentBadge: CommentBadge? { store.commentBadge(task.id, me: Session.userID) }
+    private var commentBadge: CommentBadge? { store.commentBadge(task.id, me: store.me) }
 
     /// A nil `createdBy` is a task the user made before the server stamped it, or an import, so it names no one.
     private var createdBy: Person? {

@@ -141,6 +141,8 @@ public final class Store {
     /// The user's own tasks, projects (in their order), and labels, which the personal views (Inbox, Today, No date,
     /// places, search) show.
     public var tasks: [TaskItem] { snapshot.tasks }
+    /// `tasks` without the completed ones, for every view that only lists open tasks.
+    public var openTasks: [TaskItem] { index.openTasks }
     public var projects: [Project] { StoreRules.projectsInOrder(snapshot.projects) }
     public var labels: [Label] { snapshot.labels }
     public var sections: [ProjectSection] { snapshot.sections }

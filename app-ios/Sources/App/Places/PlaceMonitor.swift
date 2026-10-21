@@ -122,7 +122,7 @@ final class PlaceMonitor: NSObject {
     private func apply() async {
         guard let monitor else { return }
         let now = clock.now
-        let plan = Self.plan(store.tasks, now: now, today: clock.today, in: clock.timeZone)
+        let plan = Self.plan(store.openTasks, now: now, today: clock.today, in: clock.timeZone)
         let wanted = Dictionary(plan.armed.map { (Self.conditionID($0), $0) }) { a, _ in a }
         let existing = Set(await monitor.identifiers)
         for id in existing where wanted[id] == nil {
@@ -224,7 +224,7 @@ final class PlaceMonitor: NSObject {
         states[id] = inside
         saveStates()
         let now = clock.now
-        let here = store.tasks.filter { task in
+        let here = store.openTasks.filter { task in
             guard task.completedAt == nil, let location = task.location else { return false }
             return Self.conditionID(location) == id && Self.isArmed(task, now: now, today: clock.today, in: clock.timeZone)
         }
@@ -259,7 +259,7 @@ final class PlaceMonitor: NSObject {
     /// next foreground sync starts it if Stefan is still there.
     private func reconcileActivities(entered: Set<String>) async {
         var wanted: [String: (name: String, titles: [String], first: TaskItem)] = [:]
-        for task in store.tasks where task.completedAt == nil {
+        for task in store.openTasks {
             guard let location = task.location, location.trigger == .during,
                   states[Self.conditionID(location)] == true else { continue }
             let key = Triggers.placeKey(location)
