@@ -50,7 +50,7 @@ struct CompletedRow: View {
 
     /// A null `completedBy` is a completion from before the server stamped them, or one not synced yet, so it names no one.
     private var completedBy: Person? {
-        guard let id = task.completedBy, id != Session.userID else { return nil }
+        guard let id = task.completedBy, id != store.me else { return nil }
         return store.person(id) ?? Person(id: id, name: "Someone", kind: .human)
     }
 

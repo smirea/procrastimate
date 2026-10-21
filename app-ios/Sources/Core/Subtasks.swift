@@ -156,10 +156,10 @@ public enum Subtasks {
 
 extension Array {
     /// Sorts by a comparison that returns nil for a tie, keeping tied elements in their order like JavaScript's sort.
+    /// Sorts positions rather than elements, since moving a task struct around costs far more than comparing it.
     func stableSorted(by order: (Element, Element) -> Bool?) -> [Element] {
-        enumerated()
-            .sorted { a, b in order(a.element, b.element) ?? (a.offset < b.offset) }
-            .map(\.element)
+        guard indices.dropFirst().contains(where: { order(self[$0 - 1], self[$0]) == false }) else { return self }
+        return indices.sorted { a, b in order(self[a], self[b]) ?? (a < b) }.map { self[$0] }
     }
 }
 

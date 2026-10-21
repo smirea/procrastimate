@@ -56,7 +56,7 @@ extension Store {
 
     /// Every top-level list, from the one catalog Browse and the tab menus share.
     func listCatalog(today: DateKey) -> [Lists.Group] {
-        Lists.catalog(own: (tasks, snapshot.projects, labels), shared: sharedSpaces, today: today, in: timeZone)
+        Lists.catalog(own: (openTasks, snapshot.projects, labels), shared: sharedSpaces, today: today, in: timeZone)
     }
 
     /// Every list in the catalog's order, leaving out the ones already pinned.

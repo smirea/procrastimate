@@ -46,7 +46,7 @@ enum SpotlightIndex {
     }
 
     private static func listed(in store: Store, today: DateKey, router: IntentRouter) -> [TaskEntity] {
-        let open = IntentRules.indexedTasks(store.tasks)
+        let open = IntentRules.indexedTasks(store.openTasks)
         router.spotlight = open.map(\.title).sorted().joined(separator: ", ")
         let projects = store.snapshot.projects
         return open.map { TaskEntity.make($0, projects: projects, labels: store.labels, today: today) }

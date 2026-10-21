@@ -113,6 +113,7 @@ struct ProcrastimateApp: App {
                 .onChange(of: store.projects) { _, _ in SpotlightIndex.schedule(session) }
                 .onChange(of: store.labels) { _, _ in SpotlightIndex.schedule(session) }
                 .task { SpotlightIndex.schedule(session) }
+                .task { await PerfDemo.run(store: store, clock: clock, navigator: navigator, actions: actions) }
                 .task { await IntentHarness.run() }
                 .task { await SharingDemo.run(sync: sync) }
                 .task {

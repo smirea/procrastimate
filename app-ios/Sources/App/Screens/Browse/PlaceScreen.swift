@@ -25,7 +25,7 @@ struct PlaceScreen: View {
     }
 
     private var unsaved: some View {
-        let all = Views.placeTasks(store.tasks, key, in: store.timeZone)
+        let all = Views.placeTasks(store.openTasks, key, in: store.timeZone)
         let tasks = ListFilters.filterTasks(all, filter, me: store.me)
         let title = all.first?.location?.name ?? "Place"
         // The earliest task names the place, so its spot and radius are what gets saved.
@@ -69,7 +69,7 @@ struct EventScreen: View {
     }
 
     var body: some View {
-        let all = Views.eventTasks(store.tasks, eventID, today, in: store.timeZone)
+        let all = Views.eventTasks(store.openTasks, eventID, today, in: store.timeZone)
         let tasks = ListFilters.filterTasks(all, filter, me: store.me)
         let title = all.first?.event?.title ?? "Event"
         TaskListScreen(
