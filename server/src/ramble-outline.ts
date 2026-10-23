@@ -38,7 +38,9 @@ Corrections come first. When the speaker changes their mind, keep only the final
 
 Structure:
 - One task per separate action. Actions joined by "and", "also", "then", or "oh and" are separate tasks unless one is a step of the other.
-- Items or steps the speaker lists for one task become its subtasks: things to buy at a store, parts of a project, "the steps are", "with subtasks", "which means", or a colon. A subtask can have its own subtasks when the speaker nests a list inside an item.
+- Items or steps the speaker lists for one task become its subtasks: things to buy at a store, parts of a project, "the steps are", "with subtasks", "which means", or a colon. The task's title then leaves the items out ("Go to the store", not "Go to the store and get milk").
+- A subtask is the item as said, without the verb the list shares: "Milk", not "Get milk".
+- When the speaker groups items under a heading ("for food get pizza and soda", "in the kitchen wipe the counters"), the heading is a subtask ("Food", "Kitchen") and its items are its subtasks.
 - Spoken commands: "new task" or "next task" starts a task, "subtask" adds a subtask to the current task, "note" or "description" adds notes to the current task.
 - Ignore chatter that is not a task, and "that's all" or "that's it" at the end.
 
@@ -50,6 +52,7 @@ Fields:
 - project: the exact name of an existing project the speaker put the task in, or empty. "For the Work project, ..." applies to the tasks that follow it. Never invent one.
 - labels: exact names of existing labels the speaker said for the task ("label it errands", "tag it calls"). Never infer a label from the task's meaning.
 - notes: details the speaker gave as a note or description of the task, or empty.
+- Write every time with am or pm, picking the one the task implies: dinner "at 6" is 6pm, a run "at 6" is 6am.
 - Leave out every field the speaker did not set. Subtasks take no project. Keep the tasks in the order they were said.`;
 }
 

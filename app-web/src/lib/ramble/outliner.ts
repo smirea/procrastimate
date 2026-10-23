@@ -6,20 +6,25 @@ export type Outlined = { transcript: string; outline: RambleOutline };
 
 /**
  * Keeps Gemini's outline of a ramble current while it is spoken, so stopping rarely waits on a request. One request
- * is in flight at a time, sent once the words settle for `settleMs`; the newest transcript goes next. A failed
- * request turns the outliner off for the session, and the grammar's tasks stand.
+ * is in flight at a time, sent once the words settle for `settleMs`, or after `maxWaitMs` of speech without a pause;
+ * the newest transcript goes next. Two failures in
+ * a row turn it off for the session, so a passing rate limit costs one read, and the grammar's tasks stand.
  */
 export class Outliner {
 	latest: Outlined | null = null;
 	#pending: string | null = null;
 	#inflight: { transcript: string; controller: AbortController; done: Promise<Outlined | null> } | null = null;
 	#timer: ReturnType<typeof setTimeout> | undefined;
+	/** When the oldest unsent words arrived, so nonstop speech still gets read. */
+	#waitingSince: number | null = null;
 	#off = false;
+	#failures = 0;
 
 	constructor(
 		private readonly request: OutlineRequest,
 		private readonly onOutline: (outlined: Outlined) => void,
 		private readonly settleMs = 500,
+		private readonly maxWaitMs = 2000,
 	) {}
 
 	get off(): boolean {
@@ -29,8 +34,11 @@ export class Outliner {
 	update(transcript: string) {
 		if (this.#off || !transcript.trim() || transcript === this.latest?.transcript) return;
 		this.#pending = transcript;
+		this.#waitingSince ??= performance.now();
 		clearTimeout(this.#timer);
-		if (!this.#inflight) this.#timer = setTimeout(() => this.#send(), this.settleMs);
+		if (this.#inflight) return;
+		const waited = performance.now() - this.#waitingSince;
+		this.#timer = setTimeout(() => this.#send(), Math.max(0, Math.min(this.settleMs, this.maxWaitMs - waited)));
 	}
 
 	/** The outline of exactly `transcript`, or null when there is none within `timeoutMs`. */
@@ -62,17 +70,19 @@ export class Outliner {
 	#send() {
 		const transcript = this.#pending;
 		this.#pending = null;
+		this.#waitingSince = null;
 		if (transcript === null) return;
 		const controller = new AbortController();
 		const done = this.request(transcript, controller.signal).then(
 			outline => {
 				if (controller.signal.aborted) return null;
+				this.#failures = 0;
 				this.latest = { transcript, outline };
 				this.onOutline(this.latest);
 				return this.latest;
 			},
 			() => {
-				if (!controller.signal.aborted) this.#off = true;
+				if (!controller.signal.aborted && ++this.#failures >= 2) this.#off = true;
 				return null;
 			},
 		);

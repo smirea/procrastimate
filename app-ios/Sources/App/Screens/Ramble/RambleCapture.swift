@@ -51,7 +51,7 @@ final class RambleCapture {
         }
     }
 
-    /// Past this the grammar's tasks stand instead of the outline.
+    /// Past this the last outline stands, with the grammar's tasks for the words after it.
     static let settleTimeout = Duration.seconds(6)
 
     private(set) var phase = Phase.listening
@@ -232,7 +232,8 @@ final class RambleCapture {
         phase = .structuring
         let outline = await outliner.settle(text, timeout: Self.settleTimeout)
         guard token == generation else { return nil }
-        return outline.map(c.resolve) ?? c.parse(text).tasks
+        if let outline { return c.resolve(outline) }
+        return RambleOutliner.smartTasks(text, latest: outliner.latest, parse: { c.parse($0).tasks }, resolve: c.resolve)
     }
 
     /// The final transcript decides the tasks. Keys carry over, so rows stay where they are.

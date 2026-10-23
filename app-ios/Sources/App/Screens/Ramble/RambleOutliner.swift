@@ -2,34 +2,49 @@ import Core
 import Foundation
 
 /// Keeps Gemini's outline of a ramble current while it is spoken, so stopping rarely waits on a request. One request
-/// is in flight at a time, sent once the words settle; the newest transcript goes next. A failed request turns it off
-/// for the session, and the grammar's tasks stand. Mirrors `Outliner` in `app-web/src/lib/ramble/outliner.ts`.
+/// is in flight at a time, sent once the words settle or after `maxWait` of speech without a pause; the newest
+/// transcript goes next. Two failures in a row turn it
+/// off for the session, so a passing rate limit costs one read, and the grammar's tasks stand. Mirrors `Outliner` in
+/// `app-web/src/lib/ramble/outliner.ts`.
 @MainActor
 final class RambleOutliner {
     typealias Request = @MainActor (String) async throws -> RambleOutline
 
     private(set) var latest: (transcript: String, outline: RambleOutline)?
     private(set) var off = false
+    private var failures = 0
     private var pending: String?
     private var inflight: (transcript: String, task: Task<RambleOutline?, Never>)?
     private var timer: Task<Void, Never>?
+    /// When the oldest unsent words arrived, so nonstop speech still gets read.
+    private var waitingSince: ContinuousClock.Instant?
     private let request: Request
     private let onOutline: () -> Void
     private let settleDelay: Duration
+    private let maxWait: Duration
 
-    init(settle: Duration = .milliseconds(500), request: @escaping Request, onOutline: @escaping () -> Void) {
+    init(
+        settle: Duration = .milliseconds(500),
+        maxWait: Duration = .seconds(2),
+        request: @escaping Request,
+        onOutline: @escaping () -> Void
+    ) {
         self.request = request
         self.onOutline = onOutline
         settleDelay = settle
+        self.maxWait = maxWait
     }
 
     func update(_ transcript: String) {
         guard !off, !Self.blank(transcript), transcript != latest?.transcript else { return }
         pending = transcript
+        let since = waitingSince ?? .now
+        waitingSince = since
         timer?.cancel()
         guard inflight == nil else { return }
-        timer = Task { [weak self, settleDelay] in
-            try? await Task.sleep(for: settleDelay)
+        let delay = max(.zero, min(settleDelay, maxWait - (ContinuousClock.now - since)))
+        timer = Task { [weak self] in
+            try? await Task.sleep(for: delay)
             guard !Task.isCancelled else { return }
             self?.send()
         }
@@ -53,6 +68,7 @@ final class RambleOutliner {
             Task { first.answer(await task.value) }
             Task {
                 try? await Task.sleep(for: timeout)
+                if first.continuation != nil { ErrorReport.log("Ramble outline timed out", detail: "\(timeout)") }
                 first.answer(nil)
             }
         }
@@ -68,17 +84,20 @@ final class RambleOutliner {
     private func send() {
         guard let transcript = pending else { return }
         pending = nil
+        waitingSince = nil
         let task = Task { [weak self, request] () -> RambleOutline? in
             do {
                 let outline = try await request(transcript)
                 guard !Task.isCancelled, let self else { return nil }
+                failures = 0
                 latest = (transcript, outline)
                 onOutline()
                 return outline
             } catch {
-                if !Task.isCancelled {
+                if !Task.isCancelled, let self {
                     ErrorReport.log("Ramble outline failed", error: error)
-                    self?.off = true
+                    failures += 1
+                    if failures >= 2 { off = true }
                 }
                 return nil
             }

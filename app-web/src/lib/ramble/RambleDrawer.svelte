@@ -59,7 +59,7 @@
 		],
 	};
 
-	/** Past this the grammar's tasks stand instead of the outline. */
+	/** Past this the last outline stands, with the grammar's tasks for the words after it. */
 	const SETTLE_TIMEOUT_MS = 6000;
 
 	const NOTICES: Partial<Record<CaptureStop, string>> = {
@@ -139,7 +139,7 @@
 		phase = 'structuring';
 		const outline = await outliner.settle(text, SETTLE_TIMEOUT_MS);
 		if (token !== generation) return null;
-		return outline ? resolve(outline) : grammar(text).tasks;
+		return outline ? resolve(outline) : smartTasks(text, outliner.latest, (rest) => grammar(rest).tasks, resolve);
 	}
 
 	/** Switching reads the capture in progress, or the last one, again; edits to its tasks give way to the new read. */

@@ -42,6 +42,16 @@ describe('Outliner', () => {
 		expect(server.calls.map(call => call.transcript)).toEqual(['buy milk', 'buy milk and eggs']);
 	});
 
+	test('nonstop speech is still read once the longest wait passes', async () => {
+		const server = fakeServer();
+		const outliner = new Outliner(server.request, () => {}, 20, 40);
+		for (let i = 1; i <= 8; i++) {
+			outliner.update(`word `.repeat(i));
+			await tick(10);
+		}
+		expect(server.calls.length).toBeGreaterThanOrEqual(1);
+	});
+
 	test('stopping on a transcript already outlined answers at once', async () => {
 		const server = fakeServer();
 		const outliner = new Outliner(server.request, () => {}, 1);
@@ -65,18 +75,22 @@ describe('Outliner', () => {
 		expect(await settled).toEqual(outlineOf('call mom tomorrow'));
 	});
 
-	test('a failure turns it off for the session, and a slow answer times out to null', async () => {
+	test('a slow answer times out to null, one failure retries, and a second in a row turns it off', async () => {
 		const server = fakeServer();
 		const outliner = new Outliner(server.request, () => {}, 1);
-		const slow = outliner.settle('pay rent', 5);
-		expect(await slow).toBe(null);
+		expect(await outliner.settle('pay rent', 5)).toBe(null);
 		server.calls[0]!.answer(false);
 		await tick();
-		expect(outliner.off).toBe(true);
+		expect(outliner.off).toBe(false);
 		outliner.update('pay rent friday');
 		await tick(5);
-		expect(server.calls).toHaveLength(1);
-		expect(await outliner.settle('pay rent friday', 5)).toBe(null);
+		server.calls[1]!.answer(false);
+		await tick();
+		expect(outliner.off).toBe(true);
+		outliner.update('pay rent on friday');
+		await tick(5);
+		expect(server.calls).toHaveLength(2);
+		expect(await outliner.settle('pay rent on friday', 5)).toBe(null);
 	});
 });
 
