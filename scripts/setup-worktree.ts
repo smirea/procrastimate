@@ -3,6 +3,7 @@
  * `branch` renames the worktree's branch first, so the simulator, the database, the PR, and teardown all share the
  * final name. `--reset-db` drops and recreates the worktree's databases. Safe to rerun. Never touches AWS.
  */
+import { spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { basename, join } from 'node:path';
@@ -39,7 +40,11 @@ if (wanted && wanted !== git('branch', '--show-current')) {
 // Before anything slow, so a Mac without Docker fails in a second with the fix named.
 requireDocker();
 
+// Bun's resolver remembers that node_modules was missing at startup, so the dynamic imports of `postgres` and the
+// server's database code failed with "Cannot find package" in a new worktree. A fresh process after the install sees it.
+const installed = existsSync(join(root, 'node_modules'));
 run(['bun', 'install', '--frozen-lockfile']);
+if (!installed) process.exit(spawnSync(process.execPath, process.argv.slice(1), { stdio: 'inherit' }).status ?? 1);
 
 function worktreeNumber(worktree: string): number | undefined {
 	return worktreeOf(Number(readOverride(worktree)?.CLIENT_PORT));
