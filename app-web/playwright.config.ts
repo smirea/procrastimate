@@ -1,9 +1,11 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
+import { MAIN_PORT, OFFSET } from '../scripts/ports.mts';
 
 // Offset from the dev ports so the suite runs beside `bun run start`; worktrees move CLIENT_PORT via .env.override.
-const PORT = Number(process.env.CLIENT_PORT || 6120) + 10;
-const API_PORT = PORT + 1;
+const CLIENT_PORT = Number(process.env.CLIENT_PORT || MAIN_PORT);
+const PORT = CLIENT_PORT + OFFSET.e2eWeb;
+const API_PORT = CLIENT_PORT + OFFSET.e2eApi;
 // An empty variable in the process env wins over `--env-file`, so a developer's `development` never reports a test.
 const NO_SENTRY = { SENTRY_ENVIRONMENT: '', SENTRY_RELEASE: '' };
 

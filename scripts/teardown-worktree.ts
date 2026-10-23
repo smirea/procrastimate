@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { readOverride, run, worktrees } from './lib';
 import { databaseOf, dockerRunning, dropDatabases, stopPowerSync, worktreeDatabases } from './local-stack';
+import { OFFSET, worktreeOf } from './ports.mts';
 import { devices, owner, remove } from './simulators';
 
 const args = process.argv.slice(2);
@@ -39,7 +40,11 @@ if (!pr.startsWith('MERGED') && !force) {
 if (worktree) {
 	const base = Number(readOverride(worktree)?.CLIENT_PORT) || undefined;
 	if (base) {
-		const ports = [base, base + 1, base + 10, base + 11].map(port => `-iTCP:${port}`);
+		// Worktrees from before the per-app scheme (6200 to 6980) ran their e2e servers at +10 and +11.
+		const offsets = worktreeOf(base)
+			? [OFFSET.web, OFFSET.api, OFFSET.e2eWeb, OFFSET.e2eApi]
+			: [OFFSET.web, OFFSET.api, 10, 11];
+		const ports = offsets.map(offset => `-iTCP:${base + offset}`);
 		const pids = run(['lsof', '-t', '-sTCP:LISTEN', ...ports], { allowFail: true })
 			.split('\n')
 			.filter(Boolean);
