@@ -18,7 +18,7 @@ function database(): Promise<IDBDatabase> {
 	opened ??= new Promise<IDBDatabase>((resolve, reject) => {
 		const request = indexedDB.open(DB, 2);
 		request.onupgradeneeded = () => {
-			for (const name of [...request.result.objectStoreNames]) request.result.deleteObjectStore(name);
+			for (const name of request.result.objectStoreNames) request.result.deleteObjectStore(name);
 			request.result.createObjectStore(BYTES);
 			request.result.createObjectStore(UPLOADS, { keyPath: 'key' });
 		};
