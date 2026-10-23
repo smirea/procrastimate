@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ordinal } from './format.ts';
 import { escapeRegExp, ORDINAL_WORDS, parseQuickAdd, tokenKindSchema, type TokenKind } from './quick-add.ts';
+import type { RambleOutline, RambleOutlineTask } from './ramble/outline.ts';
 import type { Due, Label, Priority, Project, Recurrence, Reminder } from './task.ts';
 import { dueSchema, prioritySchema, recurrenceSchema, reminderSchema } from './values.ts';
 
@@ -70,7 +71,11 @@ export const rambleDraftSchema = z
 	});
 export type RambleDraft = z.infer<typeof rambleDraftSchema>;
 
-export type RambleOptions = { now: Date; projects?: readonly Project[]; labels?: readonly Label[] };
+/**
+ * `commands` reads only spoken cues: `new task` or `next task` starts a task, `subtask` a subtask, `note` the notes,
+ * and `scratch that` drops the current one. Sentences, commas, verbs, and list intros never split it.
+ */
+export type RambleOptions = { now: Date; projects?: readonly Project[]; labels?: readonly Label[]; commands?: boolean };
 
 // ---------------------------------------------------------------------------------------------------
 // Normalizing. Each rewrite keeps a map back to the transcript, so tokens and titles use its offsets
@@ -708,6 +713,9 @@ const STRUCTURE = new RegExp(
 	'gi',
 );
 const LIST_SPLIT = /\s*,\s*(?:and\s+)?|\s+and\s+/gi;
+/** In commands mode the cues are the only structure, and a note runs until the next cue. */
+const COMMAND_STRUCTURE =
+	/(?<note>\b(?:add\s+(?:a\s+)?)?(?:note|description)\b[\s:,-]*)|(?<one>\b(?:add\s+(?:a\s+)?)?sub[\s-]?task\b[\s:,-]*)/gi;
 const CUE =
 	/^(?:(?:and|also|oh)\s+)?(?:remind\s+me(?!\s+to\b)|priority|p[1-4]\b|project|in\s+(?:the\s+|my\s+)?project|labels?|tag(?:ged)?|it'?s\s+due|it\s+is\s+due|due|make\s+it(?:\s+to)?|set\s+it(?:\s+to)?|every|each|add\s+it|put\s+it|move\s+it|(?:for|in|to)\s+(?:the|my)\s)/i;
 
@@ -723,13 +731,13 @@ const newItem = (parent: Item | null = null): Item => ({ main: [], notes: [], cu
 
 type Boundary = Range & { kind: 'separator' | 'correction' | 'sentence' };
 
-function findBoundaries(text: string): Boundary[] {
+function findBoundaries(text: string, commands: boolean): Boundary[] {
 	const boundaries: Boundary[] = [];
 	for (const m of text.matchAll(BOUNDARY)) {
 		const groups = m.groups ?? {};
 		const start = m.index;
 		const end = start + m[0].length;
-		if (groups.sentence && ABBREVIATION.test(text.slice(0, start))) continue;
+		if (groups.sentence && (commands || ABBREVIATION.test(text.slice(0, start)))) continue;
 		if (groups.correction) {
 			if (/\bto\s+$/i.test(text.slice(0, start)) || !correctionEnds(text.slice(end))) continue;
 		}
@@ -802,8 +810,10 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 		return leadingCue(range) !== null && attributes.tokens.length > 0;
 	};
 
+	const commands = options.commands ?? false;
+
 	const handleLead = (range: Range, forceNew: boolean) => {
-		const clauses = splitClauses(span(range), range.start).filter(c => !isBlank(span(c)));
+		const clauses = (commands ? [range] : splitClauses(span(range), range.start)).filter(c => !isBlank(span(c)));
 		clauses.forEach((clause, index) => {
 			const attach =
 				current && (index === 0 ? !forceNew && shouldAttach(clause, current) : isAttributesOnly(clause, current));
@@ -817,7 +827,7 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 
 	const handleSentence = (range: Range, forceNew: boolean) => {
 		const sentence = span(range);
-		const note = current && !forceNew ? NOTE_AT_START.exec(sentence) : null;
+		const note = current && !forceNew && !commands ? NOTE_AT_START.exec(sentence) : null;
 		if (note && current) {
 			const item: Item = current;
 			item.cues.push({ start: range.start, end: range.start + note[0].length });
@@ -825,7 +835,7 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 			structural.push({ kind: 'note', start: range.start, end: range.start + note[0].length });
 			return;
 		}
-		const markers = [...sentence.matchAll(STRUCTURE)].map(m => ({
+		const markers = [...sentence.matchAll(commands ? COMMAND_STRUCTURE : STRUCTURE)].map(m => ({
 			kind: (m.groups?.note ? 'note' : m.groups?.list ? 'list' : 'one') as 'note' | 'list' | 'one',
 			start: range.start + m.index,
 			end: range.start + m.index + m[0].length,
@@ -833,18 +843,17 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 		const leadEnd = markers[0]?.start ?? range.end;
 		if (!isBlank(mapped.text.slice(range.start, leadEnd))) handleLead({ start: range.start, end: leadEnd }, forceNew);
 		for (const [index, marker] of markers.entries()) {
-			const nextStart = marker.kind === 'note' ? range.end : (markers[index + 1]?.start ?? range.end);
+			const nextStart = marker.kind === 'note' && !commands ? range.end : (markers[index + 1]?.start ?? range.end);
 			const content = { start: marker.end, end: nextStart };
 			const cue = { start: marker.start, end: marker.end };
 			if (marker.kind === 'note') {
 				const target: Item | null = current;
-				if (!target) {
-					startTask({ start: marker.start, end: range.end });
-					return;
-				}
-				target.cues.push(cue);
-				target.notes.push(content);
-				structural.push({ kind: 'note', ...cue });
+				if (target) {
+					target.cues.push(cue);
+					target.notes.push(content);
+					structural.push({ kind: 'note', ...cue });
+				} else startTask({ start: marker.start, end: nextStart });
+				if (commands) continue;
 				return;
 			}
 			const root = rootOf(current);
@@ -897,7 +906,7 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 	let cursor = 0;
 	let forceNew = true;
 	for (const boundary of [
-		...findBoundaries(text),
+		...findBoundaries(text, commands),
 		{ kind: 'sentence' as const, start: text.length, end: text.length },
 	]) {
 		const part = { start: cursor, end: boundary.start };
@@ -977,4 +986,35 @@ export function parseRamble(transcript: string, options: RambleOptions): RambleD
 	for (const s of structural) pushToken(s.kind, s);
 	tokens.sort((a, b) => a.start - b.start || a.end - b.end);
 	return { tasks: built, tokens, ended: ending !== null };
+}
+
+/**
+ * Turns the language model's outline into drafted tasks. Phrases go through the quick add parser, and names match
+ * existing projects and labels the way the grammar matches them, so an unknown name sets nothing.
+ */
+export function resolveOutline(outline: RambleOutline, options: RambleOptions): RambleTask[] {
+	const projects = new Map((options.projects ?? []).map(p => [nameKey(p.name), p.id]));
+	const labels = new Map((options.labels ?? []).map(l => [nameKey(l.name), l.id]));
+	const resolve = (task: RambleOutlineTask, isRoot: boolean): RambleTask | null => {
+		const title = task.title.trim();
+		if (!title) return null;
+		const reminder = task.reminder.trim();
+		const phrase = [task.when.trim(), reminder && `remind me ${reminder.replace(/^remind\s+me\s+/i, '')}`]
+			.filter(Boolean)
+			.join(' ');
+		const parsed = phrase ? parseQuickAdd(phrase, { now: options.now }) : null;
+		return {
+			segment: { start: 0, end: 0 },
+			title: title.charAt(0).toUpperCase() + title.slice(1),
+			notes: task.notes.trim(),
+			due: parsed?.due ?? null,
+			recurrence: parsed?.recurrence ?? null,
+			priority: task.priority >= 1 && task.priority <= 4 ? (task.priority as Priority) : null,
+			reminders: parsed?.reminders ?? [],
+			projectId: isRoot ? (projects.get(nameKey(task.project)) ?? null) : null,
+			labelIds: [...new Set(task.labels.flatMap(name => labels.get(nameKey(name)) ?? []))],
+			subtasks: task.subtasks.map(subtask => resolve(subtask, false)).filter(subtask => subtask !== null),
+		};
+	};
+	return outline.tasks.map(task => resolve(task, true)).filter(task => task !== null);
 }

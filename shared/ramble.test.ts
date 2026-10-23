@@ -11,6 +11,7 @@ import {
 } from './fixtures/ramble-corpus.ts';
 import * as ramble from './ramble.ts';
 import type { RambleDraft, RambleTask } from './ramble.ts';
+import type { RambleOutlineTask } from './ramble/outline.ts';
 import type { DateKey, TimeOfDay } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
@@ -321,5 +322,114 @@ describe('draft details', () => {
 	test('without projects or labels every phrase stays text', () => {
 		const draft = parseRamble('Book flights in project Home label calls', { now });
 		expect(draft.tasks.map(shape)).toEqual([expectedShape({ title: 'Book flights in project Home label calls' })]);
+	});
+});
+
+const resolveOutline = recorded('ramble', ramble.resolveOutline);
+
+describe('commands mode', () => {
+	const commands = { ...options, commands: true };
+	const titles = (tasks: readonly RambleTask[]): unknown =>
+		tasks.map(task => (task.subtasks.length ? [task.title, titles(task.subtasks)] : task.title));
+
+	test('only `new task` splits, so sentences, commas, and verbs stay in one title', () => {
+		const draft = parseRamble('Buy milk and eggs tomorrow. Call mom, then email the landlord', commands);
+		expect(titles(draft.tasks)).toEqual(['Buy milk and eggs. Call mom, then email the landlord']);
+		expect(draft.tasks[0]!.due).toEqual({ date: '2026-10-15', time: null });
+	});
+
+	test('cues build subtasks, notes, priorities, and drop a scratched task', () => {
+		const draft = parseRamble(
+			'Plan the party priority one subtask buy balloons subtask order cake by friday note she likes chocolate new task call the venue scratch that new task pay rent on the first',
+			commands,
+		);
+		expect(draft.tasks.map(shape)).toEqual([
+			{
+				...expectedShape({ title: 'Plan the party', priority: 1 }),
+				subtasks: [
+					expectedShape({ title: 'Buy balloons' }),
+					expectedShape({ title: 'Order cake', due: '2026-10-16', notes: 'she likes chocolate' }),
+				],
+			},
+			expectedShape({ title: 'Pay rent', due: '2026-11-01' }),
+		]);
+	});
+
+	test('list intros and sentence notes are plain words', () => {
+		const draft = parseRamble('Plan the trip, the steps are book flights and find a hotel. Details tbd', commands);
+		expect(titles(draft.tasks)).toEqual(['Plan the trip, the steps are book flights and find a hotel. Details tbd']);
+	});
+
+	test('a note before any task starts one, and the next cue ends the note', () => {
+		const draft = parseRamble('note pick a color subtask ask Sam', commands);
+		expect(titles(draft.tasks)).toEqual([['Note pick a color', ['Ask Sam']]]);
+	});
+});
+
+describe('outline resolution', () => {
+	const task = (title: string, fields: Partial<RambleOutlineTask> = {}): RambleOutlineTask => ({
+		title,
+		when: '',
+		reminder: '',
+		priority: 0,
+		project: '',
+		labels: [],
+		notes: '',
+		subtasks: [],
+		...fields,
+	});
+	const home = idOf(PROJECTS, 'Home');
+
+	test('phrases become dates, repeats, and reminders, and names become ids', () => {
+		const tasks = resolveOutline(
+			{
+				tasks: [
+					task('call the dentist', {
+						when: 'friday at 4pm',
+						reminder: '30 minutes before',
+						priority: 1,
+						project: 'home',
+					}),
+					task('Water plants', { when: 'every monday', labels: [LABELS[0]!.name, 'nonexistent'] }),
+				],
+			},
+			options,
+		);
+		expect(tasks.map(shape)).toEqual([
+			{
+				...expectedShape({ title: 'Call the dentist', due: '2026-10-16 16:00', priority: 1 }),
+				projectId: home,
+				reminders: [{ kind: 'before', minutes: 30 }],
+			},
+			{
+				...expectedShape({ title: 'Water plants', due: '2026-10-19' }),
+				recurrence: { interval: 1, unit: 'week' },
+				labelIds: [LABELS[0]!.id],
+			},
+		]);
+	});
+
+	test('unknown names and out-of-range priorities set nothing, and subtasks take no project', () => {
+		const tasks = resolveOutline(
+			{
+				tasks: [
+					task('Plan the trip', {
+						project: 'Atlantis',
+						priority: 7,
+						notes: '  window seats  ',
+						subtasks: [task('book flights', { project: 'Home', subtasks: [task('compare prices')] }), task('  ')],
+					}),
+				],
+			},
+			options,
+		);
+		expect(tasks.map(shape)).toEqual([
+			{
+				...expectedShape({ title: 'Plan the trip', notes: 'window seats' }),
+				subtasks: [
+					{ ...expectedShape({ title: 'Book flights' }), subtasks: [expectedShape({ title: 'Compare prices' })] },
+				],
+			},
+		]);
 	});
 });

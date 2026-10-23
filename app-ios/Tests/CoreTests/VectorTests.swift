@@ -479,6 +479,7 @@ private struct RambleInput: Decodable {
     let now: Int
     let projects: [Project]?
     let labels: [Label]?
+    let commands: Bool?
 }
 
 @Sendable func rambleVector(_ fn: String, _ a: Args) throws -> JSONValue {
@@ -487,6 +488,18 @@ private struct RambleInput: Decodable {
         let options = try a(1, as: RambleInput.self)
         return try json(
             Ramble.parse(
+                try a(0),
+                now: Date(epochMilliseconds: options.now),
+                projects: options.projects ?? [],
+                labels: options.labels ?? [],
+                in: a.zone,
+                commands: options.commands ?? false
+            )
+        )
+    case "resolveOutline":
+        let options = try a(1, as: RambleInput.self)
+        return try json(
+            Ramble.resolveOutline(
                 try a(0),
                 now: Date(epochMilliseconds: options.now),
                 projects: options.projects ?? [],
