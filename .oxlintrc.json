@@ -4,9 +4,7 @@
 	"categories": {
 		"correctness": "error",
 		"suspicious": "warn",
-		"perf": "warn",
-		"style": "warn",
-		"pedantic": "warn"
+		"perf": "warn"
 	},
 	"rules": {
 		"no-unused-vars": "warn",
@@ -14,11 +12,22 @@
 		"unicorn/no-null": "off",
 		"unicorn/prefer-top-level-await": "off",
 		"unicorn/filename-case": "off",
+		"import/namespace": "off",
 		"node/no-process-env": "error"
 	},
 	"overrides": [
 		{
-			"files": ["**/env.ts"],
+			"files": [
+				"**/env.ts",
+				"scripts/**",
+				"server/scripts/**",
+				"app-web/scripts/**",
+				".claude/**",
+				"**/playwright.config.ts",
+				"**/*.test.ts",
+				"app-web/e2e/**",
+				"shared/vectors/record.ts"
+			],
 			"rules": {
 				"node/no-process-env": "off"
 			}

@@ -33,10 +33,10 @@ const ALLOWED_HOSTS = [
 const TRUSTED_ORIGINS = [
 	'https://procrastimate.stf.lol',
 	'http://procrastimate.localhost:6120',
-	'http://127.0.0.1:6130',
+	'http://127.0.0.1:6125',
 	'http://127.0.0.1:6120',
 	'http://127.0.0.1:6121',
-	'http://localhost:6130',
+	'http://localhost:6125',
 	'http://localhost:6120',
 	'https://procrastimate.test',
 	'http://procrastimate.test',
