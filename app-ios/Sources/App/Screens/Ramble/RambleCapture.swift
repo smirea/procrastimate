@@ -29,17 +29,30 @@ final class RambleCapture {
     enum Phase: Equatable {
         case listening
         case finishing
+        /// Waiting on Gemini's final outline.
         case structuring
         case review
     }
 
-    /// What the grammar reads: the clock and the names of the space the drawer opened on.
+    /// What the grammar reads: the clock, the names of every space a task may land on, and how to read speech.
     struct Context {
         let now: Date
         let projects: [Project]
         let labels: [Label]
         let zone: TimeZone
+        let mode: RambleMode
+
+        func parse(_ text: String) -> RambleDraft {
+            Ramble.parse(text, now: now, projects: projects, labels: labels, in: zone, commands: mode == .commands)
+        }
+
+        func resolve(_ outline: RambleOutline) -> [RambleTask] {
+            Ramble.resolveOutline(outline, now: now, projects: projects, labels: labels, in: zone)
+        }
     }
+
+    /// Past this the grammar's tasks stand instead of the outline.
+    static let settleTimeout = Duration.seconds(6)
 
     private(set) var phase = Phase.listening
     private(set) var entries: [RambleEntry] = []
@@ -53,6 +66,9 @@ final class RambleCapture {
     @ObservationIgnored private var nextKey = 0
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var liveParse: Task<Void, Never>?
+    @ObservationIgnored private var outliner: RambleOutliner?
+    /// The last settled capture, which switching the mode reads again.
+    @ObservationIgnored private var capture: (transcript: String, ids: [String])?
     @ObservationIgnored private var context: () -> Context = { preconditionFailure("start first") }
 
     var items: [RambleEntry] { entries + live }
@@ -69,10 +85,12 @@ final class RambleCapture {
         live = []
         notice = nil
         startedAt = .now
-        RambleModel.prewarm()
+        outliner?.stop()
+        outliner = context().mode == .smart ? newOutliner(token: token) : nil
         session.onText = { [weak self] spoken, _ in
             guard let self, token == generation, phase == .listening || phase == .finishing else { return }
             transcript = spoken
+            if context().mode == .smart { outliner?.update(spoken) }
             parseLive(spoken, token: token)
         }
         session.onEnd = { [weak self] end in
@@ -82,7 +100,7 @@ final class RambleCapture {
             case .typed: notice = "Dictation is not available here. You can type the tasks instead."
             case let .failed(message): notice = message
             }
-            finish(token: token)
+            Task { await self.settle(token: token) }
         }
         Task { await session.start(choice: choice, deviceId: deviceId) }
     }
@@ -97,74 +115,136 @@ final class RambleCapture {
     func end() {
         generation += 1
         liveParse?.cancel()
+        outliner?.stop()
         session.stop()
     }
 
-    func find(_ id: String) -> RambleEntry? {
-        for entry in entries {
-            if entry.id == id { return entry }
-            if let subtask = entry.subtasks.first(where: { $0.id == id }) { return subtask }
+    /// Reads the capture in progress, or the last one, again in the mode the context now names; edits to its tasks
+    /// give way to the new read.
+    func modeChanged() async {
+        let c = context()
+        switch phase {
+        case .listening, .finishing:
+            if c.mode == .smart {
+                if outliner == nil { outliner = newOutliner(token: generation) }
+                outliner?.update(transcript)
+            }
+            parseLive(transcript, token: generation)
+        case .review:
+            guard let previous = capture else { return }
+            let at = entries.firstIndex { previous.ids.contains($0.id) }
+            guard let tasks = await read(previous.transcript, token: generation),
+                  capture.map({ $0.ids == previous.ids }) == true else { return }
+            let settled = RambleEntry.keyed(tasks, base: nextKey)
+            nextKey += settled.count
+            var kept = entries.filter { !previous.ids.contains($0.id) }
+            kept.insert(contentsOf: settled, at: min(at ?? kept.count, kept.count))
+            entries = kept
+            capture = (previous.transcript, settled.map(\.id))
+            phase = .review
+        case .structuring:
+            return
         }
-        return nil
+    }
+
+    func find(_ id: String) -> RambleEntry? {
+        func search(_ list: [RambleEntry]) -> RambleEntry? {
+            for entry in list {
+                if entry.id == id { return entry }
+                if let found = search(entry.subtasks) { return found }
+            }
+            return nil
+        }
+        return search(entries)
     }
 
     func update(_ id: String, _ change: (inout RambleTask) -> Void) {
-        for index in entries.indices {
-            if entries[index].id == id { return change(&entries[index].task) }
-            if let sub = entries[index].subtasks.firstIndex(where: { $0.id == id }) { return change(&entries[index].subtasks[sub].task) }
+        func apply(_ list: inout [RambleEntry]) -> Bool {
+            for index in list.indices {
+                if list[index].id == id {
+                    change(&list[index].task)
+                    return true
+                }
+                if apply(&list[index].subtasks) { return true }
+            }
+            return false
         }
+        _ = apply(&entries)
     }
 
     func remove(_ id: String) {
-        entries = entries
-            .filter { $0.id != id }
-            .map { entry in
+        func prune(_ list: [RambleEntry]) -> [RambleEntry] {
+            list.filter { $0.id != id }.map { entry in
                 var entry = entry
-                entry.subtasks.removeAll { $0.id == id }
+                entry.subtasks = prune(entry.subtasks)
                 return entry
             }
+        }
+        entries = prune(entries)
     }
 
-    /// The grammar runs off the main thread on every transcript update, so a long ramble never stalls the drawer.
+    /// The grammar runs off the main thread on every transcript update, so a long ramble never stalls the drawer. In
+    /// smart mode the latest outline leads the list.
     private func parseLive(_ text: String, token: Int) {
         liveParse?.cancel()
-        let c = context(), base = nextKey
+        let c = context(), base = nextKey, latest = outliner?.latest
         liveParse = Task {
-            let draft = await Task.detached(priority: .userInitiated) {
-                Ramble.parse(text, now: c.now, projects: c.projects, labels: c.labels, in: c.zone)
+            let (draft, tasks) = await Task.detached(priority: .userInitiated) {
+                let draft = c.parse(text)
+                let tasks = c.mode == .commands
+                    ? draft.tasks
+                    : RambleOutliner.smartTasks(text, latest: latest, parse: { c.parse($0).tasks }, resolve: c.resolve)
+                return (draft, tasks)
             }.value
             guard !Task.isCancelled, token == generation, phase == .listening || phase == .finishing else { return }
             tokens = draft.tokens
-            live = RambleEntry.keyed(draft.tasks, base: base)
+            live = RambleEntry.keyed(tasks, base: base)
             if draft.ended { stop() }
         }
     }
 
-    /// The final transcript decides the tasks. The on-device model then picks the structure where the transcript backs
-    /// it up; spoken commands keep the grammar's split.
-    private func finish(token: Int) {
-        liveParse?.cancel()
-        let transcript = transcript, c = context()
-        let ramble = Ramble.parse(transcript, now: c.now, projects: c.projects, labels: c.labels, in: c.zone)
-        guard !ramble.tasks.isEmpty, !Ramble.usesCommands(ramble) else { return settle(ramble.tasks) }
-        phase = .structuring
-        live = RambleEntry.keyed(ramble.tasks, base: nextKey)
-        Task {
-            let split = await RambleModel.split(transcript)
-            guard token == generation else { return }
-            let structured = split.flatMap {
-                Ramble.structured($0, transcript: transcript, draft: ramble, now: c.now, projects: c.projects, labels: c.labels, in: c.zone)
+    private func newOutliner(token: Int) -> RambleOutliner {
+        RambleOutliner(
+            request: { [context] text in
+                let c = context()
+                let input = API.RambleOutlineInput(
+                    transcript: text,
+                    today: Dates.toDateKey(c.now, in: c.zone),
+                    time: Triggers.wallTime(c.now.epochMilliseconds, in: c.zone),
+                    projects: c.projects.map(\.name),
+                    labels: c.labels.map(\.name)
+                )
+                return try await APIClient.send(API.Endpoints.RambleOutline.self, input)
+            },
+            onOutline: { [weak self] in
+                guard let self, token == generation, phase == .listening || phase == .finishing else { return }
+                parseLive(transcript, token: token)
             }
-            settle(structured ?? ramble.tasks)
-        }
+        )
     }
 
-    private func settle(_ tasks: [RambleTask]) {
+    /// What a finished transcript reads as in the current mode, or nil when a newer capture took over.
+    private func read(_ text: String, token: Int) async -> [RambleTask]? {
+        let c = context()
+        guard c.mode == .smart, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return c.parse(text).tasks }
+        if outliner == nil { outliner = newOutliner(token: token) }
+        guard let outliner, !outliner.off else { return c.parse(text).tasks }
+        phase = .structuring
+        let outline = await outliner.settle(text, timeout: Self.settleTimeout)
+        guard token == generation else { return nil }
+        return outline.map(c.resolve) ?? c.parse(text).tasks
+    }
+
+    /// The final transcript decides the tasks. Keys carry over, so rows stay where they are.
+    private func settle(token: Int) async {
+        liveParse?.cancel()
+        let text = transcript
+        guard let tasks = await read(text, token: token) else { return }
         let settled = RambleEntry.keyed(tasks, base: nextKey)
         nextKey += settled.count
         live = []
         entries += settled
+        capture = (text, settled.map(\.id))
         phase = .review
     }
-
 }

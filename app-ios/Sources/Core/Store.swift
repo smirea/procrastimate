@@ -304,6 +304,10 @@ public final class Store {
 
     public func setDictation(_ choice: DictationChoice) { setSettings { $0.dictation = choice } }
 
+    public var rambleMode: RambleMode { snapshot.settings.rambleMode }
+
+    public func setRambleMode(_ mode: RambleMode) { setSettings { $0.rambleMode = mode } }
+
     public var quickAddButtons: [QuickAddButton] { snapshot.settings.quickAddButtons }
 
     public func setQuickAddButtons(_ buttons: [QuickAddButton]) { setSettings { $0.quickAddButtons = buttons } }

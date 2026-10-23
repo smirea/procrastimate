@@ -2,8 +2,9 @@ import Core
 import SwiftUI
 
 /// Ramble: a fullscreen drawer that listens, shows the waveform of the real mic level, and lets the spoken tasks,
-/// their subtasks, and their fields arrive as they are recognized. After stop the on-device model picks the
-/// structure, every task stays editable and removable, and one button saves them all. Nothing saves before that.
+/// their subtasks, and their fields arrive as they are recognized. In smart mode Gemini reads the ramble as it grows;
+/// in commands mode only spoken cues shape it. After stop every task stays editable and removable, and one button
+/// saves them all. Nothing saves before that.
 struct RambleDrawer: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
@@ -93,12 +94,36 @@ struct RambleDrawer: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Close")
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
             status
-            Spacer()
-            Color.clear.frame(width: 44, height: 44)
+            modeToggle
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(.horizontal, 8)
+    }
+
+    private var mode: RambleMode { store.rambleMode }
+
+    private var modeToggle: some View {
+        Button {
+            store.setRambleMode(mode == .smart ? .commands : .smart)
+            Task { await capture.modeChanged() }
+        } label: {
+            Label(mode == .smart ? "Smart" : "Commands", systemImage: mode == .smart ? "sparkles" : "command")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(mode == .smart ? Color.accent : Color.muted)
+                .padding(.horizontal, 12)
+                .frame(height: 32)
+                .background((mode == .smart ? Color.accent.opacity(0.12) : Color.ink.opacity(0.06)), in: .capsule)
+                .contentTransition(.symbolEffect(.replace))
+                .frame(minHeight: 44)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .disabled(phase == .structuring)
+        .accessibilityLabel(mode == .smart ? "Smart parsing" : "Spoken commands")
+        .accessibilityHint(mode == .smart ? "Switches to spoken commands" : "Switches to smart parsing")
+        .accessibilityIdentifier("RambleMode")
     }
 
     @ViewBuilder
@@ -141,14 +166,14 @@ struct RambleDrawer: View {
 
     private var hints: some View {
         VStack(spacing: 8) {
-            Text("Just talk.")
+            Text(mode == .smart ? "Just talk." : "Talk in cues.")
                 .font(.system(size: 26, weight: .semibold))
-            Text("Tasks, dates, and lists fall into place as you go.")
+            Text(mode == .smart ? "Tasks, dates, lists, and corrections fall into place as you go." : "Only these words split and shape your tasks.")
                 .font(.subheadline)
                 .foregroundStyle(.muted)
             VStack(spacing: 10) {
-                ForEach(["Call mom tomorrow at 5pm, priority one", "Plan the trip, the steps are book flights and find a hotel", "Pay rent on Friday. Next task, water the plants"], id: \.self) {
-                    Text("“\($0)”")
+                ForEach(mode == .smart ? Self.smartHints.map { "“\($0)”" } : Self.commandHints, id: \.self) {
+                    Text($0)
                 }
             }
             .font(.footnote)
@@ -159,6 +184,17 @@ struct RambleDrawer: View {
         .frame(maxWidth: .infinity)
         .padding(.top, 140)
     }
+
+    private static let smartHints = [
+        "Call mom tomorrow at 5pm, priority one",
+        "Plan the trip: book flights and find a hotel",
+        "Pay rent on Friday, actually make that Thursday",
+    ]
+    private static let commandHints = [
+        "“New task” starts a task, “subtask” a subtask",
+        "“Note” adds notes, “priority one” sets a priority",
+        "“Scratch that” drops it, “that’s all” stops",
+    ]
 
     private var footer: some View {
         VStack(spacing: 4) {
@@ -323,7 +359,22 @@ struct RambleDrawer: View {
         .onTapGesture { if editable { focusedTitle = entry.id } }
     }
 
-    private func subtaskRow(_ subtask: RambleEntry, editable: Bool) -> some View {
+    /// Recursive, since Gemini nests a listed item's own items under it.
+    private func subtaskRow(_ subtask: RambleEntry, editable: Bool) -> AnyView {
+        AnyView(VStack(alignment: .leading, spacing: 2) {
+            subtaskLine(subtask, editable: editable)
+            if !subtask.subtasks.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(subtask.subtasks) { nested in
+                        subtaskRow(nested, editable: editable).transition(arrival)
+                    }
+                }
+                .padding(.leading, 24)
+            }
+        })
+    }
+
+    private func subtaskLine(_ subtask: RambleEntry, editable: Bool) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Circle()
                 .strokeBorder(Color.ink.opacity(0.3), lineWidth: 1.5)
@@ -437,7 +488,21 @@ struct RambleDrawer: View {
         let clock = clock, store = store
         capture.start(choice: store.dictation, deviceId: DeviceDefaults.installID) {
             let names = store.everySpace
-            return RambleCapture.Context(now: clock.now, projects: names.projects, labels: names.labels, zone: clock.timeZone)
+            return RambleCapture.Context(
+                now: clock.now,
+                projects: names.projects,
+                labels: names.labels,
+                zone: clock.timeZone,
+                mode: store.rambleMode
+            )
+        }
+    }
+
+    private func addSubtasks(_ subtasks: [RambleEntry], under parentId: String) {
+        for subtask in subtasks where !subtask.task.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            guard let child = store.addTask(Ramble.newTask(subtask.task, defaults: nil, labels: spaceLabels), parentId: parentId) else { continue }
+            if !subtask.task.notes.isEmpty { store.updateTask(child.id, TaskPatch(notes: subtask.task.notes)) }
+            addSubtasks(subtask.subtasks, under: child.id)
         }
     }
 
@@ -458,10 +523,7 @@ struct RambleDrawer: View {
             saving.compactMap { entry -> TaskItem? in
                 guard let added = store.addTask(Ramble.newTask(entry.task, defaults: defaults, labels: spaceLabels)) else { return nil }
                 if !entry.task.notes.isEmpty { store.updateTask(added.id, TaskPatch(notes: entry.task.notes)) }
-                for subtask in entry.subtasks where !subtask.task.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    guard let child = store.addTask(Ramble.newTask(subtask.task, defaults: nil, labels: spaceLabels), parentId: added.id) else { continue }
-                    if !subtask.task.notes.isEmpty { store.updateTask(child.id, TaskPatch(notes: subtask.task.notes)) }
-                }
+                addSubtasks(entry.subtasks, under: added.id)
                 return added
             }
         }

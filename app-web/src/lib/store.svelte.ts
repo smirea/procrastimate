@@ -1,4 +1,4 @@
-import type { DictationChoice } from 'shared/dictation.ts';
+import type { DictationChoice, RambleMode } from 'shared/dictation.ts';
 import type { LabelColor } from 'shared/label-colors.ts';
 import type { ProjectIcon } from 'shared/project-icons.ts';
 import type { QuickAddButton } from 'shared/quick-add-buttons.ts';
@@ -345,6 +345,14 @@ class Store {
 	/** Offline voice still uses native. */
 	setDictation(dictation: DictationChoice) {
 		this.#setSettings({ dictation });
+	}
+
+	get rambleMode(): RambleMode {
+		return this.settings.rambleMode;
+	}
+
+	setRambleMode(rambleMode: RambleMode) {
+		this.#setSettings({ rambleMode });
 	}
 
 	get quickAddButtons(): QuickAddButton[] {
