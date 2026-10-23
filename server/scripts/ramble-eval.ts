@@ -6,8 +6,8 @@ import { outlineRamble, type GeminiModel, type GeminiThinking } from '../src/ram
 
 /**
  * Scores Ramble's parsers on labelled rambles: the grammar, and Gemini models through the production outline call.
- * The cases are `app-ios/Evals/RambleModel/*.json`, the same sets the on-device model's Swift eval reads. A case
- * key that is absent is not scored, so structure-only sets still count.
+ * The cases are `shared/fixtures/ramble-eval/*.json`. Tune on `dev`, `structure`, and `todoist-dev`; run the holdouts
+ * once at the end. A case key that is absent is not scored, so structure-only sets still count.
  *
  *   TZ=UTC bun server/scripts/ramble-eval.ts [-v] [--gap ms] [--out file] --with <strategy,...> <cases.json>...
  *
