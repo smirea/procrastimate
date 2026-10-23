@@ -313,6 +313,7 @@
 										"reminders",
 										"subtasks"
 									],
+									"rambleMode": "smart",
 									"timeZone": null,
 									"userId": "me"
 								}
@@ -415,6 +416,7 @@
 							"reminders",
 							"subtasks"
 						],
+						"rambleMode": "smart",
 						"timeZone": null
 					},
 					"spaces": {},

@@ -29,6 +29,8 @@ export type Env = {
 	/** A PKCS8 .p8, with newlines as `\n` when the secret is a single line. */
 	APPLE_PRIVATE_KEY?: string;
 	ELEVENLABS_API_KEY?: string;
+	/** Ramble's smart parse, a Worker secret. */
+	GEMINI_API_KEY?: string;
 	/** `cassette` replays recorded transcripts instead of calling ElevenLabs, for `wrangler dev` in tests. */
 	RAMBLE_UPSTREAM?: string;
 	/** Plain vars `wrangler deploy --var` sets, never secrets. See `Config.sentry`. */

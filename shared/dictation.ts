@@ -8,6 +8,14 @@ export const DICTATION_CHOICES = ['native', 'elevenlabs'] as const;
 export const dictationChoiceSchema = z.enum(DICTATION_CHOICES).meta({ id: 'DictationChoice' });
 export type DictationChoice = z.infer<typeof dictationChoiceSchema>;
 
+/**
+ * How Ramble reads speech. `smart` is Gemini on the server, with the grammar offline or when it fails. `commands` is
+ * the grammar reading only spoken cues: `new task`, `subtask`, `note`, priorities, and dates.
+ */
+export const RAMBLE_MODES = ['smart', 'commands'] as const;
+export const rambleModeSchema = z.enum(RAMBLE_MODES).meta({ id: 'RambleMode' });
+export type RambleMode = z.infer<typeof rambleModeSchema>;
+
 export const DICTATION_CAPTURES = ['speech', 'socket', 'typed'] as const;
 export const dictationCaptureSchema = z.enum(DICTATION_CAPTURES).meta({ id: 'DictationCapture' });
 export type DictationCapture = z.infer<typeof dictationCaptureSchema>;

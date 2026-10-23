@@ -30,6 +30,7 @@ import { taskEditSchema } from '../store.ts';
 import { imageSizeSchema } from '../images.ts';
 import { labelSchema, projectSchema, sectionSchema } from '../model.ts';
 import { ROW_OPS, TABLE_OF } from '../rows.ts';
+import { rambleOutlineInputSchema, rambleOutlineSchema } from '../ramble/outline.ts';
 
 /**
  * Every HTTP endpoint the clients call, as one oRPC contract. The server implements it, the web client calls it
@@ -513,6 +514,18 @@ export const contract = {
 			.meta(openapi({ method: 'DELETE', path: '/api/shares', inputStructure: 'detailed' }))
 			.input(z.object({ query: byId }))
 			.output(okSchema),
+	},
+	ramble: {
+		/**
+		 * Ramble's smart parse: Gemini reads the transcript, applies the speaker's corrections, and returns the tasks as
+		 * an outline the client resolves. Human users only. `SERVICE_UNAVAILABLE` without a key, `BAD_GATEWAY` when Gemini
+		 * fails; the client keeps the grammar's tasks either way.
+		 */
+		outline: allowed
+			.errors({ BAD_GATEWAY: {} })
+			.meta(openapi({ method: 'POST', path: '/api/ramble/outline' }))
+			.input(rambleOutlineInputSchema)
+			.output(rambleOutlineSchema),
 	},
 	/** Smoke tests for Sentry: each throws, so a 500 and an event in `procrastimate-worker` prove the path. */
 	debug: {

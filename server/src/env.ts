@@ -13,6 +13,7 @@ const env = z.object({
   VAPID_PUBLIC_KEY: optional(z.string()),
   VAPID_PRIVATE_KEY: optional(z.string()),
   ELEVENLABS_API_KEY: optional(z.string()),
+  GEMINI_API_KEY: optional(z.string()),
   RAMBLE_UPSTREAM: optional(z.string().regex(/^cassette$/)),
   DATABASE_URL: optional(z.url()),
   POWERSYNC_URL: optional(z.url()),

@@ -1,0 +1,1 @@
+ALTER TABLE "settings" ADD COLUMN "ramble_mode" text DEFAULT 'smart' NOT NULL;

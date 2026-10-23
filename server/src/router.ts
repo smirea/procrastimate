@@ -47,6 +47,8 @@ import {
 	sharedView,
 } from './sharing';
 import { personById, searchPeople } from './people';
+import { OUTLINE_TIMEOUT_MS, outlineRamble, RAMBLE_GEMINI } from './ramble-outline';
+import { reportError } from './sentry';
 import { seesTask, sightOf } from './space';
 import { POWERSYNC_PATH, signSyncToken } from './sync';
 import { upload } from './upload';
@@ -204,6 +206,19 @@ export const router = os.router({
 			const actor = await requireHuman(context.request, context.app);
 			await deleteToken(context.app.db, actor.id, input.query.id);
 			return ok;
+		}),
+	},
+	ramble: {
+		outline: os.ramble.outline.handler(async ({ input, context, errors }) => {
+			await requireHuman(context.request, context.app);
+			const gemini = context.app.config.gemini;
+			if (!gemini) throw errors.SERVICE_UNAVAILABLE({ message: 'Ramble has no Gemini key' });
+			try {
+				return await outlineRamble(input, gemini.apiKey, RAMBLE_GEMINI, AbortSignal.timeout(OUTLINE_TIMEOUT_MS));
+			} catch (error) {
+				reportError(error);
+				throw errors.BAD_GATEWAY({ message: 'Gemini could not read the ramble' });
+			}
 		}),
 	},
 	debug: {

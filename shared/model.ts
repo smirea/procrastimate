@@ -33,6 +33,7 @@ export type Settings = z.infer<typeof settingsFieldsSchema>;
 export const DEFAULT_SETTINGS: Settings = {
 	timeZone: null,
 	dictation: 'native',
+	rambleMode: 'smart',
 	quickAddButtons: DEFAULT_QUICK_ADD_BUTTONS,
 };
 
