@@ -233,7 +233,9 @@ final class RambleCapture {
         let outline = await outliner.settle(text, timeout: Self.settleTimeout)
         guard token == generation else { return nil }
         if let outline { return c.resolve(outline) }
-        return RambleOutliner.smartTasks(text, latest: outliner.latest, parse: { c.parse($0).tasks }, resolve: c.resolve)
+        // A recognizer that revised earlier words leaves the last outline reading a different transcript.
+        guard let latest = outliner.latest, text.hasPrefix(latest.transcript) else { return c.parse(text).tasks }
+        return RambleOutliner.smartTasks(text, latest: latest, parse: { c.parse($0).tasks }, resolve: c.resolve)
     }
 
     /// The final transcript decides the tasks. Keys carry over, so rows stay where they are.

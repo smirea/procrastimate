@@ -139,7 +139,11 @@
 		phase = 'structuring';
 		const outline = await outliner.settle(text, SETTLE_TIMEOUT_MS);
 		if (token !== generation) return null;
-		return outline ? resolve(outline) : smartTasks(text, outliner.latest, (rest) => grammar(rest).tasks, resolve);
+		if (outline) return resolve(outline);
+		// A recognizer that revised earlier words leaves the last outline reading a different transcript.
+		const latest = outliner.latest;
+		if (!latest || !text.startsWith(latest.transcript)) return grammar(text).tasks;
+		return smartTasks(text, latest, (rest) => grammar(rest).tasks, resolve);
 	}
 
 	/** Switching reads the capture in progress, or the last one, again; edits to its tasks give way to the new read. */
