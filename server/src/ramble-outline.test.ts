@@ -147,6 +147,11 @@ describe('spokenOnly', () => {
 		expect(spokenOnly(outline, 'for the side-project, Deep Work label, priority two')).toEqual(outline);
 	});
 
+	test('a spelled-out priority counts as said', () => {
+		const outline = { tasks: [task({ priority: 2 })] };
+		expect(spokenOnly(outline, 'finish the budget review by friday, P two')).toEqual(outline);
+	});
+
 	test('a name inside a longer word is not said', () => {
 		const outline = { tasks: [task({ project: 'Work', labels: ['calls'] })] };
 		expect(spokenOnly(outline, 'do my workout and recall the plan')).toEqual({ tasks: [task({})] });

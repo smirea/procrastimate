@@ -144,7 +144,7 @@ function withDefaults(value: unknown): unknown {
 	return 'title' in object ? { ...EMPTY_TASK, ...object } : object;
 }
 
-const PRIORITY_WORD = /\b(?:priority|p\s?[1-4]|urgent|asap)\b/i;
+const PRIORITY_WORD = /\b(?:priority|p\s?(?:[1-4]|one|two|three|four)|urgent|asap)\b/i;
 
 function said(name: string, transcript: string): boolean {
 	const words = name.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
