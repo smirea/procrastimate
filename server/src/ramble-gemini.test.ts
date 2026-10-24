@@ -125,6 +125,30 @@ describe('geminiUpstream', () => {
 		expect(heard.at(-1)).toEqual({ message_type: 'committed_transcript', text: 'Buy milk.' });
 	});
 
+	test('words heard before a completed turn need no wait after the audio ends', async () => {
+		const live = fakeLive();
+		const { upstream, heard } = await connect(live);
+		live.say({ setupComplete: {} });
+		live.say({ serverContent: { inputTranscription: { text: 'Buy milk.' } } });
+		live.say({ serverContent: { turnComplete: true } });
+		upstream.send(chunk(0, true));
+		expect(heard.at(-1)).toEqual({ message_type: 'partial_transcript', text: 'Buy milk.' });
+		await Bun.sleep(900);
+		expect(heard.at(-1)).toEqual({ message_type: 'committed_transcript', text: 'Buy milk.' });
+	});
+
+	test('words never answered wait for their turn instead of the quiet window', async () => {
+		const live = fakeLive();
+		const { upstream, heard } = await connect(live);
+		live.say({ setupComplete: {} });
+		upstream.send(chunk(0, true));
+		await Bun.sleep(900);
+		expect(heard.at(-1)).toEqual({ message_type: 'session_started' });
+		live.say({ serverContent: { inputTranscription: { text: 'Call mom.' } } });
+		live.say({ serverContent: { turnComplete: true } });
+		expect(heard.at(-1)).toEqual({ message_type: 'committed_transcript', text: 'Call mom.' });
+	});
+
 	test('a refused open is tried once more', async () => {
 		const live = fakeLive();
 		live.refuse(1);

@@ -13,8 +13,11 @@ import { rambleInstructions, spokenOnly } from './ramble-outline';
 export const RAMBLE_LIVE_MODEL = 'gemini-3.1-flash-live-preview';
 const LIVE_URL =
 	'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
-/** After the end of the audio, how long Gemini may stay silent before the tasks are taken as they are. */
-const QUIET_AFTER_END_MS = 1500;
+/**
+ * After the end of the audio, how long Gemini may stay silent before the tasks are taken as they are, when every word
+ * heard was already answered. Words still unanswered wait for their turn to complete, up to the session's cap.
+ */
+const QUIET_AFTER_END_MS = 800;
 
 export type RawSocket = { send(text: string): void; close(): void };
 /** Opens a WebSocket to `url`; resolves once it is open, and calls `close` when it closes after that. */
@@ -170,6 +173,11 @@ export function geminiUpstream(apiKey: string, open: OpenSocket): ConnectUpstrea
 		const tasks = new LiveTasks();
 		let transcript = '';
 		let ending = false;
+		/**
+		 * Speech the model has not finished a turn on. True from the start: Gemini transcribes a turn only once it hears
+		 * a pause, so a ramble with none arrives whole after the end of the audio.
+		 */
+		let unanswered = true;
 		let quiet: ReturnType<typeof setTimeout> | undefined;
 		const emit = (message: Record<string, unknown>) => events.message(JSON.stringify(message));
 		let finished = false;
@@ -182,7 +190,7 @@ export function geminiUpstream(apiKey: string, open: OpenSocket): ConnectUpstrea
 		/** Each message after the end of the audio restarts the wait, so the last tool calls are never cut off. */
 		const settle = () => {
 			clearTimeout(quiet);
-			quiet = setTimeout(finish, QUIET_AFTER_END_MS);
+			if (!unanswered) quiet = setTimeout(finish, QUIET_AFTER_END_MS);
 		};
 
 		let socket: RawSocket | null = null;
@@ -199,8 +207,10 @@ export function geminiUpstream(apiKey: string, open: OpenSocket): ConnectUpstrea
 				// Each turn's transcription starts bare, so a sentence after a pause would run into the one before it.
 				const gap = /[.!?,]$/.test(transcript) && !/^\s/.test(heard) ? ' ' : '';
 				transcript += gap + heard;
+				unanswered = true;
 				emit({ message_type: 'partial_transcript', text: transcript });
 			}
+			if (message.serverContent?.turnComplete) unanswered = false;
 			if (ending) settle();
 			const calls = message.toolCall?.functionCalls ?? [];
 			if (calls.length) {
