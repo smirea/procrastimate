@@ -3,7 +3,7 @@ import type { Env } from './bindings';
 import { config } from './config';
 import { connect, type Connection } from './db/postgres';
 import { errorResponse } from './errors';
-import { rambleRoute, upstreamOf, workerUpstream, type RambleRoute } from './ramble';
+import { rambleRoute, upstreamOf, workerSocket, workerUpstream, type RambleRoute } from './ramble';
 import { workerStream } from './sockets';
 
 /** The user's actor, set by the Worker after it authenticated the upgrade. The object trusts only this header. */
@@ -30,7 +30,11 @@ export class Ramble {
 	async fetch(request: Request): Promise<Response> {
 		const actor = request.headers.get(RAMBLE_ACTOR_HEADER);
 		if (!this.ctx.id.name || !actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
-		this.route ??= rambleRoute(this.open().db, workerStream(), upstreamOf(config(this.env).ramble, workerUpstream));
+		this.route ??= rambleRoute(
+			this.open().db,
+			workerStream(),
+			upstreamOf(config(this.env), workerUpstream, workerSocket),
+		);
 		return this.route(request, JSON.parse(actor));
 	}
 }

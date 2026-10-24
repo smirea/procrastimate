@@ -87,11 +87,18 @@ final class RambleCapture {
         startedAt = .now
         outliner?.stop()
         outliner = context().mode == .smart ? newOutliner(token: token) : nil
+        // Gemini Live reads the tasks in the audio stream itself, so its outlines replace the reads made from the text.
+        let geminiLive = choice == .gemini
         session.onText = { [weak self] spoken, _ in
             guard let self, token == generation, phase == .listening || phase == .finishing else { return }
             transcript = spoken
-            if context().mode == .smart { outliner?.update(spoken) }
+            if context().mode == .smart, !geminiLive { outliner?.update(spoken) }
             parseLive(spoken, token: token)
+        }
+        session.onOutline = { [weak self] outline in
+            guard let self, token == generation, phase == .listening || phase == .finishing else { return }
+            outliner?.adopt(transcript, outline)
+            if context().mode == .smart { parseLive(transcript, token: token) }
         }
         session.onEnd = { [weak self] end in
             guard let self, token == generation else { return }

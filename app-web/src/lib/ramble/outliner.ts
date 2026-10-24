@@ -41,6 +41,16 @@ export class Outliner {
 		this.#timer = setTimeout(() => this.#send(), Math.max(0, Math.min(this.settleMs, this.maxWaitMs - waited)));
 	}
 
+	/** Takes an outline read elsewhere, as Gemini Live's are, so stopping on that transcript reuses it. */
+	adopt(transcript: string, outline: RambleOutline) {
+		this.latest = { transcript, outline };
+		if (this.#pending === transcript) {
+			clearTimeout(this.#timer);
+			this.#pending = null;
+			this.#waitingSince = null;
+		}
+	}
+
 	/** The outline of exactly `transcript`, or null when there is none within `timeoutMs`. */
 	async settle(transcript: string, timeoutMs: number): Promise<RambleOutline | null> {
 		clearTimeout(this.#timer);

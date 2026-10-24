@@ -50,6 +50,16 @@ final class RambleOutliner {
         }
     }
 
+    /// Takes an outline read elsewhere, as Gemini Live's are, so stopping on that transcript reuses it.
+    func adopt(_ transcript: String, _ outline: RambleOutline) {
+        latest = (transcript, outline)
+        if pending == transcript {
+            timer?.cancel()
+            pending = nil
+            waitingSince = nil
+        }
+    }
+
     /// The outline of exactly `transcript`, or nil when there is none within `timeout`.
     func settle(_ transcript: String, timeout: Duration) async -> RambleOutline? {
         timer?.cancel()

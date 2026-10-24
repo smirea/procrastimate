@@ -5,6 +5,7 @@ import type { Env } from './bindings';
 import { config } from './config';
 import type { Db } from './db/postgres';
 import { rambleRoute, upstreamOf, upstreamUrl, type ConnectUpstream } from './ramble';
+import type { OpenSocket } from './ramble-gemini';
 import type { Socket, StreamEvents, StreamHost } from './sockets';
 
 type SocketData = { start: (socket: Socket) => StreamEvents; events?: StreamEvents };
@@ -26,6 +27,25 @@ export function bunUpstream(apiKey: string): ConnectUpstream {
 		});
 }
 
+/** A WebSocket from Bun. Gemini sends its messages as binary frames, so they are decoded to text. */
+export const bunSocket: OpenSocket = (url, events) =>
+	new Promise((resolve, reject) => {
+		const socket = new WebSocket(url);
+		socket.binaryType = 'arraybuffer';
+		let opened = false;
+		socket.addEventListener('open', () => {
+			opened = true;
+			resolve({ send: text => socket.send(text), close: () => socket.close(1000, 'Done') });
+		});
+		socket.addEventListener('message', ({ data }) =>
+			events.message(typeof data === 'string' ? data : new TextDecoder().decode(data as ArrayBuffer)),
+		);
+		socket.addEventListener('close', ({ code, reason }) => {
+			if (!opened) reject(new Error(`The upstream refused the connection: ${code} ${reason}`));
+			else events.close();
+		});
+	});
+
 /**
  * The Bun dev server: the Worker's handler on Bun's HTTP server, with Ramble's socket on Bun's WebSocket server.
  * Bun upgrades through `server.upgrade` and needs the fetch handler to answer nothing, so an accepted upgrade
@@ -42,7 +62,7 @@ export async function serveDev(port: number, env: Env, db: Db): Promise<Server<S
 		upgraded.add(marker);
 		return marker;
 	};
-	const app = await createApp(env, db, rambleRoute(db, stream, upstreamOf(config(env).ramble, bunUpstream)));
+	const app = await createApp(env, db, rambleRoute(db, stream, upstreamOf(config(env), bunUpstream, bunSocket)));
 	server = Bun.serve<SocketData>({
 		development: true,
 		idleTimeout: 0,

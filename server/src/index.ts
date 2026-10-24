@@ -57,6 +57,8 @@ console.log(
 console.log('PowerSync:', settings.powersync.url);
 console.log(
 	'Ramble transcribes with:',
-	settings.ramble?.kind === 'elevenlabs' ? 'ElevenLabs' : settings.ramble ? 'cassettes' : 'nothing (off)',
+	settings.ramble?.kind === 'cassette'
+		? 'cassettes'
+		: [settings.ramble && 'ElevenLabs', settings.gemini && 'Gemini Live'].filter(Boolean).join(', ') || 'nothing (off)',
 );
 console.log('Sentry:', settings.sentry ? `${settings.sentry.environment} ${settings.sentry.release}` : 'off');
