@@ -15,7 +15,7 @@ import {
 export type GeminiThinking = 'minimal' | 'low' | 'medium' | 'high';
 export type GeminiModel = { model: string; thinking: GeminiThinking | null };
 
-export const RAMBLE_GEMINI: GeminiModel = { model: 'gemini-3.5-flash-lite', thinking: 'minimal' };
+export const RAMBLE_GEMINI: GeminiModel = { model: 'gemini-3.5-flash', thinking: 'minimal' };
 
 /** Past this the client has already fallen back to the grammar. */
 export const OUTLINE_TIMEOUT_MS = 10_000;
@@ -144,7 +144,7 @@ function withDefaults(value: unknown): unknown {
 	return 'title' in object ? { ...EMPTY_TASK, ...object } : object;
 }
 
-const PRIORITY_WORD = /\b(?:priority|p\s?[1-4]|urgent|asap)\b/i;
+const PRIORITY_WORD = /\b(?:priority|p\s?(?:[1-4]|one|two|three|four)|urgent|asap)\b/i;
 
 function said(name: string, transcript: string): boolean {
 	const words = name.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
