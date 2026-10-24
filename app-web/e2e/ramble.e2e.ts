@@ -154,7 +154,7 @@ test('smart mode lists Gemini’s outline with nested subtasks, and commands mod
 	await expect(spoken.getByText('Free range')).toBeVisible({ timeout: 15_000 });
 	await drawer.getByRole('button', { name: 'Stop listening' }).click();
 	await expect(drawer.getByRole('button', { name: 'Add 2 tasks' })).toBeVisible();
-	await expect(spoken.getByText('Tomorrow 5pm')).toBeVisible();
+	await expect(spoken.getByText('Tomorrow 5pm')).toHaveCount(1);
 	expect(asked.at(-1)).toContain('Renew the passport');
 
 	await drawer.getByRole('button', { name: 'Smart parsing. Switch to spoken commands' }).click();
