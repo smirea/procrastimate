@@ -160,9 +160,10 @@
 		}
 		const previous = capture;
 		if (!previous) return;
-		const at = entries.findIndex((entry) => previous.keys.includes(entry.key));
 		const tasks = await read(previous.transcript, generation);
+		phase = 'review';
 		if (!tasks || capture !== previous) return;
+		const at = entries.findIndex((entry) => previous.keys.includes(entry.key));
 		const settled = keyed(tasks, nextKey);
 		nextKey += settled.length;
 		const kept = entries.filter((entry) => !previous.keys.includes(entry.key));

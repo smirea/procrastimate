@@ -146,4 +146,9 @@ describe('spokenOnly', () => {
 		const outline = { tasks: [task({ project: 'Side Project', labels: ['deep work'], priority: 2 })] };
 		expect(spokenOnly(outline, 'for the side-project, Deep Work label, priority two')).toEqual(outline);
 	});
+
+	test('a name inside a longer word is not said', () => {
+		const outline = { tasks: [task({ project: 'Work', labels: ['calls'] })] };
+		expect(spokenOnly(outline, 'do my workout and recall the plan')).toEqual({ tasks: [task({})] });
+	});
 });

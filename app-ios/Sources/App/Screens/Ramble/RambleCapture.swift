@@ -132,9 +132,10 @@ final class RambleCapture {
             parseLive(transcript, token: generation)
         case .review:
             guard let previous = capture else { return }
+            let tasks = await read(previous.transcript, token: generation)
+            phase = .review
+            guard let tasks, capture.map({ $0.ids == previous.ids }) == true else { return }
             let at = entries.firstIndex { previous.ids.contains($0.id) }
-            guard let tasks = await read(previous.transcript, token: generation),
-                  capture.map({ $0.ids == previous.ids }) == true else { return }
             let settled = RambleEntry.keyed(tasks, base: nextKey)
             nextKey += settled.count
             var kept = entries.filter { !previous.ids.contains($0.id) }

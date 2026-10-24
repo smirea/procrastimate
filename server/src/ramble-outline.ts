@@ -150,7 +150,7 @@ function said(name: string, transcript: string): boolean {
 	const words = name.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
 	if (!words.length) return false;
 	return new RegExp(
-		String.raw`(?<![\p{L}\p{N}])${words.map(escapeRegExp).join(String.raw`[^\p{L}\p{N}]+`)}`,
+		String.raw`(?<![\p{L}\p{N}])${words.map(escapeRegExp).join(String.raw`[^\p{L}\p{N}]+`)}(?:'?s)?(?![\p{L}\p{N}])`,
 		'iu',
 	).test(transcript);
 }
