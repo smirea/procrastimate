@@ -1,6 +1,7 @@
 import Foundation
 
 public typealias DictationChoice = API.DictationChoice
+public typealias RambleMode = API.RambleMode
 public typealias VoiceCapture = API.VoiceCapture
 
 public enum Dictation {

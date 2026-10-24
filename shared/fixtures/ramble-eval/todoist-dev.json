@@ -1,0 +1,383 @@
+[
+	{
+		"text": "call the dentist tomorrow at 3pm priority one in my home project",
+		"tasks": [{ "title": "Call dentist", "date": "2026-10-15", "time": "15:00", "priority": 1, "project": "Home" }]
+	},
+	{
+		"text": "Finish the quarterly budget review by Friday afternoon, P2, put it in finance.",
+		"tasks": [
+			{
+				"title": "Finish quarterly budget review",
+				"date": "2026-10-16",
+				"time": null,
+				"priority": 2,
+				"project": "Finance"
+			}
+		]
+	},
+	{
+		"text": "pay the electricity bill today add it to finance urgent make it a p1",
+		"tasks": [
+			{ "title": "Pay electricity bill", "date": "2026-10-14", "time": null, "priority": 1, "project": "Finance" }
+		]
+	},
+	{
+		"text": "Buy groceries tomorrow, tag it as errands, make it a P3.",
+		"tasks": [
+			{
+				"title": "Buy groceries",
+				"date": "2026-10-15",
+				"time": null,
+				"priority": 3,
+				"labels": ["errands"],
+				"project": null
+			}
+		]
+	},
+	{
+		"text": "Okay, I need to renew my passport, buy travel insurance, and check if my flight has extra baggage allowance.",
+		"tasks": [
+			{ "title": "Renew passport", "date": null, "time": null },
+			{ "title": "Buy travel insurance", "date": null, "time": null },
+			{ "title": "Check if flight has extra baggage allowance", "date": null, "time": null }
+		]
+	},
+	{
+		"text": "email the landlord about the leak then call mom then pick up the dry cleaning on saturday",
+		"tasks": [
+			{ "title": "Email landlord about leak", "date": null, "time": null },
+			{ "title": "Call mom", "date": null, "time": null },
+			{ "title": "Pick up dry cleaning", "date": "2026-10-17", "time": null }
+		]
+	},
+	{
+		"text": "so I need to send the invoice to acme today also water the plants oh and book a haircut for next week and clean out the garage at some point",
+		"tasks": [
+			{ "title": "Send invoice to acme", "date": "2026-10-14", "time": null },
+			{ "title": "Water plants", "date": null, "time": null },
+			{ "title": "Book haircut", "date": "2026-10-19", "time": null },
+			{ "title": "Clean out garage", "date": null, "time": null }
+		]
+	},
+	{
+		"text": "ok list time return the library books renew car registration schedule an oil change buy a birthday card for dana cancel the gym membership",
+		"tasks": [
+			{ "title": "Return library books", "date": null, "time": null },
+			{ "title": "Renew car registration", "date": null, "time": null },
+			{ "title": "Schedule oil change", "date": null, "time": null },
+			{ "title": "Buy birthday card for dana", "date": null, "time": null },
+			{ "title": "Cancel gym membership", "date": null, "time": null }
+		]
+	},
+	{
+		"text": "Email the client the updated pricing doc, schedule team sync for Thursday at 2pm, follow up with Jordan about budget approvals, and call mom on the way home.",
+		"tasks": [
+			{ "title": "Email client updated pricing doc", "date": null, "time": null },
+			{ "title": "Schedule team sync", "date": "2026-10-15", "time": "14:00" },
+			{ "title": "Follow up with Jordan about budget approvals", "date": null, "time": null },
+			{ "title": "Call mom on way home", "date": null, "time": null, "project": null }
+		]
+	},
+	{
+		"text": "go grocery shopping tomorrow and get milk eggs bread and bananas",
+		"tasks": [
+			{
+				"title": "Go grocery shopping",
+				"date": "2026-10-15",
+				"time": null,
+				"subtasks": ["Milk", "Eggs", "Bread", "Bananas"]
+			}
+		]
+	},
+	{
+		"text": "Plan the trip to Lisbon. The steps are book flights, find a hotel near the old town, and renew my passport.",
+		"tasks": [
+			{
+				"title": "Plan trip to Lisbon",
+				"date": null,
+				"time": null,
+				"subtasks": ["Book flights", "Find hotel near old town", "Renew passport"]
+			}
+		]
+	},
+	{
+		"text": "add a task to prepare the board presentation for monday and add a subtask to collect the sales numbers and another subtask to draft the slides",
+		"tasks": [
+			{
+				"title": "Prepare board presentation",
+				"date": "2026-10-19",
+				"time": null,
+				"subtasks": ["Collect sales numbers", "Draft slides"]
+			}
+		]
+	},
+	{
+		"text": "plan the party: for food get pizza and soda, for decorations get balloons and streamers",
+		"tasks": [
+			{
+				"title": "Plan party",
+				"date": null,
+				"time": null,
+				"subtasks": [
+					{ "title": "Food", "subtasks": ["Pizza", "Soda"] },
+					{ "title": "Decorations", "subtasks": ["Balloons", "Streamers"] }
+				]
+			}
+		]
+	},
+	{
+		"text": "saturday I need to clean the house, in the kitchen wipe the counters and mop the floor, in the bathroom scrub the tub and replace the towels",
+		"tasks": [
+			{
+				"title": "Clean house",
+				"date": "2026-10-17",
+				"time": null,
+				"subtasks": [
+					{ "title": "Kitchen", "subtasks": ["Wipe counters", "Mop floor"] },
+					{ "title": "Bathroom", "subtasks": ["Scrub tub", "Replace towels"] }
+				]
+			}
+		]
+	},
+	{
+		"text": "pack for the camping trip on friday, I need the tent, sleeping bags and the stove, and separately call grandma tonight",
+		"tasks": [
+			{
+				"title": "Pack for camping trip",
+				"date": "2026-10-16",
+				"time": null,
+				"subtasks": ["Tent", "Sleeping bags", "Stove"]
+			},
+			{ "title": "Call grandma", "date": "2026-10-14", "time": "20:00" }
+		]
+	},
+	{
+		"text": "schedule a meeting with sophie on thursday, actually make that friday",
+		"tasks": [{ "title": "Schedule meeting with sophie", "date": "2026-10-16", "time": null }]
+	},
+	{
+		"text": "pick up the kids tomorrow at 3 no wait 4",
+		"tasks": [{ "title": "Pick up kids", "date": "2026-10-15", "time": "16:00" }]
+	},
+	{
+		"text": "buy apples, sorry, pears",
+		"tasks": [{ "title": "Buy pears", "date": null, "time": null }]
+	},
+	{
+		"text": "I need to buy apples. Scratch that, I already have some. Also call the plumber about the sink tomorrow morning.",
+		"tasks": [{ "title": "Call plumber about sink", "date": "2026-10-15", "time": null }]
+	},
+	{
+		"text": "go to the store and get dog food, coffee beans and paper towels, and return the amazon package. actually forget the coffee beans",
+		"tasks": [
+			{ "title": "Go to store", "date": null, "time": null, "subtasks": ["Dog food", "Paper towels"] },
+			{ "title": "Return amazon package", "date": null, "time": null }
+		]
+	},
+	{
+		"text": "go to the gym tomorrow at 7am and meet alex for lunch tomorrow at noon. never mind the gym, my knee hurts",
+		"tasks": [{ "title": "Meet alex for lunch", "date": "2026-10-15", "time": "12:00" }]
+	},
+	{
+		"text": "Call the dentist to reschedule, email the HOA about the fence, and buy a new phone charger. Oh and make the dentist one priority one.",
+		"tasks": [
+			{ "title": "Call dentist to reschedule", "date": null, "time": null, "priority": 1 },
+			{ "title": "Email HOA about fence", "date": null, "time": null, "priority": null },
+			{ "title": "Buy new phone charger", "date": null, "time": null, "priority": null }
+		]
+	},
+	{
+		"text": "submit the expense report on monday, renew the domain name, and book the venue for the offsite. the second one should be tomorrow instead",
+		"tasks": [
+			{ "title": "Submit expense report", "date": "2026-10-19", "time": null },
+			{ "title": "Renew domain name", "date": "2026-10-15", "time": null },
+			{ "title": "Book venue for offsite", "date": null, "time": null }
+		]
+	},
+	{
+		"text": "Email the beta testers tomorrow at 8am and prep the demo for Friday. Actually, move the email to Monday, same time.",
+		"tasks": [
+			{ "title": "Email beta testers", "date": "2026-10-19", "time": "08:00" },
+			{ "title": "Prep demo", "date": "2026-10-16", "time": null }
+		]
+	},
+	{
+		"text": "water the plants, take out the recycling, reorganize the spice rack. hmm remove that last one",
+		"tasks": [
+			{ "title": "Water plants", "date": null, "time": null },
+			{ "title": "Take out recycling", "date": null, "time": null }
+		]
+	},
+	{
+		"text": "I need to call the bank tomorrow. Actually, I need to call the bank on Friday about the mortgage rate.",
+		"tasks": [{ "title": "Call bank about mortgage rate", "date": "2026-10-16", "time": null }]
+	},
+	{
+		"text": "I also need to text Julia about dinner sometime today. Actually, scratch that, I'm going to call Julia about the dinner.",
+		"tasks": [{ "title": "Call Julia about dinner", "date": "2026-10-14", "time": null }]
+	},
+	{
+		"text": "finish the slide deck by friday, that's a p1. hmm no, this is not priority one, this is priority three",
+		"tasks": [{ "title": "Finish slide deck", "date": "2026-10-16", "time": null, "priority": 3 }]
+	},
+	{
+		"text": "prep for my speech on monday, it's a work thing. oh actually that's a home thing",
+		"tasks": [{ "title": "Prep for speech", "date": "2026-10-19", "time": null, "project": "Home" }]
+	},
+	{
+		"text": "I need to get cakes. Sorry, not cakes. I need to get candles for the birthday cake.",
+		"tasks": [{ "title": "Get candles for birthday cake", "date": null, "time": null }]
+	},
+	{
+		"text": "go to the dentist tomorrow at 10am, actually make that 11, not 10",
+		"tasks": [{ "title": "Go to dentist", "date": "2026-10-15", "time": "11:00" }]
+	},
+	{
+		"text": "book flights to denver, call the vet about max's shots, and order new contacts. remove the vet one, I already booked it",
+		"tasks": [
+			{ "title": "Book flights to denver", "date": null, "time": null },
+			{ "title": "Order new contacts", "date": null, "time": null }
+		]
+	},
+	{
+		"text": "pay rent on november 1st, renew the car insurance on the 20th, and schedule a haircut. actually the insurance is due on the 25th",
+		"tasks": [
+			{ "title": "Pay rent", "date": "2026-11-01", "time": null },
+			{ "title": "Renew car insurance", "date": "2026-10-25", "time": null },
+			{ "title": "Schedule haircut", "date": null, "time": null }
+		]
+	},
+	{
+		"text": "For the work project, I need to review the mockups by tomorrow, get feedback from the team by Monday, and schedule the implementation kickoff for next Friday.",
+		"tasks": [
+			{ "title": "Review mockups", "date": "2026-10-15", "time": null, "project": "Work" },
+			{ "title": "Get feedback from team", "date": "2026-10-19", "time": null, "project": "Work" },
+			{ "title": "Schedule implementation kickoff", "date": "2026-10-23", "time": null, "project": "Work" }
+		]
+	},
+	{
+		"text": "finish the science project with emma tonight and clean up the home office",
+		"tasks": [
+			{
+				"title": "Finish science project with emma",
+				"date": "2026-10-14",
+				"time": "20:00",
+				"project": null,
+				"labels": []
+			},
+			{ "title": "Clean up home office", "date": null, "time": null, "project": null, "labels": [] }
+		]
+	},
+	{
+		"text": "call the insurance company tomorrow, tag it calls, and follow up with the contractor, label that waiting",
+		"tasks": [
+			{ "title": "Call insurance company", "date": "2026-10-15", "time": null, "labels": ["calls"] },
+			{ "title": "Follow up with contractor", "date": null, "time": null, "labels": ["waiting"] }
+		]
+	},
+	{
+		"text": "High priority, renew the passport before the trip. Low priority, sort the photo albums.",
+		"tasks": [
+			{ "title": "Renew passport before trip", "date": null, "time": null, "priority": 1 },
+			{ "title": "Sort photo albums", "date": null, "time": null, "priority": 4 }
+		]
+	},
+	{
+		"text": "this is important, I have to tell my boss about the vacation dates tomorrow",
+		"tasks": [{ "title": "Tell boss about vacation dates", "date": "2026-10-15", "time": null, "priority": null }]
+	},
+	{
+		"text": "write the onboarding docs for the side project on saturday morning, medium priority, label it deep work",
+		"tasks": [
+			{
+				"title": "Write onboarding docs",
+				"date": "2026-10-17",
+				"time": null,
+				"priority": 3,
+				"project": "Side Project",
+				"labels": ["deep work"]
+			}
+		]
+	},
+	{
+		"text": "I need to call my accountant tomorrow afternoon and I need to follow up on that invoice by Friday. Those are both finance tasks.",
+		"tasks": [
+			{ "title": "Call accountant", "date": "2026-10-15", "time": null, "project": "Finance" },
+			{ "title": "Follow up on invoice", "date": "2026-10-16", "time": null, "project": "Finance" }
+		]
+	},
+	{
+		"text": "run errands downtown on saturday",
+		"tasks": [{ "title": "Run errands downtown", "date": "2026-10-17", "time": null, "labels": [], "project": null }]
+	},
+	{
+		"text": "book a table at the italian place for friday at 7pm, add a note that sam is gluten free",
+		"tasks": [
+			{ "title": "Book table at italian place", "date": "2026-10-16", "time": "19:00", "notes": "Sam is gluten free" }
+		]
+	},
+	{
+		"text": "Fix the leaky faucet in the bathroom on Sunday. Description: the washer kit is in the garage on the left shelf.",
+		"tasks": [
+			{
+				"title": "Fix leaky faucet in bathroom",
+				"date": "2026-10-18",
+				"time": null,
+				"notes": "The washer kit is in the garage on the left shelf"
+			}
+		]
+	},
+	{
+		"text": "submit the grant application by the 31st in my work project, note: use the updated budget numbers from finance",
+		"tasks": [
+			{
+				"title": "Submit grant application",
+				"date": "2026-10-31",
+				"time": null,
+				"project": "Work",
+				"notes": "Use the updated budget numbers from finance"
+			}
+		]
+	},
+	{
+		"text": "um okay so uh ugh what a day. like I need to, you know, pick up the prescription at cvs tomorrow and uh that's all",
+		"tasks": [{ "title": "Pick up prescription at cvs", "date": "2026-10-15", "time": null }]
+	},
+	{
+		"text": "I need to call, no, I need to email the school about the field trip form, and um, like, also buy printer ink. that's it",
+		"tasks": [
+			{ "title": "Email school about field trip form", "date": null, "time": null },
+			{ "title": "Buy printer ink", "date": null, "time": null }
+		]
+	},
+	{
+		"text": "man the traffic was insane today. anyway remind me to change the oil in the car next week and uh I should probably look up flights for thanksgiving. ok that's all",
+		"tasks": [
+			{ "title": "Change oil in car", "date": "2026-10-19", "time": null },
+			{ "title": "Look up flights for thanksgiving", "date": null, "time": null }
+		]
+	},
+	{
+		"text": "so like the main thing today is uh finish the proposal for serena, that's my number one priority. and then you know iron some shirts and maybe wash the car if I get time",
+		"tasks": [
+			{ "title": "Finish proposal for serena", "date": "2026-10-14", "time": null, "priority": 1 },
+			{ "title": "Iron shirts", "date": null, "time": null, "priority": null },
+			{ "title": "Wash car", "date": null, "time": null, "priority": null }
+		]
+	},
+	{
+		"text": "call the recruiter on friday at 10am and remind me 30 minutes before",
+		"tasks": [{ "title": "Call recruiter", "date": "2026-10-16", "time": "10:00", "remindBefore": [30] }]
+	},
+	{
+		"text": "ok uh I gotta go shopping for the bake sale on saturday, um, flour, sugar, chocolate chips, and oh, eggs. that's all",
+		"tasks": [
+			{
+				"title": "Go shopping for bake sale",
+				"date": "2026-10-17",
+				"time": null,
+				"subtasks": ["Flour", "Sugar", "Chocolate chips", "Eggs"]
+			}
+		]
+	}
+]

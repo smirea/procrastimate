@@ -26,6 +26,8 @@ export type Config = {
 	google: { web: { clientId: string; clientSecret: string } | null; iosClientId: string | null };
 	apple: { servicesId: string | null; secret: AppleSecret } | null;
 	ramble: { kind: 'cassette' } | { kind: 'elevenlabs'; apiKey: string } | null;
+	/** Ramble's smart parse. Null answers 503, and clients keep the grammar's tasks. */
+	gemini: { apiKey: string } | null;
 	/** Reporting to `procrastimate-worker`, on only where the deploy passes `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`. */
 	sentry: SentryTarget | null;
 };
@@ -122,6 +124,7 @@ export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Co
 	if (upstream && upstream !== 'cassette')
 		problems.push(`RAMBLE_UPSTREAM must be cassette or unset, not "${upstream}"`);
 	const elevenLabsKey = read('ELEVENLABS_API_KEY');
+	const geminiKey = read('GEMINI_API_KEY');
 
 	const sentry = parseSentryTarget(sentryDsn, {
 		environment: read('SENTRY_ENVIRONMENT'),
@@ -149,6 +152,7 @@ export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Co
 				: elevenLabsKey
 					? { kind: 'elevenlabs', apiKey: elevenLabsKey }
 					: null,
+		gemini: geminiKey ? { apiKey: geminiKey } : null,
 		sentry: sentry.target,
 	};
 }

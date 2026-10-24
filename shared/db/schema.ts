@@ -13,7 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { IMAGE_SIZES, IMAGE_TYPES } from '../images.ts';
-import { DICTATION_CHOICES } from '../dictation.ts';
+import { DICTATION_CHOICES, RAMBLE_MODES } from '../dictation.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 import { KINDS } from '../kinds.ts';
 import { LABEL_COLORS } from '../label-colors.ts';
@@ -163,6 +163,11 @@ export const settings = pgTable(
 			.$type<ColumnValue<'settings', 'dictation'>>()
 			.notNull()
 			.default('native'),
+		/** How Ramble reads speech: `smart` (Gemini) or `commands` (spoken cues only). Toggled in the Ramble drawer. */
+		rambleMode: text('ramble_mode', { enum: RAMBLE_MODES })
+			.$type<ColumnValue<'settings', 'rambleMode'>>()
+			.notNull()
+			.default('smart'),
 		/** The quick add buttons pinned to the chip row, in row order. The `+` menu lists the rest. */
 		quickAddButtons: jsonb('quick_add_buttons')
 			.$type<ColumnValue<'settings', 'quickAddButtons'>>()

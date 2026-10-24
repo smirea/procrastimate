@@ -28,7 +28,7 @@ struct LabelPatterns {
     var ids: [String: String]
 }
 
-private enum RambleNames {
+enum RambleNames {
     static let letters = JSRegex(#"[^\p{L}\p{N}]+"#)
     static let possessive = JSRegex(#"(?<=\w) ?'?s$"#)
     static let endsWithProject = JSRegex(#"\bproject$"#, ignoreCase: true)
@@ -265,6 +265,7 @@ struct RambleGrammar {
     let zone: TimeZone
     let projects: NamedPattern?
     let labels: LabelPatterns?
+    let commands: Bool
     var structural: [(kind: RambleTokenKind, start: Int, end: Int)] = []
     var tasks: [RambleItem] = []
     var current: RambleItem?
@@ -323,6 +324,10 @@ struct RambleGrammar {
         "(?<note>\\b(?:with\\s+(?:a|the)\\s+note(?:\\s+that)?|add\\s+a\\s+note|the\\s+note\\s+is)\\b[\\s:,-]*|(?<=[,;:]\\s*)(?:and\\s+)?(?:notes?|details)(?!\\s+to\\s+self\\b)\\b[\\s:,-]*)|(?<list>\\b(?:with\\s+(?:the\\s+)?|and\\s+)?sub[\\s-]?tasks\\b[\\s:,-]*|[\\s,]*\\b(?:the\\s+steps\\s+are|steps\\s+are|which\\s+means|that\\s+means|the\\s+list\\s+is)\\b[\\s:,-]*|(?<=[a-z])\\s*:\\s+(?=[a-z]))|(?<one>\\b(?:and\\s+|with\\s+)?(?:add\\s+)?(?:a\\s+|another\\s+)?sub[\\s-]?task\\b[\\s:,-]*)",
         ignoreCase: true
     )
+    static let commandStructure = JSRegex(
+        #"(?<note>\b(?:add\s+(?:a\s+)?)?(?:note|description)\b[\s:,-]*)|(?<one>\b(?:add\s+(?:a\s+)?)?sub[\s-]?task\b[\s:,-]*)"#,
+        ignoreCase: true
+    )
     static let listSplit = JSRegex(#"\s*,\s*(?:and\s+)?|\s+and\s+"#, ignoreCase: true)
     static let cue = JSRegex(
         #"^(?:(?:and|also|oh)\s+)?(?:remind\s+me(?!\s+to\b)|priority|p[1-4]\b|project|in\s+(?:the\s+|my\s+)?project|labels?|tag(?:ged)?|it'?s\s+due|it\s+is\s+due|due|make\s+it(?:\s+to)?|set\s+it(?:\s+to)?|every|each|add\s+it|put\s+it|move\s+it|(?:for|in|to)\s+(?:the|my)\s)"#,
@@ -333,8 +338,9 @@ struct RambleGrammar {
     static let words = JSRegex(#"\s+"#)
     static let leftTrim = JSRegex(#"^[\s,;]+"#)
 
-    init(transcript: String, now: Date, projects: [Project], labels: [Label], zone: TimeZone) {
+    init(transcript: String, now: Date, projects: [Project], labels: [Label], zone: TimeZone, commands: Bool) {
         self.transcript = transcript
+        self.commands = commands
         mapped = RambleNormalize.normalize(transcript)
         self.now = now
         self.zone = zone
@@ -421,7 +427,7 @@ struct RambleGrammar {
         var boundaries: [(kind: String, start: Int, end: Int)] = []
         let js = JSString(text)
         for match in Self.boundary.matches(in: text) {
-            if match.named("sentence") != nil, Self.abbreviation.test(js.slice(0, match.start)) { continue }
+            if match.named("sentence") != nil, commands || Self.abbreviation.test(js.slice(0, match.start)) { continue }
             if match.named("correction") != nil {
                 if Self.toBefore.test(js.slice(0, match.start)) || !correctionEnds(js.slice(match.end, js.count)) { continue }
             }
@@ -476,7 +482,7 @@ struct RambleGrammar {
     }
 
     mutating func handleLead(_ range: RambleSpan, _ forceNew: Bool) {
-        let clauses = splitClauses(span(range), range.start).filter { !blank(span($0)) }
+        let clauses = (commands ? [range] : splitClauses(span(range), range.start)).filter { !blank(span($0)) }
         for (index, clause) in clauses.enumerated() {
             let attach = current != nil && (index == 0 ? !forceNew && shouldAttach(clause, current!) : attributesOnly(clause, current!))
             if attach, let current {
@@ -490,30 +496,31 @@ struct RambleGrammar {
 
     mutating func handleSentence(_ range: RambleSpan, _ forceNew: Bool) {
         let sentence = span(range)
-        if let current, !forceNew, let note = Self.noteAtStart.first(in: sentence) {
+        if let current, !forceNew, !commands, let note = Self.noteAtStart.first(in: sentence) {
             current.cues.append(RambleSpan(start: range.start, end: range.start + note.end))
             current.notes.append(RambleSpan(start: range.start + note.end, end: range.end))
             structural.append((kind: .note, start: range.start, end: range.start + note.end))
             return
         }
-        let markers: [(kind: String, start: Int, end: Int)] = Self.structure.matches(in: sentence).map { match in
+        let markers: [(kind: String, start: Int, end: Int)] = (commands ? Self.commandStructure : Self.structure).matches(in: sentence).map { match in
             let kind = match.named("note") != nil ? "note" : match.named("list") != nil ? "list" : "one"
             return (kind, range.start + match.start, range.start + match.end)
         }
         let leadEnd = markers.first?.start ?? range.end
         if !blank(JSString(mapped.text).slice(range.start, leadEnd)) { handleLead(RambleSpan(start: range.start, end: leadEnd), forceNew) }
         for (index, marker) in markers.enumerated() {
-            let nextStart = marker.kind == "note" ? range.end : (markers.dropFirst(index + 1).first?.start ?? range.end)
+            let nextStart = marker.kind == "note" && !commands ? range.end : (markers.dropFirst(index + 1).first?.start ?? range.end)
             let content = RambleSpan(start: marker.end, end: nextStart)
             let cue = RambleSpan(start: marker.start, end: marker.end)
             if marker.kind == "note" {
-                guard let target = current else {
-                    _ = startTask(RambleSpan(start: marker.start, end: range.end))
-                    return
+                if let target = current {
+                    target.cues.append(cue)
+                    target.notes.append(content)
+                    structural.append((kind: .note, start: cue.start, end: cue.end))
+                } else {
+                    _ = startTask(RambleSpan(start: marker.start, end: nextStart))
                 }
-                target.cues.append(cue)
-                target.notes.append(content)
-                structural.append((kind: .note, start: cue.start, end: cue.end))
+                if commands { continue }
                 return
             }
             structural.append((kind: .subtask, start: cue.start, end: cue.end))

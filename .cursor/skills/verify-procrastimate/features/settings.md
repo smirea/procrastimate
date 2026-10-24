@@ -7,7 +7,7 @@ A `Settings` row with a gear sits at the bottom of the sidebar, which is also th
 - `settings-popover` opens the settings popover from the desktop sidebar and closes it with Escape or a click outside.
 - `settings-sheet` opens the settings bottom sheet from the phone drawer and closes it with `Close settings` or a tap on the scrim.
 - `settings-theme` holds the `Theme` switch and the `Theme color` swatches. See [Theme](./theme.md).
-- `settings-dictation` holds `Dictation`: `Native` or `ElevenLabs`. `Native` is selected until changed, and the choice is kept across a reload. Offline voice still uses native. See [Ramble](./ramble.md).
+- `settings-dictation` holds `Dictation`: `Native` or `ElevenLabs`. `Native` is selected until changed, and the choice is kept across a reload. Offline voice still uses native. See [Ramble](./ramble.md). Ramble's `Smart` / `Commands` mode syncs with these settings but is toggled only in the Ramble drawer.
 - `settings-quick-add-buttons` toggles which buttons quick add's chip row shows and orders them. The shown ones come first in row order and drag to reorder (a `Reorder <name>` handle, or the arrow keys on it, on the web, a long press on iOS); the hidden ones follow in the default order. It is synced, and the `+` menu's pins change the same list. See [Add a task](./add-task.md).
 - `settings-notifications` is one line: `Notifications: On`, `Notifications: Off`, or `Notifications need permission`. The last one is a button. See [Push notifications](./push-notifications.md).
 - `settings-delete` is `Delete all data`. Confirming wipes tasks, projects, and labels on this device and the server. See [Offline and sync](./offline-sync.md).

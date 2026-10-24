@@ -5,6 +5,8 @@ public typealias RambleSpan = API.RambleSpan
 public typealias RambleToken = API.RambleToken
 public typealias RambleTokenKind = API.RambleTokenKind
 public typealias RambleDraft = API.RambleDraft
+public typealias RambleOutline = API.RambleOutline
+public typealias RambleOutlineTask = API.RambleOutlineTask
 
 public enum Ramble {
     public static func parse(
@@ -12,10 +14,53 @@ public enum Ramble {
         now: Date,
         projects: [Project] = [],
         labels: [Label] = [],
-        in zone: TimeZone
+        in zone: TimeZone,
+        commands: Bool = false
     ) -> RambleDraft {
-        var grammar = RambleGrammar(transcript: transcript, now: now, projects: projects, labels: labels, zone: zone)
+        var grammar = RambleGrammar(transcript: transcript, now: now, projects: projects, labels: labels, zone: zone, commands: commands)
         return grammar.parse()
+    }
+
+    private static let remindMe = JSRegex(#"^remind\s+me\s+"#, ignoreCase: true)
+
+    /// `resolveOutline` in `shared/ramble.ts`: phrases go through quick add, and names match existing projects and
+    /// labels the way the grammar matches them, so an unknown name sets nothing.
+    public static func resolveOutline(
+        _ outline: RambleOutline,
+        now: Date,
+        projects: [Project] = [],
+        labels: [Label] = [],
+        in zone: TimeZone
+    ) -> [RambleTask] {
+        let projectIds = Dictionary(projects.map { (RambleNames.key($0.name), $0.id) }, uniquingKeysWith: { _, last in last })
+        let labelIds = Dictionary(labels.map { (RambleNames.key($0.name), $0.id) }, uniquingKeysWith: { _, last in last })
+        func trim(_ text: String) -> String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
+        func resolve(_ task: RambleOutlineTask, _ isRoot: Bool) -> RambleTask? {
+            let title = trim(task.title)
+            if title.isEmpty { return nil }
+            let reminder = trim(task.reminder)
+            let phrase = [trim(task.when), reminder.isEmpty ? "" : "remind me \(remindMe.replaceFirst(reminder) { _ in "" })"]
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            let parsed = phrase.isEmpty ? nil : QuickAdd.parse(phrase, QuickAdd.Options(now: now), in: zone)
+            var ids: [String] = []
+            for name in task.labels {
+                if let id = labelIds[RambleNames.key(name)], !ids.contains(id) { ids.append(id) }
+            }
+            return RambleTask(
+                segment: RambleSpan(start: 0, end: 0),
+                title: rambleCapitalize(title),
+                notes: trim(task.notes),
+                due: parsed?.due,
+                recurrence: parsed?.recurrence,
+                priority: (1 ... 4).contains(task.priority) ? Priority(rawValue: task.priority) : nil,
+                reminders: parsed?.reminders ?? [],
+                projectId: isRoot ? projectIds[RambleNames.key(task.project)] : nil,
+                labelIds: ids,
+                subtasks: task.subtasks.compactMap { resolve($0, false) }
+            )
+        }
+        return outline.tasks.compactMap { resolve($0, true) }
     }
 }
 
