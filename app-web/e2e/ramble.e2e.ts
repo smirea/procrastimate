@@ -159,9 +159,9 @@ test('smart mode lists Gemini’s outline with nested subtasks, and commands mod
 
 	await drawer.getByRole('button', { name: 'Smart parsing. Switch to spoken commands' }).click();
 	await expect(drawer.getByRole('button', { name: 'Add task', exact: true })).toBeVisible();
-	await expect(drawer.getByRole('textbox', { name: 'Task title', exact: true })).toHaveValue(
-		/^Buy groceries for the party, the list is milk/,
-	);
+	const titles = drawer.getByRole('textbox', { name: 'Task title', exact: true });
+	await expect(titles).toHaveCount(1);
+	await expect(titles).toHaveValue(/^Buy groceries for the party, the list is milk/);
 
 	await drawer.getByRole('button', { name: 'Spoken commands. Switch to smart parsing' }).click();
 	await expect(drawer.getByRole('button', { name: 'Add 2 tasks' })).toBeVisible();
