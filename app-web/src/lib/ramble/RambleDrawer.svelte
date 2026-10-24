@@ -191,16 +191,23 @@
 		const began = performance.now();
 		let ended = false;
 		const timer = setInterval(() => (elapsed = Math.floor((performance.now() - began) / 1000)), 250);
+		// Gemini Live reads the tasks in the audio stream itself, so its outlines replace the reads made from the text.
+		const geminiLive = store.dictation === 'gemini';
 		const next = listenRamble({
 			choice: store.dictation,
 			online: navigator.onLine,
+			onOutline: (outline) => {
+				if (token !== generation || phase === 'review') return;
+				outliner?.adopt(transcript, outline);
+				if (mode === 'smart') showLive();
+			},
 			onLevel: (level) => (meter.level = level),
 			onText: (spoken) => {
 				if (token !== generation || phase === 'review') return;
 				const draft = grammar(spoken);
 				transcript = spoken;
 				tokens = draft.tokens;
-				if (mode === 'smart') outliner?.update(spoken);
+				if (mode === 'smart' && !geminiLive) outliner?.update(spoken);
 				showLive();
 				if (draft.ended) stop();
 			},

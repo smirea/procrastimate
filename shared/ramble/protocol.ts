@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { rambleOutlineSchema } from './outline.ts';
 
 /**
  * The Ramble socket: the client streams microphone audio and the server answers with the live transcript, which it
@@ -41,6 +42,8 @@ export const rambleServerMessageSchema = z
 		z.object({ type: z.literal('started') }),
 		z.object({ type: z.literal('partial'), text: z.string() }),
 		z.object({ type: z.literal('committed'), text: z.string() }),
+		/** Gemini Live's tasks so far, the whole outline each time it changes. */
+		z.object({ type: z.literal('outline'), outline: rambleOutlineSchema }),
 		z.object({ type: z.literal('ended'), seconds: z.number().nonnegative(), reason: rambleEndReasonSchema }),
 		z.object({
 			type: z.literal('error'),

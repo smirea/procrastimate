@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
 /**
- * Where speech becomes text. Native is the platform recognizer. ElevenLabs is the server Scribe path, and it runs
- * only when it is selected and the device is online. Offline is always native.
+ * Where speech becomes text. Native is the platform recognizer. ElevenLabs is the server Scribe path. Gemini streams
+ * the audio to Gemini Live, which transcribes it and reads the tasks in one stream. The server paths run only when
+ * selected and online. Offline is always native.
  */
-export const DICTATION_CHOICES = ['native', 'elevenlabs'] as const;
+export const DICTATION_CHOICES = ['native', 'elevenlabs', 'gemini'] as const;
 export const dictationChoiceSchema = z.enum(DICTATION_CHOICES).meta({ id: 'DictationChoice' });
 export type DictationChoice = z.infer<typeof dictationChoiceSchema>;
 
@@ -22,19 +23,19 @@ export type DictationCapture = z.infer<typeof dictationCaptureSchema>;
 
 export const voiceCaptureSchema = z
 	.object({
-		engine: z.enum(['native', 'elevenlabs']),
+		engine: z.enum(['native', 'elevenlabs', 'gemini']),
 		capture: dictationCaptureSchema,
 	})
 	.meta({ id: 'VoiceCapture' });
 export type VoiceCapture = z.infer<typeof voiceCaptureSchema>;
 
 /**
- * The capture a voice session starts with. `speech` is the platform recognizer. `socket` is the Ramble
- * ElevenLabs socket. `typed` is the fallback when the platform has no recognizer the app can start: the
+ * The capture a voice session starts with. `speech` is the platform recognizer. `socket` is the Ramble socket,
+ * transcribed by ElevenLabs or, for `gemini`, read whole by Gemini Live. `typed` is the fallback when the platform has no recognizer the app can start: the
  * transcript field stays editable, so typing and the operating system's own dictation still reach the grammar.
  * ElevenLabs is never that fallback.
  */
 export function voiceCapture(choice: DictationChoice, online: boolean, nativeSpeech: boolean): VoiceCapture {
-	if (choice === 'elevenlabs' && online) return { engine: 'elevenlabs', capture: 'socket' };
+	if (choice !== 'native' && online) return { engine: choice, capture: 'socket' };
 	return { engine: 'native', capture: nativeSpeech ? 'speech' : 'typed' };
 }

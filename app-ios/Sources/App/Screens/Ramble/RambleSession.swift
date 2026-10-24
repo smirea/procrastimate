@@ -15,6 +15,8 @@ final class RambleSession {
 
     var onText: (String, Int) -> Void = { _, _ in }
     var onEnd: (End) -> Void = { _ in }
+    /// Gemini Live's tasks so far, on the `gemini` engine.
+    var onOutline: (RambleOutline) -> Void = { _ in }
     let meter = LevelMeter()
 
     private let speech = SpeechDictation()
@@ -28,6 +30,7 @@ final class RambleSession {
     private var heard = false
     private var tapped = false
     private var epoch = 0
+    private var gemini = false
 
     func start(choice: DictationChoice, deviceId: String?) async {
         epoch += 1
@@ -49,7 +52,9 @@ final class RambleSession {
         #endif
         let online = await NetworkPath.online()
         guard !userStop else { return }
-        switch Dictation.voiceCapture(choice, online: online, nativeSpeech: true).capture {
+        let plan = Dictation.voiceCapture(choice, online: online, nativeSpeech: true)
+        gemini = plan.engine == .gemini
+        switch plan.capture {
         case .speech:
             await startSpeech()
         case .socket:
@@ -93,8 +98,10 @@ final class RambleSession {
         }
         socket.send(.string(#"{"type":"stop"}"#)) { _ in }
         let token = epoch
+        // The server waits up to 6 seconds for Gemini Live's last tool calls, 3 for ElevenLabs' last text.
+        let wait: Duration = gemini ? .seconds(7) : .seconds(3.5)
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(3.5))
+            try? await Task.sleep(for: wait)
             guard token == self.epoch else { return }
             self.finish(.stopped)
         }
@@ -138,6 +145,7 @@ final class RambleSession {
         }
         var components = URLComponents(url: AppEnvironment.apiURL.appending(path: "api/ramble/socket"), resolvingAgainstBaseURL: false)
         components?.scheme = AppEnvironment.apiURL.scheme == "https" ? "wss" : "ws"
+        if gemini { components?.queryItems = [URLQueryItem(name: "engine", value: "gemini")] }
         guard let url = components?.url else {
             onEnd(.failed("Ramble needs a connection"))
             return
@@ -211,6 +219,8 @@ final class RambleSession {
             committed = joined.text
             partial = ""
             publish()
+        case "outline":
+            if let outline = event.outline { onOutline(outline) }
         case "error":
             let limit = event.code == "daily-limit"
             finish(.failed(limit ? "Ramble's daily limit is used up" : (event.message ?? "Ramble needs a connection")))
@@ -251,6 +261,7 @@ final class RambleSession {
         var text: String?
         var code: String?
         var message: String?
+        var outline: RambleOutline?
     }
 }
 

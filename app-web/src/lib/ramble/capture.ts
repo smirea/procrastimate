@@ -1,5 +1,6 @@
 import { DEVICE_PROTOCOL_PREFIX } from 'shared/auth.ts';
 import { RAMBLE_SOCKET_PATH, RAMBLE_SOCKET_PROTOCOL, type RambleServerMessage } from 'shared/ramble/protocol.ts';
+import type { RambleOutline } from 'shared/ramble/outline.ts';
 import { voiceCapture, type DictationChoice } from 'shared/dictation.ts';
 import { NativeDictation, speechRecognitionConstructor, type DictationEnd } from '../dictation.ts';
 import { installId } from '../device.ts';
@@ -51,18 +52,20 @@ export function listenRamble(options: {
 	onText: (text: string, partialStart: number) => void;
 	onStop: (reason: CaptureStop, message?: string) => void;
 	onLevel?: (level: number) => void;
+	/** Gemini Live's tasks so far, on the `gemini` engine. */
+	onOutline?: (outline: RambleOutline) => void;
 }): RambleListen {
 	const plan = voiceCapture(options.choice, options.online, speechRecognitionConstructor() !== null);
 	if (plan.capture === 'typed') return { typed: true, stop() {} };
 	if (plan.capture === 'speech') return options.online ? speechThenSocket(options) : speech(options);
-	return socket(options);
+	return socket({ ...options, engine: plan.engine === 'gemini' ? 'gemini' : 'elevenlabs' });
 }
 
 /**
  * Brave and some Chromium builds expose SpeechRecognition but fail at once with a network error, which stopped the mic
  * the moment it was tapped. A native session that fails before hearing anything moves to the ramble socket instead.
  */
-function speechThenSocket(options: Parameters<typeof socket>[0]): RambleListen {
+function speechThenSocket(options: Omit<Parameters<typeof socket>[0], 'engine'>): RambleListen {
 	let heard = false;
 	let fallback: RambleListen | null = null;
 	const native = speech({
@@ -72,8 +75,9 @@ function speechThenSocket(options: Parameters<typeof socket>[0]): RambleListen {
 			options.onText(text, partialStart);
 		},
 		onStop: (reason, message) => {
-			if (!heard && !fallback && (reason === 'error' || reason === 'unsupported')) fallback = socket(options);
-			else options.onStop(reason, message);
+			if (!heard && !fallback && (reason === 'error' || reason === 'unsupported')) {
+				fallback = socket({ ...options, engine: 'elevenlabs' });
+			} else options.onStop(reason, message);
 		},
 	});
 	return { typed: false, stop: () => (fallback ?? native).stop() };
@@ -103,9 +107,11 @@ function speech(options: {
 }
 
 function socket(options: {
+	engine: 'elevenlabs' | 'gemini';
 	onText: (text: string, partialStart: number) => void;
 	onStop: (reason: CaptureStop, message?: string) => void;
 	onLevel?: (level: number) => void;
+	onOutline?: (outline: RambleOutline) => void;
 }): RambleListen {
 	const id = installId();
 	let stopped = false;
@@ -131,6 +137,7 @@ function socket(options: {
 	};
 	const url = new URL(RAMBLE_SOCKET_PATH, location.href);
 	url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+	if (options.engine === 'gemini') url.searchParams.set('engine', 'gemini');
 	socket = new WebSocket(url, [RAMBLE_SOCKET_PROTOCOL, `${DEVICE_PROTOCOL_PREFIX}${id}`]);
 	socket.binaryType = 'arraybuffer';
 	socket.onmessage = event => {
@@ -152,6 +159,8 @@ function socket(options: {
 				committed = joinTranscript(committed, message.text).text;
 				partial = '';
 				return publish();
+			case 'outline':
+				return options.onOutline?.(message.outline);
 			case 'error':
 				return finish(message.code === 'daily-limit' ? 'limit' : 'unavailable', message.message);
 			case 'ended':
@@ -187,7 +196,8 @@ function socket(options: {
 			stream?.getTracks().forEach(track => track.stop());
 			if (socket && socket.readyState === WebSocket.OPEN) {
 				socket.send(JSON.stringify({ type: 'stop' }));
-				setTimeout(() => finish('stopped'), 3500);
+				// The server waits up to 6 seconds for Gemini Live's last tool calls, 3 for ElevenLabs' last text.
+				setTimeout(() => finish('stopped'), options.engine === 'gemini' ? 7000 : 3500);
 			} else finish('stopped');
 		},
 	};

@@ -94,7 +94,7 @@
 			label="Dictation"
 			choices={DICTATION_CHOICES}
 			value={store.dictation}
-			options={{ native: { label: 'Native' }, elevenlabs: { label: 'ElevenLabs' } }}
+			options={{ native: { label: 'Native' }, elevenlabs: { label: 'ElevenLabs' }, gemini: { label: 'Gemini Live' } }}
 			onchange={(choice) => store.setDictation(choice)}
 		/>
 	</section>

@@ -9,6 +9,7 @@ extension DictationChoice {
         switch self {
         case .native: "Native"
         case .elevenlabs: "ElevenLabs"
+        case .gemini: "Gemini Live"
         }
     }
 }
