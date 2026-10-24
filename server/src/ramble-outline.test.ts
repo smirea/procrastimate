@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, spyOn, test } from 'bun:test';
+import { spokenOnly } from './ramble-outline';
 import { aiAccount, signUp, testApp, type Session, type TestApp } from './test-app';
 
 const input = {
@@ -116,5 +117,33 @@ describe('ramble outline', () => {
 	test('an AI account may not call it', async () => {
 		const bot = await aiAccount(withKey, owner);
 		expect((await post(withKey, bot, input)).status).toBe(403);
+	});
+});
+
+describe('spokenOnly', () => {
+	const task = (fields: Record<string, unknown>) => ({
+		title: 'Task',
+		when: '',
+		reminder: '',
+		priority: 0,
+		project: '',
+		labels: [],
+		notes: '',
+		subtasks: [],
+		...fields,
+	});
+
+	test('drops projects, labels, and priorities the speaker never said', () => {
+		const outline = {
+			tasks: [task({ project: 'Finance', labels: ['calls'], priority: 1, subtasks: [task({ labels: ['errands'] })] })],
+		};
+		expect(spokenOnly(outline, 'call the bank, this is important')).toEqual({
+			tasks: [task({ subtasks: [task({})] })],
+		});
+	});
+
+	test('keeps the ones spoken, across punctuation and case', () => {
+		const outline = { tasks: [task({ project: 'Side Project', labels: ['deep work'], priority: 2 })] };
+		expect(spokenOnly(outline, 'for the side-project, Deep Work label, priority two')).toEqual(outline);
 	});
 });

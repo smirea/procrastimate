@@ -1,5 +1,11 @@
 import { fromDateKey } from '../../shared/task';
-import { rambleOutlineSchema, type RambleOutline, type RambleOutlineInput } from '../../shared/ramble/outline';
+import { escapeRegExp } from '../../shared/quick-add';
+import {
+	rambleOutlineSchema,
+	type RambleOutline,
+	type RambleOutlineInput,
+	type RambleOutlineTask,
+} from '../../shared/ramble/outline';
 
 /**
  * Ramble's smart parse: Gemini reads the whole transcript, applies the speaker's corrections, and returns an outline
@@ -124,7 +130,7 @@ export async function outlineRamble(
 	if (!text) throw new RambleOutlineError('Gemini returned no text');
 	const parsed = rambleOutlineSchema.safeParse(withDefaults(JSON.parse(text)));
 	if (!parsed.success) throw new RambleOutlineError(`Gemini returned an invalid outline: ${parsed.error.message}`);
-	return parsed.data;
+	return spokenOnly(parsed.data, input.transcript);
 }
 
 const EMPTY_TASK = { when: '', reminder: '', priority: 0, project: '', labels: [], notes: '', subtasks: [] };
@@ -136,4 +142,31 @@ function withDefaults(value: unknown): unknown {
 	const entries = Object.entries(value).map(([key, inner]) => [key, withDefaults(inner)] as const);
 	const object = Object.fromEntries(entries) as Record<string, unknown>;
 	return 'title' in object ? { ...EMPTY_TASK, ...object } : object;
+}
+
+const PRIORITY_WORD = /\b(?:priority|p\s?[1-4]|urgent|asap)\b/i;
+
+function said(name: string, transcript: string): boolean {
+	const words = name.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+	if (!words.length) return false;
+	return new RegExp(
+		String.raw`(?<![\p{L}\p{N}])${words.map(escapeRegExp).join(String.raw`[^\p{L}\p{N}]+`)}`,
+		'iu',
+	).test(transcript);
+}
+
+/**
+ * Drops what the model inferred rather than heard: a project or label whose name the speaker never said (`call the
+ * bank` is not the `calls` label), and a priority without a priority word (`this is important`).
+ */
+export function spokenOnly(outline: RambleOutline, transcript: string): RambleOutline {
+	const prioritized = PRIORITY_WORD.test(transcript);
+	const clean = (task: RambleOutlineTask): RambleOutlineTask => ({
+		...task,
+		priority: prioritized ? task.priority : 0,
+		project: task.project && said(task.project, transcript) ? task.project : '',
+		labels: task.labels.filter(label => said(label, transcript)),
+		subtasks: task.subtasks.map(clean),
+	});
+	return { tasks: outline.tasks.map(clean) };
 }

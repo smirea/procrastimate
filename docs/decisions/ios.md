@@ -133,7 +133,6 @@ Every feature ships on web and iOS together unless it is listed here, with the r
 
 - **Siri, Shortcuts, and Spotlight.** App Intents are iOS system features with no web counterpart. See [Siri, Shortcuts, and Spotlight](#siri-shortcuts-and-spotlight).
 - **Setting a task's place or calendar event.** Location and EventKit live on the phone; the web shows them read-only. See [Places and calendar events](#places-and-calendar-events).
-- **Ramble's model split.** Apple's on-device model splits a ramble into to-dos and their items; the web keeps the grammar's split. See [Ramble](ramble.md).
 - **A new label's color from the on-device model.** Stefan chose to try it on iOS only with Apple's Foundation Models. The web keeps `defaultLabelColor`. See [Labels UI](labels.md).
 
 ## Build and verification
