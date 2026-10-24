@@ -15,7 +15,7 @@ import {
 export type GeminiThinking = 'minimal' | 'low' | 'medium' | 'high';
 export type GeminiModel = { model: string; thinking: GeminiThinking | null };
 
-export const RAMBLE_GEMINI: GeminiModel = { model: 'gemini-3.5-flash-lite', thinking: 'minimal' };
+export const RAMBLE_GEMINI: GeminiModel = { model: 'gemini-3.5-flash', thinking: 'minimal' };
 
 /** Past this the client has already fallen back to the grammar. */
 export const OUTLINE_TIMEOUT_MS = 10_000;
