@@ -137,6 +137,24 @@ describe('geminiUpstream', () => {
 		expect(heard.at(-1)).toEqual({ message_type: 'committed_transcript', text: 'Buy milk.' });
 	});
 
+	test('speech after a completed turn waits for its own turn', async () => {
+		const live = fakeLive();
+		const { upstream, heard } = await connect(live);
+		live.say({ setupComplete: {} });
+		live.say({ serverContent: { inputTranscription: { text: 'Buy milk.' } } });
+		live.say({ serverContent: { turnComplete: true } });
+		const loud = new Int16Array(1600).fill(4000);
+		upstream.send(
+			JSON.stringify({ audio_base_64: Buffer.from(loud.buffer).toString('base64'), commit: false, sample_rate: 16000 }),
+		);
+		upstream.send(chunk(0, true));
+		await Bun.sleep(900);
+		expect(heard.at(-1)).toEqual({ message_type: 'partial_transcript', text: 'Buy milk.' });
+		live.say({ serverContent: { inputTranscription: { text: 'Call mom.' } } });
+		live.say({ serverContent: { turnComplete: true } });
+		expect(heard.at(-1)).toEqual({ message_type: 'committed_transcript', text: 'Buy milk. Call mom.' });
+	});
+
 	test('words never answered wait for their turn instead of the quiet window', async () => {
 		const live = fakeLive();
 		const { upstream, heard } = await connect(live);
@@ -172,7 +190,7 @@ describe('LiveTasks', () => {
 		expect(tasks.outline()).toEqual({
 			tasks: [
 				task('Plan the party', {
-					when: 'october 16',
+					when: 'october 16 2026',
 					priority: 2,
 					subtasks: [task('Food', { subtasks: [task('Pizza')] })],
 				}),

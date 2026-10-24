@@ -92,7 +92,19 @@ const MONTHS = [
 ];
 /** The model sometimes writes an ISO date, which quick add does not read. */
 const phrase = (when: string) =>
-	when.replace(/\b\d{4}-(\d{2})-(\d{2})\b/, (_, m, d) => `${MONTHS[Number(m) - 1]} ${Number(d)}`);
+	when.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/, (_, y, m, d) => `${MONTHS[Number(m) - 1]} ${Number(d)} ${y}`);
+
+/** Above this RMS a 16-bit frame holds speech, the threshold `ramble-latency.ts` uses to find utterances. */
+const VOICED_RMS = 300;
+
+function voiced(base64: string): boolean {
+	const bytes = Uint8Array.from(atob(base64), char => char.charCodeAt(0));
+	const samples = new Int16Array(bytes.buffer, 0, Math.floor(bytes.length / 2));
+	if (!samples.length) return false;
+	let sum = 0;
+	for (const sample of samples) sum += sample * sample;
+	return Math.sqrt(sum / samples.length) > VOICED_RMS;
+}
 
 const text = (value: unknown) => (typeof value === 'string' ? value : '');
 
@@ -174,8 +186,8 @@ export function geminiUpstream(apiKey: string, open: OpenSocket): ConnectUpstrea
 		let transcript = '';
 		let ending = false;
 		/**
-		 * Speech the model has not finished a turn on. True from the start: Gemini transcribes a turn only once it hears
-		 * a pause, so a ramble with none arrives whole after the end of the audio.
+		 * Speech the model has not finished a turn on. True from the start and again with every voiced frame: Gemini
+		 * transcribes a turn only once it hears a pause, so the words since the last turn arrive after the audio ends.
 		 */
 		let unanswered = true;
 		let quiet: ReturnType<typeof setTimeout> | undefined;
@@ -253,6 +265,7 @@ export function geminiUpstream(apiKey: string, open: OpenSocket): ConnectUpstrea
 			send(raw) {
 				const chunk = JSON.parse(raw) as AudioChunk;
 				if (chunk.audio_base_64) {
+					if (voiced(chunk.audio_base_64)) unanswered = true;
 					live.send(
 						JSON.stringify({
 							realtimeInput: { audio: { data: chunk.audio_base_64, mimeType: `audio/pcm;rate=${chunk.sample_rate}` } },
