@@ -2,13 +2,6 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-@main
-struct ProcrastimateWidgets: WidgetBundle {
-    var body: some Widget {
-        PlaceActivityWidget()
-    }
-}
-
 /// The app's accent in its dark appearance, since Live Activities sit on a dark background and the extension has no
 /// access to the app's asset catalog.
 private let accent = Color(red: 1, green: 0x7A / 255, blue: 0x61 / 255)

@@ -88,6 +88,13 @@ public enum WidgetLists {
         public let done: Int
 
         /// How far through today's list Stefan is, from 0 to 1. An empty list with nothing done is not progress.
+        public init(name: String, tasks: [TaskItem], overdue: Int, done: Int) {
+            self.name = name
+            self.tasks = tasks
+            self.overdue = overdue
+            self.done = done
+        }
+
         public var progress: Double {
             let total = tasks.count + done
             return total == 0 ? 0 : Double(done) / Double(total)

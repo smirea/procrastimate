@@ -16,6 +16,16 @@ extension Pin {
     }
 }
 
+extension WidgetList {
+    /// Today has no screen of its own, so it opens Inbox, which starts with overdue and today's tasks.
+    var route: Route {
+        switch self {
+        case .today: .inbox
+        case let .pin(pin): pin.route
+        }
+    }
+}
+
 /// How a pin shows in the tab bar, its menus, and Settings.
 struct PinLabel {
     let title: String
@@ -65,21 +75,5 @@ extension Store {
         return listCatalog(today: today)
             .map { group in PinGroup(title: group.title, pins: group.entries.map(Pin.init).filter { !taken.contains($0.key) }) }
             .filter { !$0.pins.isEmpty }
-    }
-}
-
-extension Pin {
-    /// The symbol of a list that always exists, shared by its tab and its Browse row.
-    var systemImage: String {
-        switch self {
-        case .inbox: "tray"
-        case .tomorrow: "sunrise"
-        case .thisWeek: "calendar.day.timeline.left"
-        case .noDate: "calendar.badge.minus"
-        case .project: "number"
-        case .label: "tag"
-        case .place: "mappin.and.ellipse"
-        case .event: "calendar"
-        }
     }
 }
