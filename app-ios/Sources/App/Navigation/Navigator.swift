@@ -158,9 +158,9 @@ final class Navigator {
             sheet = nil
             open(list.route)
         case let .add(key):
-            sheet = .quickAdd(store.quickAddDefaults(list(key)?.screen))
+            sheet = .quickAdd(store.quickAddDefaults(list(key)?.screen(today: today)))
         case let .ramble(key):
-            sheet = .ramble(store.quickAddDefaults(list(key)?.screen))
+            sheet = .ramble(store.quickAddDefaults(list(key)?.screen(today: today)))
         }
     }
 

@@ -103,6 +103,11 @@ import Testing
         #expect(made.tasks.count == 7)
     }
 
+    @Test func addingFromTodayDatesTheTaskToday() {
+        #expect(WidgetList.today.screen(today: today) == .inbox(date: today))
+        #expect(WidgetList.pin(.inbox).screen(today: today) == .inbox(date: nil))
+    }
+
     @Test func rolloversAreTheComingMidnights() {
         let midnights = WidgetLists.rollovers(after: pinned, days: 2, in: zone)
         #expect(midnights.map(\.timeIntervalSince1970) == [1_792_022_400, 1_792_108_800])

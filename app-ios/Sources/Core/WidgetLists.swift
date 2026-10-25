@@ -54,10 +54,11 @@ public enum WidgetList: Hashable, Sendable {
         }
     }
 
-    /// The screen quick add inherits from, so a task added from the widget lands on its list.
-    public var screen: ListScreen {
+    /// The screen quick add inherits from, so a task added from the widget lands on its list. Today adds a task due
+    /// today, as Inbox's Today heading does.
+    public func screen(today: DateKey) -> ListScreen {
         switch self {
-        case .today: .inbox(date: nil)
+        case .today: .inbox(date: today)
         case .pin(.inbox): .inbox(date: nil)
         case .pin(.tomorrow): .tomorrow
         case .pin(.thisWeek): .thisWeek(date: nil)
@@ -146,7 +147,7 @@ public enum WidgetLists {
         let completed = Views.completedTasks(data.tasks, Views.CompletedRange(from: today, to: today), in: zone)
         let done = choice.list == .today
             ? completed.count
-            : completed.filter { Screens.holds(choice.list.screen, $0, today, in: zone) }.count
+            : completed.filter { Screens.holds(choice.list.screen(today: today), $0, today, in: zone) }.count
         return Listing(name: choice.name, tasks: tasks, overdue: overdue, done: done)
     }
 

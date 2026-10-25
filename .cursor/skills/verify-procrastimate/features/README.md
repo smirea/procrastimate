@@ -76,3 +76,4 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Places and events](./places-and-events.md) covers places and calendar events on tasks, set on the iPhone: the Maps search and Arrive, Leave, or During, the calendar event picker, rows, the Browse sections, notifications, the Live Activity, and moved events.
 - [Notouroboros tasks](./notouroboros-tasks.md) covers tasks Notouroboros sends: the waveform icon on rows, the `Notouroboros` line in details, `procrastimate://task/<id>` links, and the shared session.
 - [Siri, Shortcuts, and Spotlight](./app-intents.md) covers the iOS App Intents: adding and completing tasks, opening lists and projects, search, today's and overdue tasks, and Spotlight. Web is excluded.
+- [Widgets and controls](./widgets.md) covers the iOS Home Screen and Lock Screen widgets (Tasks, Progress, Quick Add), completing from a checkbox, opening tasks and lists, and the Control Center controls. Web is excluded.

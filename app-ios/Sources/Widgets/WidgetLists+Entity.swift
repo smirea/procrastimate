@@ -72,10 +72,6 @@ struct TaskListConfiguration: WidgetConfigurationIntent {
     var showsAdd: Bool
 
     init() {}
-
-    init(list: WidgetListEntity?) {
-        self.list = list
-    }
 }
 
 struct ProgressConfiguration: WidgetConfigurationIntent {

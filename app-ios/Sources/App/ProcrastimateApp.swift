@@ -119,6 +119,7 @@ struct ProcrastimateApp: App {
                 .task { await SharingDemo.run(sync: sync) }
                 .task {
                     SectionsDemo.run(store: store, navigator: navigator)
+                    WidgetsDemo.run(store: store, clock: clock)
                     await PlacesDemo.run(store: store, calendar: calendar, navigator: navigator, clock: clock)
                 }
                 // An overlay sits outside the `.environment` calls above, so it gets the router itself; without it every
