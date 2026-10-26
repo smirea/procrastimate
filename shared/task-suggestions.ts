@@ -1,15 +1,21 @@
 import { z } from 'zod';
 import type { Task } from './task.ts';
 import { placeKey } from './triggers.ts';
-import { taskLocationSchema, type TaskLocation } from './values.ts';
+import { taskLocationSchema } from './values.ts';
 
-/** What quick add offers to set from how similar past tasks were filed. Each field is null or empty when the vote is split. */
-export type MetadataSuggestions = {
-	projectId: string | null;
-	sectionId: string | null;
-	labelIds: string[];
-	location: TaskLocation | null;
-};
+export const suggestionFieldsSchema = z
+	.object({
+		projectId: z.string().nullable(),
+		sectionId: z.string().nullable(),
+		labelIds: z.array(z.string()),
+		location: taskLocationSchema.nullable(),
+	})
+	.meta({
+		id: 'SuggestionFields',
+		description:
+			'The fields a suggestion pill can set: what similar past tasks agree on, or what the draft already holds. A split vote leaves a field null or empty.',
+	});
+export type MetadataSuggestions = z.infer<typeof suggestionFieldsSchema>;
 
 type Filed = Pick<Task, 'title' | 'createdAt' | 'projectId' | 'sectionId' | 'labelIds' | 'location'>;
 
@@ -129,10 +135,16 @@ export const suggestionPillSchema = z
 export type SuggestionPill = z.infer<typeof suggestionPillSchema>;
 
 /** What the draft already holds, which no pill repeats. */
-export type DraftFields = Pick<MetadataSuggestions, 'projectId' | 'sectionId' | 'labelIds' | 'location'>;
+export type DraftFields = MetadataSuggestions;
 
-/** Ids the draft may still use. A suggestion naming a deleted or view-only project, section, or label never shows. */
-export type Available = { projectIds: readonly string[]; sectionIds: readonly string[]; labelIds: readonly string[] };
+export const suggestionAvailableSchema = z
+	.object({ projectIds: z.array(z.string()), sectionIds: z.array(z.string()), labelIds: z.array(z.string()) })
+	.meta({
+		id: 'SuggestionAvailable',
+		description:
+			'Ids the draft may still use. A suggestion naming a deleted or view-only project, section, or label never shows.',
+	});
+export type Available = z.infer<typeof suggestionAvailableSchema>;
 
 /** The pills to show, in field order: each suggestion the draft can use and does not already hold. */
 export function suggestionPills(

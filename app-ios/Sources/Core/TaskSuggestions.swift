@@ -5,38 +5,9 @@ import Foundation
 public enum TaskSuggestions {
     public typealias Pill = API.SuggestionPill
 
-    public struct Suggestions: Equatable, Sendable {
-        public var projectId: String?
-        public var sectionId: String?
-        public var labelIds: [String] = []
-        public var location: TaskLocation?
-    }
-
-    public struct Draft: Equatable, Sendable {
-        public var projectId: String?
-        public var sectionId: String?
-        public var labelIds: [String]
-        public var location: TaskLocation?
-
-        public init(projectId: String?, sectionId: String?, labelIds: [String], location: TaskLocation?) {
-            self.projectId = projectId
-            self.sectionId = sectionId
-            self.labelIds = labelIds
-            self.location = location
-        }
-    }
-
-    public struct Available: Equatable, Sendable {
-        public var projectIds: Set<String>
-        public var sectionIds: Set<String>
-        public var labelIds: Set<String>
-
-        public init(projectIds: Set<String>, sectionIds: Set<String>, labelIds: Set<String>) {
-            self.projectIds = projectIds
-            self.sectionIds = sectionIds
-            self.labelIds = labelIds
-        }
-    }
+    /// What similar past tasks agree on, and what the draft already holds.
+    public typealias Fields = API.SuggestionFields
+    public typealias Available = API.SuggestionAvailable
 
     public struct Index: Sendable {
         let tasks: [TaskItem]
@@ -78,10 +49,10 @@ public enum TaskSuggestions {
     /// The project, section, labels, and place that the eight past tasks sharing the most rare words with `title` agree
     /// on, each weighted by how closely and how recently it matches. A value shows only when the tasks that hold it
     /// carry at least half the vote, and a missing value votes too.
-    public static func suggest(_ index: Index, _ title: String, now: Int) -> Suggestions {
+    public static func suggest(_ index: Index, _ title: String, now: Int) -> Fields {
         let query = words(title)
         let queryNorm = norm(query, index.idf)
-        guard queryNorm > 0 else { return Suggestions() }
+        guard queryNorm > 0 else { return Fields() }
         var scored: [(offset: Int, task: TaskItem, score: Double)] = []
         for (i, task) in index.tasks.enumerated() {
             let shared = query.reduce(0.0) { index.words[i].contains($1) ? $0 + pow(index.idf[$1]!, 2) : $0 }
@@ -113,7 +84,7 @@ public enum TaskSuggestions {
             only(agreed { $0.projectId == projectId ? $0.sectionId.map { [$0] } ?? [] : [] })
         }
         let place = only(agreed { $0.location.map { [Triggers.placeKey($0)] } ?? [] })
-        return Suggestions(
+        return Fields(
             projectId: projectId,
             sectionId: sectionId,
             labelIds: agreed(\.labelIds),
@@ -122,7 +93,7 @@ public enum TaskSuggestions {
     }
 
     /// The pills to show, in field order: each suggestion the draft can use and does not already hold.
-    public static func pills(_ suggestions: Suggestions, draft: Draft, available: Available) -> [Pill] {
+    public static func pills(_ suggestions: Fields, draft: Fields, available: Available) -> [Pill] {
         var pills: [Pill] = []
         if let projectId = suggestions.projectId, available.projectIds.contains(projectId) {
             if draft.projectId != projectId { pills.append(.project(projectId: projectId)) }

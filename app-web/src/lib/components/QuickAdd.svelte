@@ -119,12 +119,9 @@
 			else if (pill.kind === 'label') draft.pickLabels([...draft.labelIds, pill.labelId]);
 			else {
 				const saved = savedPlaceAt(store.labels, placeKey(pill.location));
-				// A saved place is a label to the draft, and a checked one would win over a picked location.
-				if (saved) draft.pickLabels([...draft.labelIds, saved.id]);
-				else {
-					draft.pickLabels(draft.labelIds.filter((id) => !store.label(id)?.place));
-					draft.picked.location = pill.location;
-				}
+				// A checked saved place wins over a picked location, so the pill checks its own and unchecks any other.
+				draft.pickLabels([...draft.labelIds.filter((id) => !store.label(id)?.place), ...(saved ? [saved.id] : [])]);
+				draft.picked.location = pill.location;
 			}
 		});
 	}

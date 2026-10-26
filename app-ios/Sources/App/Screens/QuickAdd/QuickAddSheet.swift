@@ -146,8 +146,8 @@ struct QuickAddSheet: View {
             focused = true
             draft.startAtPlace(spaceLabels)
         }
-        .onChange(of: PillInputs(parsed, resolved, draft.picked.location, ready: suggestionIndex != nil), initial: true) {
-            pills = suggestionPills(parsed, resolved)
+        .onChange(of: pillInputs(parsed, resolved), initial: true) { _, inputs in
+            pills = suggestionPills(inputs)
         }
         .task(id: store.allTasks.count) {
             let tasks = store.allTasks.filter { $0.parentId == nil }
@@ -423,10 +423,11 @@ struct QuickAddSheet: View {
         }
     }
 
-    private func suggestionPills(_ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> [TaskSuggestions.Pill] {
-        guard !parsed.title.isEmpty, let suggestionIndex else { return [] }
-        return TaskSuggestions.pills(
-            TaskSuggestions.suggest(suggestionIndex, parsed.title, now: clock.now.epochMilliseconds),
+    /// Everything the pills depend on besides the index. Holding a project, section, or label that appears or goes
+    /// while the card is open reruns them too.
+    private func pillInputs(_ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> PillInputs {
+        PillInputs(
+            title: parsed.title,
             draft: .init(
                 projectId: resolved.projectId,
                 sectionId: resolved.sectionId,
@@ -434,10 +435,20 @@ struct QuickAddSheet: View {
                 location: parsed.location ?? draft.picked.location
             ),
             available: .init(
-                projectIds: Set(spaceProjects.map(\.id)),
-                sectionIds: Set(spaceSections.map(\.id)),
-                labelIds: Set(store.labels(in: store.creationSpace(projectId: resolved.projectId, labelIds: resolved.labelIds)).map(\.id))
-            )
+                projectIds: spaceProjects.map(\.id),
+                sectionIds: spaceSections.map(\.id),
+                labelIds: store.labels(in: store.creationSpace(projectId: resolved.projectId, labelIds: resolved.labelIds)).map(\.id)
+            ),
+            ready: suggestionIndex != nil
+        )
+    }
+
+    private func suggestionPills(_ inputs: PillInputs) -> [TaskSuggestions.Pill] {
+        guard !inputs.title.isEmpty, let suggestionIndex else { return [] }
+        return TaskSuggestions.pills(
+            TaskSuggestions.suggest(suggestionIndex, inputs.title, now: clock.now.epochMilliseconds),
+            draft: inputs.draft,
+            available: inputs.available
         )
     }
 
@@ -556,20 +567,9 @@ private struct RowFade: Equatable {
 
 private struct PillInputs: Equatable {
     let title: String
-    let projectId: String?
-    let sectionId: String?
-    let labelIds: [String]
-    let location: TaskLocation?
+    let draft: TaskSuggestions.Fields
+    let available: TaskSuggestions.Available
     let ready: Bool
-
-    init(_ parsed: QuickAdd.Parsed, _ resolved: (due: Due?, priority: Priority, projectId: String?, sectionId: String?, labelIds: [String]), _ picked: TaskLocation?, ready: Bool) {
-        title = parsed.title
-        projectId = resolved.projectId
-        sectionId = resolved.sectionId
-        labelIds = resolved.labelIds
-        location = parsed.location ?? picked
-        self.ready = ready
-    }
 }
 
 private struct ParsedReminder: Hashable {
