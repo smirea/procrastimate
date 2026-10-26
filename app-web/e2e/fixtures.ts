@@ -295,16 +295,22 @@ export class App {
 		await this.showAdded();
 	}
 
-	/** Leaves quick add for the list its last task went to, through the `Show` on its toast when another list holds it. */
+	/**
+	 * Leaves quick add for the list its last task went to, named by its `Added to` toast when another list holds it.
+	 * The sidebar gets there rather than the toast's `Show`, which can time out before a loaded phone WebKit taps it.
+	 */
 	async showAdded() {
-		const show = this.page
+		const toast = this.page
 			.getByRole('status')
 			.filter({ hasText: /^Added to / })
-			.getByRole('button', { name: 'Show' })
 			.last();
-		if (!(await show.isVisible())) return this.closeQuickAdd();
-		await show.click();
-		await expect(this.quickAdd()).toBeHidden();
+		const added = (await toast.isVisible()) ? await toast.textContent() : null;
+		await this.closeQuickAdd();
+		const list = added?.match(/^Added to (.+?)Show$/)?.[1];
+		if (!list) return;
+		const nav = this.page.getByRole('navigation', { name: 'Main' });
+		if (!(await nav.isVisible())) await this.page.getByRole('button', { name: 'Open navigation' }).click();
+		await this.go(list);
 	}
 
 	async closeQuickAdd() {
