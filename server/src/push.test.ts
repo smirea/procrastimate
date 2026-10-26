@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, setSystem
 import { and, eq } from 'drizzle-orm';
 import { log, push, tasks } from '../../shared/db/schema';
 import type { PushMessage } from '../../shared/push';
-import { deliverDue, isAllowedEndpoint } from './push';
+import { deliverDue, isAllowedEndpoint, touchesPush } from './push';
 import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
 
 const NOW = Date.UTC(2026, 9, 14, 18, 0);
@@ -199,6 +199,13 @@ describe('push', () => {
 		expect(stored.map(row => row.deviceId)).toEqual(['install-c-0000000']);
 		expect((await app.fetch('/api/push/subscription', { method: 'DELETE', headers: second.headers })).status).toBe(200);
 		expect(await app.db.select().from(push).where(eq(push.userId, again.person.id))).toEqual([]);
+	});
+});
+
+describe('touchesPush', () => {
+	test('moving a task to another project replans, since a group opens the project its tasks share', () => {
+		expect(touchesPush({ op: 'patch', kind: 'task', id: 't', values: { projectId: 'work' } })).toBe(true);
+		expect(touchesPush({ op: 'patch', kind: 'task', id: 't', values: { title: 'Pack' } })).toBe(false);
 	});
 });
 
