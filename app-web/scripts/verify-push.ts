@@ -176,7 +176,12 @@ if (LOCAL) {
 
 const reopened = await context.newPage();
 await reopened.goto('/inbox');
-const delivered = (await shown(reopened)).filter(n => n.tag !== 'test');
+/** The push left the server, but FCM hands it to Chrome on its own schedule. */
+let delivered: Awaited<ReturnType<typeof shown>> = [];
+for (const start = Date.now(); Date.now() - start < 20_000; await reopened.waitForTimeout(250)) {
+	delivered = (await shown(reopened)).filter(n => n.tag !== 'test');
+	if (delivered.length > 0) break;
+}
 check(
 	delivered.length === 1 &&
 		delivered[0]?.title === '2 tasks' &&
