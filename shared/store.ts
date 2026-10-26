@@ -534,7 +534,8 @@ export function undoTargets(action: Undo): string[] {
  * the same result in any order: undoing a label's delete puts the label back on a task whose own delete is pending.
  * A record an undo moves or brings back whose project, section, or parent task a pending delete holds joins that
  * delete, and comes back with it. One whose project, section, or parent is gone for good stays gone, so no task comes
- * back where no view shows it. A task edited since keeps its edits.
+ * back where no view shows it. A task edited since keeps its edits. A live task keeps only live labels: one a pending
+ * delete holds goes into that delete's labelings, so undoing it puts the label back, and one gone for good is dropped.
  */
 export function undo(data: StoreData, pending: readonly Undo[], index: number): { data: StoreData; pending: Undo[] } {
 	const action = pending[index];
@@ -617,9 +618,24 @@ export function undo(data: StoreData, pending: readonly Undo[], index: number): 
 		labels: after.labels.filter(e => placeOf(e) === place),
 		tasks: after.tasks.filter(e => placeOf(e) === place),
 	});
+	const live = at('live');
+	const liveLabels = new Set(live.labels.map(l => l.id));
+	const moved = rest.map((): Deleted['labelings'] => []);
+	live.tasks = live.tasks.map(t => {
+		if (t.labelIds.every(id => liveLabels.has(id))) return t;
+		t.labelIds.forEach((labelId, index) => {
+			const held = owner.get(labelId);
+			if (!liveLabels.has(labelId) && held !== undefined) moved[held]!.push({ taskId: t.id, labelId, index });
+		});
+		return { ...t, labelIds: t.labelIds.filter(id => liveLabels.has(id)) };
+	});
 	return {
-		data: { ...data, ...at('live') },
-		pending: rest.map((u, i) => (u.kind === 'delete' ? { ...u, deleted: { ...u.deleted, ...at(i) } } : u)),
+		data: { ...data, ...live },
+		pending: rest.map((u, i) =>
+			u.kind === 'delete'
+				? { ...u, deleted: { ...u.deleted, ...at(i), labelings: [...u.deleted.labelings, ...moved[i]!] } }
+				: u,
+		),
 	};
 }
 

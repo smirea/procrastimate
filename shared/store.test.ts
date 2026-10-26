@@ -693,6 +693,7 @@ describe('stacked undos', () => {
 			() => data(),
 			[deleting(d => store.deleteLabel(d, 'calls')), deletingTask('call')],
 		],
+		['a task, then a label it had', () => data(), [deletingTask('call'), deleting(d => store.deleteLabel(d, 'calls'))]],
 		['a completion, then the task', () => data(), [completing('trip'), deletingTask('trip')]],
 		[
 			'a section, then its project',
@@ -743,6 +744,23 @@ describe('stacked undos', () => {
 		const { data: gone, removed } = deleteTask(noLabel, 'call');
 		const first = undo(gone, [deletion(deletedBetween(data(), noLabel)), deletion({ tasks: removed })], 0);
 		expect(first.data).toEqual({ ...data(), tasks: data().tasks.filter(t => t.id !== 'call') });
+		expect(undo(first.data, first.pending, 0).data).toEqual(data());
+	});
+
+	test("a task undone after its label's delete expired comes back without the label", () => {
+		const { data: gone, removed } = deleteTask(data(), 'call');
+		const noLabel = deleteLabel(gone, 'calls');
+		expect(find(undo(noLabel, [deletion({ tasks: removed })], 0).data, 'call').labelIds).toEqual(['phone']);
+	});
+
+	test("a task undone while its label's delete is pending hands the label to that delete", () => {
+		const { data: gone, removed } = deleteTask(data(), 'call');
+		const noLabel = deleteLabel(gone, 'calls');
+		const first = undo(noLabel, [deletion(deletedBetween(gone, noLabel)), deletion({ tasks: removed })], 1);
+		expect(find(first.data, 'call').labelIds).toEqual(['phone']);
+		expect(first.pending).toEqual([
+			deletion({ labels: data().labels.slice(0, 1), labelings: [{ taskId: 'call', labelId: 'calls', index: 0 }] }),
+		]);
 		expect(undo(first.data, first.pending, 0).data).toEqual(data());
 	});
 
