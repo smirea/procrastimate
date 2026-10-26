@@ -22,7 +22,7 @@ test('sections group a project, take tasks from quick add and details, and renam
 	await addSection('Next up');
 
 	const later = page.getByRole('region', { name: 'Later' });
-	await later.getByRole('button', { name: 'Add task' }).click();
+	await later.getByRole('button', { name: 'Add task to Later' }).click();
 	await app.taskInput().fill('Fix fence');
 	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Later' })).toBeVisible();
 	await app.taskInput().press('Enter');
@@ -57,19 +57,23 @@ test('sections group a project, take tasks from quick add and details, and renam
 	);
 	await page.screenshot({ path: 'test-results/sections/project.png' });
 
-	await page.getByRole('button', { name: 'Next up actions' }).click();
+	await expect(later.getByRole('button', { name: 'Add task', exact: true })).toHaveCount(0);
+	await page.getByRole('button', { name: 'Next up', exact: true }).click();
+	await expect(page.getByRole('dialog', { name: 'Section actions' })).toContainText(/^Next up/);
+	await app.settle();
+	await page.screenshot({ path: 'test-results/sections/menu.png' });
 	await page.getByRole('button', { name: 'Move up' }).click();
 	await app.settle();
 	await expect(sectionHeadings()).toHaveText([/^Next up/, /^Later/]);
 
-	await page.getByRole('button', { name: 'Later actions' }).click();
+	await page.getByRole('button', { name: 'Later', exact: true }).click();
 	await page.getByRole('button', { name: 'Rename' }).click();
 	const name = page.getByRole('textbox', { name: 'Section name' });
 	await name.fill('Dropped');
 	await name.press('Escape');
 	await expect(page.getByRole('region', { name: 'Later' })).toBeVisible();
 	await expect(page.getByRole('region', { name: 'Dropped' })).toHaveCount(0);
-	await page.getByRole('button', { name: 'Later actions' }).click();
+	await page.getByRole('button', { name: 'Later', exact: true }).click();
 	await page.getByRole('button', { name: 'Rename' }).click();
 	await name.fill('Someday');
 	await name.press('Enter');
@@ -78,7 +82,7 @@ test('sections group a project, take tasks from quick add and details, and renam
 	await app.reload();
 	await expect(sectionHeadings()).toHaveText([/^Next up/, /^Someday/]);
 
-	await page.getByRole('button', { name: 'Someday actions' }).click();
+	await page.getByRole('button', { name: 'Someday', exact: true }).click();
 	await page.getByRole('button', { name: 'Delete section' }).click();
 	await expect(page.getByText('Delete Someday and its 1 task?')).toBeVisible();
 	await page.getByRole('button', { name: 'Delete', exact: true }).click();

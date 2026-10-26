@@ -1,52 +1,45 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import DotsThree from 'phosphor-svelte/lib/DotsThree';
 	import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import Popover from './Popover.svelte';
 
-	/** The actions popover of a project, label, or section heading: rename, delete behind a confirmation, and its own items. */
+	/**
+	 * A section's menu, opened by tapping its title: rename, delete behind a confirmation, and its own items, under the
+	 * section's name so the menu says what it acts on.
+	 */
 	let {
-		label,
-		triggerLabel,
-		triggerClass = 'icon-btn touch:size-11',
-		iconSize = 20,
-		deleteLabel,
+		name,
 		confirm,
 		ondelete,
 		onrename,
-		before,
 		after,
 	}: {
-		label: string;
-		triggerLabel: string;
-		triggerClass?: string;
-		iconSize?: number;
-		deleteLabel: string;
+		name: string;
 		/** The question the delete asks, with what goes along. */
 		confirm: Snippet;
 		ondelete: () => void;
 		onrename: () => void;
-		before?: Snippet<[{ close: () => void }]>;
 		after?: Snippet<[{ close: () => void }]>;
 	} = $props();
 
 	let confirmingDelete = $state(false);
 </script>
 
-<Popover {label} align="end">
-	{#snippet trigger({ toggle })}
-		<button
-			type="button"
-			class={triggerClass}
-			aria-label={triggerLabel}
-			onclick={() => {
-				confirmingDelete = false;
-				toggle();
-			}}
-		>
-			<DotsThree size={iconSize} weight="bold" />
-		</button>
+<Popover label="Section actions">
+	{#snippet trigger({ open, toggle })}
+		<h2 class="min-w-0">
+			<button
+				type="button"
+				class="press hit-area relative block max-w-full rounded-md text-left text-[15px] font-semibold"
+				aria-haspopup="dialog"
+				aria-expanded={open}
+				onclick={() => {
+					confirmingDelete = false;
+					toggle();
+				}}
+			><span class="block truncate">{name}</span></button>
+		</h2>
 	{/snippet}
 	{#snippet children({ close })}
 		{#if confirmingDelete}
@@ -65,13 +58,13 @@
 				</div>
 			</div>
 		{:else}
-			{@render before?.({ close })}
+			<p class="max-w-60 truncate px-2.5 pt-1 pb-1.5 text-[13px] font-semibold text-muted">{name}</p>
 			<button type="button" class="menu-item" onclick={() => {
 				onrename();
 				close();
 			}}><PencilSimple size={15} />Rename</button>
 			{@render after?.({ close })}
-			<button type="button" class="menu-item text-[var(--tone-overdue)]" onclick={() => (confirmingDelete = true)}><Trash size={15} />{deleteLabel}</button>
+			<button type="button" class="menu-item text-[var(--tone-overdue)]" onclick={() => (confirmingDelete = true)}><Trash size={15} />Delete section</button>
 		{/if}
 	{/snippet}
 </Popover>

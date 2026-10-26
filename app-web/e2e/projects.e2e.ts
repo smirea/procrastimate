@@ -204,7 +204,7 @@ test('Show completed is per project and per section, and a completed task delete
 	await page.getByRole('textbox', { name: 'New section name' }).fill('Later');
 	await page.getByRole('textbox', { name: 'New section name' }).press('Enter');
 	for (const title of ['Fix fence', 'Oil hinges']) {
-		await page.getByRole('region', { name: 'Later' }).getByRole('button', { name: 'Add task' }).click();
+		await page.getByRole('region', { name: 'Later' }).getByRole('button', { name: 'Add task to Later' }).click();
 		await app.taskInput().fill(title);
 		await app.taskInput().press('Enter');
 		await expect(app.quickAdd()).toBeHidden();

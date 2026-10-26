@@ -59,12 +59,6 @@ struct ProjectScreen: View {
                     Section {
                         ForEach(entry.tasks) { TaskRow(task: $0) }
                         ForEach(doneIn(entry.section.id)) { CompletedRow(task: $0) }
-                        if canAdd {
-                            GroupAddRow(
-                                group: entry.section.name,
-                                addTo: .project(id: entry.section.projectId, sectionId: entry.section.id)
-                            )
-                        }
                     } header: {
                         SectionHeading(
                             section: entry.section,
@@ -90,8 +84,9 @@ struct ProjectScreen: View {
     }
 }
 
-/// A section's heading in its project. A tap or a long press anywhere on it opens its menu: add a task to it, copy it,
-/// and in the user's own project rename, move, and delete it.
+/// A section's heading in its project. Its accent `+` adds a task to it. A tap or a long press anywhere else opens its
+/// menu, titled with the section's name: add a task to it, copy it, and in the user's own project rename, move, and
+/// delete it.
 private struct SectionHeading: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
@@ -110,53 +105,14 @@ private struct SectionHeading: View {
     @State private var confirmingDelete = false
 
     var body: some View {
-        // A plain List never shows a header's `.contextMenu`, so the whole heading is the menu's label. It showed an
-        // ellipsis but ignored taps, which read as a broken button.
-        Menu {
+        HStack(spacing: 0) {
+            menu
             if canAdd {
-                Button("Add task", systemImage: "plus") {
-                    navigator.sheet = .quickAdd(store.quickAddDefaults(.project(id: section.projectId, sectionId: section.id)))
-                }
+                GroupAddButton(group: section.name, addTo: .project(id: section.projectId, sectionId: section.id))
             }
-            Button("Copy as Markdown", systemImage: "doc.on.doc") {
-                actions.copyAsMarkdown(
-                    Markdown.Document(sections: [.init(heading: section.name, tasks: tasks)])
-                )
-            }
-            if editable {
-                Button("Rename", systemImage: "pencil") {
-                    draft = section.name
-                    renaming = true
-                }
-                Button("Move up", systemImage: "arrow.up") {
-                    withAnimation(.snappy) { store.moveSection(section.id, to: index - 1) }
-                }
-                .disabled(index == 0)
-                Button("Move down", systemImage: "arrow.down") {
-                    withAnimation(.snappy) { store.moveSection(section.id, to: index + 1) }
-                }
-                .disabled(index == count - 1)
-                Button("Delete section", systemImage: "trash", role: .destructive) { confirmingDelete = true }
-            }
-        } label: {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(section.name)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.ink)
-                Spacer(minLength: 0)
-                PendingCount(open: tasks.count)
-                Image(systemName: "ellipsis")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.faint)
-            }
-            .textCase(nil)
-            .padding(.top, 14)
-            .frame(minHeight: 44, alignment: .bottom)
-            .contentShape(.rect)
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(.isHeader)
-        .accessibilityIdentifier("heading-\(section.name)")
+        .textCase(nil)
+        .padding(.top, 4)
         .alert("Rename section", isPresented: $renaming) {
             TextField("Section name", text: $draft)
                 .submitLabel(.done)
@@ -176,5 +132,51 @@ private struct SectionHeading: View {
                 actions.toastDeleted(section.name, withAnimation(.snappy) { store.deleteSection(section.id) })
             }
         }
+    }
+
+    // A plain List never shows a header's `.contextMenu`, so the title is the menu's label.
+    private var menu: some View {
+        Menu {
+            Section(section.name) {
+                if canAdd {
+                    Button("Add task", systemImage: "plus") {
+                        navigator.sheet = .quickAdd(store.quickAddDefaults(.project(id: section.projectId, sectionId: section.id)))
+                    }
+                }
+                Button("Copy as Markdown", systemImage: "doc.on.doc") {
+                    actions.copyAsMarkdown(
+                        Markdown.Document(sections: [.init(heading: section.name, tasks: tasks)])
+                    )
+                }
+                if editable {
+                    Button("Rename", systemImage: "pencil") {
+                        draft = section.name
+                        renaming = true
+                    }
+                    Button("Move up", systemImage: "arrow.up") {
+                        withAnimation(.snappy) { store.moveSection(section.id, to: index - 1) }
+                    }
+                    .disabled(index == 0)
+                    Button("Move down", systemImage: "arrow.down") {
+                        withAnimation(.snappy) { store.moveSection(section.id, to: index + 1) }
+                    }
+                    .disabled(index == count - 1)
+                    Button("Delete section", systemImage: "trash", role: .destructive) { confirmingDelete = true }
+                }
+            }
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(section.name)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.ink)
+                Spacer(minLength: 0)
+                PendingCount(open: tasks.count)
+            }
+            .frame(minHeight: 44)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityIdentifier("heading-\(section.name)")
     }
 }

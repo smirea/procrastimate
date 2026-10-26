@@ -55,7 +55,6 @@ struct DueScreen: View {
             if !due.today.isEmpty {
                 Section {
                     ForEach(due.today) { TaskRow(task: $0, showProject: $0.projectId != nil, timeOnly: true) }
-                    GroupAddRow(group: "Today", addTo: screen(on: today))
                 } header: {
                     ListHeading(text: "Today", tasks: due.today, addTo: screen(on: today))
                 }
@@ -64,7 +63,6 @@ struct DueScreen: View {
                 if headed {
                     Section {
                         ForEach(group.tasks) { TaskRow(task: $0, showProject: $0.projectId != nil) }
-                        GroupAddRow(group: Format.dayHeading(group.date, today), addTo: screen(on: group.date))
                     } header: {
                         ListHeading(text: Format.dayHeading(group.date, today), tasks: group.tasks, addTo: screen(on: group.date))
                     }
