@@ -600,6 +600,11 @@ public enum StoreRules {
             }
             if let known = places[id] { return known }
             var result = owner[id].map(Place.held) ?? .live
+            // A subtask follows its parent into a pending delete, since the undo moved the parent with its whole subtree.
+            if owner[id] == nil, !targets.contains(id), case let .task(key) = ref, let parentId = tasks[key]?.parentId,
+               owner[parentId] == nil, tasks[parentId] != nil, case .held = place(.task(parentId)) {
+                result = place(.task(parentId))
+            }
             if owner[id] == nil, targets.contains(id) {
                 for case let parent? in parents {
                     let exists = switch parent {

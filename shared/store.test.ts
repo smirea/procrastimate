@@ -703,7 +703,7 @@ describe('stacked undos', () => {
 		['a subtask, then its parent', () => data(), [deletingTask('passport'), deletingTask('trip')]],
 		[
 			'exploded subtasks, then their parent',
-			() => data(),
+			() => ({ ...data(), tasks: [...data().tasks, task('photo', 6, { parentId: 'passport', projectId: 'home' })] }),
 			[
 				(d: StoreData) => {
 					const { data, previous } = store.explodeSubtasks(d, 'trip', 'prefix');
@@ -753,6 +753,18 @@ describe('stacked undos', () => {
 		const first = undo(gone, [{ kind: 'reopen', reopened: previous }, deletion({ tasks: removed })], 0);
 		expect(first.data).toEqual(gone);
 		expect(undo(first.data, first.pending, 0).data).toEqual(done);
+	});
+
+	test('subtasks put back under a deleted parent join its delete with their own subtasks, and go when it does', () => {
+		const start = {
+			...data(),
+			tasks: [...data().tasks, task('photo', 6, { parentId: 'passport', projectId: 'home' })],
+		};
+		const { data: exploded, previous } = explodeSubtasks(start, 'trip', 'direct');
+		const { data: gone, removed } = deleteTask(exploded, 'trip');
+		const result = undo(gone, [{ kind: 'explode', previous }, deletion({ tasks: removed })], 0);
+		expect(ids(result.data.tasks)).toEqual(['standup', 'call']);
+		expect(undo(result.data, result.pending, 0).data).toEqual(start);
 	});
 
 	test('a section undone while its project is deleted joins the project delete, and goes when it does', () => {

@@ -581,9 +581,15 @@ export function undo(data: StoreData, pending: readonly Undo[], index: number): 
 	const placeOf = (e: Project | Section | Label | Task): Place => {
 		let place = places.get(e.id);
 		if (place !== undefined) return place;
-		place = owner.get(e.id) ?? (targets.has(e.id) ? parentPlace(e) : 'live');
+		place = owner.get(e.id) ?? (targets.has(e.id) ? parentPlace(e) : followParent(e));
 		places.set(e.id, place);
 		return place;
+	};
+	// A subtask follows its parent into a pending delete, since the undo moved the parent with its whole subtree.
+	const followParent = (e: Project | Section | Label | Task): Place => {
+		const parent = 'parentId' in e && e.parentId !== null && !owner.has(e.parentId) ? tasks.get(e.parentId) : undefined;
+		const place = parent ? placeOf(parent) : 'live';
+		return typeof place === 'number' ? place : 'live';
 	};
 	const parentPlace = (e: Project | Section | Label | Task): Place => {
 		const parents: [string | null, ReadonlyMap<string, Project | Section | Task>][] =
