@@ -1,0 +1,127 @@
+name: Swift Build crash watch
+
+# core-linux runs `swift test --build-system native` to dodge swiftlang/swift-build#1786 (docs/decisions/testing.md).
+# This weekly check fails when the workaround may be droppable: the issue closed, or a Swift release newer than the pinned
+# one went 500 clean builds on the default backend without the crash. A red run is the signal to bump the tag in ios.yml
+# and drop the flag; green means nothing to do. GitHub emails a failed scheduled run to whoever last changed the cron.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Stress the latest release even when it is the pinned one
+        type: boolean
+        default: false
+  pull_request:
+    paths: [.github/workflows/swift-build-1786.yml]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      latest: ${{ steps.release.outputs.latest }}
+      stress: ${{ steps.release.outputs.stress }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: swiftlang/swift-build#1786 is still open
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          state=$(gh api repos/swiftlang/swift-build/issues/1786 --jq .state)
+          echo "swift-build#1786 is $state"
+          if [ "$state" != open ]; then
+            echo "::error::swiftlang/swift-build#1786 is $state. Check which release has the fix, bump core-linux's swift tag in ios.yml, and drop --build-system native."
+            exit 1
+          fi
+
+      - id: release
+        env:
+          FORCE: ${{ inputs.force || github.event_name == 'pull_request' }}
+        run: |
+          pinned=$(sed -n 's/^ *container: swift:\([0-9.]*\)$/\1/p' .github/workflows/ios.yml)
+          latest=$(curl -fsS 'https://hub.docker.com/v2/repositories/library/swift/tags?page_size=100&ordering=last_updated' \
+            | jq -r '.results[].name' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          test -n "$pinned" && test -n "$latest"
+          echo "pinned swift:$pinned, latest release swift:$latest"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "stress=$([ "$latest" != "$pinned" ] || [ "$FORCE" = true ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+  generate:
+    needs: check
+    if: needs.check.outputs.stress == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - run: bun run generate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-swift
+          path: app-ios/Sources/Core/Generated
+          if-no-files-found: error
+
+  # The crash hit about one clean build in 200 on swift:6.4.1, so 500 clean builds that never crash are strong evidence of a fix.
+  stress:
+    needs: [check, generate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    container: swift:${{ needs.check.outputs.latest }}
+    defaults:
+      run:
+        working-directory: app-ios
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated-swift
+          path: app-ios/Sources/Core/Generated
+      - run: swift --version
+      - name: 50 clean builds with the default backend
+        shell: bash
+        run: |
+          crashes=0
+          for i in $(seq 1 50); do
+            rm -rf .build
+            code=0
+            swift build --build-tests > build.log 2>&1 || code=$?
+            echo "build $i exit $code"
+            if [ "$code" -eq 139 ]; then
+              crashes=$((crashes + 1))
+              grep -E -A12 'crashed:' build.log || true
+            elif [ "$code" -ne 0 ]; then
+              tail -40 build.log
+              exit 1
+            fi
+          done
+          echo "$crashes" > "$RUNNER_TEMP/crashes-${{ matrix.shard }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crashes-${{ matrix.shard }}
+          path: ${{ runner.temp }}/crashes-${{ matrix.shard }}
+
+  verdict:
+    needs: [check, stress]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: crashes-*
+          merge-multiple: true
+      - run: |
+          crashes=$(awk '{ s += $1 } END { print s }' crashes-*)
+          echo "swift:${{ needs.check.outputs.latest }} crashed in $crashes of 500 clean builds"
+          if [ "$crashes" -eq 0 ]; then
+            echo "::error::swift:${{ needs.check.outputs.latest }} never crashed in 500 clean builds. Bump core-linux's swift tag in ios.yml, drop --build-system native, and update docs/decisions/testing.md."
+            exit 1
+          fi
