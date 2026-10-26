@@ -289,24 +289,29 @@ export class App {
 		await this.openQuickAdd();
 		for (const title of titles) {
 			await this.taskInput().fill(title);
-			await this.taskInput().press('Enter');
-			await expect(this.taskInput()).toHaveValue('');
+			await this.save();
 		}
 		await this.showAdded();
 	}
 
+	/** Saves the draft with Enter. Toasts from earlier saves are marked, so `showAdded` reads only this save's. */
+	async save() {
+		await this.page
+			.locator('[role="status"]')
+			.evaluateAll(toasts => toasts.forEach(t => t.setAttribute('data-earlier', '')));
+		await this.taskInput().press('Enter');
+		await expect(this.taskInput()).toHaveValue('');
+	}
+
 	/**
-	 * Leaves quick add for the list its last task went to, named by its `Added to` toast when another list holds it.
+	 * Leaves quick add for the list the last save went to, named by its `Added to` toast when another list holds it.
 	 * The sidebar gets there rather than the toast's `Show`, which can time out before a loaded phone WebKit taps it.
 	 */
 	async showAdded() {
-		const toast = this.page
-			.getByRole('status')
-			.filter({ hasText: /^Added to / })
-			.last();
-		const added = (await toast.isVisible()) ? await toast.textContent() : null;
+		const toast = this.page.locator('[role="status"]:not([data-earlier])').filter({ hasText: /^Added to / });
+		const added = (await toast.count()) ? await toast.textContent() : null;
 		await this.closeQuickAdd();
-		const list = added?.match(/^Added to (.+?)Show$/)?.[1];
+		const list = added?.match(/^Added to (.+?)\s*Show$/)?.[1];
 		if (!list) return;
 		const nav = this.page.getByRole('navigation', { name: 'Main' });
 		if (!(await nav.isVisible())) await this.page.getByRole('button', { name: 'Open navigation' }).click();
@@ -335,8 +340,7 @@ export class App {
 			await create.click();
 			await expect(parsed).toBeVisible();
 		}
-		await this.taskInput().press('Enter');
-		await expect(this.taskInput()).toHaveValue('');
+		await this.save();
 		await this.showAdded();
 	}
 

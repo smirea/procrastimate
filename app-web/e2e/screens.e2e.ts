@@ -21,7 +21,7 @@ test('removing the place chip saves the task with no place', async ({ app, page 
 	await app.openQuickAdd();
 	await app.quickAdd().getByRole('button', { name: 'Remove place' }).click();
 	await app.taskInput().fill('Call the bank');
-	await app.taskInput().press('Enter');
+	await app.save();
 	await expect(page.getByRole('status').filter({ hasText: 'Added to No date' })).toBeVisible();
 	await app.showAdded();
 
