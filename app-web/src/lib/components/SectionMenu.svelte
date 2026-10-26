@@ -27,12 +27,13 @@
 </script>
 
 <Popover label="Section actions">
-	{#snippet trigger({ toggle })}
+	{#snippet trigger({ open, toggle })}
 		<h2 class="min-w-0">
 			<button
 				type="button"
 				class="press block max-w-full truncate rounded-md text-left text-[15px] font-semibold"
-				aria-label={`${name} actions`}
+				aria-haspopup="dialog"
+				aria-expanded={open}
 				onclick={() => {
 					confirmingDelete = false;
 					toggle();

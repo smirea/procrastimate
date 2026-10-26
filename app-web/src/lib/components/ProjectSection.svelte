@@ -6,7 +6,7 @@
 	import CompletedList from './CompletedList.svelte';
 	import InlineEdit from './InlineEdit.svelte';
 	import SectionMenu from './SectionMenu.svelte';
-		import SectionHeading from './SectionHeading.svelte';
+	import SectionHeading from './SectionHeading.svelte';
 	import TaskList from './TaskList.svelte';
 	import { toastDeleted } from '../completion.ts';
 	import { store } from '../store.svelte.ts';

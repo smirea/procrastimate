@@ -176,6 +176,7 @@ struct ListHeading: View {
                     Spacer(minLength: 0)
                     if counted { PendingCount(open: tasks.count) }
                 }
+                .frame(minHeight: 44)
                 .contentShape(.rect)
             } primaryAction: {}
             .buttonStyle(.plain)
