@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 // Loaded where it connects: `setup-worktree.ts` imports this file before its `bun install` has run in a new worktree.
 import type postgres from 'postgres';
@@ -105,6 +105,32 @@ export async function worktreeDatabases(): Promise<{ database: string; worktree:
 			.filter(row => row.comment?.startsWith(COMMENT_PREFIX) && !row.datname.endsWith('_powersync'))
 			.map(row => ({ database: row.datname, worktree: row.comment!.slice(COMMENT_PREFIX.length) }));
 	});
+}
+
+const CONFIG_FILES = [
+	'.env.override',
+	'.env.local',
+	'server/.env.local',
+	'app-web/.env.local',
+	'.dev.vars',
+	'.powersync/service.yaml',
+];
+
+/** Every Postgres URL in a worktree's env files and PowerSync config, quoted or not. */
+export function configuredDatabaseUrls(worktree: string): string[] {
+	return CONFIG_FILES.map(file => join(worktree, file))
+		.filter(file => existsSync(file))
+		.flatMap(file => readFileSync(file, 'utf8').match(/postgres(ql)?:\/\/[^\s'"#]+/g) ?? []);
+}
+
+/**
+ * The databases commented with a live worktree that none of its configured URLs point at, left by a branch rename.
+ * Without any URL nothing is known to be current, so a worktree mid-setup keeps everything.
+ */
+export function staleDatabases(commented: string[], urls: string[]): string[] {
+	const current = new Set(urls.map(databaseOf));
+	if (!current.size) return [];
+	return commented.filter(database => databasesOf(database).every(name => !current.has(name)));
 }
 
 export type ReplicationSlot = { name: string; database: string; active: boolean; held: string };
