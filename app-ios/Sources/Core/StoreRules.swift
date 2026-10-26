@@ -508,8 +508,14 @@ public enum StoreRules {
         case let .completion(undo):
             return restoreCompletion(data, undo.previous)
         case let .reopen(undo):
+            let completedAt = Dictionary(undo.reopened.map { ($0.id, $0.completedAt) }, uniquingKeysWith: { _, last in last })
             var next = data
-            for task in undo.reopened { next = edit(task.id) { $0.completedAt = task.completedAt } }
+            next.tasks = data.tasks.map { t in
+                guard let at = completedAt[t.id] else { return t }
+                var t = t
+                t.completedAt = at
+                return t
+            }
             return next
         case let .explode(undo):
             return restoreExploded(data, undo.previous)

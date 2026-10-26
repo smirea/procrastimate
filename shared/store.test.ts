@@ -746,9 +746,9 @@ describe('stacked undos', () => {
 		expect(undo(first.data, first.pending, 0).data).toEqual(data());
 	});
 
-	test('a completed reopen undone after the task is deleted comes back completed', () => {
+	test('a reopened subtask undone after its parent is deleted comes back completed with its parent', () => {
 		const { data: done } = completeTask(data(), 'trip', today, NOW)!;
-		const { data: reopened, reopened: previous } = reopenTask(done, 'trip');
+		const { data: reopened, reopened: previous } = reopenTask(done, 'passport');
 		const { data: gone, removed } = deleteTask(reopened, 'trip');
 		const first = undo(gone, [{ kind: 'reopen', reopened: previous }, deletion({ tasks: removed })], 0);
 		expect(first.data).toEqual(gone);

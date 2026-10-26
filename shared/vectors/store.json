@@ -46667,7 +46667,7 @@
 		},
 		{
 			"fn": "completeTask",
-			"test": "stacked undos › a completed reopen undone after the task is deleted comes back completed",
+			"test": "stacked undos › a reopened subtask undone after its parent is deleted comes back completed with its parent",
 			"input": [
 				{
 					"comments": [],
@@ -47071,7 +47071,7 @@
 		},
 		{
 			"fn": "reopenTask",
-			"test": "stacked undos › a completed reopen undone after the task is deleted comes back completed",
+			"test": "stacked undos › a reopened subtask undone after its parent is deleted comes back completed with its parent",
 			"input": [
 				{
 					"comments": [],
@@ -47259,7 +47259,7 @@
 						}
 					]
 				},
-				"trip"
+				"passport"
 			],
 			"output": {
 				"data": {
@@ -47344,7 +47344,7 @@
 							"title": "trip"
 						},
 						{
-							"completedAt": 1000,
+							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 2,
 							"createdBy": null,
@@ -47452,13 +47452,17 @@
 					{
 						"completedAt": 1000,
 						"id": "trip"
+					},
+					{
+						"completedAt": 1000,
+						"id": "passport"
 					}
 				]
 			}
 		},
 		{
 			"fn": "deleteTask",
-			"test": "stacked undos › a completed reopen undone after the task is deleted comes back completed",
+			"test": "stacked undos › a reopened subtask undone after its parent is deleted comes back completed with its parent",
 			"input": [
 				{
 					"comments": [],
@@ -47542,7 +47546,7 @@
 							"title": "trip"
 						},
 						{
-							"completedAt": 1000,
+							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 2,
 							"createdBy": null,
@@ -47793,7 +47797,7 @@
 						"title": "trip"
 					},
 					{
-						"completedAt": 1000,
+						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 2,
 						"createdBy": null,
@@ -47841,7 +47845,7 @@
 		},
 		{
 			"fn": "undo",
-			"test": "stacked undos › a completed reopen undone after the task is deleted comes back completed",
+			"test": "stacked undos › a reopened subtask undone after its parent is deleted comes back completed with its parent",
 			"input": [
 				{
 					"comments": [],
@@ -47970,6 +47974,10 @@
 							{
 								"completedAt": 1000,
 								"id": "trip"
+							},
+							{
+								"completedAt": 1000,
+								"id": "passport"
 							}
 						]
 					},
@@ -48003,7 +48011,7 @@
 									"title": "trip"
 								},
 								{
-									"completedAt": 1000,
+									"completedAt": null,
 									"completedBy": null,
 									"createdAt": 2,
 									"createdBy": null,
@@ -48257,7 +48265,7 @@
 		},
 		{
 			"fn": "undo",
-			"test": "stacked undos › a completed reopen undone after the task is deleted comes back completed",
+			"test": "stacked undos › a reopened subtask undone after its parent is deleted comes back completed with its parent",
 			"input": [
 				{
 					"comments": [],

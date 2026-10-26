@@ -175,6 +175,8 @@ class Store {
 			this.people = [];
 			savePeople([]);
 			this.loaded = false;
+			this.#undos = [];
+			this.#deletedFrom.clear();
 		}
 		this.#owner = userId;
 		this.#rows = new LocalRows(userId);
