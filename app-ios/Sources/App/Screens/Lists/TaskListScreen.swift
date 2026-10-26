@@ -157,35 +157,61 @@ struct ListHeading: View {
     var addTo: ListScreen?
 
     var body: some View {
-        // A plain List never shows a header's `.contextMenu`, so a long press opens this menu and a tap does nothing.
-        Menu {
-            if let addTo {
-                Button("Add task", systemImage: "plus") {
-                    navigator.sheet = .quickAdd(store.quickAddDefaults(addTo))
+        HStack(spacing: 0) {
+            // A plain List never shows a header's `.contextMenu`, so a long press opens this menu and a tap does nothing.
+            Menu {
+                if let addTo {
+                    Button("Add task", systemImage: "plus") {
+                        navigator.sheet = .quickAdd(store.quickAddDefaults(addTo))
+                    }
                 }
-            }
-            Button("Copy as Markdown", systemImage: "doc.on.doc") {
-                actions.copyAsMarkdown(Markdown.Document(sections: [.init(heading: text, tasks: tasks)]))
-            }
-        } label: {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(text)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(tone)
-                Spacer(minLength: 0)
-                if counted { PendingCount(open: tasks.count) }
-            }
-            .textCase(nil)
-            .contentShape(.rect)
-        } primaryAction: {}
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(.isHeader)
-        .accessibilityIdentifier("heading-\(text)")
+                Button("Copy as Markdown", systemImage: "doc.on.doc") {
+                    actions.copyAsMarkdown(Markdown.Document(sections: [.init(heading: text, tasks: tasks)]))
+                }
+            } label: {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(text)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(tone)
+                    Spacer(minLength: 0)
+                    if counted { PendingCount(open: tasks.count) }
+                }
+                .contentShape(.rect)
+            } primaryAction: {}
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityIdentifier("heading-\(text)")
+            if let addTo { GroupAddButton(group: text, addTo: addTo) }
+        }
+        .textCase(nil)
     }
 }
 
-/// The quiet row at the end of a group, such as a section or an Inbox day, that opens quick add on that group. The tab
+/// The accent `+` on a group's heading, such as a section or an Inbox day, that opens quick add on that group. The tab
 /// bar's `+` adds to the screen; this adds to the group, so its name says which.
+struct GroupAddButton: View {
+    @Environment(Store.self) private var store
+    @Environment(Navigator.self) private var navigator
+
+    let group: String
+    let addTo: ListScreen
+
+    var body: some View {
+        Button { navigator.sheet = .quickAdd(store.quickAddDefaults(addTo)) } label: {
+            Image(systemName: "plus")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.accent)
+                .frame(width: 44, height: 44)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .padding(.trailing, -12)
+        .accessibilityLabel("Add task to \(group)")
+        .accessibilityIdentifier("add-task-\(group)")
+    }
+}
+
+/// The quiet row at the end of Tomorrow's one day, which has no heading to carry a `+`.
 struct GroupAddRow: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator

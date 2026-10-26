@@ -22,7 +22,7 @@ test('sections group a project, take tasks from quick add and details, and renam
 	await addSection('Next up');
 
 	const later = page.getByRole('region', { name: 'Later' });
-	await later.getByRole('button', { name: 'Add task' }).click();
+	await later.getByRole('button', { name: 'Add task to Later' }).click();
 	await app.taskInput().fill('Fix fence');
 	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Later' })).toBeVisible();
 	await app.taskInput().press('Enter');
@@ -57,7 +57,11 @@ test('sections group a project, take tasks from quick add and details, and renam
 	);
 	await page.screenshot({ path: 'test-results/sections/project.png' });
 
+	await expect(later.getByRole('button', { name: 'Add task', exact: true })).toHaveCount(0);
 	await page.getByRole('button', { name: 'Next up actions' }).click();
+	await expect(page.getByRole('dialog', { name: 'Section actions' })).toContainText(/^Next up/);
+	await app.settle();
+	await page.screenshot({ path: 'test-results/sections/menu.png' });
 	await page.getByRole('button', { name: 'Move up' }).click();
 	await app.settle();
 	await expect(sectionHeadings()).toHaveText([/^Next up/, /^Later/]);
