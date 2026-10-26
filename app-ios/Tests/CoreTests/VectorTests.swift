@@ -357,7 +357,6 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     case "deleteTask":
         let result = StoreRules.deleteTask(try data(), try a(1))
         return object(["data": try json(result.data), "removed": try json(result.removed)])
-    case "undeleteTasks": return try json(StoreRules.undeleteTasks(data(), a(1)))
     case "explodeSubtasks":
         let result = StoreRules.explodeSubtasks(try data(), try a(1), try a(2))
         return object(["data": try json(result.data), "previous": try json(result.previous)])
@@ -389,7 +388,9 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     case "projectsInOrder": return try json(StoreRules.projectsInOrder(a(0)))
     case "deleteSection": return try json(StoreRules.deleteSection(data(), a(1)))
     case "deletedBetween": return try json(StoreRules.deletedBetween(data(), a(1)))
-    case "undelete": return try json(StoreRules.undelete(data(), a(1)))
+    case "undo":
+        let result = StoreRules.undo(try data(), try a(1), try a(2))
+        return object(["data": try json(result.data), "pending": try json(result.pending)])
     default: throw unknown(fn)
     }
 }

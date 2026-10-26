@@ -6,6 +6,7 @@ Complete a task lets Stefan check off a task with a short, satisfying animation,
 
 - `complete-check` marks a task done and animates it out of the list.
 - `complete-undo` restores the task to its place. The toast's five-second countdown pauses while it is hovered, focused, or touched (VoiceOver focus on iOS), and resumes with the time it had left.
+- `complete-undo-stacked` makes stacked Undo toasts give the same result in any order, across completing, reopening, postponing, exploding subtasks, deleting an image, and deleting a task, project, section, or label. Undoing a label's delete before its deleted task's puts the label back on the task, and undoing a completion before the task's delete brings the task back open.
 - `complete-recurring` moves a recurring task to its next occurrence instead of closing it. [Recurring tasks](./recurring-tasks.md) covers it.
 - `complete-subtasks` completes every open subtask under the task too. [Subtasks](./subtasks.md) covers it.
 - `complete-reopen` reopens a completed task with `Reopen` in task details, reached through [Search](./search.md), which covers it.
@@ -35,6 +36,7 @@ Preconditions:
 - **Complete.** Check `Buy milk` with the `Complete Buy milk` checkbox. The checkbox fills, the title strikes through, and the row slides out. Inbox shows only `Pay rent` and an `Undo` toast appears.
 - **Undo.** Choose `Undo` in the toast. `Buy milk` returns above `Pay rent`.
 - **Toast waits.** Hover or focus the toast and it stays past five seconds; leave it and it goes after the time it had left. Test: `an action toast waits while hovered or focused, then counts down what it had left` in `e2e/toasts.e2e.ts`. On iOS, press and hold the toast's message for eight seconds: `Undo` is still there, and it leaves within five seconds of letting go.
+- **Stacked undo.** Add `@calls Call bank`, delete the `calls` label, then delete `Call bank` from its row menu. Choose Undo in `Deleted “calls”` first, then in `Deleted “Call bank”`: the task returns with `calls`, and still has it after a reload. Test: `stacked undos give the same result in any order: a label undone before its deleted task comes back on it` in `e2e/toasts.e2e.ts`. Every order of every undo pair is covered in `stacked undos` in `shared/store.test.ts`, and iOS runs the same store path in `aLabelUndoneBeforeItsDeletedTaskComesBackOnIt` in Core's `StoreTests`.
 - **Phone.** Seed `Buy milk` and `Pay rent`, then tap 8 px left of the `Complete Buy milk` ring. The row leaves and the `Undo` toast appears above the `Quick add` button. Tap `Undo`; `Buy milk` returns.
 - **History.** Complete `Buy milk` again and open Completed. `Buy milk` is under `Today` with `Today 10am` and `Inbox`. Seed an older completion by setting the clock to October 1, adding and completing `Old report`, then restoring the clock; it is missing under `Last 7 days`.
 - **Range.** Open `Completed Last 7 days` and choose `All time`; `Old report` shows under `Thu, Oct 1`. Under `Custom range` set From `2026-10-01` and To `2026-10-12` and choose `Apply`; the button reads `Completed Oct 1 – Oct 12` and today's tasks leave. Reload; the range stays.

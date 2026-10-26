@@ -17,7 +17,8 @@
 	import TaskRow from './TaskRow.svelte';
 	import { store } from '../store.svelte.ts';
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
-	import { leaving, sheets, toasts, motion } from '../ui.svelte.ts';
+	import { leaving, sheets, motion } from '../ui.svelte.ts';
+	import { toastUndo } from '../completion.ts';
 	import { Reorder } from '../reorder.svelte.ts';
 	let { task }: { task: Task } = $props();
 
@@ -57,7 +58,7 @@
 		const previous = store.explodeSubtasks(task.id, method);
 		if (!previous.length) return;
 		const message = previous.length === 1 ? 'Turned 1 subtask into a task' : `Turned ${previous.length} subtasks into tasks`;
-		toasts.show(message, { label: 'Undo', run: () => store.restoreExploded(previous) });
+		toastUndo(message, { kind: 'explode', previous });
 	}
 
 	let list: HTMLUListElement;

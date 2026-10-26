@@ -123,6 +123,9 @@ class Store {
 	#commentById = $derived(new Map(this.#comments.map(c => [c.id, c])));
 	/** Where deleted tasks lived, so undo puts them back into the same space. */
 	#deletedFrom = new Map<string, Home>();
+	/** Undos still on offer, each with the space it runs in. */
+	#undos: { id: number; home: Home; undo: rules.Undo }[] = [];
+	#lastUndo = 0;
 
 	get tasks(): Task[] {
 		return this.#tasks;
@@ -483,11 +486,6 @@ class Store {
 		return reopened;
 	}
 
-	restoreCompletion(previous: readonly rules.CompletionState[]) {
-		const first = previous[0];
-		if (first) this.#onTask(first.id, data => rules.restoreCompletion(data, previous));
-	}
-
 	moveSubtask(id: string, index: number) {
 		this.#onTask(id, data => rules.moveSubtask(data, id, index));
 	}
@@ -507,11 +505,6 @@ class Store {
 		return previous;
 	}
 
-	restoreExploded(previous: readonly rules.ExplodedState[]) {
-		const first = previous[0];
-		if (first) this.#onTask(first.id, data => rules.restoreExploded(data, previous));
-	}
-
 	deleteTask(id: string): Task[] {
 		const home = this.homeOf(id);
 		let removed: Task[] = [];
@@ -522,11 +515,6 @@ class Store {
 		});
 		for (const task of removed) this.#deletedFrom.set(task.id, home);
 		return removed;
-	}
-
-	undeleteTasks(removed: readonly Task[]) {
-		const first = removed[0];
-		if (first) this.#run(this.#deletedFrom.get(first.id) ?? null, data => rules.undeleteTasks(data, removed));
 	}
 
 	/** Projects and labels are always made in the user's own space. Shared ones are never renamed or deleted here. */
@@ -602,8 +590,34 @@ class Store {
 		return deleted;
 	}
 
-	undelete(deleted: rules.Deleted) {
-		this.#apply(rules.undelete(this.own, deleted));
+	/** Holds an undo until `dropUndo`, so that `undo` applies it, and every other one held, in any order. */
+	offerUndo(undo: rules.Undo): number {
+		const target = rules.undoTargets(undo)[0] ?? '';
+		const home = undo.kind === 'delete' ? (this.#deletedFrom.get(target) ?? null) : this.homeOf(target);
+		const id = ++this.#lastUndo;
+		this.#undos.push({ id, home, undo });
+		return id;
+	}
+
+	undo(id: number) {
+		const taken = this.#undos.find(e => e.id === id);
+		if (!taken) return;
+		const held = this.#undos.filter(e => e.home === taken.home);
+		const result = rules.undo(
+			this.dataOf(taken.home),
+			held.map(e => e.undo),
+			held.indexOf(taken),
+		);
+		let left = 0;
+		this.#undos = this.#undos.flatMap(e => {
+			if (e === taken) return [];
+			return e.home === taken.home ? [{ ...e, undo: result.pending[left++]! }] : [e];
+		});
+		this.#run(taken.home, () => result.data);
+	}
+
+	dropUndo(id: number) {
+		this.#undos = this.#undos.filter(e => e.id !== id);
 	}
 
 	/** One command and one write for the whole backup, however many tasks it holds. */
