@@ -1,8 +1,8 @@
 import { imageUrl, type ImageSize } from 'shared/images.ts';
 import { newId } from 'shared/id.ts';
-import type { ImageRef } from 'shared/values.ts';
 import { reportError } from '../sentry.ts';
 import { store } from '../store.svelte.ts';
+import { toastUndo } from '../completion.ts';
 import { toasts } from '../ui.svelte.ts';
 import { encodeImage } from './encode.ts';
 import { imageKey, keepNew, pendingUploads, readBytes, uploaded, writeBytes } from './local.ts';
@@ -91,14 +91,7 @@ class Images {
 		if (!task || !removed) return;
 		store.updateTask(taskId, { images: task.images.filter(image => image.id !== id) });
 		if (this.viewing?.id === id) this.viewing = null;
-		toasts.show('Deleted image', { label: 'Undo', run: () => this.#restore(taskId, removed, index) });
-	}
-
-	/** Puts one image back where it was, into the list as it is now, so changes made since stay. */
-	#restore(taskId: string, image: ImageRef, index: number) {
-		const current = store.task(taskId)?.images;
-		if (!current || current.some(other => other.id === image.id)) return;
-		store.updateTask(taskId, { images: current.toSpliced(index, 0, image) });
+		toastUndo('Deleted image', { kind: 'image', taskId, image: removed, index });
 	}
 
 	/**

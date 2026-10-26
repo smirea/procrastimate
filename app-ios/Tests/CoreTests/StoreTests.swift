@@ -57,6 +57,21 @@ import Testing
         #expect(store.dictation == .elevenlabs)
     }
 
+    @Test func aLabelUndoneBeforeItsDeletedTaskComesBackOnIt() throws {
+        let (store, _) = recordingStore()
+        let calls = store.addLabel("calls")
+        let task = try #require(store.addTask(NewTask(title: "Call bank", labelIds: [calls.id])))
+        let label = store.offerUndo(.delete(.init(deleted: try #require(store.deleteLabel(calls.id)))))
+        let removed = store.deleteTask(task.id)
+        let taskUndo = store.offerUndo(.delete(.init(deleted: Deleted(tasks: removed))))
+
+        store.undo(label)
+        #expect(store.task(task.id) == nil)
+        store.undo(taskUndo)
+        #expect(store.task(task.id)?.labelIds == [calls.id])
+        #expect(store.labels.map(\.name) == ["calls"])
+    }
+
     @Test func deleteAllDeletesEveryOwnRowAndKeepsTheSettings() {
         var rows = StoredRows()
         rows.tasks = [Owned(owner: "me", value: TaskItem(id: "t", title: "Mine", createdAt: 1))]

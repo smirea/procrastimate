@@ -1,6 +1,6 @@
 import { expect } from 'bun:test';
 import * as store from './store.ts';
-import type { StoreData } from './store.ts';
+import type { Deleted, StoreData, Undo } from './store.ts';
 import type { Task } from './task.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 import { task as base } from './testing.ts';
@@ -33,8 +33,7 @@ const restoreExploded = recorded('store', store.restoreExploded);
 const sectionsOf = recorded('store', store.sectionsOf);
 const sectionTasks = recorded('store', store.sectionTasks);
 const sortTasks = recorded('store', store.sortTasks);
-const undelete = recorded('store', store.undelete);
-const undeleteTasks = recorded('store', store.undeleteTasks);
+const undo = recorded('store', store.undo);
 const updateTask = recorded('store', store.updateTask);
 
 const task = (id: string, createdAt: number, fields: Partial<Task> = {}): Task => base(id, { createdAt, ...fields });
@@ -85,6 +84,11 @@ const newTask = {
 };
 const ids = (list: readonly Task[]) => list.map(t => t.id);
 const find = (d: StoreData, id: string) => d.tasks.find(t => t.id === id)!;
+const deletion = (deleted: Partial<Deleted>): Undo => ({
+	kind: 'delete',
+	deleted: { projects: [], sections: [], labels: [], tasks: [], labelings: [], ...deleted },
+});
+const undelete = (d: StoreData, deleted: Deleted) => undo(d, [deletion(deleted)], 0).data;
 
 describe('tasks', () => {
 	test('a new task lands at the end with the default priority and its project', () => {
@@ -200,8 +204,8 @@ describe('tasks', () => {
 		const { data: next, removed } = deleteTask(data(), 'trip');
 		expect(ids(removed)).toEqual(['trip', 'passport', 'charger']);
 		expect(ids(next.tasks)).toEqual(['standup', 'call']);
-		expect(undeleteTasks(next, removed)).toEqual(data());
-		expect(undeleteTasks(data(), removed)).toEqual(data());
+		expect(undo(next, [deletion({ tasks: removed })], 0)).toEqual({ data: data(), pending: [] });
+		expect(undo(data(), [deletion({ tasks: removed })], 0).data).toEqual(data());
 		expect(deleteTask(data(), 'missing')).toEqual({ data: data(), removed: [] });
 	});
 });
@@ -633,5 +637,144 @@ describe('labels', () => {
 		expect(restoreCompletion(next, completion.previous)).toEqual(before);
 		const last = completeTask(next, 'jan', '2026-10-21', NOW)!;
 		expect(last.completion.kind).toBe('done');
+	});
+});
+
+describe('stacked undos', () => {
+	type Step = (d: StoreData) => { data: StoreData; undo: Undo };
+	const deleting =
+		(remove: (d: StoreData) => StoreData): Step =>
+		d => {
+			const after = remove(d);
+			return { data: after, undo: deletion(store.deletedBetween(d, after)) };
+		};
+	const deletingTask =
+		(id: string): Step =>
+		d => {
+			const { data, removed } = store.deleteTask(d, id);
+			return { data, undo: deletion({ tasks: removed }) };
+		};
+	const completing =
+		(id: string): Step =>
+		d => {
+			const { data, completion } = store.completeTask(d, id, today, NOW)!;
+			return { data, undo: { kind: 'completion', previous: completion.previous } };
+		};
+
+	/**
+	 * Takes the steps in order, then undoes them in `order`, one index into the steps at a time. Its calls go unrecorded,
+	 * since every order of every case would add a hundred thousand lines of vectors.
+	 */
+	function undoAll(start: StoreData, steps: Step[], order: number[]): StoreData {
+		let current = start;
+		const taken: Undo[] = [];
+		for (const step of steps) {
+			const next = step(current);
+			current = next.data;
+			taken.push(next.undo);
+		}
+		let pending: (Undo | null)[] = taken;
+		for (const index of order) {
+			const live = pending.filter(u => u !== null);
+			const result = store.undo(current, live, live.indexOf(pending[index]!));
+			current = result.data;
+			let left = 0;
+			pending = pending.map((u, i) => (u === null || i === index ? null : result.pending[left++]!));
+		}
+		return current;
+	}
+
+	const orders = (n: number): number[][] =>
+		n === 1 ? [[0]] : orders(n - 1).flatMap(o => Array.from({ length: n }, (_, i) => o.toSpliced(i, 0, n - 1)));
+
+	test.each([
+		[
+			'a label, then a task that had it',
+			() => data(),
+			[deleting(d => store.deleteLabel(d, 'calls')), deletingTask('call')],
+		],
+		['a completion, then the task', () => data(), [completing('trip'), deletingTask('trip')]],
+		[
+			'a section, then its project',
+			() => store.updateTask(data(), 'trip', { sectionId: 'next' }),
+			[deleting(d => store.deleteSection(d, 'next')), deleting(d => store.deleteProject(d, 'home'))],
+		],
+		['a task, then its project', () => data(), [deletingTask('trip'), deleting(d => store.deleteProject(d, 'home'))]],
+		['a subtask, then its parent', () => data(), [deletingTask('passport'), deletingTask('trip')]],
+		[
+			'exploded subtasks, then their parent',
+			() => ({ ...data(), tasks: [...data().tasks, task('photo', 6, { parentId: 'passport', projectId: 'home' })] }),
+			[
+				(d: StoreData) => {
+					const { data, previous } = store.explodeSubtasks(d, 'trip', 'prefix');
+					return { data, undo: { kind: 'explode', previous } };
+				},
+				deletingTask('trip'),
+			],
+		],
+		[
+			'a postpone, a removed image, a label, and the task',
+			() =>
+				store.updateTask(data(), 'call', {
+					images: [
+						{ id: 'a', width: 1, height: 1 },
+						{ id: 'b', width: 1, height: 1 },
+					],
+				}),
+			[
+				(d: StoreData) => ({
+					data: store.updateTask(d, 'call', { due: { date: today, time: null } }),
+					undo: { kind: 'postpone', id: 'call', due: null },
+				}),
+				(d: StoreData) => ({
+					data: store.updateTask(d, 'call', { images: [{ id: 'b', width: 1, height: 1 }] }),
+					undo: { kind: 'image', taskId: 'call', image: { id: 'a', width: 1, height: 1 }, index: 0 },
+				}),
+				deleting(d => store.deleteLabel(d, 'phone')),
+				deletingTask('call'),
+			],
+		],
+	] as [string, () => StoreData, Step[]][])('undoing %s in any order restores the start', (_, start, steps) => {
+		for (const order of orders(steps.length)) expect(undoAll(start(), steps, order)).toEqual(start());
+	});
+
+	test("undoing a label's delete before its task's delete puts the label back on the task", () => {
+		const noLabel = deleteLabel(data(), 'calls');
+		const { data: gone, removed } = deleteTask(noLabel, 'call');
+		const first = undo(gone, [deletion(deletedBetween(data(), noLabel)), deletion({ tasks: removed })], 0);
+		expect(first.data).toEqual({ ...data(), tasks: data().tasks.filter(t => t.id !== 'call') });
+		expect(undo(first.data, first.pending, 0).data).toEqual(data());
+	});
+
+	test('a reopened subtask undone after its parent is deleted comes back completed with its parent', () => {
+		const { data: done } = completeTask(data(), 'trip', today, NOW)!;
+		const { data: reopened, reopened: previous } = reopenTask(done, 'passport');
+		const { data: gone, removed } = deleteTask(reopened, 'trip');
+		const first = undo(gone, [{ kind: 'reopen', reopened: previous }, deletion({ tasks: removed })], 0);
+		expect(first.data).toEqual(gone);
+		expect(undo(first.data, first.pending, 0).data).toEqual(done);
+	});
+
+	test('subtasks put back under a deleted parent join its delete with their own subtasks, and go when it does', () => {
+		const start = {
+			...data(),
+			tasks: [...data().tasks, task('photo', 6, { parentId: 'passport', projectId: 'home' })],
+		};
+		const { data: exploded, previous } = explodeSubtasks(start, 'trip', 'direct');
+		const { data: gone, removed } = deleteTask(exploded, 'trip');
+		const result = undo(gone, [{ kind: 'explode', previous }, deletion({ tasks: removed })], 0);
+		expect(ids(result.data.tasks)).toEqual(['standup', 'call']);
+		expect(undo(result.data, result.pending, 0).data).toEqual(start);
+	});
+
+	test('a section undone while its project is deleted joins the project delete, and goes when it does', () => {
+		const start = updateTask(data(), 'trip', { sectionId: 'next' });
+		const noSection = deleteSection(start, 'next');
+		const noProject = deleteProject(noSection, 'home');
+		const pending = [deletion(deletedBetween(start, noSection)), deletion(deletedBetween(noSection, noProject))];
+		const result = undo(noProject, pending, 0);
+		expect(result.data).toEqual(noProject);
+		expect(result.pending).toEqual([deletion(deletedBetween(start, noProject))]);
+		expect(undo(noProject, [pending[0]!], 0).data).toEqual(noProject);
 	});
 });

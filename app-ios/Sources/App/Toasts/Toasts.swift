@@ -1,3 +1,4 @@
+import Core
 import Observation
 import SwiftUI
 
@@ -6,6 +7,8 @@ final class Toasts {
     struct Action {
         let label: String
         let run: @MainActor () -> Void
+        /// Runs once the toast goes, whether or not the action ran.
+        var dismissed: (@MainActor () -> Void)?
     }
 
     struct Toast: Identifiable {
@@ -51,8 +54,19 @@ final class Toasts {
         if countdown.holds == 0 { run(id) }
     }
 
+    /// The store holds the undo while the toast shows, so stacked undos give the same result in any order.
+    func show(_ message: String, undo: Undo, in store: Store) {
+        let id = store.offerUndo(undo)
+        show(message, action: Action(
+            label: "Undo",
+            run: { withAnimation(.snappy) { store.undo(id) } },
+            dismissed: { store.dropUndo(id) }
+        ))
+    }
+
     func dismiss(_ id: Int) {
         countdowns.removeValue(forKey: id)?.task?.cancel()
+        items.first { $0.id == id }?.action?.dismissed?()
         withAnimation(.snappy) { items.removeAll { $0.id == id } }
     }
 

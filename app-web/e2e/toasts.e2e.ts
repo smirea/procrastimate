@@ -55,3 +55,26 @@ test.describe('on a phone', () => {
 		await expect(toast).toHaveCount(0);
 	});
 });
+
+test('stacked undos give the same result in any order: a label undone before its deleted task comes back on it', async ({
+	app,
+	page,
+}) => {
+	await app.addCreating('@calls Call bank');
+	await app.nav('calls').click();
+	await page.getByRole('button', { name: 'Label actions' }).click();
+	await page.getByRole('button', { name: 'Delete label' }).click();
+	await page.getByRole('button', { name: 'Delete', exact: true }).click();
+	await app.go('No date');
+	await app.row('Call bank').click({ button: 'right' });
+	await page.getByRole('menu').getByRole('menuitem', { name: 'Delete' }).click();
+	await expect(app.row('Call bank')).toHaveCount(0);
+
+	const toast = (name: string) => page.getByRole('status').filter({ hasText: `Deleted “${name}”` });
+	await toast('calls').getByRole('button', { name: 'Undo' }).click();
+	await expect(app.row('Call bank')).toHaveCount(0);
+	await toast('Call bank').getByRole('button', { name: 'Undo' }).click();
+	await expect(app.row('Call bank')).toContainText('calls');
+	await app.reload();
+	await expect(app.row('Call bank')).toContainText('calls');
+});

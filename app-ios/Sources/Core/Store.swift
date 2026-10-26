@@ -52,6 +52,9 @@ public final class Store {
     @ObservationIgnored private var readOnly: Set<String> = []
     /// Where each deleted task lived, so undo puts it back in the same space.
     @ObservationIgnored private var deletedFrom: [String: SpaceKey] = [:]
+    /// Undos still on offer, each with the space it runs in.
+    @ObservationIgnored private var undos: [(id: Int, space: SpaceKey, undo: Undo)] = []
+    @ObservationIgnored private var lastUndo = 0
     /// Picks a color for a new label from its name after it is created, such as the on-device model on iOS. Nil keeps
     /// `LabelColors.defaultLabelColor`, which every label starts with so creating one stays instant and offline.
     @ObservationIgnored public var labelColorSuggester: ((String) async -> LabelColor?)?
@@ -130,6 +133,7 @@ public final class Store {
         people = []
         readOnly = []
         deletedFrom = [:]
+        undos = []
         settingsStored = false
         unsavedSettings = [:]
     }
@@ -364,11 +368,6 @@ public final class Store {
         return reopened
     }
 
-    public func restoreCompletion(_ previous: [CompletionState]) {
-        guard let first = previous.first else { return }
-        edit(first.id) { StoreRules.restoreCompletion($0, previous) }
-    }
-
     public func moveSubtask(_ id: String, to index: Int) {
         edit(id) { StoreRules.moveSubtask($0, id, index) }
     }
@@ -387,11 +386,6 @@ public final class Store {
         return previous
     }
 
-    public func restoreExploded(_ previous: [ExplodedState]) {
-        guard let first = previous.first else { return }
-        edit(first.id) { StoreRules.restoreExploded($0, previous) }
-    }
-
     /// Deletes the task with every subtask under it, and returns them for undo.
     public func deleteTask(_ id: String) -> [TaskItem] {
         guard let space = space(ofTask: id), !isReadOnly(id) else { return [] }
@@ -399,12 +393,6 @@ public final class Store {
         commit(data, in: space)
         for task in removed { deletedFrom[task.id] = space }
         return removed
-    }
-
-    public func undeleteTasks(_ removed: [TaskItem]) {
-        guard let first = removed.first else { return }
-        let space = deletedFrom[first.id] ?? .own
-        commit(StoreRules.undeleteTasks(data(in: space), removed), in: space)
     }
 
     @discardableResult
@@ -517,8 +505,31 @@ public final class Store {
         return deleted
     }
 
-    public func undelete(_ deleted: Deleted) {
-        commit(StoreRules.undelete(snapshot.data, deleted))
+    /// Holds an undo until `dropUndo`, so that `undo` applies it, and every other one held, in any order.
+    public func offerUndo(_ undo: Undo) -> Int {
+        let target = StoreRules.undoTargets(undo).first ?? ""
+        let space: SpaceKey = if case .delete = undo { deletedFrom[target] ?? .own } else { space(ofTask: target) ?? .own }
+        lastUndo += 1
+        undos.append((lastUndo, space, undo))
+        return lastUndo
+    }
+
+    public func undo(_ id: Int) {
+        guard let taken = undos.first(where: { $0.id == id }) else { return }
+        let held = undos.filter { $0.space == taken.space }
+        let result = StoreRules.undo(
+            data(in: taken.space), held.map(\.undo), held.firstIndex { $0.id == id }!
+        )
+        var left = result.pending.makeIterator()
+        undos = undos.compactMap { entry in
+            if entry.id == id { return nil }
+            return entry.space == taken.space ? (entry.id, entry.space, left.next()!) : entry
+        }
+        commit(result.data, in: taken.space)
+    }
+
+    public func dropUndo(_ id: Int) {
+        undos.removeAll { $0.id == id }
     }
 
     /// Adds a Todoist backup in one command and one write, skipping tasks an earlier import already added.

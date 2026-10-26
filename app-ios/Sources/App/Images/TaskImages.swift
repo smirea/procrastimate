@@ -84,12 +84,7 @@ final class TaskImages {
         let removed = task.images[index]
         store.updateTask(taskID, TaskPatch(images: task.images.filter { $0.id != imageID }))
         if viewing?.imageID == imageID { viewing = nil }
-        toasts.show("Deleted image", action: .init(label: "Undo") { [store] in
-            // Back where it was, into the list as it is now, so changes made since stay.
-            guard var current = store.task(taskID)?.images, !current.contains(where: { $0.id == imageID }) else { return }
-            current.insert(removed, at: min(index, current.count))
-            store.updateTask(taskID, TaskPatch(images: current))
-        })
+        toasts.show("Deleted image", undo: .image(.init(taskId: taskID, image: removed, index: index)), in: store)
     }
 
     /// Uploads every queued image, before PowerSync uploads the edits that list them. Throws when the server cannot be
