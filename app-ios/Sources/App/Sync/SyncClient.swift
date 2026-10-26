@@ -310,6 +310,7 @@ final class SyncClient {
             }
         }
         DeviceDefaults.forgetDatabaseID()
+        unsynced.reset()
         store.switchUser(to: id)
         store.noteTimeZone(clock.timeZone.identifier)
         rows = LocalRows(me: id)

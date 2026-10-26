@@ -30,7 +30,7 @@ final class UnsyncedTasks {
         offline = forced
         observation = ValueObservation.tracking { db -> [String: Int64] in
             // PowerSync queues a write from inside its own virtual table, which GRDB never sees change, so the change log
-            // that every local write also lands in is tracked too. Emptying the queue is a plain delete GRDB does see.
+            // that every local write also lands in is tracked too. An upload empties the queue with a plain delete GRDB does see.
             _ = try LocalDatabase.lastChange(db)
             let rows = try Row.fetchAll(
                 db,
@@ -51,6 +51,13 @@ final class UnsyncedTasks {
                 show()
             }
         }
+    }
+
+    /// `disconnectAndClear()` empties the queue through a PowerSync SQL function, a write GRDB never sees, so the
+    /// previous user's ids would stay until the next local write or download.
+    func reset() {
+        queued = [:]
+        if !shown.isEmpty { shown = [] }
     }
 
     /// One grace per read covers every task whose oldest write changed in it, so an import ripens in one update.
