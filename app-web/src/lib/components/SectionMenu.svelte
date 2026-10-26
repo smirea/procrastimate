@@ -31,14 +31,14 @@
 		<h2 class="min-w-0">
 			<button
 				type="button"
-				class="press block max-w-full truncate rounded-md text-left text-[15px] font-semibold"
+				class="press hit-area relative block max-w-full rounded-md text-left text-[15px] font-semibold"
 				aria-haspopup="dialog"
 				aria-expanded={open}
 				onclick={() => {
 					confirmingDelete = false;
 					toggle();
 				}}
-			>{name}</button>
+			><span class="block truncate">{name}</span></button>
 		</h2>
 	{/snippet}
 	{#snippet children({ close })}
