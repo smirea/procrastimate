@@ -44,6 +44,39 @@ private struct SearchNames: Decodable {
     }
 }
 
+private struct SuggestionDraft: Decodable {
+    let projectId: String?
+    let sectionId: String?
+    let labelIds: [String]
+    let location: TaskLocation?
+}
+
+private struct SuggestionAvailable: Decodable {
+    let projectIds: [String]
+    let sectionIds: [String]
+    let labelIds: [String]
+}
+
+@Sendable func taskSuggestionsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "suggestionWords": return try json(TaskSuggestions.words(a(0)))
+    case "pills":
+        let draft: SuggestionDraft = try a(3)
+        let available: SuggestionAvailable = try a(4)
+        let suggestions = TaskSuggestions.suggest(TaskSuggestions.index(try a(0)), try a(1), now: try a(2))
+        return try json(TaskSuggestions.pills(
+            suggestions,
+            draft: .init(projectId: draft.projectId, sectionId: draft.sectionId, labelIds: draft.labelIds, location: draft.location),
+            available: .init(
+                projectIds: Set(available.projectIds),
+                sectionIds: Set(available.sectionIds),
+                labelIds: Set(available.labelIds)
+            )
+        ))
+    default: throw unknown(fn)
+    }
+}
+
 private struct MergeOptions: Decodable {
     let now: Int
 }

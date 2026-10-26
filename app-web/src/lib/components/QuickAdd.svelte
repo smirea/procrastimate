@@ -15,6 +15,7 @@
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
+	import { suggestionIndex, suggestionPills, suggestMetadata, type SuggestionPill } from 'shared/task-suggestions.ts';
 	import { DEFAULT_PRIORITY } from 'shared/task.ts';
 	import Sheet from './Sheet.svelte';
 	import SmartInput from './SmartInput.svelte';
@@ -25,6 +26,7 @@
 	import LabelPicker from './LabelPicker.svelte';
 	import RecurrencePicker from './RecurrencePicker.svelte';
 	import QuickAddMenu from './QuickAddMenu.svelte';
+	import SuggestionPills from './SuggestionPills.svelte';
 	import { rowButtons } from 'shared/quick-add-buttons.ts';
 	import { WEB_BUTTONS, type WebButton } from '../quick-add-buttons.ts';
 	import { store } from '../store.svelte.ts';
@@ -93,6 +95,31 @@
 	const unknown = $derived(
 		unknownNames(draft.text, parsed.tokens, store.projects, store.labels).filter((name) => name.start !== listAt),
 	);
+
+	/** Built on the first keystroke, not on open, and again only when the tasks change. */
+	const index = $derived(suggestionIndex(store.tasks.filter((t) => t.parentId === null)));
+	const pills = $derived(
+		parsed.title
+			? suggestionPills(
+					suggestMetadata(index, parsed.title, clock.now),
+					{ projectId, sectionId, labelIds: draft.labelIds, location: draft.applied.location },
+					{
+						projectIds: draft.projects.map((p) => p.id),
+						sectionIds: draft.sections.map((s) => s.id),
+						labelIds: draft.labels.map((l) => l.id),
+					},
+				)
+			: [],
+	);
+
+	function usePill(pill: SuggestionPill) {
+		pick(() => {
+			if (pill.kind === 'project') draft.pickPlace(pill.projectId, null);
+			else if (pill.kind === 'section') draft.pickPlace(pill.projectId, pill.sectionId);
+			else if (pill.kind === 'label') draft.pickLabels([...draft.labelIds, pill.labelId]);
+			else draft.picked.location = pill.location;
+		});
+	}
 
 	function create(name: UnknownName) {
 		NAME_SOURCES[name.sigil === '#' ? 'project' : 'label'].create(name.name);
@@ -410,6 +437,7 @@
 			</div>
 		</div>
 	{/if}
+	<SuggestionPills {pills} onpick={usePill} />
 	<div class="flex items-center gap-1.5 px-4 pb-3">
 		<div
 			bind:this={row}

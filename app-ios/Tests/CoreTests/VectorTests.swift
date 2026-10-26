@@ -120,6 +120,7 @@ let handlers: [String: Handler] = [
     "csv": csvVector,
     "search": searchVector,
     "name-search": nameSearchVector,
+    "task-suggestions": taskSuggestionsVector,
     "todoist": todoistVector,
     "dictation": dictationVector,
     "quick-add-buttons": quickAddButtonsVector,

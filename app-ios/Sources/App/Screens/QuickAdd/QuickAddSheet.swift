@@ -33,6 +33,8 @@ struct QuickAddSheet: View {
     @State private var imageSource: ImageSource?
     /// Images still loading or making their thumbnail. Saving waits for them, so none is lost.
     @State private var loadingImages = 0
+    /// Built off the main actor when the card opens and kept while it is open, so typing never rebuilds it.
+    @State private var suggestionIndex: TaskSuggestions.Index?
     /// How far the grabber's drag has pulled the card up, rubber-banded.
     @State private var lift: CGFloat = 0
     @State private var saves = 0
@@ -52,6 +54,7 @@ struct QuickAddSheet: View {
     var body: some View {
         let parsed = draft.parse(context)
         let resolved = draft.resolved(parsed)
+        let pills = suggestionPills(parsed, resolved)
         VStack(alignment: .leading, spacing: 12) {
             SmartInput(
                 text: Binding(get: { draft.text }, set: { draft.setText($0) }),
@@ -78,6 +81,10 @@ struct QuickAddSheet: View {
             }
             if subtasksOpen || !subtasks.isEmpty {
                 QuickAddSubtasks(spaceLabels: spaceLabels, subtasks: $subtasks, text: $subtaskText, focused: $subtaskFocused) { submit() }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+            if !pills.isEmpty {
+                SuggestionPills(pills: pills) { use($0, parsed, resolved) }
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
             HStack(spacing: 6) {
@@ -109,6 +116,7 @@ struct QuickAddSheet: View {
             }
         }
         .animation(.snappy(duration: 0.2), value: subtasksOpen)
+        .animation(.snappy(duration: 0.2), value: pills)
         .animation(.snappy(duration: 0.2), value: drafted)
         .imageSource($imageSource) { addImages($0) }
         .padding(.horizontal, 16)
@@ -136,6 +144,10 @@ struct QuickAddSheet: View {
         .onAppear {
             focused = true
             draft.startAtPlace(spaceLabels)
+        }
+        .task {
+            let tasks = store.allTasks.filter { $0.parentId == nil }
+            suggestionIndex = await Task.detached(priority: .userInitiated) { TaskSuggestions.index(tasks) }.value
         }
         .onChange(of: subtaskFocused) {
             if !subtaskFocused, subtaskText.isEmpty, subtasks.isEmpty { subtasksOpen = false }
@@ -405,6 +417,34 @@ struct QuickAddSheet: View {
             try? await Task.sleep(for: .milliseconds(350))
             openTriggers[button, default: 0] += 1
         }
+    }
+
+    private func suggestionPills(_ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> [TaskSuggestions.Pill] {
+        guard !parsed.title.isEmpty, let suggestionIndex else { return [] }
+        return TaskSuggestions.pills(
+            TaskSuggestions.suggest(suggestionIndex, parsed.title, now: clock.now.epochMilliseconds),
+            draft: .init(
+                projectId: resolved.projectId,
+                sectionId: resolved.sectionId,
+                labelIds: resolved.labelIds,
+                location: parsed.location ?? draft.picked.location
+            ),
+            available: .init(
+                projectIds: Set(spaceProjects.map(\.id)),
+                sectionIds: Set(spaceSections.map(\.id)),
+                labelIds: Set(spaceLabels.map(\.id))
+            )
+        )
+    }
+
+    private func use(_ pill: TaskSuggestions.Pill, _ parsed: QuickAdd.Parsed, _ resolved: Resolved) {
+        switch pill {
+        case let .project(projectId): draft.pick(projectId: projectId, sectionId: nil, context)
+        case let .section(projectId, sectionId): draft.pick(projectId: projectId, sectionId: sectionId, context)
+        case let .label(labelId): draft.pick(labelIds: resolved.labelIds + [labelId], parsed, context)
+        case let .place(location): draft.pick(location: location, context)
+        }
+        focused = true
     }
 
     /// Creates a typed name only when its chip is tapped, so the parser then reads it like any other.
