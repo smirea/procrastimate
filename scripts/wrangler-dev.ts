@@ -24,7 +24,16 @@ if (!existsSync(join(root, '.dev.vars'))) {
 
 const result = spawnSync(
 	'bunx',
-	['wrangler', 'dev', '--var', `POWERSYNC_URL:${powersync}`, '--var', 'AUTH_RATE_LIMIT:off', ...passthrough],
+	[
+		'wrangler',
+		'dev',
+		'--var',
+		`POWERSYNC_URL:${powersync}`,
+		'--var',
+		'AUTH_RATE_LIMIT:off',
+		'--test-scheduled',
+		...passthrough,
+	],
 	{
 		cwd: root,
 		stdio: 'inherit',
