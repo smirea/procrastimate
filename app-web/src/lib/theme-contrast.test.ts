@@ -19,15 +19,23 @@ function block(selector: string): Tokens {
 
 const light = { ...block('@theme'), ...block(':root') };
 const dark = { ...light, ...block(":root[data-theme='dark']") };
-/** Every theme color in both themes, since the accent tokens and the canvas glow come from the chosen one. */
+/** Custom colors a grid over the sRGB cube, from black through the palest tints that `deriveAccent` has to dim. */
+const LEVELS = [0, 51, 102, 153, 204, 255];
+const customs = LEVELS.flatMap(r =>
+	LEVELS.flatMap(g => LEVELS.map(b => `#${[r, g, b].map(c => c.toString(16).padStart(2, '0')).join('')}`)),
+);
+
+/** Every theme color, preset or custom, in both themes, since the accent tokens and the canvas glow come from it. */
 const themes: Record<string, Tokens> = Object.fromEntries(
-	Object.entries(ACCENTS).flatMap(([key, { base }]) => {
-		const derived = deriveAccent(base);
-		return [
-			[`${key} light`, { ...light, ...accentProperties(derived.light) }],
-			[`${key} dark`, { ...dark, ...accentProperties(derived.dark) }],
-		];
-	}),
+	[...Object.entries(ACCENTS), ...customs.map(base => [`custom ${base}`, { base }] as const)].flatMap(
+		([key, { base }]) => {
+			const derived = deriveAccent(base);
+			return [
+				[`${key} light`, { ...light, ...accentProperties(derived.light) }],
+				[`${key} dark`, { ...dark, ...accentProperties(derived.dark) }],
+			];
+		},
+	),
 );
 
 function color(tokens: Tokens, value: string): Rgba {

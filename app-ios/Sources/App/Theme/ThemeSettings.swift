@@ -4,7 +4,6 @@ import SwiftUI
 import UIKit
 
 typealias ThemeChoice = API.ThemeChoice
-typealias AccentChoice = API.AccentChoice
 
 extension ThemeChoice {
     var label: String {
@@ -32,28 +31,66 @@ extension ThemeChoice {
     }
 }
 
+extension Accent {
+    var base: String {
+        switch self {
+        case .preset(let choice): choice.base
+        case .custom(let base): base
+        }
+    }
+
+    var preset: AccentChoice? {
+        if case .preset(let choice) = self { choice } else { nil }
+    }
+}
+
+/// A theme color's derived accent, on-accent, and canvas glow, each resolving to its light or dark value live.
+struct AccentColors {
+    let tint: Color
+    let onTint: Color
+    let glow: Color
+
+    init(base: String) {
+        let derived = Accents.deriveAccent(base)
+        let pair = { (pick: (Accents.Tokens) -> SRGB) in Color(light: pick(derived.light), dark: pick(derived.dark)) }
+        tint = pair { SRGB(rgb: $0.accent) }
+        onTint = pair { SRGB(rgb: $0.onAccent) }
+        glow = pair { SRGB(rgb: $0.glow, $0.glowAlpha) }
+    }
+
+    @MainActor static let presets = Dictionary(uniqueKeysWithValues: AccentChoice.allCases.map { ($0, AccentColors(base: $0.base)) })
+}
+
 /// Device preferences under the web's `procrastimate-theme` and `procrastimate-accent` keys, kept out of the task store so
-/// they never sync. `System` and the default accent store nothing.
+/// they never sync. `System` and the default accent store nothing. A custom accent stores its `#rrggbb` base.
 @MainActor @Observable
 final class ThemeSettings {
     static let key = "procrastimate-theme"
     static let accentKey = "procrastimate-accent"
-    static let defaultAccent: AccentChoice = .frost
 
     /// One instance, because `.accent` reads it from any view; reading it in a body re-renders that view on a change.
     static let shared = ThemeSettings()
 
     private(set) var choice: ThemeChoice
-    private(set) var accent: AccentChoice
+    private(set) var accent: Accent
+    private(set) var colors: AccentColors
 
     private init() {
         choice = UserDefaults.standard.string(forKey: Self.key).flatMap(ThemeChoice.init(rawValue:)) ?? .system
-        accent = UserDefaults.standard.string(forKey: Self.accentKey).flatMap(AccentChoice.init(rawValue:)) ?? Self.defaultAccent
+        let accent = Accents.parseAccent(UserDefaults.standard.string(forKey: Self.accentKey))
+        self.accent = accent
+        colors = Self.colors(for: accent)
     }
 
-    func chooseAccent(_ next: AccentChoice) {
+    private static func colors(for accent: Accent) -> AccentColors {
+        accent.preset.flatMap { AccentColors.presets[$0] } ?? AccentColors(base: accent.base)
+    }
+
+    func chooseAccent(_ next: Accent) {
+        guard next != accent else { return }
         accent = next
-        if next == Self.defaultAccent {
+        colors = Self.colors(for: next)
+        if next == .preset(Accents.defaultAccent) {
             UserDefaults.standard.removeObject(forKey: Self.accentKey)
         } else {
             UserDefaults.standard.set(next.rawValue, forKey: Self.accentKey)
@@ -78,16 +115,16 @@ final class ThemeSettings {
         for scene in UIApplication.shared.connectedScenes {
             for window in (scene as? UIWindowScene)?.windows ?? [] {
                 window.overrideUserInterfaceStyle = choice.interfaceStyle
-                window.tintColor = UIColor(accent.tint)
+                window.tintColor = UIColor(colors.tint)
             }
         }
     }
 }
 
 extension ShapeStyle where Self == Color {
-    @MainActor static var accent: Color { ThemeSettings.shared.accent.tint }
-    @MainActor static var onAccent: Color { ThemeSettings.shared.accent.onTint }
-    @MainActor static var accentGlow: Color { ThemeSettings.shared.accent.glow }
+    @MainActor static var accent: Color { ThemeSettings.shared.colors.tint }
+    @MainActor static var onAccent: Color { ThemeSettings.shared.colors.onTint }
+    @MainActor static var accentGlow: Color { ThemeSettings.shared.colors.glow }
 }
 
 extension View {

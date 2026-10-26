@@ -450,6 +450,7 @@ export class App {
 
 	accentOption = (name: string) =>
 		this.settings().getByRole('radiogroup', { name: 'Theme color' }).getByRole('radio', { name, exact: true });
+	customAccent = () => this.settings().getByLabel('Custom theme color');
 	accent = () =>
 		this.page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim());
 	themeOption = (name: 'System' | 'Light' | 'Dark') =>

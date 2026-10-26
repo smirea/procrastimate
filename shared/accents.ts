@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 /**
  * The app's theme color, a device preference like the theme (see `docs/decisions/theming.md`). Each one is a vivid base
- * color; `deriveAccent` turns it into the accent and on-accent pair for each theme, so every choice meets the same
- * contrast bar the fixed accent did.
+ * color; `deriveAccent` turns it, or any custom color, into the accent and on-accent pair for each theme, so every choice
+ * meets the same contrast bar the fixed accent did.
  */
 export const ACCENTS = {
 	frost: { name: 'Frost', base: '#3d9bff' },
@@ -24,6 +24,20 @@ export const accentChoiceSchema = z
 export type AccentChoice = z.infer<typeof accentChoiceSchema>;
 export const accentChoices = accentChoiceSchema.options;
 export const DEFAULT_ACCENT: AccentChoice = 'frost';
+
+/** A custom theme color's base, `#rrggbb` in lowercase. */
+export type CustomAccent = `#${string}`;
+/** The saved theme color: a preset's key, or a custom base color. No key starts with `#`. */
+export type Accent = AccentChoice | CustomAccent;
+
+export function parseAccent(stored: string | null): Accent {
+	const custom = stored?.toLowerCase();
+	if (custom && /^#[0-9a-f]{6}$/.test(custom)) return custom as CustomAccent;
+	return accentChoiceSchema.safeParse(stored).data ?? DEFAULT_ACCENT;
+}
+
+export const isCustomAccent = (accent: Accent): accent is CustomAccent => accent.startsWith('#');
+export const accentBase = (accent: Accent) => (isCustomAccent(accent) ? accent : ACCENTS[accent].base);
 
 export type Rgb = [number, number, number];
 /** One theme's accent: the fill and text color, the text drawn on an accent fill, and the canvas glow's tint. */
@@ -106,12 +120,32 @@ function lightnessFor(base: Oklch, start: number, direction: 1 | -1, against: Rg
 const LIGHT_SURFACE: Rgb = [246, 246, 247];
 const DARK_SURFACE: Rgb = [46, 46, 53];
 const TARGET = 5.2;
+/**
+ * The dark glow tints the canvas at `DARK_GLOW_ALPHA`, blended in sRGB. A pale custom color would lift the canvas, and
+ * as the dark accent fill under dense glass, until muted and label text fail, so both start no brighter than the
+ * lightness that tints the canvas to this luminance. Of the presets it only dims Amber, slightly.
+ */
+const DARK_CANVAS: Rgb = [14, 14, 16];
+const DARK_GLOW_ALPHA = 0.11;
+const DARK_GLOWING_CANVAS_MAX = 0.0135;
+
+const tinted = (glow: Rgb) => glow.map((c, i) => c * DARK_GLOW_ALPHA + DARK_CANVAS[i]! * (1 - DARK_GLOW_ALPHA)) as Rgb;
+
+/** The same hue and chroma, darkened until it tints the dark canvas no brighter than `DARK_GLOWING_CANVAS_MAX`. */
+function darkGlow(lch: Oklch, rgb: Rgb): { lightness: number; rgb: Rgb } {
+	for (let L = lch[0]; L > 0; L -= 0.005) {
+		const glow = L === lch[0] ? rgb : inGamut([L, lch[1], lch[2]]);
+		if (luminance(tinted(glow)) <= DARK_GLOWING_CANVAS_MAX) return { lightness: L, rgb: glow };
+	}
+	return { lightness: 0, rgb: [0, 0, 0] };
+}
 
 export function deriveAccent(base: string): { light: AccentTokens; dark: AccentTokens } {
 	const rgb = hexRgb(base);
 	const lch = toOklch(rgb);
 	const lightAccent = lightnessFor(lch, Math.min(lch[0], 0.7), -1, LIGHT_SURFACE, TARGET);
-	const darkAccent = lightnessFor(lch, Math.max(lch[0], 0.72), 1, DARK_SURFACE, TARGET);
+	const glow = darkGlow(lch, rgb);
+	const darkAccent = lightnessFor(lch, Math.max(glow.lightness, 0.72), 1, DARK_SURFACE, TARGET);
 	return {
 		light: {
 			accent: lightAccent,
@@ -119,7 +153,12 @@ export function deriveAccent(base: string): { light: AccentTokens; dark: AccentT
 			glow: inGamut([0.93, Math.min(lch[1], 0.05), lch[2]]),
 			glowAlpha: 0.6,
 		},
-		dark: { accent: darkAccent, onAccent: inGamut([0.2, Math.min(lch[1], 0.05), lch[2]]), glow: rgb, glowAlpha: 0.11 },
+		dark: {
+			accent: darkAccent,
+			onAccent: inGamut([0.2, Math.min(lch[1], 0.05), lch[2]]),
+			glow: glow.rgb,
+			glowAlpha: DARK_GLOW_ALPHA,
+		},
 	};
 }
 
@@ -132,4 +171,16 @@ export function accentProperties(tokens: AccentTokens): Record<string, string> {
 		'--on-accent': hex(tokens.onAccent),
 		'--accent-glow': `rgb(${tokens.glow.join(' ')} / ${tokens.glowAlpha})`,
 	};
+}
+
+const rule = (selector: string, properties: Record<string, string>) =>
+	`${selector} {\n${Object.entries(properties)
+		.map(([name, value]) => `\t${name}: ${value};`)
+		.join('\n')}\n}\n`;
+
+/** The rules for one theme color in both themes, under `<html data-accent>` when `key` is given. */
+export function accentCss(base: string, key?: string) {
+	const { light, dark } = deriveAccent(base);
+	const accent = key ? `[data-accent='${key}']` : '';
+	return `${rule(`:root${accent}`, accentProperties(light))}${rule(`:root[data-theme='dark']${accent}`, accentProperties(dark))}`;
 }
