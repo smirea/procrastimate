@@ -107,7 +107,7 @@ struct SettingsSheet: View {
         .overlay(alignment: .bottom) { ToastStack() }
         .sensoryFeedback(.selection, trigger: theme.choice)
         .sensoryFeedback(.selection, trigger: store.dictation)
-        .sensoryFeedback(.selection, trigger: theme.accent)
+        .sensoryFeedback(.selection, trigger: theme.accent.preset)
     }
 }
 

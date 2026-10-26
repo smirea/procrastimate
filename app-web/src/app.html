@@ -17,13 +17,20 @@
 		<title>ProcrastiMate</title>
 		<script>
 			// Runs before first paint so the page never flashes the other theme. `src/lib/theme.svelte.ts` owns the keys, the choices,
-			// and the theme-color values. Without a saved accent, `accents.css` paints the default one.
+			// and the theme-color values. Without a saved accent, `accents.css` paints the default one; a custom one brings its rules.
 			try {
 				const choice = localStorage.getItem('procrastimate-theme');
 				const dark = choice === 'dark' || (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
 				document.documentElement.dataset.theme = dark ? 'dark' : 'light';
 				const accent = localStorage.getItem('procrastimate-accent');
-				if (accent) document.documentElement.dataset.accent = accent;
+				if (accent) document.documentElement.dataset.accent = accent[0] === '#' ? 'custom' : accent;
+				const customCss = accent && accent[0] === '#' && localStorage.getItem('procrastimate-accent-css');
+				if (customCss) {
+					const style = document.createElement('style');
+					style.id = 'custom-accent';
+					style.textContent = customCss;
+					document.head.append(style);
+				}
 				document.querySelector('meta[name="theme-color"]').content = dark ? '#0e0e10' : '#f6f6f7';
 			} catch {}
 		</script>

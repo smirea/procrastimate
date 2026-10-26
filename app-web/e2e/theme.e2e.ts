@@ -62,3 +62,42 @@ test('System follows the device, Light or Dark overrides it, a theme color recol
 	await app.accentOption('Frost').click();
 	expect(await page.evaluate(() => localStorage.getItem('procrastimate-accent'))).toBeNull();
 });
+
+test('a custom theme color derives a readable accent in each theme, survives a reload from the first frame, and a preset replaces it', async ({
+	app,
+	page,
+}) => {
+	await app.openSettings();
+	await app.customAccent().fill('#ffff00');
+	await expect.poll(() => app.accent()).toBe('#6b6b00');
+	await expect(app.accentOption('Frost')).toHaveAttribute('aria-checked', 'false');
+	await expect(app.settings().getByText('#ffff00')).toBeVisible();
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await expect.poll(() => app.accent()).toBe('#aeae00');
+
+	await page.addInitScript(() => {
+		new MutationObserver((_, observer) => {
+			if (!document.body) return;
+			observer.disconnect();
+			sessionStorage.setItem(
+				'first-paint-accent',
+				getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+			);
+		}).observe(document, { childList: true, subtree: true });
+	});
+	await app.reload();
+	await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+	expect(await page.evaluate(() => sessionStorage.getItem('first-paint-accent'))).toBe('#aeae00');
+	await app.openSettings();
+	await expect(app.customAccent()).toHaveValue('#ffff00');
+
+	await app.accentOption('Teal').click();
+	await expect.poll(() => app.accent()).toBe('#21bdab');
+	await expect(page.locator('style#custom-accent')).toHaveCount(0);
+	expect(
+		await page.evaluate(() => [
+			localStorage.getItem('procrastimate-accent'),
+			localStorage.getItem('procrastimate-accent-css'),
+		]),
+	).toEqual(['teal', null]);
+});

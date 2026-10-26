@@ -124,6 +124,7 @@ let handlers: [String: Handler] = [
     "dictation": dictationVector,
     "quick-add-buttons": quickAddButtonsVector,
     "label-colors": labelColorsVector,
+    "accents": accentsVector,
     "triggers": triggersVector,
     "ramble": rambleVector,
     "ramble-fill": rambleFillVector,
@@ -465,6 +466,24 @@ private struct ParseInput: Decodable {
     case "toggleButton": return try json(QuickAddButtons.toggleButton(a(0), a(1)))
     case "rowButtons": return try json(QuickAddButtons.rowButtons(a(0), a(1), a(2)))
     case "moveButton": return try json(QuickAddButtons.moveButton(a(0), a(1), a(2) as QuickAddButton?))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func accentsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    func tokens(_ t: Accents.Tokens) throws -> JSONValue {
+        object([
+            "accent": try json(t.accent),
+            "onAccent": try json(t.onAccent),
+            "glow": try json(t.glow),
+            "glowAlpha": .number(t.glowAlpha),
+        ])
+    }
+    switch fn {
+    case "deriveAccent":
+        let derived = Accents.deriveAccent(try a(0))
+        return object(["light": try tokens(derived.light), "dark": try tokens(derived.dark)])
+    case "parseAccent": return .string(Accents.parseAccent(try a(0, as: String?.self)).rawValue)
     default: throw unknown(fn)
     }
 }
