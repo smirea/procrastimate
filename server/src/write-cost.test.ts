@@ -125,6 +125,27 @@ describe('statements per upload', () => {
 		]);
 	});
 
+	test('an owner’s delete in a shared space recomputes access, then asks whether the space still holds a row', async () => {
+		const doomed = crypto.randomUUID();
+		await upload(app, owner, [
+			{ op: 'put', table: 'tasks', id: doomed, values: taskRow(doomed, owner.person.id, 'Doomed') },
+		]);
+		expect(await statementsOf(owner, [{ op: 'delete', table: 'tasks', id: doomed }])).toEqual([
+			'delete tasks',
+			'insert log',
+			'select push',
+			'select shares',
+			'lock',
+			'select shares',
+			'select access',
+			'select tasks',
+			'select projects',
+			'select sections',
+			'select labels',
+			'select tasks',
+		]);
+	});
+
 	test('a retried batch runs the same statements and the log insert is ignored', async () => {
 		const fresh = crypto.randomUUID();
 		const batch = [

@@ -80,9 +80,12 @@ describe('push', () => {
 			body: JSON.stringify({ subscription: subscription('https://push.example/retry') }),
 		});
 		const id = crypto.randomUUID();
+		const kept = crypto.randomUUID();
 		const due = JSON.stringify({ date: '2026-10-14', time: '20:00' });
+		// A second task keeps the space from emptying, which would purge the delete's log row.
 		await upload(app, retrier, [
 			{ op: 'put', table: 'tasks', id, values: taskRow(id, retrier.person.id, 'Feed the cat', { due }) },
+			{ op: 'put', table: 'tasks', id: kept, values: taskRow(kept, retrier.person.id, 'Water the plants') },
 		]);
 		const plan = async () =>
 			(await app.db.select().from(push).where(eq(push.userId, retrier.person.id)))[0]?.notifications.map(

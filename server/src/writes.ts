@@ -16,6 +16,7 @@ import {
 import type { Client } from '../../shared/values';
 import { asGuest, recomputeAccess, touchesAccess } from './access';
 import type { Db } from './db/postgres';
+import { purgeIfEmptied } from './purge';
 import { replan, touchesPush } from './push';
 
 /**
@@ -567,6 +568,7 @@ async function finish(db: Db, ctx: WriteContext, landed: readonly Landed[]): Pro
 			const writes = group.map(entry => entry.write);
 			if (writes.some(touchesPush)) await replan(db, owner, ctx.now);
 			if (writes.some(touchesAccess)) await recomputeAccess(db, owner);
+			if (owner === ctx.actor.id && writes.some(write => write.op === 'delete')) await purgeIfEmptied(db, owner);
 		}),
 	);
 }
