@@ -1,0 +1,2708 @@
+{
+	"module": "task-suggestions",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "suggestionWords",
+			"test": "suggestionWords › lowercases, drops stop words, and drops a plural s from words over three letters",
+			"input": [
+				"Water the Plants for Mom, 2 bags"
+			],
+			"output": [
+				"water",
+				"plant",
+				"mom",
+				"2",
+				"bag"
+			]
+		},
+		{
+			"fn": "suggestionWords",
+			"test": "suggestionWords › keeps letters and digits from any script",
+			"input": [
+				"Café über-größe 3x"
+			],
+			"output": [
+				"café",
+				"über",
+				"größe",
+				"3x"
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › a title like past ones offers their project, section, and label",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"water the roses",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": [
+				{
+					"kind": "project",
+					"projectId": "home"
+				},
+				{
+					"kind": "section",
+					"projectId": "home",
+					"sectionId": "garden"
+				},
+				{
+					"kind": "label",
+					"labelId": "weekend"
+				}
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › a tie, or a value under half the vote, offers nothing for that field",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"call someone",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": [
+				{
+					"kind": "label",
+					"labelId": "calls"
+				}
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › a tie, or a value under half the vote, offers nothing for that field",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"mow the lawn",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": [
+				{
+					"kind": "project",
+					"projectId": "home"
+				},
+				{
+					"kind": "section",
+					"projectId": "home",
+					"sectionId": "garden"
+				}
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › a place offers the past task’s place",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"Back day",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": [
+				{
+					"kind": "place",
+					"location": {
+						"address": "1 Main St",
+						"latitude": 44.43,
+						"longitude": 26.1,
+						"name": "Gym",
+						"radius": 150,
+						"trigger": "arrive"
+					}
+				}
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › words no past task shares, or only stop words, offer nothing",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"Renew passport",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › words no past task shares, or only stop words, offer nothing",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"the",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › words no past task shares, or only stop words, offer nothing",
+			"input": [
+				[],
+				"Water the plants",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › a recent habit outweighs an older one",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1757376000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t10",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Pay rent"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791504000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t11",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Pay rent"
+					}
+				],
+				"pay rent",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": [
+				{
+					"kind": "project",
+					"projectId": "work"
+				}
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › a field the draft already holds shows no pill, and a place matches by spot, whatever its name",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"water the roses",
+				1791936000000,
+				{
+					"labelIds": [
+						"weekend"
+					],
+					"location": null,
+					"projectId": "home",
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": [
+				{
+					"kind": "section",
+					"projectId": "home",
+					"sectionId": "garden"
+				}
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › a field the draft already holds shows no pill, and a place matches by spot, whatever its name",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"Back day",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": {
+						"address": "1 Main St",
+						"latitude": 44.43,
+						"longitude": 26.1,
+						"name": "My gym",
+						"radius": 150,
+						"trigger": "leave"
+					},
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › a project, section, or label the draft cannot use shows no pill",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"water the roses",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [],
+					"projectIds": [
+						"home"
+					],
+					"sectionIds": []
+				}
+			],
+			"output": [
+				{
+					"kind": "project",
+					"projectId": "home"
+				}
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › a project, section, or label the draft cannot use shows no pill",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"water the roses",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [],
+					"projectIds": [],
+					"sectionIds": []
+				}
+			],
+			"output": []
+		}
+	]
+}

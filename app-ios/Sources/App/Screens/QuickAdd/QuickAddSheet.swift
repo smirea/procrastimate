@@ -33,6 +33,10 @@ struct QuickAddSheet: View {
     @State private var imageSource: ImageSource?
     /// Images still loading or making their thumbnail. Saving waits for them, so none is lost.
     @State private var loadingImages = 0
+    /// Built off the main actor when the card opens or the tasks change, so typing never rebuilds it.
+    @State private var suggestionIndex: TaskSuggestions.Index?
+    /// Scoring scans the whole index, so it reruns only when its inputs change, not on every frame of a drag.
+    @State private var pills: [TaskSuggestions.Pill] = []
     /// How far the grabber's drag has pulled the card up, rubber-banded.
     @State private var lift: CGFloat = 0
     @State private var saves = 0
@@ -80,6 +84,10 @@ struct QuickAddSheet: View {
                 QuickAddSubtasks(spaceLabels: spaceLabels, subtasks: $subtasks, text: $subtaskText, focused: $subtaskFocused) { submit() }
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
+            if !pills.isEmpty {
+                SuggestionPills(pills: pills) { use($0, parsed, resolved) }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
             HStack(spacing: 6) {
                 chipRow(parsed, resolved)
                 QuickAddMenu(
@@ -109,6 +117,7 @@ struct QuickAddSheet: View {
             }
         }
         .animation(.snappy(duration: 0.2), value: subtasksOpen)
+        .animation(.snappy(duration: 0.2), value: pills)
         .animation(.snappy(duration: 0.2), value: drafted)
         .imageSource($imageSource) { addImages($0) }
         .padding(.horizontal, 16)
@@ -136,6 +145,13 @@ struct QuickAddSheet: View {
         .onAppear {
             focused = true
             draft.startAtPlace(spaceLabels)
+        }
+        .onChange(of: pillInputs(parsed, resolved), initial: true) { _, inputs in
+            pills = suggestionPills(inputs)
+        }
+        .task(id: store.allTasks.count) {
+            let tasks = store.allTasks.filter { $0.parentId == nil }
+            suggestionIndex = await Task.detached(priority: .userInitiated) { TaskSuggestions.index(tasks) }.value
         }
         .onChange(of: subtaskFocused) {
             if !subtaskFocused, subtaskText.isEmpty, subtasks.isEmpty { subtasksOpen = false }
@@ -407,6 +423,45 @@ struct QuickAddSheet: View {
         }
     }
 
+    /// Everything the pills depend on besides the index. Holding a project, section, or label that appears or goes
+    /// while the card is open reruns them too.
+    private func pillInputs(_ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> PillInputs {
+        PillInputs(
+            title: parsed.title,
+            draft: .init(
+                projectId: resolved.projectId,
+                sectionId: resolved.sectionId,
+                labelIds: resolved.labelIds,
+                location: parsed.location ?? draft.picked.location
+            ),
+            available: .init(
+                projectIds: spaceProjects.map(\.id),
+                sectionIds: spaceSections.map(\.id),
+                labelIds: store.labels(in: store.creationSpace(projectId: resolved.projectId, labelIds: resolved.labelIds)).map(\.id)
+            ),
+            ready: suggestionIndex != nil
+        )
+    }
+
+    private func suggestionPills(_ inputs: PillInputs) -> [TaskSuggestions.Pill] {
+        guard !inputs.title.isEmpty, let suggestionIndex else { return [] }
+        return TaskSuggestions.pills(
+            TaskSuggestions.suggest(suggestionIndex, inputs.title, now: clock.now.epochMilliseconds),
+            draft: inputs.draft,
+            available: inputs.available
+        )
+    }
+
+    private func use(_ pill: TaskSuggestions.Pill, _ parsed: QuickAdd.Parsed, _ resolved: Resolved) {
+        switch pill {
+        case let .project(projectId): draft.pick(projectId: projectId, sectionId: nil, context)
+        case let .section(projectId, sectionId): draft.pick(projectId: projectId, sectionId: sectionId, context)
+        case let .label(labelId): draft.pick(labelIds: resolved.labelIds + [labelId], parsed, context)
+        case let .place(location): draft.pick(location: location, context)
+        }
+        focused = true
+    }
+
     /// Creates a typed name only when its chip is tapped, so the parser then reads it like any other.
     private func create(_ name: NameSearch.UnknownName) {
         switch name.sigil {
@@ -508,6 +563,13 @@ enum QuickAddMetrics {
 private struct RowFade: Equatable {
     var start = false
     var end = false
+}
+
+private struct PillInputs: Equatable {
+    let title: String
+    let draft: TaskSuggestions.Fields
+    let available: TaskSuggestions.Available
+    let ready: Bool
 }
 
 private struct ParsedReminder: Hashable {
