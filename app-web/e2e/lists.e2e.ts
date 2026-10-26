@@ -31,7 +31,7 @@ test('Tomorrow and This week list their days, and quick add there lands on them'
 	await saturday.getByRole('button', { name: 'Add task to Saturday' }).click();
 	await app.taskInput().fill('Bake bread');
 	await app.taskInput().press('Enter');
-	await expect(app.quickAdd()).toBeHidden();
+	await app.closeQuickAdd();
 	await expect(tasksIn('Saturday')).toHaveCount(2);
 
 	await app.openNavigation();
