@@ -146,6 +146,12 @@ test('quick add suggests the project, section, and label of similar past tasks, 
 	await expect(app.taskInput()).toHaveValue('water the roses');
 
 	await app.taskInput().press('Enter');
+	await expect(app.taskInput()).toHaveValue('');
+	await app.taskInput().pressSequentially('water the tulips');
+	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Garden' })).toBeVisible();
+	await expect(suggestions).toBeHidden();
+
+	await page.getByRole('button', { name: 'Show' }).click();
 	await expect(page.getByRole('list', { name: 'Garden tasks' }).locator('[data-task="water the roses"]')).toBeVisible();
 	await expect(app.row('water the roses')).toContainText('weekend');
 });
