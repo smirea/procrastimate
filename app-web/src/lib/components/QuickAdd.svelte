@@ -34,7 +34,7 @@
 	import { labelIcon } from '../label-icon.ts';
 	import { clock, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
-	import { formatEvent, formatLocation } from 'shared/triggers.ts';
+	import { formatEvent, formatLocation, placeKey, savedPlaceAt } from 'shared/triggers.ts';
 	import { reusedDefaults, type ListDefaults } from 'shared/screens.ts';
 	import type { NewTask } from 'shared/store.ts';
 	import { PRIORITIES } from '../priorities.ts';
@@ -106,7 +106,7 @@
 					{
 						projectIds: draft.projects.map((p) => p.id),
 						sectionIds: draft.sections.map((s) => s.id),
-						labelIds: draft.labels.map((l) => l.id),
+						labelIds: store.dataOf(draft.home).labels.map((l) => l.id),
 					},
 				)
 			: [],
@@ -117,7 +117,15 @@
 			if (pill.kind === 'project') draft.pickPlace(pill.projectId, null);
 			else if (pill.kind === 'section') draft.pickPlace(pill.projectId, pill.sectionId);
 			else if (pill.kind === 'label') draft.pickLabels([...draft.labelIds, pill.labelId]);
-			else draft.picked.location = pill.location;
+			else {
+				const saved = savedPlaceAt(store.labels, placeKey(pill.location));
+				// A saved place is a label to the draft, and a checked one would win over a picked location.
+				if (saved) draft.pickLabels([...draft.labelIds, saved.id]);
+				else {
+					draft.pickLabels(draft.labelIds.filter((id) => !store.label(id)?.place));
+					draft.picked.location = pill.location;
+				}
+			}
 		});
 	}
 

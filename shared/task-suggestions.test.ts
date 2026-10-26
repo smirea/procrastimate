@@ -119,14 +119,14 @@ describe('suggestionPills', () => {
 		expect(pills(changed, 'pay rent', NOW, empty, everything)).toEqual([{ kind: 'project', projectId: 'work' }]);
 	});
 
-	test('a field the draft already holds shows no pill', () => {
+	test('a field the draft already holds shows no pill, and a place matches by spot, whatever its name', () => {
 		const draft: DraftFields = { projectId: 'home', sectionId: null, labelIds: ['weekend'], location: null };
 		expect(pills(history, 'water the roses', NOW, draft, everything)).toEqual([
 			{ kind: 'section', projectId: 'home', sectionId: 'garden' },
 		]);
-		expect(pills(history, 'Back day', NOW, { ...empty, location: { ...gym, trigger: 'leave' } }, everything)).toEqual(
-			[],
-		);
+		expect(
+			pills(history, 'Back day', NOW, { ...empty, location: { ...gym, name: 'My gym', trigger: 'leave' } }, everything),
+		).toEqual([]);
 	});
 
 	test('a project, section, or label the draft cannot use shows no pill', () => {

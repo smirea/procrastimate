@@ -43,7 +43,7 @@
 				class="chip pill hit-area relative shrink-0"
 				class:label-tinted={label}
 				style={label ? labelStyle(label.color) : undefined}
-				aria-label={`Suggested ${kind} ${name}`}
+				aria-label={`Suggest ${name} as ${kind}`}
 				animate:flip={motion({ duration: 200, easing: cubicOut })}
 				transition:scale={motion({ start: 0.9, duration: 160 })}
 				onmousedown={(e) => e.preventDefault()}

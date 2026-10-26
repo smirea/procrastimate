@@ -7,7 +7,7 @@
  * titles, so the output can go in a PR.
  */
 import type { Task } from '../shared/task.ts';
-import type { TaskLocation } from '../shared/values.ts';
+import { placeKey } from '../shared/triggers.ts';
 import {
 	suggestionIndex,
 	suggestionWords,
@@ -22,7 +22,6 @@ const minHistory = Number(minArg ?? 30);
 const view = (await Bun.file(file).json()) as { tasks: Task[] };
 const tasks = view.tasks.filter(t => t.parentId === null).toSorted((a, b) => a.createdAt - b.createdAt);
 
-const placeKey = (l: TaskLocation) => `${l.name}\n${l.address ?? ''}`;
 function pills(m: MetadataSuggestions) {
 	const set = new Set<string>();
 	if (m.projectId) set.add(`project:${m.projectId}`);

@@ -27,7 +27,7 @@ struct SuggestionPills: View {
                         .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Suggested \(shown.kind) \(shown.name)")
+                    .accessibilityLabel("Suggest \(shown.name) as \(shown.kind)")
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
                 }
             }

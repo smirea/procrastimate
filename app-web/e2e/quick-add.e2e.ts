@@ -133,14 +133,14 @@ test('quick add suggests the project, section, and label of similar past tasks, 
 	await app.taskInput().pressSequentially('water the roses');
 	const suggestions = app.quickAdd().getByRole('group', { name: 'Suggestions' });
 	await expect(suggestions.getByRole('button')).toHaveText(['Home', 'Garden', 'weekend']);
-	await expect(suggestions.getByRole('button', { name: 'Suggested project Home' })).toBeVisible();
+	await expect(suggestions.getByRole('button', { name: 'Suggest Home as project' })).toBeVisible();
 
-	await suggestions.getByRole('button', { name: 'Suggested section Garden' }).click();
+	await suggestions.getByRole('button', { name: 'Suggest Garden as section' }).click();
 	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Garden' })).toBeVisible();
 	await expect(suggestions.getByRole('button')).toHaveText(['weekend']);
 	await expect(app.taskInput()).toBeFocused();
 
-	await suggestions.getByRole('button', { name: 'Suggested label weekend' }).click();
+	await suggestions.getByRole('button', { name: 'Suggest weekend as label' }).click();
 	await expect(app.quickAdd().getByRole('button', { name: 'Labels weekend' })).toBeVisible();
 	await expect(suggestions).toBeHidden();
 	await expect(app.taskInput()).toHaveValue('water the roses');

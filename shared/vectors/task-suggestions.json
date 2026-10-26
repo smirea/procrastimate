@@ -1696,7 +1696,7 @@
 		},
 		{
 			"fn": "pills",
-			"test": "suggestionPills › a field the draft already holds shows no pill",
+			"test": "suggestionPills › a field the draft already holds shows no pill, and a place matches by spot, whatever its name",
 			"input": [
 				[
 					{
@@ -1956,7 +1956,7 @@
 		},
 		{
 			"fn": "pills",
-			"test": "suggestionPills › a field the draft already holds shows no pill",
+			"test": "suggestionPills › a field the draft already holds shows no pill, and a place matches by spot, whatever its name",
 			"input": [
 				[
 					{
@@ -2188,7 +2188,7 @@
 						"address": "1 Main St",
 						"latitude": 44.43,
 						"longitude": 26.1,
-						"name": "Gym",
+						"name": "My gym",
 						"radius": 150,
 						"trigger": "leave"
 					},

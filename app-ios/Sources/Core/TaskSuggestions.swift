@@ -112,12 +112,12 @@ public enum TaskSuggestions {
         let sectionId = projectId.flatMap { projectId in
             only(agreed { $0.projectId == projectId ? $0.sectionId.map { [$0] } ?? [] : [] })
         }
-        let place = only(agreed { $0.location.map { [placeKey($0)] } ?? [] })
+        let place = only(agreed { $0.location.map { [Triggers.placeKey($0)] } ?? [] })
         return Suggestions(
             projectId: projectId,
             sectionId: sectionId,
             labelIds: agreed(\.labelIds),
-            location: place.flatMap { place in near.lazy.compactMap(\.task.location).first { placeKey($0) == place } }
+            location: place.flatMap { place in near.lazy.compactMap(\.task.location).first { Triggers.placeKey($0) == place } }
         )
     }
 
@@ -133,11 +133,9 @@ public enum TaskSuggestions {
         for labelId in suggestions.labelIds where available.labelIds.contains(labelId) && !draft.labelIds.contains(labelId) {
             pills.append(.label(labelId: labelId))
         }
-        if let location = suggestions.location, draft.location.map(placeKey) != placeKey(location) {
+        if let location = suggestions.location, draft.location.map(Triggers.placeKey) != Triggers.placeKey(location) {
             pills.append(.place(location: location))
         }
         return pills
     }
-
-    private static func placeKey(_ location: TaskLocation) -> String { "\(location.name)\n\(location.address ?? "")" }
 }

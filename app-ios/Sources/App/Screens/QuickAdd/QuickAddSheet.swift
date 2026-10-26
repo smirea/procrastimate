@@ -33,8 +33,10 @@ struct QuickAddSheet: View {
     @State private var imageSource: ImageSource?
     /// Images still loading or making their thumbnail. Saving waits for them, so none is lost.
     @State private var loadingImages = 0
-    /// Built off the main actor when the card opens and kept while it is open, so typing never rebuilds it.
+    /// Built off the main actor when the card opens or the tasks change, so typing never rebuilds it.
     @State private var suggestionIndex: TaskSuggestions.Index?
+    /// Scoring scans the whole index, so it reruns only when its inputs change, not on every frame of a drag.
+    @State private var pills: [TaskSuggestions.Pill] = []
     /// How far the grabber's drag has pulled the card up, rubber-banded.
     @State private var lift: CGFloat = 0
     @State private var saves = 0
@@ -54,7 +56,6 @@ struct QuickAddSheet: View {
     var body: some View {
         let parsed = draft.parse(context)
         let resolved = draft.resolved(parsed)
-        let pills = suggestionPills(parsed, resolved)
         VStack(alignment: .leading, spacing: 12) {
             SmartInput(
                 text: Binding(get: { draft.text }, set: { draft.setText($0) }),
@@ -145,7 +146,10 @@ struct QuickAddSheet: View {
             focused = true
             draft.startAtPlace(spaceLabels)
         }
-        .task {
+        .onChange(of: PillInputs(parsed, resolved, draft.picked.location, ready: suggestionIndex != nil), initial: true) {
+            pills = suggestionPills(parsed, resolved)
+        }
+        .task(id: store.allTasks.count) {
             let tasks = store.allTasks.filter { $0.parentId == nil }
             suggestionIndex = await Task.detached(priority: .userInitiated) { TaskSuggestions.index(tasks) }.value
         }
@@ -432,7 +436,7 @@ struct QuickAddSheet: View {
             available: .init(
                 projectIds: Set(spaceProjects.map(\.id)),
                 sectionIds: Set(spaceSections.map(\.id)),
-                labelIds: Set(spaceLabels.map(\.id))
+                labelIds: Set(store.labels(in: store.creationSpace(projectId: resolved.projectId, labelIds: resolved.labelIds)).map(\.id))
             )
         )
     }
@@ -548,6 +552,24 @@ enum QuickAddMetrics {
 private struct RowFade: Equatable {
     var start = false
     var end = false
+}
+
+private struct PillInputs: Equatable {
+    let title: String
+    let projectId: String?
+    let sectionId: String?
+    let labelIds: [String]
+    let location: TaskLocation?
+    let ready: Bool
+
+    init(_ parsed: QuickAdd.Parsed, _ resolved: (due: Due?, priority: Priority, projectId: String?, sectionId: String?, labelIds: [String]), _ picked: TaskLocation?, ready: Bool) {
+        title = parsed.title
+        projectId = resolved.projectId
+        sectionId = resolved.sectionId
+        labelIds = resolved.labelIds
+        location = parsed.location ?? picked
+        self.ready = ready
+    }
 }
 
 private struct ParsedReminder: Hashable {

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Task } from './task.ts';
+import { placeKey } from './triggers.ts';
 import { taskLocationSchema, type TaskLocation } from './values.ts';
 
 /** What quick add offers to set from how similar past tasks were filed. Each field is null or empty when the vote is split. */
@@ -112,8 +113,6 @@ export function suggestMetadata(index: SuggestionIndex, title: string, now: numb
 		location: place ? near.find(({ task }) => task.location && placeKey(task.location) === place)!.task.location : null,
 	};
 }
-
-const placeKey = (location: TaskLocation) => `${location.name}\n${location.address ?? ''}`;
 
 export const suggestionPillSchema = z
 	.discriminatedUnion('kind', [
