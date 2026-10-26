@@ -27,13 +27,16 @@ export const DEFAULT_ACCENT: AccentChoice = 'frost';
 
 /** A custom theme color's base, `#rrggbb` in lowercase. */
 export type CustomAccent = `#${string}`;
-/** The saved theme color: a preset's key, or a custom base color. No key starts with `#`. */
+/**
+ * The saved theme color: a preset's key, or a custom base color. No key starts with `#`. It never leaves the device, and
+ * the Swift generator has no form for an enum-or-pattern string, so `Core`'s `Accent` is its port, held equal by the
+ * `parseAccent` vectors.
+ */
 export type Accent = AccentChoice | CustomAccent;
+const accentSchema = z.union([accentChoiceSchema, z.string().regex(/^#[0-9a-f]{6}$/)]);
 
 export function parseAccent(stored: string | null): Accent {
-	const custom = stored?.toLowerCase();
-	if (custom && /^#[0-9a-f]{6}$/.test(custom)) return custom as CustomAccent;
-	return accentChoiceSchema.safeParse(stored).data ?? DEFAULT_ACCENT;
+	return (accentSchema.safeParse(stored?.toLowerCase()).data as Accent | undefined) ?? DEFAULT_ACCENT;
 }
 
 export const isCustomAccent = (accent: Accent): accent is CustomAccent => accent.startsWith('#');
