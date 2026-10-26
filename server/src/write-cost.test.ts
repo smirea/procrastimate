@@ -104,13 +104,15 @@ describe('statements per upload', () => {
 			{ op: 'put', table: 'tasks', id: moved, values: taskRow(moved, owner.person.id, 'Moved') },
 		]);
 		await shareWith(app, owner, { kind: 'project', id: projectId }, guest.person.id, 'view');
-		// The pre-check, the lock, the shares to humans and the stored rows, then the tree, then the changed rows.
+		// The push check, since a group of notifications opens its project, then the pre-check, the lock, the shares to
+		// humans and the stored rows, then the tree, then the changed rows.
 		const move = [
 			{ op: 'patch', table: 'tasks', id: moved, values: { project_id: projectId }, opId: crypto.randomUUID() },
 		];
 		expect(await statementsOf(owner, move)).toEqual([
 			'update tasks',
 			'insert log',
+			'select push',
 			'select shares',
 			'lock',
 			'select shares',

@@ -30,7 +30,8 @@ export type SendPush = (subscription: PushSubscriptionInfo, message: PushMessage
 export const computeNotifications = (open: readonly Task[], zone: string, now: number) =>
 	upcomingNotifications(open, now - STALE_AFTER_MS - 1, Number.POSITIVE_INFINITY, zone);
 
-const PUSH_FIELDS = ['due', 'reminders', 'recurrence', 'completedAt', 'event', 'location'];
+// `projectId` because a group of tasks at one moment opens the project they share.
+const PUSH_FIELDS = ['due', 'reminders', 'recurrence', 'completedAt', 'event', 'location', 'projectId'];
 
 /** Whether a write can move when a notification is due: a task created, deleted, scheduled, or completed, or the time zone. */
 export function touchesPush(write: RowWrite): boolean {
@@ -106,7 +107,7 @@ const TEST_MESSAGE = {
 	title: 'Notifications are on',
 	body: 'ProcrastiMate will notify you here when tasks are due.',
 	tag: 'test',
-	taskId: null,
+	opens: null,
 };
 
 export function sendTestPush(subscription: PushSubscriptionInfo, vapid: Vapid): Promise<number | null> {
@@ -210,7 +211,7 @@ async function deliverTo(db: Db, owner: string, now: number, send: SendPush): Pr
 					outcome.settled.add(pushTag(pending));
 					continue;
 				}
-				const message = { title: pending.title, body: pending.body, tag: pushTag(pending), taskId: pending.taskId };
+				const message = { title: pending.title, body: pending.body, tag: pushTag(pending), opens: pending.opens };
 				const delivery = classifyDelivery(await send(row.subscription, message));
 				if (delivery === 'gone') {
 					outcome.gone = true;

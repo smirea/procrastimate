@@ -228,29 +228,31 @@ final class PlaceMonitor: NSObject {
             guard task.completedAt == nil, let location = task.location else { return false }
             return Self.conditionID(location) == id && Self.isArmed(task, now: now, today: clock.today, in: clock.timeZone)
         }
-        for task in here {
-            guard let location = task.location else { continue }
-            switch location.trigger {
-            case .arrive: if before == false, inside { notify(task, location) }
-            case .leave: if before == true, !inside { notify(task, location) }
-            case .during: break
+        let crossed = here.filter { task in
+            switch task.location?.trigger {
+            case .arrive: before == false && inside
+            case .leave: before == true && !inside
+            case .during, nil: false
             }
         }
+        if let location = crossed.first?.location { notify(crossed, location) }
         if here.contains(where: { $0.location?.trigger == .during }) {
             let entered = before == false && inside ? here.compactMap(\.location).map(Triggers.placeKey) : []
             await reconcileActivities(entered: Set(entered))
         }
     }
 
-    private func notify(_ task: TaskItem, _ location: TaskLocation) {
+    /// One notification for every task a crossing reaches, so arriving at a place with four tasks shows one.
+    private func notify(_ tasks: [TaskItem], _ location: TaskLocation) {
+        let item = Notifications.placeNotification(tasks, location, at: clock.now)
         let content = UNMutableNotificationContent()
-        content.title = task.title
-        content.body = Triggers.formatLocation(location)
+        content.title = item.title
+        content.body = item.body
         content.sound = .default
         content.interruptionLevel = .timeSensitive
-        content.threadIdentifier = task.id
-        content.userInfo = ["taskId": task.id]
-        let id = "\(Self.notificationPrefix)\(task.id):\(clock.now.epochMilliseconds)"
+        content.threadIdentifier = Triggers.placeKey(location)
+        content.userInfo = item.opens.userInfo
+        let id = "\(Self.notificationPrefix)\(Triggers.placeKey(location)):\(clock.now.epochMilliseconds)"
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
     }
 
@@ -282,7 +284,7 @@ final class PlaceMonitor: NSObject {
                     content: .init(state: .init(titles: place.titles), staleDate: nil)
                 )
             } catch {
-                if entered.contains(key), let location = place.first.location { notify(place.first, location) }
+                if entered.contains(key), let location = place.first.location { notify([place.first], location) }
             }
         }
     }

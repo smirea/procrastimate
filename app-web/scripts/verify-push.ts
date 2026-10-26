@@ -53,11 +53,17 @@ const schedule = async (page: Page) => {
 		return sync?.deviceId ?? '';
 	});
 	const response = await page.request.get('/api/push/schedule', { headers: { 'x-procrastimate-device': deviceId } });
-	const { notifications } = (await response.json()) as { notifications: { title: string; at: number }[] };
-	return notifications
-		.filter(n => n.title.endsWith(` ${RUN}`))
-		.map(n => `${n.title.replace(` ${RUN}`, '')}@${new Date(n.at).toISOString()}`);
+	const { notifications } = (await response.json()) as {
+		notifications: { title: string; body: string; at: number }[];
+	};
+	return notifications.flatMap(n => named(n).map(name => `${name}@${new Date(n.at).toISOString()}`));
 };
+
+/** The run's tasks a notification names: its title alone, or the titles a group lists in its body. */
+const named = (n: { title: string; body: string }) =>
+	(/^\d+ tasks/.test(n.title) ? n.body.split(', ') : [n.title])
+		.filter(name => name.endsWith(` ${RUN}`))
+		.map(name => name.replace(` ${RUN}`, ''));
 
 const signed = await context.request.post('/api/auth/sign-up/email', {
 	data: { email: `push-${RUN}@example.com`, password: 'e2e-password-1', name: 'Push' },
@@ -148,7 +154,7 @@ for (const start = Date.now(); Date.now() - start < 10_000; await page.waitForTi
 }
 check(
 	JSON.stringify(pending) === JSON.stringify(expected),
-	'server holds one push per moment, without deleted, completed, edited, or date-only tasks',
+	'server holds one push naming both live tasks, without deleted, completed, edited, or date-only tasks',
 	await schedule(page),
 );
 
@@ -161,9 +167,10 @@ const reopened = await context.newPage();
 await reopened.goto('/today');
 const delivered = (await shown(reopened)).filter(n => n.tag !== 'test');
 check(
-	JSON.stringify(delivered.map(n => n.title).sort()) ===
-		JSON.stringify([`Daily repeat ${RUN}`, `Due and reminded ${RUN}`]),
-	'only the two live tasks notified while the app was closed',
+	delivered.length === 1 &&
+		delivered[0]?.title === '2 tasks' &&
+		JSON.stringify(named(delivered[0]).sort()) === JSON.stringify(['Daily repeat', 'Due and reminded']),
+	'the two live tasks due at one moment notified once, together, while the app was closed',
 	delivered,
 );
 check(

@@ -6,7 +6,7 @@ Reminders let Stefan get nudged about a task, either a set time before it is due
 
 - `reminders-nl` parses `remind me 30m before`, `remind 5m before`, `r5m`, `r1h`, `remind me 1 hour before`, `remind me at 4pm`, and `remind me tomorrow 9am`.
 - `reminders-picker` adds a relative reminder (at due time, 10m, 30m, 1h, or 1d before) or a custom date and time, and removes reminders.
-- `reminders-fire` shows a system notification, never an in-app toast, when a reminder comes due. On the web without push, or offline, the open app shows it itself.
+- `reminders-fire` shows a system notification, never an in-app toast, when a reminder comes due. Reminders and due times at the same moment share one notification, such as `2 tasks` listing `Pack, Charge phone`, which opens their shared list. On the web without push, or offline, the open app shows it itself. E2E: `e2e/notifications.e2e.ts`.
 - `reminders-due-time` notifies at a task's due time with no reminder set. Reminders add to it, a date with no time never notifies, and a reminder at the due time notifies once.
 - `reminders-notify` delivers each moment as a system notification through Web Push once notifications are on. While the web app is open and offline, it shows that notification itself, under the push's tag so a late push replaces it. See [Push notifications](./push-notifications.md).
 

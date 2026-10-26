@@ -271,9 +271,9 @@ private struct Occurrence: Decodable {
         return .array(scheduled.map { n in
             object([
                 "at": .number(Double(n.at.epochMilliseconds)),
-                "taskId": .string(n.taskId),
                 "title": .string(n.title),
                 "body": .string(n.body),
+                "opens": object(["kind": .string(n.opens.kind.rawValue), "id": .string(n.opens.id)]),
             ])
         })
     default: throw unknown(fn)

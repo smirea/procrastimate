@@ -195,55 +195,82 @@
 				{
 					"at": 1791988200000,
 					"body": "Today 10:30 AM",
-					"taskId": "Call mom",
+					"opens": {
+						"id": "Call mom",
+						"kind": "task"
+					},
 					"title": "Call mom"
 				},
 				{
 					"at": 1791993600000,
 					"body": "Reminder",
-					"taskId": "Passport",
+					"opens": {
+						"id": "Passport",
+						"kind": "task"
+					},
 					"title": "Passport"
 				},
 				{
 					"at": 1792011600000,
 					"body": "Tomorrow 5:00 PM",
-					"taskId": "Gym",
+					"opens": {
+						"id": "Gym",
+						"kind": "task"
+					},
 					"title": "Gym"
 				},
 				{
 					"at": 1792065600000,
 					"body": "Today",
-					"taskId": "Rent",
+					"opens": {
+						"id": "Rent",
+						"kind": "task"
+					},
 					"title": "Rent"
 				},
 				{
 					"at": 1792069200000,
 					"body": "Sat Oct 17",
-					"taskId": "Taxes",
+					"opens": {
+						"id": "Taxes",
+						"kind": "task"
+					},
 					"title": "Taxes"
 				},
 				{
 					"at": 1792096200000,
 					"body": "Today 5:00 PM",
-					"taskId": "Gym",
+					"opens": {
+						"id": "Gym",
+						"kind": "task"
+					},
 					"title": "Gym"
 				},
 				{
 					"at": 1792098000000,
 					"body": "Today 5:00 PM",
-					"taskId": "Gym",
+					"opens": {
+						"id": "Gym",
+						"kind": "task"
+					},
 					"title": "Gym"
 				},
 				{
 					"at": 1792512000000,
 					"body": "Tomorrow 12:00 PM",
-					"taskId": "Lunch",
+					"opens": {
+						"id": "Lunch",
+						"kind": "task"
+					},
 					"title": "Lunch"
 				},
 				{
 					"at": 1792598400000,
 					"body": "Today 12:00 PM",
-					"taskId": "Lunch",
+					"opens": {
+						"id": "Lunch",
+						"kind": "task"
+					},
 					"title": "Lunch"
 				}
 			]
@@ -329,7 +356,10 @@
 				{
 					"at": 1792020600000,
 					"body": "30m before Night out",
-					"taskId": "Wear red",
+					"opens": {
+						"id": "Wear red",
+						"kind": "task"
+					},
 					"title": "Wear red"
 				}
 			]
@@ -452,7 +482,10 @@
 				{
 					"at": 1791987300000,
 					"body": "Today 10:15 AM",
-					"taskId": "Standup",
+					"opens": {
+						"id": "Standup",
+						"kind": "task"
+					},
 					"title": "Standup"
 				}
 			]
@@ -505,7 +538,10 @@
 				{
 					"at": 1791989100000,
 					"body": "Today 10:45 AM",
-					"taskId": "Standup",
+					"opens": {
+						"id": "Standup",
+						"kind": "task"
+					},
 					"title": "Standup"
 				}
 			]
@@ -600,13 +636,19 @@
 				{
 					"at": 1792152000000,
 					"body": "Today 9:00 AM",
-					"taskId": "Water plants",
+					"opens": {
+						"id": "Water plants",
+						"kind": "task"
+					},
 					"title": "Water plants"
 				},
 				{
 					"at": 1792155600000,
 					"body": "Today 9:00 AM",
-					"taskId": "Water plants",
+					"opens": {
+						"id": "Water plants",
+						"kind": "task"
+					},
 					"title": "Water plants"
 				}
 			]
@@ -694,7 +736,7 @@
 							{
 								"date": "2026-10-15",
 								"kind": "at",
-								"time": "09:00"
+								"time": "09:01"
 							}
 						],
 						"sectionId": null,
@@ -722,7 +764,7 @@
 							{
 								"date": "2026-10-15",
 								"kind": "at",
-								"time": "09:00"
+								"time": "09:02"
 							}
 						],
 						"sectionId": null,
@@ -736,20 +778,401 @@
 				{
 					"at": 1792069200000,
 					"body": "Reminder",
-					"taskId": "a",
+					"opens": {
+						"id": "a",
+						"kind": "task"
+					},
 					"title": "a"
 				},
 				{
-					"at": 1792069200000,
+					"at": 1792069260000,
 					"body": "Reminder",
-					"taskId": "b",
+					"opens": {
+						"id": "b",
+						"kind": "task"
+					},
 					"title": "b"
 				},
 				{
-					"at": 1792069200000,
+					"at": 1792069320000,
 					"body": "Reminder",
-					"taskId": "c",
+					"opens": {
+						"id": "c",
+						"kind": "task"
+					},
 					"title": "c"
+				}
+			]
+		},
+		{
+			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › tasks at one moment share a notification that counts them, lists three, and opens their place",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "Gun courses",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 30.2672,
+							"longitude": -97.7431,
+							"name": "Austin",
+							"radius": 2000,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "18:00"
+							}
+						],
+						"sectionId": null,
+						"title": "Gun courses"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "Yoga maybe",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 30.2672,
+							"longitude": -97.7431,
+							"name": "Austin",
+							"radius": 2000,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "18:00"
+							}
+						],
+						"sectionId": null,
+						"title": "Yoga maybe"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "Give timeleft another shot",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 30.2672,
+							"longitude": -97.7431,
+							"name": "Austin",
+							"radius": 2000,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "18:00"
+							}
+						],
+						"sectionId": null,
+						"title": "Give timeleft another shot"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "Setup arcade",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": null,
+							"latitude": 30.2672,
+							"longitude": -97.7431,
+							"name": "Austin",
+							"radius": 2000,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "18:00"
+							}
+						],
+						"sectionId": null,
+						"title": "Setup arcade"
+					}
+				],
+				1791986400000,
+				500
+			],
+			"output": [
+				{
+					"at": 1792015200000,
+					"body": "Gun courses, Yoga maybe, Give timeleft another shot, and 1 more",
+					"opens": {
+						"id": "30.2672,-97.7431",
+						"kind": "place"
+					},
+					"title": "4 tasks at Austin"
+				}
+			]
+		},
+		{
+			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › a group opens the event, else the project, else Inbox that its tasks share",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "start",
+							"id": "night",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1792033200000,
+									"original": 1792022400000,
+									"start": 1792022400000
+								}
+							],
+							"series": false,
+							"title": "Night out"
+						},
+						"id": "Wear red",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Wear red"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": null,
+						"event": {
+							"allDay": false,
+							"edge": "start",
+							"id": "night",
+							"minutes": 0,
+							"occurrences": [
+								{
+									"end": 1792033200000,
+									"original": 1792022400000,
+									"start": 1792022400000
+								}
+							],
+							"series": false,
+							"title": "Night out"
+						},
+						"id": "Bring cash",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Bring cash"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "Draft",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Draft"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "Review",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": "12:00"
+						},
+						"event": null,
+						"id": "Call mom",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call mom"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": "12:00"
+						},
+						"event": null,
+						"id": "Lunch",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Lunch"
+					}
+				],
+				1791986400000,
+				500
+			],
+			"output": [
+				{
+					"at": 1792022400000,
+					"body": "Wear red, Bring cash",
+					"opens": {
+						"id": "night",
+						"kind": "event"
+					},
+					"title": "2 tasks for Night out"
+				},
+				{
+					"at": 1792069200000,
+					"body": "Draft, Review",
+					"opens": {
+						"id": "work",
+						"kind": "project"
+					},
+					"title": "2 tasks"
+				},
+				{
+					"at": 1792080000000,
+					"body": "Call mom, Lunch",
+					"opens": {
+						"id": "",
+						"kind": "inbox"
+					},
+					"title": "2 tasks"
 				}
 			]
 		},
@@ -791,7 +1214,10 @@
 				{
 					"at": 1791990000000,
 					"body": "Today 11:00 AM",
-					"taskId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+					"opens": {
+						"id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+						"kind": "task"
+					},
 					"title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 				}
 			]

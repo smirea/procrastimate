@@ -33,7 +33,8 @@ public enum Notifications {
         return due.time.map { "\(day) \(Format.clockTime($0))" } ?? day
     }
 
-    /// Every future moment an open task notifies, soonest first, with an event task's body naming its event, keeping the soonest `limit`.
+    /// Every future moment an open task notifies, soonest first, keeping the soonest `limit`. Tasks that notify at the
+    /// same moment share one notification.
     public static func upcomingNotifications(
         _ tasks: [TaskItem],
         now: Date,
@@ -41,22 +42,81 @@ public enum Notifications {
         in zone: TimeZone
     ) -> [Scheduled] {
         let today = Dates.toDateKey(now, in: zone)
-        let all = tasks.filter { $0.completedAt == nil }.flatMap { task in
-            Triggers.taskNotificationTimes(task, today, in: zone).filter { $0 > now }.map { at in
-                Scheduled(
-                    at: at,
-                    taskId: task.id,
-                    title: String(decoding: Array(task.title.utf16.prefix(300)), as: UTF16.self),
-                    body: task.event.map(Triggers.formatEvent)
-                        ?? notificationBody(Triggers.scheduledDue(task, today, in: zone), at: at, in: zone)
-                )
+        var moments: [Int] = []
+        var firing: [Int: [TaskItem]] = [:]
+        for task in tasks where task.completedAt == nil {
+            for at in Triggers.taskNotificationTimes(task, today, in: zone) where at > now {
+                let moment = at.epochMilliseconds
+                if firing[moment] == nil { moments.append(moment) }
+                firing[moment, default: []].append(task)
             }
         }
-        return Array(all.stableSorted { a, b in a.at == b.at ? nil : a.at < b.at }.prefix(limit))
+        return moments.sorted().prefix(limit).map { moment in
+            momentNotification(firing[moment] ?? [], at: Date(epochMilliseconds: moment), today: today, in: zone)
+        }
+    }
+
+    /// One task as itself, opening its details. Several as their count and first titles, opening the list they all
+    /// share: their event, their place, their project, or else Inbox.
+    public static func momentNotification(_ tasks: [TaskItem], at: Date, today: DateKey, in zone: TimeZone) -> Scheduled {
+        guard let first = tasks.first else { preconditionFailure("A notification needs a task") }
+        if tasks.count == 1 {
+            return Scheduled(
+                at: at,
+                title: cut(first.title),
+                body: first.event.map(Triggers.formatEvent)
+                    ?? notificationBody(Triggers.scheduledDue(first, today, in: zone), at: at, in: zone),
+                opens: .init(kind: .task, id: first.id)
+            )
+        }
+        let opens = sharedList(tasks)
+        let name = switch opens.kind {
+        case .event: first.event.map { " for \($0.title)" } ?? ""
+        case .place: first.location.map { " at \($0.name)" } ?? ""
+        default: ""
+        }
+        return Scheduled(at: at, title: cut("\(tasks.count) tasks\(name)"), body: titleList(tasks.map(\.title)), opens: opens)
+    }
+
+    /// What a crossing at a place shows: one task as itself, several as their count and first titles, opening the
+    /// place.
+    public static func placeNotification(_ tasks: [TaskItem], _ location: TaskLocation, at: Date) -> Scheduled {
+        if tasks.count == 1, let task = tasks.first {
+            return Scheduled(at: at, title: cut(task.title), body: Triggers.formatLocation(location), opens: .init(kind: .task, id: task.id))
+        }
+        let edge = location.trigger == .leave ? "leaving" : "at"
+        return Scheduled(
+            at: at,
+            title: cut("\(tasks.count) tasks \(edge) \(location.name)"),
+            body: titleList(tasks.map(\.title)),
+            opens: .init(kind: .place, id: Triggers.placeKey(location))
+        )
+    }
+
+    private static func sharedList(_ tasks: [TaskItem]) -> API.NotificationTarget {
+        func shared(_ key: (TaskItem) -> String?) -> String? {
+            let keys = Set(tasks.map(key))
+            guard keys.count == 1, let only = keys.first, let only, !only.isEmpty else { return nil }
+            return only
+        }
+        if let event = shared({ $0.event?.id }) { return .init(kind: .event, id: event) }
+        if let place = shared({ $0.location.map(Triggers.placeKey) }) { return .init(kind: .place, id: place) }
+        if let project = shared({ $0.projectId }) { return .init(kind: .project, id: project) }
+        return .init(kind: .inbox, id: "")
+    }
+
+    /// `Gym, Rent, Taxes`, or `Gym, Rent, Taxes, and 2 more` past three.
+    public static func titleList(_ titles: [String]) -> String {
+        let listed = titles.prefix(3).joined(separator: ", ")
+        return cut(titles.count > 3 ? "\(listed), and \(titles.count - 3) more" : listed)
+    }
+
+    private static func cut(_ text: String) -> String {
+        String(decoding: Array(text.utf16.prefix(300)), as: UTF16.self)
     }
 }
 
 extension API.ScheduledNotification {
-    /// The identifier both clients use, `<taskId>:<epoch ms>`, so scheduling a moment again replaces it.
-    public var tag: String { "\(taskId):\(at.epochMilliseconds)" }
+    /// The identifier both clients use, `at:<epoch ms>`: one notification per moment, so scheduling it again replaces it.
+    public var tag: String { "at:\(at.epochMilliseconds)" }
 }
