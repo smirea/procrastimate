@@ -5,16 +5,24 @@
  *
  *   bun app-web/scripts/verify-push.ts [BASE_URL]   (default http://localhost:8787)
  *
- * Needs Google Chrome (CHROME, default /usr/local/bin/google-chrome). Playwright's Chromium has no FCM keys, and
+ * Needs Google Chrome (CHROME, default its macOS app or /usr/local/bin/google-chrome). Playwright's Chromium has no FCM keys, and
  * incognito contexts cannot subscribe, so this uses a persistent profile.
  */
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, expect, type Page } from '@playwright/test';
+import { DEVICE_HEADER } from '../../shared/auth';
+import { DELIVERY_CRON } from '../../server/src/crons';
 
 const BASE_URL = process.argv[2] ?? 'http://localhost:8787';
-const CHROME = process.env.CHROME ?? '/usr/local/bin/google-chrome';
+const CHROME =
+	process.env.CHROME ??
+	(process.platform === 'darwin'
+		? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+		: '/usr/local/bin/google-chrome');
+/** `wrangler dev` runs no Cron Triggers on its own; `scripts/wrangler-dev.ts` passes `--test-scheduled` to fire them. */
+const LOCAL = ['localhost', '127.0.0.1'].includes(new URL(BASE_URL).hostname);
 /** The account outlives a run, so this run's titles carry a suffix. */
 const RUN = crypto.randomUUID().slice(0, 4);
 
@@ -47,12 +55,8 @@ const shown = (page: Page) =>
 	});
 
 const schedule = async (page: Page) => {
-	const deviceId = await page.evaluate(() => {
-		const raw = localStorage.getItem('procrastimate');
-		const sync = raw ? (JSON.parse(raw) as { sync?: { deviceId?: string } }).sync : undefined;
-		return sync?.deviceId ?? '';
-	});
-	const response = await page.request.get('/api/push/schedule', { headers: { 'x-procrastimate-device': deviceId } });
+	const deviceId = await page.evaluate(() => localStorage.getItem('procrastimate-install') ?? '');
+	const response = await page.request.get('/api/push/schedule', { headers: { [DEVICE_HEADER]: deviceId } });
 	const { notifications } = (await response.json()) as {
 		notifications: { title: string; body: string; at: number }[];
 	};
@@ -79,7 +83,7 @@ await expect
 	.toBeTruthy();
 log('PASS sync is on');
 await nav.getByRole('button', { name: 'Settings' }).click();
-await expect(settings.getByText('Notifications: On', { exact: true })).toBeVisible();
+await expect(settings.getByText('Notifications: On', { exact: true })).toBeVisible({ timeout: 20_000 });
 await page.keyboard.press('Escape');
 const endpoint = await page.evaluate(async () => {
 	const registration = await navigator.serviceWorker.ready;
@@ -111,17 +115,18 @@ await page.keyboard.press('Escape');
 async function add(title: string) {
 	await page.locator('body').click({ position: { x: 1200, y: 700 } });
 	await page.keyboard.press('q');
-	const input = page.getByRole('dialog', { name: 'Quick add' }).getByRole('textbox', { name: 'Task name' });
+	const quickAdd = page.getByRole('dialog', { name: 'Quick add' });
+	const input = quickAdd.getByRole('textbox', { name: 'Task name' });
+	await expect(input).toBeFocused();
 	await input.fill(title);
 	await input.press('Enter');
-	await expect(input).toHaveValue('');
-	await page.keyboard.press('Escape');
+	await expect(quickAdd).toBeHidden();
 }
 
 async function openTask(title: string) {
 	await page
 		.locator(`[data-task="${title} ${RUN}"]`)
-		.getByRole('button', { name: new RegExp(title) })
+		.getByRole('button', { name: `${title} ${RUN}`, exact: true })
 		.click();
 	return page.getByRole('dialog', { name: 'Task details' });
 }
@@ -133,7 +138,7 @@ await add(`Deleted ${RUN} ${clock}`);
 await add(`Completed ${RUN} ${clock}`);
 await add(`Edited ${RUN} ${clock}`);
 await add(`Date only ${RUN} today`);
-await nav.getByRole('link', { name: 'Today' }).click();
+await nav.getByRole('link', { name: 'Inbox' }).click();
 
 await (await openTask('Deleted')).getByRole('button', { name: 'Delete task' }).click();
 await page
@@ -162,10 +167,21 @@ await page.close();
 log('app closed; waiting for the due time');
 const wait = target.getTime() + 15_000 - Date.now();
 await new Promise(resolve => setTimeout(resolve, wait));
+if (LOCAL) {
+	const fired = await context.request.get(
+		`/cdn-cgi/handler/scheduled?cron=${encodeURIComponent(DELIVERY_CRON)}&time=${target.getTime()}`,
+	);
+	check(fired.ok(), 'fired the delivery cron on wrangler dev', fired.status());
+}
 
 const reopened = await context.newPage();
-await reopened.goto('/today');
-const delivered = (await shown(reopened)).filter(n => n.tag !== 'test');
+await reopened.goto('/inbox');
+/** The push left the server, but FCM hands it to Chrome on its own schedule. */
+let delivered: Awaited<ReturnType<typeof shown>> = [];
+for (const start = Date.now(); Date.now() - start < 20_000; await reopened.waitForTimeout(250)) {
+	delivered = (await shown(reopened)).filter(n => n.tag !== 'test');
+	if (delivered.length > 0) break;
+}
 check(
 	delivered.length === 1 &&
 		delivered[0]?.title === '2 tasks' &&
