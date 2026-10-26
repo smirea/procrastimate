@@ -642,8 +642,12 @@ public enum StoreRules {
         next.labels = live.labels
         next.tasks = live.tasks.map { t in
             guard !t.labelIds.allSatisfy(liveLabels.contains) else { return t }
-            for (index, labelId) in t.labelIds.enumerated() where !liveLabels.contains(labelId) {
-                if let held = owner[labelId] { moved[held].append(API.Labeling(taskId: t.id, labelId: labelId, index: index)) }
+            // Each index is the one that delete would have recorded had the task been live, when the labels deleted
+            // after it were still on the task, so undoing the label deletes newest first puts them back in their order.
+            for (at, labelId) in t.labelIds.enumerated() where !liveLabels.contains(labelId) {
+                guard let held = owner[labelId] else { continue }
+                let index = t.labelIds[..<at].filter { liveLabels.contains($0) || (owner[$0] ?? -1) >= held }.count
+                moved[held].append(API.Labeling(taskId: t.id, labelId: labelId, index: index))
             }
             var kept = t
             kept.labelIds = t.labelIds.filter(liveLabels.contains)

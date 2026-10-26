@@ -623,9 +623,14 @@ export function undo(data: StoreData, pending: readonly Undo[], index: number): 
 	const moved = rest.map((): Deleted['labelings'] => []);
 	live.tasks = live.tasks.map(t => {
 		if (t.labelIds.every(id => liveLabels.has(id))) return t;
-		t.labelIds.forEach((labelId, index) => {
+		// Each index is the one that delete would have recorded had the task been live, when the labels deleted after it
+		// were still on the task, so undoing the label deletes newest first puts them back in their order.
+		const since = (id: string, held: number) => liveLabels.has(id) || (owner.get(id) ?? -1) >= held;
+		t.labelIds.forEach((labelId, at) => {
 			const held = owner.get(labelId);
-			if (!liveLabels.has(labelId) && held !== undefined) moved[held]!.push({ taskId: t.id, labelId, index });
+			if (liveLabels.has(labelId) || held === undefined) return;
+			const index = t.labelIds.slice(0, at).filter(id => since(id, held)).length;
+			moved[held]!.push({ taskId: t.id, labelId, index });
 		});
 		return { ...t, labelIds: t.labelIds.filter(id => liveLabels.has(id)) };
 	});

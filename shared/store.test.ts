@@ -764,6 +764,26 @@ describe('stacked undos', () => {
 		expect(undo(first.data, first.pending, 0).data).toEqual(data());
 	});
 
+	test("a task undone while two of its labels' deletes are pending gets them back in order, newest undone first", () => {
+		const start = updateTask(data(), 'call', { labelIds: ['calls', 'phone', 'work'] });
+		const withWork = {
+			...start,
+			labels: [...start.labels, { ...start.labels[0]!, id: 'work', name: 'Work', createdAt: 3 }],
+		};
+		const { data: gone, removed } = deleteTask(withWork, 'call');
+		const noCalls = deleteLabel(gone, 'calls');
+		const noPhone = deleteLabel(noCalls, 'phone');
+		const pending = [
+			deletion({ tasks: removed }),
+			deletion(deletedBetween(gone, noCalls)),
+			deletion(deletedBetween(noCalls, noPhone)),
+		];
+		const first = undo(noPhone, pending, 0);
+		expect(find(first.data, 'call').labelIds).toEqual(['work']);
+		const second = undo(first.data, first.pending, 1);
+		expect(undo(second.data, second.pending, 0).data).toEqual(withWork);
+	});
+
 	test('a reopened subtask undone after its parent is deleted comes back completed with its parent', () => {
 		const { data: done } = completeTask(data(), 'trip', today, NOW)!;
 		const { data: reopened, reopened: previous } = reopenTask(done, 'passport');

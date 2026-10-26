@@ -49615,6 +49615,3467 @@
 			}
 		},
 		{
+			"fn": "updateTask",
+			"test": "stacked undos › a task undone while two of its labels' deletes are pending gets them back in order, newest undone first",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"images": [],
+							"labelIds": [
+								"calls",
+								"phone"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "call"
+						}
+					]
+				},
+				"call",
+				{
+					"labelIds": [
+						"calls",
+						"phone",
+						"work"
+					]
+				}
+			],
+			"output": {
+				"comments": [],
+				"labels": [
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "calls",
+						"name": "calls",
+						"place": null
+					},
+					{
+						"color": "gray",
+						"createdAt": 2,
+						"id": "phone",
+						"name": "Phone",
+						"place": null
+					}
+				],
+				"projects": [
+					{
+						"createdAt": 1,
+						"icon": null,
+						"id": "home",
+						"name": "Home",
+						"order": 0
+					},
+					{
+						"createdAt": 2,
+						"icon": null,
+						"id": "work",
+						"name": "Work",
+						"order": 0
+					}
+				],
+				"reads": [],
+				"sections": [
+					{
+						"createdAt": 1,
+						"id": "later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 2,
+						"id": "next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 3,
+						"id": "someday",
+						"name": "Someday",
+						"order": 0,
+						"projectId": "work"
+					}
+				],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 2,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "passport",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "passport"
+					},
+					{
+						"completedAt": 50,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "charger",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "standup",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "08:00"
+							}
+						],
+						"sectionId": null,
+						"title": "standup"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call",
+						"images": [],
+						"labelIds": [
+							"calls",
+							"phone",
+							"work"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call"
+					}
+				]
+			}
+		},
+		{
+			"fn": "deleteTask",
+			"test": "stacked undos › a task undone while two of its labels' deletes are pending gets them back in order, newest undone first",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"images": [],
+							"labelIds": [
+								"calls",
+								"phone",
+								"work"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "call"
+						}
+					]
+				},
+				"call"
+			],
+			"output": {
+				"data": {
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						}
+					]
+				},
+				"removed": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 5,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call",
+						"images": [],
+						"labelIds": [
+							"calls",
+							"phone",
+							"work"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call"
+					}
+				]
+			}
+		},
+		{
+			"fn": "deleteLabel",
+			"test": "stacked undos › a task undone while two of its labels' deletes are pending gets them back in order, newest undone first",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						}
+					]
+				},
+				"calls"
+			],
+			"output": {
+				"comments": [],
+				"labels": [
+					{
+						"color": "gray",
+						"createdAt": 2,
+						"id": "phone",
+						"name": "Phone",
+						"place": null
+					},
+					{
+						"color": "gray",
+						"createdAt": 3,
+						"id": "work",
+						"name": "Work",
+						"place": null
+					}
+				],
+				"projects": [
+					{
+						"createdAt": 1,
+						"icon": null,
+						"id": "home",
+						"name": "Home",
+						"order": 0
+					},
+					{
+						"createdAt": 2,
+						"icon": null,
+						"id": "work",
+						"name": "Work",
+						"order": 0
+					}
+				],
+				"reads": [],
+				"sections": [
+					{
+						"createdAt": 1,
+						"id": "later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 2,
+						"id": "next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 3,
+						"id": "someday",
+						"name": "Someday",
+						"order": 0,
+						"projectId": "work"
+					}
+				],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 2,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "passport",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "passport"
+					},
+					{
+						"completedAt": 50,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "charger",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "standup",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "08:00"
+							}
+						],
+						"sectionId": null,
+						"title": "standup"
+					}
+				]
+			}
+		},
+		{
+			"fn": "deleteLabel",
+			"test": "stacked undos › a task undone while two of its labels' deletes are pending gets them back in order, newest undone first",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						}
+					]
+				},
+				"phone"
+			],
+			"output": {
+				"comments": [],
+				"labels": [
+					{
+						"color": "gray",
+						"createdAt": 3,
+						"id": "work",
+						"name": "Work",
+						"place": null
+					}
+				],
+				"projects": [
+					{
+						"createdAt": 1,
+						"icon": null,
+						"id": "home",
+						"name": "Home",
+						"order": 0
+					},
+					{
+						"createdAt": 2,
+						"icon": null,
+						"id": "work",
+						"name": "Work",
+						"order": 0
+					}
+				],
+				"reads": [],
+				"sections": [
+					{
+						"createdAt": 1,
+						"id": "later",
+						"name": "Later",
+						"order": 1,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 2,
+						"id": "next",
+						"name": "Next",
+						"order": 0,
+						"projectId": "home"
+					},
+					{
+						"createdAt": 3,
+						"id": "someday",
+						"name": "Someday",
+						"order": 0,
+						"projectId": "work"
+					}
+				],
+				"tasks": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 2,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "passport",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "passport"
+					},
+					{
+						"completedAt": 50,
+						"completedBy": null,
+						"createdAt": 3,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "charger",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 1,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "charger"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 4,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "standup",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": {
+							"interval": 1,
+							"unit": "day"
+						},
+						"reminders": [
+							{
+								"date": "2026-10-14",
+								"kind": "at",
+								"time": "08:00"
+							}
+						],
+						"sectionId": null,
+						"title": "standup"
+					}
+				]
+			}
+		},
+		{
+			"fn": "deletedBetween",
+			"test": "stacked undos › a task undone while two of its labels' deletes are pending gets them back in order, newest undone first",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						}
+					]
+				},
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						}
+					]
+				}
+			],
+			"output": {
+				"labelings": [],
+				"labels": [
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "calls",
+						"name": "calls",
+						"place": null
+					}
+				],
+				"projects": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "deletedBetween",
+			"test": "stacked undos › a task undone while two of its labels' deletes are pending gets them back in order, newest undone first",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						}
+					]
+				},
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						}
+					]
+				}
+			],
+			"output": {
+				"labelings": [],
+				"labels": [
+					{
+						"color": "gray",
+						"createdAt": 2,
+						"id": "phone",
+						"name": "Phone",
+						"place": null
+					}
+				],
+				"projects": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "undo",
+			"test": "stacked undos › a task undone while two of its labels' deletes are pending gets them back in order, newest undone first",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						}
+					]
+				},
+				[
+					{
+						"deleted": {
+							"labelings": [],
+							"labels": [],
+							"projects": [],
+							"sections": [],
+							"tasks": [
+								{
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 5,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"id": "call",
+									"images": [],
+									"labelIds": [
+										"calls",
+										"phone",
+										"work"
+									],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "call"
+								}
+							]
+						},
+						"kind": "delete"
+					},
+					{
+						"deleted": {
+							"labelings": [],
+							"labels": [
+								{
+									"color": "gray",
+									"createdAt": 1,
+									"id": "calls",
+									"name": "calls",
+									"place": null
+								}
+							],
+							"projects": [],
+							"sections": [],
+							"tasks": []
+						},
+						"kind": "delete"
+					},
+					{
+						"deleted": {
+							"labelings": [],
+							"labels": [
+								{
+									"color": "gray",
+									"createdAt": 2,
+									"id": "phone",
+									"name": "Phone",
+									"place": null
+								}
+							],
+							"projects": [],
+							"sections": [],
+							"tasks": []
+						},
+						"kind": "delete"
+					}
+				],
+				0
+			],
+			"output": {
+				"data": {
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"images": [],
+							"labelIds": [
+								"work"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "call"
+						}
+					]
+				},
+				"pending": [
+					{
+						"deleted": {
+							"labelings": [
+								{
+									"index": 0,
+									"labelId": "calls",
+									"taskId": "call"
+								}
+							],
+							"labels": [
+								{
+									"color": "gray",
+									"createdAt": 1,
+									"id": "calls",
+									"name": "calls",
+									"place": null
+								}
+							],
+							"projects": [],
+							"sections": [],
+							"tasks": []
+						},
+						"kind": "delete"
+					},
+					{
+						"deleted": {
+							"labelings": [
+								{
+									"index": 0,
+									"labelId": "phone",
+									"taskId": "call"
+								}
+							],
+							"labels": [
+								{
+									"color": "gray",
+									"createdAt": 2,
+									"id": "phone",
+									"name": "Phone",
+									"place": null
+								}
+							],
+							"projects": [],
+							"sections": [],
+							"tasks": []
+						},
+						"kind": "delete"
+					}
+				]
+			}
+		},
+		{
+			"fn": "undo",
+			"test": "stacked undos › a task undone while two of its labels' deletes are pending gets them back in order, newest undone first",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"images": [],
+							"labelIds": [
+								"work"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "call"
+						}
+					]
+				},
+				[
+					{
+						"deleted": {
+							"labelings": [
+								{
+									"index": 0,
+									"labelId": "calls",
+									"taskId": "call"
+								}
+							],
+							"labels": [
+								{
+									"color": "gray",
+									"createdAt": 1,
+									"id": "calls",
+									"name": "calls",
+									"place": null
+								}
+							],
+							"projects": [],
+							"sections": [],
+							"tasks": []
+						},
+						"kind": "delete"
+					},
+					{
+						"deleted": {
+							"labelings": [
+								{
+									"index": 0,
+									"labelId": "phone",
+									"taskId": "call"
+								}
+							],
+							"labels": [
+								{
+									"color": "gray",
+									"createdAt": 2,
+									"id": "phone",
+									"name": "Phone",
+									"place": null
+								}
+							],
+							"projects": [],
+							"sections": [],
+							"tasks": []
+						},
+						"kind": "delete"
+					}
+				],
+				1
+			],
+			"output": {
+				"data": {
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"images": [],
+							"labelIds": [
+								"phone",
+								"work"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "call"
+						}
+					]
+				},
+				"pending": [
+					{
+						"deleted": {
+							"labelings": [
+								{
+									"index": 0,
+									"labelId": "calls",
+									"taskId": "call"
+								}
+							],
+							"labels": [
+								{
+									"color": "gray",
+									"createdAt": 1,
+									"id": "calls",
+									"name": "calls",
+									"place": null
+								}
+							],
+							"projects": [],
+							"sections": [],
+							"tasks": []
+						},
+						"kind": "delete"
+					}
+				]
+			}
+		},
+		{
+			"fn": "undo",
+			"test": "stacked undos › a task undone while two of its labels' deletes are pending gets them back in order, newest undone first",
+			"input": [
+				{
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"images": [],
+							"labelIds": [
+								"phone",
+								"work"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "call"
+						}
+					]
+				},
+				[
+					{
+						"deleted": {
+							"labelings": [
+								{
+									"index": 0,
+									"labelId": "calls",
+									"taskId": "call"
+								}
+							],
+							"labels": [
+								{
+									"color": "gray",
+									"createdAt": 1,
+									"id": "calls",
+									"name": "calls",
+									"place": null
+								}
+							],
+							"projects": [],
+							"sections": [],
+							"tasks": []
+						},
+						"kind": "delete"
+					}
+				],
+				0
+			],
+			"output": {
+				"data": {
+					"comments": [],
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 2,
+							"id": "phone",
+							"name": "Phone",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 3,
+							"id": "work",
+							"name": "Work",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 2,
+							"icon": null,
+							"id": "work",
+							"name": "Work",
+							"order": 0
+						}
+					],
+					"reads": [],
+					"sections": [
+						{
+							"createdAt": 1,
+							"id": "later",
+							"name": "Later",
+							"order": 1,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 2,
+							"id": "next",
+							"name": "Next",
+							"order": 0,
+							"projectId": "home"
+						},
+						{
+							"createdAt": 3,
+							"id": "someday",
+							"name": "Someday",
+							"order": 0,
+							"projectId": "work"
+						}
+					],
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 1,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 2,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "passport",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "passport"
+						},
+						{
+							"completedAt": 50,
+							"completedBy": null,
+							"createdAt": 3,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "charger",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 1,
+							"parentId": "trip",
+							"priority": 4,
+							"projectId": "home",
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "charger"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 4,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-14",
+								"time": "09:00"
+							},
+							"event": null,
+							"id": "standup",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": {
+								"interval": 1,
+								"unit": "day"
+							},
+							"reminders": [
+								{
+									"date": "2026-10-14",
+									"kind": "at",
+									"time": "08:00"
+								}
+							],
+							"sectionId": null,
+							"title": "standup"
+						},
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 5,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "call",
+							"images": [],
+							"labelIds": [
+								"calls",
+								"phone",
+								"work"
+							],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "call"
+						}
+					]
+				},
+				"pending": []
+			}
+		},
+		{
 			"fn": "completeTask",
 			"test": "stacked undos › a reopened subtask undone after its parent is deleted comes back completed with its parent",
 			"input": [
