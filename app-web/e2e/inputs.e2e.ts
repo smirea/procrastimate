@@ -50,7 +50,7 @@ test('title, notes, and subtask fields grow with their text instead of cutting i
 	expect(typed.height).toBeGreaterThan(typed.lineHeight * 2.5);
 	expect(typed.content).toBeLessThanOrEqual(typed.height + 1);
 	await taskName.press('Enter');
-	await expect(app.quickAdd()).toBeHidden();
+	await app.showAdded();
 
 	await app
 		.row(`${LONG} second line`)

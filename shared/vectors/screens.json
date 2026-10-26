@@ -2299,7 +2299,8 @@
 					"sectionId": "kitchen",
 					"title": "a"
 				},
-				[]
+				[],
+				null
 			],
 			"output": {
 				"date": null,
@@ -2368,7 +2369,8 @@
 							"radius": 150
 						}
 					}
-				]
+				],
+				null
 			],
 			"output": {
 				"date": null,
@@ -2429,7 +2431,8 @@
 					"sectionId": null,
 					"title": "a"
 				},
-				[]
+				[],
+				null
 			],
 			"output": {
 				"date": null,
@@ -2451,6 +2454,47 @@
 				"labelIds": [],
 				"location": null,
 				"projectId": null,
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "reusedDefaults",
+			"test": "reusedDefaults › takes the date of the sheet or screen, not the task",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 25,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-20",
+						"time": null
+					},
+					"event": null,
+					"id": "a",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				[],
+				"2026-10-15"
+			],
+			"output": {
+				"date": "2026-10-15",
+				"event": null,
+				"labelIds": [],
+				"location": null,
+				"projectId": "home",
 				"sectionId": null
 			}
 		}

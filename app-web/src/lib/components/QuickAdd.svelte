@@ -33,13 +33,13 @@
 	import { clock, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
 	import { formatEvent, formatLocation } from 'shared/triggers.ts';
-	import type { ListDefaults } from 'shared/screens.ts';
+	import { reusedDefaults, type ListDefaults } from 'shared/screens.ts';
 	import type { NewTask } from 'shared/store.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { QuickAddDraft } from '../quick-add-draft.svelte.ts';
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { NAME_SOURCES } from '../names.ts';
-	import { showAdded } from '../show-added.ts';
+	import { confirmAdded, showAdded } from '../show-added.ts';
 	import { imageFiles, images } from '../images/images.svelte.ts';
 	import { reuseAdded } from '../screen.ts';
 	import { page } from '$app/state';
@@ -154,7 +154,7 @@
 		return () => observer.disconnect();
 	});
 
-	/** Saves the task and its subtasks, closes quick add, and shows the task in its list. */
+	/** Saves the task with its subtasks and images. */
 	function save() {
 		const next = draft.task();
 		if (!next) return null;
@@ -163,20 +163,33 @@
 		const typing = subtaskTask(subtaskParsed);
 		for (const child of [...subtasks.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
 		if (drafted.length) void images.attach(task.id, drafted.map((d) => d.file));
-		sheets.close();
-		const from = page.url.pathname;
-		if (showAdded(task) === from) reuseAdded(from, task);
+		reuseAdded(page.url.pathname, task);
 		return task;
 	}
 
+	/** Quick add stays open for the next task, which starts where this one went. */
 	function submit() {
-		save();
+		const task = save();
+		if (!task) return;
+		confirmAdded(task);
+		draft.restart(reusedDefaults(task, store.labels, defaults.date));
+		opened = [];
+		picker = null;
+		subtasks = [];
+		subtaskText = '';
+		subtasksOpen = false;
+		for (const { url } of drafted) URL.revokeObjectURL(url);
+		drafted = [];
+		input.focus();
 	}
 
-	/** The full editor is task details, so expanding saves the draft and opens it there. */
+	/** The full editor is task details, so expanding saves the draft, closes quick add, and opens it there. */
 	function expand() {
 		const task = save();
-		if (task) sheets.openTask(task.id);
+		if (!task) return;
+		sheets.close();
+		showAdded(task);
+		sheets.openTask(task.id);
 	}
 
 	function addImages(files: File[]) {
@@ -490,7 +503,7 @@
 				<ArrowsOutSimple size={16} weight="bold" />
 			</button>
 			<button type="button" class="btn btn-quiet" onclick={() => sheets.close()}>Cancel</button>
-			<button type="button" class="btn btn-primary" disabled={!parsed.title} onclick={submit}>Add task</button>
+			<button type="button" class="btn btn-primary" disabled={!parsed.title} onmousedown={(e) => e.preventDefault()} onclick={submit}>Add task</button>
 		</div>
 	</div>
 	<input bind:this={imagePicker} type="file" accept="image/*" multiple class="hidden" aria-hidden="true" tabindex="-1" onchange={pickedImages} />

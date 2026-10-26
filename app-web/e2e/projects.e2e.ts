@@ -127,7 +127,8 @@ test.describe('on a phone', () => {
 		await app.openQuickAdd();
 		await app.taskInput().fill('Fix sink');
 		await app.quickAdd().getByRole('button', { name: 'Add task' }).tap();
-		await expect(app.quickAdd()).toBeHidden();
+		await expect(app.taskInput()).toHaveValue('');
+		await app.closeQuickAdd();
 		await expect(app.list('Work tasks').locator('[data-task="Fix sink"]')).toBeVisible();
 	});
 });
@@ -207,7 +208,7 @@ test('Show completed is per project and per section, and a completed task delete
 		await page.getByRole('region', { name: 'Later' }).getByRole('button', { name: 'Add task to Later' }).click();
 		await app.taskInput().fill(title);
 		await app.taskInput().press('Enter');
-		await expect(app.quickAdd()).toBeHidden();
+		await app.closeQuickAdd();
 	}
 	await app.row('Rake leaves').getByRole('checkbox', { name: 'Complete Rake leaves' }).click();
 	await page.getByRole('checkbox', { name: 'Complete Fix fence', exact: true }).click();

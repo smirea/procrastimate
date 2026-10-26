@@ -88,7 +88,10 @@ describe('screenDefaults', () => {
 	});
 
 	test('a label starts with the label', () => {
-		expect(screenDefaults({ kind: 'label', id: 'errands' }, [], null, today)).toEqual({ ...none, labelIds: ['errands'] });
+		expect(screenDefaults({ kind: 'label', id: 'errands' }, [], null, today)).toEqual({
+			...none,
+			labelIds: ['errands'],
+		});
 	});
 
 	test('a place starts at the place, as its earliest open task names it', () => {
@@ -143,7 +146,10 @@ describe('screenDefaults', () => {
 			...none,
 			projectId: 'garden',
 		});
-		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space, today)).toEqual({ ...none, labelIds: ['weekend'] });
+		expect(screenDefaults({ kind: 'label', id: 'weekend' }, [], space, today)).toEqual({
+			...none,
+			labelIds: ['weekend'],
+		});
 	});
 });
 
@@ -231,7 +237,7 @@ describe('reusedDefaults', () => {
 			due: { date: today, time: '09:00' },
 			priority: 1,
 		});
-		expect(reusedDefaults(saved, [])).toEqual({
+		expect(reusedDefaults(saved, [], null)).toEqual({
 			projectId: 'home',
 			sectionId: 'kitchen',
 			labelIds: ['errands', 'calls'],
@@ -244,10 +250,15 @@ describe('reusedDefaults', () => {
 	test('a saved place goes back among the labels', () => {
 		const place = label('l-rewe', { place: { address: null, latitude: 52.5, longitude: 13.4, radius: 150 } });
 		const saved = task('a', { labelIds: ['errands'], location: rewe('rewe') });
-		expect(reusedDefaults(saved, [place]).labelIds).toEqual(['errands', 'l-rewe']);
+		expect(reusedDefaults(saved, [place], null).labelIds).toEqual(['errands', 'l-rewe']);
 	});
 
 	test('keeps the event', () => {
-		expect(reusedDefaults(task('a', { event: standup(0) }), []).event).toEqual(standup(0));
+		expect(reusedDefaults(task('a', { event: standup(0) }), [], null).event).toEqual(standup(0));
+	});
+
+	test('takes the date of the sheet or screen, not the task', () => {
+		const saved = task('a', { projectId: 'home', due: { date: '2026-10-20', time: null } });
+		expect(reusedDefaults(saved, [], '2026-10-15').date).toBe('2026-10-15');
 	});
 });

@@ -27,6 +27,12 @@ export class QuickAddDraft {
 		this.picked = initialPicked(defaults);
 	}
 
+	/** Clears the draft for the next task in the same sheet, starting from `next`. */
+	restart(next: ListDefaults) {
+		this.text = '';
+		this.picked = initialPicked(next);
+	}
+
 	/** Every space's projects and labels a new task may land on. Picking one moves the task into its space. */
 	projects = $derived(addableProjects());
 	labels = $derived(addableLabels());

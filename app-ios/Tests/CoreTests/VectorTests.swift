@@ -573,7 +573,7 @@ private struct SharedSpaceInput: Decodable {
 }
 
 @Sendable func screensVector(_ fn: String, _ a: Args) throws -> JSONValue {
-    if fn == "reusedDefaults" { return try json(ListDefaultsJSON(Screens.reusedDefaults(a(0), a(1)))) }
+    if fn == "reusedDefaults" { return try json(ListDefaultsJSON(Screens.reusedDefaults(a(0), a(1), date: a(2)))) }
     let screen = try a(0, as: ScreenInput?.self)?.screen()
     switch fn {
     case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.access, today: a(3))))

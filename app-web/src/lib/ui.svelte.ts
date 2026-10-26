@@ -75,6 +75,7 @@ class Toasts {
 		this.items.push({ id, message, action });
 		this.#timers.set(id, { remaining: duration, startedAt: 0, holds: 0 });
 		this.#run(id);
+		return id;
 	}
 
 	/** Stops a toast's countdown while it is hovered, focused, or touched. Each `hold` pairs with one `release`. */

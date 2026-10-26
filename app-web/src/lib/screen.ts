@@ -49,23 +49,23 @@ export const canAddHere = (screen: Screen) => canAddTo(screen, spaceOf(screen));
 export const addableProjects = () => store.projects.filter(p => canAddHere({ kind: 'project', id: p.id }));
 export const addableLabels = () => store.labels.filter(l => canAddHere({ kind: 'label', id: l.id }));
 
-/** Where the last quick add saved to, reused while the list it saved from stays open. */
-let reused: { path: string; defaults: ListDefaults } | null = null;
+/** The task the last quick add saved, which the next one on the same list starts from. */
+let reused: { path: string; task: Task } | null = null;
 
 /**
- * What quick add starts with: the open list's defaults, or what the last quick add saved while the list it saved
- * from, and showed the task on, is still open.
+ * What quick add starts with: the open list's defaults, or where the last quick add on this list saved its task.
  * A group's own `Add task` row names its screen and always starts with that screen's own.
  */
 export function quickAddDefaults(screen?: Screen) {
-	if (!screen && reused?.path === page.url.pathname) return reused.defaults;
 	const target = screen ?? currentScreen();
-	return screenDefaults(target, store.own.tasks, spaceOf(target), clock.today);
+	const own = screenDefaults(target, store.own.tasks, spaceOf(target), clock.today);
+	if (!screen && reused?.path === page.url.pathname) return reusedDefaults(reused.task, store.labels, own.date);
+	return own;
 }
 
-/** Quick add just saved `task` and showed it on `path`, the list it opened on. */
+/** Quick add just saved `task` on the list at `path`. */
 export function reuseAdded(path: string, task: Task) {
-	reused = { path, defaults: reusedDefaults(task, store.labels) };
+	reused = { path, task };
 }
 
 /** Leaving the list ends the reuse. */

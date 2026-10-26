@@ -284,13 +284,32 @@ export class App {
 		await expect(this.taskInput()).toBeFocused();
 	}
 
+	/** Adds each title in one quick add, which stays open between them, then leaves it for the last task's list. */
 	async add(...titles: string[]) {
+		await this.openQuickAdd();
 		for (const title of titles) {
-			await this.openQuickAdd();
 			await this.taskInput().fill(title);
 			await this.taskInput().press('Enter');
-			await expect(this.quickAdd()).toBeHidden();
+			await expect(this.taskInput()).toHaveValue('');
 		}
+		await this.showAdded();
+	}
+
+	/** Leaves quick add for the list its last task went to, through the `Show` on its toast when another list holds it. */
+	async showAdded() {
+		const show = this.page
+			.getByRole('status')
+			.filter({ hasText: /^Added to / })
+			.getByRole('button', { name: 'Show' })
+			.last();
+		if (!(await show.isVisible())) return this.closeQuickAdd();
+		await show.click();
+		await expect(this.quickAdd()).toBeHidden();
+	}
+
+	async closeQuickAdd() {
+		await this.taskInput().press('Escape');
+		await expect(this.quickAdd()).toBeHidden();
 	}
 
 	async openNavigation() {
@@ -311,7 +330,8 @@ export class App {
 			await expect(parsed).toBeVisible();
 		}
 		await this.taskInput().press('Enter');
-		await expect(this.quickAdd()).toBeHidden();
+		await expect(this.taskInput()).toHaveValue('');
+		await this.showAdded();
 	}
 
 	async closeDetails() {

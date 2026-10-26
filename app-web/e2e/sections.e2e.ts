@@ -26,8 +26,8 @@ test('sections group a project, take tasks from quick add and details, and renam
 	await app.taskInput().fill('Fix fence');
 	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Later' })).toBeVisible();
 	await app.taskInput().press('Enter');
-	await expect(page.getByRole('list', { name: 'Later tasks' }).locator('[data-task="Fix fence"]')).toBeVisible();
-	await expect(app.quickAdd()).toBeHidden();
+	await expect(page.getByRole('list', { name: 'Later tasks' }).locator('[data-task="Fix fence"]')).toBeAttached();
+	await app.closeQuickAdd();
 	await app.settle();
 
 	await app.openQuickAdd();
@@ -38,6 +38,7 @@ test('sections group a project, take tasks from quick add and details, and renam
 	await app.taskInput().press('Tab');
 	await expect(app.taskInput()).toHaveValue('Paint door #Home /Next up ');
 	await app.taskInput().press('Enter');
+	await app.closeQuickAdd();
 	await expect(page.getByRole('list', { name: 'Next up tasks' }).locator('[data-task="Paint door"]')).toBeVisible();
 
 	await app.row('Water plants').click();
