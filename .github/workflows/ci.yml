@@ -103,8 +103,11 @@ jobs:
 
       # The Ubuntu mirror sometimes takes minutes per package, which once ate the whole job. apt keeps every deb it
       # downloads in a cached directory, so a warm run installs from disk and only fetches what the image's update changed.
+      # ImageOS and ImageVersion are runner process variables, which the `env` expression context does not see.
       - name: Keep apt downloads in a cacheable directory
+        id: apt
         run: |
+          echo "image=$ImageOS-$ImageVersion" >> "$GITHUB_OUTPUT"
           mkdir -p ~/.cache/apt-archives/partial
           printf '%s\n' \
             "Dir::Cache::Archives \"$HOME/.cache/apt-archives\";" \
@@ -118,8 +121,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/.cache/apt-archives
-          key: apt-${{ env.ImageOS }}-${{ env.ImageVersion }}-playwright-${{ steps.playwright.outputs.version }}
-          restore-keys: apt-${{ env.ImageOS }}-
+          key: apt-${{ steps.apt.outputs.image }}-playwright-${{ steps.playwright.outputs.version }}
+          restore-keys: apt-
 
       - name: Install Playwright system dependencies
         id: install-deps
