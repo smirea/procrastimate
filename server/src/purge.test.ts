@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { asc, eq } from 'drizzle-orm';
-import { log } from '../../shared/db/schema';
+import { comments, log } from '../../shared/db/schema';
 import { type Session, shareWith, signUp, taskRow, testApp, type TestApp, upload as uploadAs } from './test-app';
 
 let app: TestApp;
@@ -92,4 +92,31 @@ test('a guest’s delete that empties the owner’s space purges nothing', async
 			row => `${row.kind} ${row.op}`,
 		),
 	).toEqual(['task put', 'task delete']);
+});
+
+test('emptying the space deletes the comments left on its gone tasks, a guest’s included, and their history', async () => {
+	const host = await signUp(app, 'Host');
+	const me = host.person.id;
+	const taskId = crypto.randomUUID();
+	const mine = crypto.randomUUID();
+	const theirs = crypto.randomUUID();
+	const comment = (id: string, body: string) => ({
+		op: 'put',
+		table: 'comments',
+		id,
+		values: { id, user_id: me, task_id: taskId, body, created_at: 1, edited_at: null },
+	});
+	await upload(host, [{ op: 'put', table: 'tasks', id: taskId, values: taskRow(taskId, me, 'Shared') }]);
+	await shareWith(app, host, { kind: 'task', id: taskId }, guest.person.id, 'edit');
+	await upload(host, [comment(mine, 'Mine')]);
+	await upload(guest, [comment(theirs, 'Theirs')]);
+
+	const rejected = await uploadAs(app, host, [
+		{ op: 'delete', table: 'comments', id: mine },
+		{ op: 'delete', table: 'comments', id: theirs },
+		{ op: 'delete', table: 'tasks', id: taskId },
+	]);
+	expect(rejected.map(r => r.id)).toEqual([theirs]);
+	expect(await app.db.select().from(comments).where(eq(comments.userId, me))).toEqual([]);
+	expect(await app.db.select().from(log).where(eq(log.userId, me))).toEqual([]);
 });
