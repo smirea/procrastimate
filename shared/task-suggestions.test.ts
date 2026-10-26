@@ -58,10 +58,9 @@ function task(title: string, fields: Partial<Task> = {}, daysAgo = 10): Task {
 	};
 }
 
-const empty: DraftFields = { projectId: null, sectionId: null, labelIds: [], location: null };
+const empty: DraftFields = { projectId: null, labelIds: [], location: null };
 const everything: Available = {
 	projectIds: ['home', 'work'],
-	sectionIds: ['garden', 'kitchen', 'meetings'],
 	labelIds: ['calls', 'weekend'],
 };
 
@@ -88,20 +87,16 @@ describe('suggestionWords', () => {
 });
 
 describe('suggestionPills', () => {
-	test('a title like past ones offers their project, section, and label', () => {
+	test('a title like past ones offers their project and label, never their section', () => {
 		expect(pills(history, 'water the roses', NOW, empty, everything)).toEqual([
 			{ kind: 'project', projectId: 'home' },
-			{ kind: 'section', projectId: 'home', sectionId: 'garden' },
 			{ kind: 'label', labelId: 'weekend' },
 		]);
 	});
 
 	test('a tie, or a value under half the vote, offers nothing for that field', () => {
 		expect(pills(history, 'call someone', NOW, empty, everything)).toEqual([{ kind: 'label', labelId: 'calls' }]);
-		expect(pills(history, 'mow the lawn', NOW, empty, everything)).toEqual([
-			{ kind: 'project', projectId: 'home' },
-			{ kind: 'section', projectId: 'home', sectionId: 'garden' },
-		]);
+		expect(pills(history, 'mow the lawn', NOW, empty, everything)).toEqual([{ kind: 'project', projectId: 'home' }]);
 	});
 
 	test('a place offers the past task’s place', () => {
@@ -120,17 +115,15 @@ describe('suggestionPills', () => {
 	});
 
 	test('a field the draft already holds shows no pill, and a place matches by spot, whatever its name', () => {
-		const draft: DraftFields = { projectId: 'home', sectionId: null, labelIds: ['weekend'], location: null };
-		expect(pills(history, 'water the roses', NOW, draft, everything)).toEqual([
-			{ kind: 'section', projectId: 'home', sectionId: 'garden' },
-		]);
+		const draft: DraftFields = { projectId: 'home', labelIds: ['weekend'], location: null };
+		expect(pills(history, 'water the roses', NOW, draft, everything)).toEqual([]);
 		expect(
 			pills(history, 'Back day', NOW, { ...empty, location: { ...gym, name: 'My gym', trigger: 'leave' } }, everything),
 		).toEqual([]);
 	});
 
-	test('a project, section, or label the draft cannot use shows no pill', () => {
-		const only: Available = { projectIds: ['home'], sectionIds: [], labelIds: [] };
+	test('a project or label the draft cannot use shows no pill', () => {
+		const only: Available = { projectIds: ['home'], labelIds: [] };
 		expect(pills(history, 'water the roses', NOW, empty, only)).toEqual([{ kind: 'project', projectId: 'home' }]);
 		expect(pills(history, 'water the roses', NOW, empty, { ...only, projectIds: [] })).toEqual([]);
 	});

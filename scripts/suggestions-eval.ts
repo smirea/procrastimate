@@ -3,7 +3,7 @@
  * real data, the agent API's `GET /view`. Each top-level task is suggested from the tasks created before it, so the
  * score is what Stefan would have seen. Precision is right pills over shown pills, recall is right pills over the
  * fields the task really has. `familiar` tasks share at least 0.35 of their rare-word weight with one past title.
- * The baseline offers the most used project and its most used section every time. Prints aggregates only, never
+ * The baseline offers the most used project every time. Prints aggregates only, never
  * titles, so the output can go in a PR.
  */
 import type { Task } from '../shared/task.ts';
@@ -25,7 +25,6 @@ const tasks = view.tasks.filter(t => t.parentId === null).toSorted((a, b) => a.c
 function pills(m: MetadataSuggestions) {
 	const set = new Set<string>();
 	if (m.projectId) set.add(`project:${m.projectId}`);
-	if (m.projectId && m.sectionId) set.add(`section:${m.sectionId}`);
 	for (const id of m.labelIds) set.add(`label:${id}`);
 	if (m.location) set.add(`place:${placeKey(m.location)}`);
 	return set;
@@ -97,10 +96,7 @@ for (let i = minHistory; i < tasks.length; i++) {
 	const half = words.slice(0, Math.max(1, Math.ceil(words.length / 2))).join(' ');
 	score('half typed', pills(suggestMetadata(index, half, task.createdAt)), want);
 	const projectId = mostUsed(history.map(t => t.projectId));
-	const sectionId = projectId
-		? mostUsed(history.filter(t => t.projectId === projectId && t.sectionId).map(t => t.sectionId))
-		: null;
-	score('baseline', pills({ projectId, sectionId, labelIds: [], location: null }), want);
+	score('baseline', pills({ projectId, labelIds: [], location: null }), want);
 }
 
 const pct = (a: number, b: number) => (b ? `${Math.round((100 * a) / b)}%` : '-');
