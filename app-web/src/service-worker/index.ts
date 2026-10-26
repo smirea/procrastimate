@@ -2,7 +2,8 @@ import { version } from '$app/env';
 import { assets, immutable } from '$app/manifest';
 import { self } from '$app/service-worker';
 import { DEVICE_HEADER } from 'shared/auth.ts';
-import type { PushMessage } from 'shared/push.ts';
+import { notificationTargetSchema } from 'shared/notifications.ts';
+import { notificationHref, type PushMessage } from 'shared/push.ts';
 import { cachedInstallId } from '../lib/install-cache.ts';
 import databaseWorker from 'virtual:database-worker';
 
@@ -142,25 +143,25 @@ self.addEventListener('push', event => {
 			tag: message.tag,
 			icon: '/icons/icon-192.png',
 			badge: '/icons/badge-96.png',
-			data: { taskId: message.taskId },
+			data: { opens: message.opens },
 		}),
 	);
 });
 
 self.addEventListener('notificationclick', event => {
 	event.notification.close();
-	const taskId: string | null = event.notification.data?.taskId ?? null;
-	event.waitUntil(open(taskId));
+	const opens: PushMessage['opens'] = event.notification.data?.opens ?? null;
+	event.waitUntil(open(opens));
 });
 
-async function open(taskId: string | null) {
+async function open(opens: PushMessage['opens']) {
 	const [client] = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
 	if (client) {
 		await client.focus();
-		client.postMessage({ type: 'open-task', taskId });
+		client.postMessage({ type: 'open-notification', opens });
 		return;
 	}
-	await self.clients.openWindow(taskId ? `/inbox?task=${encodeURIComponent(taskId)}` : '/inbox');
+	await self.clients.openWindow(notificationHref(opens));
 }
 
 function parse(text: string | undefined): PushMessage {
@@ -171,9 +172,9 @@ function parse(text: string | undefined): PushMessage {
 				title: message.title,
 				body: typeof message.body === 'string' ? message.body : '',
 				tag: typeof message.tag === 'string' ? message.tag : '',
-				taskId: typeof message.taskId === 'string' ? message.taskId : null,
+				opens: notificationTargetSchema.safeParse(message.opens).data ?? null,
 			};
 		}
 	} catch {}
-	return { title: 'ProcrastiMate', body: 'A task is due', tag: '', taskId: null };
+	return { title: 'ProcrastiMate', body: 'A task is due', tag: '', opens: null };
 }

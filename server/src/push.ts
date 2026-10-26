@@ -106,7 +106,7 @@ const TEST_MESSAGE = {
 	title: 'Notifications are on',
 	body: 'ProcrastiMate will notify you here when tasks are due.',
 	tag: 'test',
-	taskId: null,
+	opens: null,
 };
 
 export function sendTestPush(subscription: PushSubscriptionInfo, vapid: Vapid): Promise<number | null> {
@@ -210,7 +210,7 @@ async function deliverTo(db: Db, owner: string, now: number, send: SendPush): Pr
 					outcome.settled.add(pushTag(pending));
 					continue;
 				}
-				const message = { title: pending.title, body: pending.body, tag: pushTag(pending), taskId: pending.taskId };
+				const message = { title: pending.title, body: pending.body, tag: pushTag(pending), opens: pending.opens };
 				const delivery = classifyDelivery(await send(row.subscription, message));
 				if (delivery === 'gone') {
 					outcome.gone = true;

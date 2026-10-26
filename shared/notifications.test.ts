@@ -1,6 +1,7 @@
 import { expect } from 'bun:test';
 import * as notifications from './notifications.ts';
-import { nextOccurrence, type Task } from './task.ts';
+import { nextOccurrence, type Task, type TimeOfDay } from './task.ts';
+import type { TaskEvent } from './values.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
 const notificationBody = recorded('notifications', notifications.notificationBody);
@@ -60,15 +61,20 @@ describe('upcomingNotifications', () => {
 			}),
 		];
 		expect(pushSchedule(tasks, NOW)).toEqual([
-			{ at: local(2026, 10, 14, 10, 30), taskId: 'Call mom', title: 'Call mom', body: 'Today 10:30 AM' },
-			{ at: local(2026, 10, 14, 12), taskId: 'Passport', title: 'Passport', body: 'Reminder' },
-			{ at: local(2026, 10, 14, 17), taskId: 'Gym', title: 'Gym', body: 'Tomorrow 5:00 PM' },
-			{ at: local(2026, 10, 15, 8), taskId: 'Rent', title: 'Rent', body: 'Today' },
-			{ at: local(2026, 10, 15, 9), taskId: 'Taxes', title: 'Taxes', body: 'Sat Oct 17' },
-			{ at: local(2026, 10, 15, 16, 30), taskId: 'Gym', title: 'Gym', body: 'Today 5:00 PM' },
-			{ at: local(2026, 10, 15, 17), taskId: 'Gym', title: 'Gym', body: 'Today 5:00 PM' },
-			{ at: local(2026, 10, 20, 12), taskId: 'Lunch', title: 'Lunch', body: 'Tomorrow 12:00 PM' },
-			{ at: local(2026, 10, 21, 12), taskId: 'Lunch', title: 'Lunch', body: 'Today 12:00 PM' },
+			{
+				at: local(2026, 10, 14, 10, 30),
+				title: 'Call mom',
+				body: 'Today 10:30 AM',
+				opens: { kind: 'task', id: 'Call mom' },
+			},
+			{ at: local(2026, 10, 14, 12), title: 'Passport', body: 'Reminder', opens: { kind: 'task', id: 'Passport' } },
+			{ at: local(2026, 10, 14, 17), title: 'Gym', body: 'Tomorrow 5:00 PM', opens: { kind: 'task', id: 'Gym' } },
+			{ at: local(2026, 10, 15, 8), title: 'Rent', body: 'Today', opens: { kind: 'task', id: 'Rent' } },
+			{ at: local(2026, 10, 15, 9), title: 'Taxes', body: 'Sat Oct 17', opens: { kind: 'task', id: 'Taxes' } },
+			{ at: local(2026, 10, 15, 16, 30), title: 'Gym', body: 'Today 5:00 PM', opens: { kind: 'task', id: 'Gym' } },
+			{ at: local(2026, 10, 15, 17), title: 'Gym', body: 'Today 5:00 PM', opens: { kind: 'task', id: 'Gym' } },
+			{ at: local(2026, 10, 20, 12), title: 'Lunch', body: 'Tomorrow 12:00 PM', opens: { kind: 'task', id: 'Lunch' } },
+			{ at: local(2026, 10, 21, 12), title: 'Lunch', body: 'Today 12:00 PM', opens: { kind: 'task', id: 'Lunch' } },
 		]);
 	});
 
@@ -93,7 +99,12 @@ describe('upcomingNotifications', () => {
 			}),
 		];
 		expect(pushSchedule(tasks, NOW)).toEqual([
-			{ at: local(2026, 10, 14, 19, 30), taskId: 'Wear red', title: 'Wear red', body: '30m before Night out' },
+			{
+				at: local(2026, 10, 14, 19, 30),
+				title: 'Wear red',
+				body: '30m before Night out',
+				opens: { kind: 'task', id: 'Wear red' },
+			},
 		]);
 	});
 
@@ -105,7 +116,12 @@ describe('upcomingNotifications', () => {
 			task('Earlier', { due: { date: '2026-10-14', time: '10:00' } }),
 		];
 		expect(pushSchedule(tasks, NOW)).toEqual([
-			{ at: local(2026, 10, 14, 10, 15), taskId: 'Standup', title: 'Standup', body: 'Today 10:15 AM' },
+			{
+				at: local(2026, 10, 14, 10, 15),
+				title: 'Standup',
+				body: 'Today 10:15 AM',
+				opens: { kind: 'task', id: 'Standup' },
+			},
 		]);
 	});
 
@@ -120,7 +136,12 @@ describe('upcomingNotifications', () => {
 			}),
 		];
 		expect(pushSchedule(tasks, NOW)).toEqual([
-			{ at: local(2026, 10, 14, 10, 45), taskId: 'Standup', title: 'Standup', body: 'Today 10:45 AM' },
+			{
+				at: local(2026, 10, 14, 10, 45),
+				title: 'Standup',
+				body: 'Today 10:45 AM',
+				opens: { kind: 'task', id: 'Standup' },
+			},
 		]);
 	});
 
@@ -133,17 +154,76 @@ describe('upcomingNotifications', () => {
 		expect(pushSchedule([water], NOW)).toEqual([]);
 		const rolled = { ...water, ...nextOccurrence(water, '2026-10-14')! };
 		expect(pushSchedule([rolled], NOW)).toEqual([
-			{ at: local(2026, 10, 16, 8), taskId: 'Water plants', title: 'Water plants', body: 'Today 9:00 AM' },
-			{ at: local(2026, 10, 16, 9), taskId: 'Water plants', title: 'Water plants', body: 'Today 9:00 AM' },
+			{
+				at: local(2026, 10, 16, 8),
+				title: 'Water plants',
+				body: 'Today 9:00 AM',
+				opens: { kind: 'task', id: 'Water plants' },
+			},
+			{
+				at: local(2026, 10, 16, 9),
+				title: 'Water plants',
+				body: 'Today 9:00 AM',
+				opens: { kind: 'task', id: 'Water plants' },
+			},
 		]);
 	});
 
 	test('keeps only the soonest notifications up to the limit', () => {
 		const latest = task('latest', { reminders: [{ kind: 'at', date: '2026-10-16', time: '09:00' }] });
-		const sooner = ['a', 'b', 'c'].map(id =>
-			task(id, { reminders: [{ kind: 'at', date: '2026-10-15', time: '09:00' }] }),
+		const sooner = (['09:00', '09:01', '09:02'] as const).map((time, i) =>
+			task('abc'[i] ?? '', { reminders: [{ kind: 'at', date: '2026-10-15', time }] }),
 		);
-		expect(upcomingNotifications([latest, ...sooner], NOW, 3).map(n => n.taskId)).toEqual(['a', 'b', 'c']);
+		expect(upcomingNotifications([latest, ...sooner], NOW, 3).map(n => n.title)).toEqual(['a', 'b', 'c']);
+	});
+
+	test('tasks at one moment share a notification that counts them, lists three, and opens their place', () => {
+		const austin = { name: 'Austin', address: null, latitude: 30.2672, longitude: -97.7431, radius: 2000 } as const;
+		const reminders = [{ kind: 'at', date: '2026-10-14', time: '18:00' }] as const;
+		const tasks = ['Gun courses', 'Yoga maybe', 'Give timeleft another shot', 'Setup arcade'].map(title =>
+			task(title, { reminders: [...reminders], location: { ...austin, trigger: 'arrive' } }),
+		);
+		expect(pushSchedule(tasks, NOW)).toEqual([
+			{
+				at: local(2026, 10, 14, 18),
+				title: '4 tasks at Austin',
+				body: 'Gun courses, Yoga maybe, Give timeleft another shot, and 1 more',
+				opens: { kind: 'place', id: '30.2672,-97.7431' },
+			},
+		]);
+	});
+
+	test('a group opens the event, else the project, else Inbox that its tasks share', () => {
+		const event: TaskEvent = {
+			id: 'night',
+			title: 'Night out',
+			allDay: false,
+			series: false,
+			edge: 'start',
+			minutes: 0,
+			occurrences: [
+				{ start: local(2026, 10, 14, 20), end: local(2026, 10, 14, 23), original: local(2026, 10, 14, 20) },
+			],
+		};
+		const at = (time: TimeOfDay) => ({ due: { date: '2026-10-15' as const, time } });
+		const tasks = [
+			task('Wear red', { event }),
+			task('Bring cash', { event }),
+			task('Draft', { ...at('09:00'), projectId: 'work' }),
+			task('Review', { ...at('09:00'), projectId: 'work' }),
+			task('Call mom', at('12:00')),
+			task('Lunch', { ...at('12:00'), projectId: 'work' }),
+		];
+		expect(pushSchedule(tasks, NOW)).toEqual([
+			{
+				at: local(2026, 10, 14, 20),
+				title: '2 tasks for Night out',
+				body: 'Wear red, Bring cash',
+				opens: { kind: 'event', id: 'night' },
+			},
+			{ at: local(2026, 10, 15, 9), title: '2 tasks', body: 'Draft, Review', opens: { kind: 'project', id: 'work' } },
+			{ at: local(2026, 10, 15, 12), title: '2 tasks', body: 'Call mom, Lunch', opens: { kind: 'inbox', id: '' } },
+		]);
 	});
 
 	test('titles are cut to 300 characters', () => {
@@ -168,5 +248,29 @@ describe('notificationBody', () => {
 		['next year', { date: '2027-01-05', time: null }, local(2026, 12, 30, 9), 'Tue Jan 5, 2027'],
 	] as const)('%s', (_, due, at, expected) => {
 		expect(notificationBody(due, at)).toBe(expected);
+	});
+});
+
+describe('caughtUpNotification', () => {
+	test('folds every moment since the last check into one, at the latest', () => {
+		const tasks = [
+			task('Pack', { due: { date: '2026-10-14', time: '11:00' }, reminders: [{ kind: 'before', minutes: 60 }] }),
+			task('Call mom', { due: { date: '2026-10-14', time: '11:30' } }),
+			task('Later', { due: { date: '2026-10-14', time: '13:00' } }),
+		];
+		const at = local(2026, 10, 14, 12);
+		expect(notifications.caughtUpNotification(tasks, NOW - 1, at)).toEqual({
+			at: local(2026, 10, 14, 11, 30),
+			title: '2 tasks',
+			body: 'Pack, Call mom',
+			opens: { kind: 'inbox', id: '' },
+		});
+		expect(notifications.caughtUpNotification(tasks.slice(0, 1), NOW - 1, at)).toEqual({
+			at: local(2026, 10, 14, 11),
+			title: 'Pack',
+			body: 'Today 11:00 AM',
+			opens: { kind: 'task', id: 'Pack' },
+		});
+		expect(notifications.caughtUpNotification(tasks, at, at + 60_000)).toBeNull();
 	});
 });

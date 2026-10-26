@@ -3,17 +3,17 @@ import { MAX_SCHEDULED } from '../../shared/push';
 import { classifyDelivery, nextAlarm, planSchedule } from './push-schedule';
 
 const NOW = 1_000_000_000;
-const push = (taskId: string, at: number) => ({ taskId, at, title: taskId, body: '' });
+const push = (title: string, at: number) => ({ at, title, body: '', opens: { kind: 'task' as const, id: title } });
 
 describe('planSchedule', () => {
-	test('sorts by time and dedupes by task and time', () => {
+	test('sorts by time and keeps one push per moment', () => {
 		const plan = planSchedule(
 			[push('b', NOW + 2), push('a', NOW + 1), push('b', NOW + 2), push('b', NOW + 3)],
 			[],
 			0,
 			NOW,
 		);
-		expect(plan.map(p => `${p.taskId}@${p.at - NOW}`)).toEqual(['a@1', 'b@2', 'b@3']);
+		expect(plan.map(p => `${p.title}@${p.at - NOW}`)).toEqual(['a@1', 'b@2', 'b@3']);
 	});
 
 	test('keeps a past push only while it is still pending, and never one more than ten minutes stale', () => {
@@ -23,9 +23,9 @@ describe('planSchedule', () => {
 			push('new', NOW - 5),
 			push('next', NOW + 5),
 		];
-		expect(planSchedule(computed, [], 0, NOW).map(p => p.taskId)).toEqual(['next']);
+		expect(planSchedule(computed, [], 0, NOW).map(p => p.title)).toEqual(['next']);
 		const pending = [push('stale', NOW - 600_001), push('late', NOW - 600_000)];
-		expect(planSchedule(computed, pending, 0, NOW).map(p => p.taskId)).toEqual(['late', 'next']);
+		expect(planSchedule(computed, pending, 0, NOW).map(p => p.title)).toEqual(['late', 'next']);
 	});
 
 	test('drops a pending push the tasks no longer make', () => {
@@ -39,7 +39,7 @@ describe('planSchedule', () => {
 	test('keeps a push that is still stored for a retry even though it is before deliveredThrough', () => {
 		const retry = push('retry', NOW - 60_000);
 		const plan = planSchedule([retry, push('delivered', NOW - 30_000)], [retry], NOW - 1, NOW);
-		expect(plan.map(p => p.taskId)).toEqual(['retry']);
+		expect(plan.map(p => p.title)).toEqual(['retry']);
 	});
 
 	test('keeps the earliest pushes when over the cap', () => {

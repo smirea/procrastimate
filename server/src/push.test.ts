@@ -37,12 +37,12 @@ describe('push', () => {
 			{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Call mum', { due: JSON.stringify(due) }) },
 		]);
 		const [row] = await rows();
-		expect(row?.notifications.map(n => n.taskId)).toEqual([id]);
+		expect(row?.notifications.map(n => n.opens.id)).toEqual([id]);
 		expect(row?.nextAt).toBe(Date.UTC(2026, 9, 14, 18, 30));
-		const schedule = await json<{ notifications: { taskId: string }[] }>(
+		const schedule = await json<{ notifications: { opens: { id: string } }[] }>(
 			app.fetch('/api/push/schedule', { headers: owner.headers }),
 		);
-		expect(schedule.notifications.map(n => n.taskId)).toEqual([id]);
+		expect(schedule.notifications.map(n => n.opens.id)).toEqual([id]);
 
 		await upload(app, owner, [{ op: 'patch', table: 'tasks', id, values: { completed_at: NOW } }]);
 		expect((await rows())[0]?.notifications).toEqual([]);
@@ -68,7 +68,7 @@ describe('push', () => {
 		});
 		expect(subscribed.status).toBe(200);
 		const [row] = await app.db.select().from(push).where(eq(push.userId, late.person.id));
-		expect(row?.notifications.map(n => n.taskId)).toEqual([id]);
+		expect(row?.notifications.map(n => n.opens.id)).toEqual([id]);
 		expect(row?.nextAt).toBe(Date.UTC(2026, 9, 14, 19, 15));
 	});
 
@@ -85,7 +85,9 @@ describe('push', () => {
 			{ op: 'put', table: 'tasks', id, values: taskRow(id, retrier.person.id, 'Feed the cat', { due }) },
 		]);
 		const plan = async () =>
-			(await app.db.select().from(push).where(eq(push.userId, retrier.person.id)))[0]?.notifications.map(n => n.taskId);
+			(await app.db.select().from(push).where(eq(push.userId, retrier.person.id)))[0]?.notifications.map(
+				n => n.opens.id,
+			);
 		expect(await plan()).toEqual([id]);
 		// The state a crash between the delete and its bookkeeping leaves: the row gone, nothing else changed.
 		await app.db.delete(tasks).where(eq(tasks.id, id));
@@ -126,7 +128,7 @@ describe('push', () => {
 		const at = Date.UTC(2026, 9, 14, 18, 45, 10);
 		expect(await deliverDue(app.db, at, send)).toBe(0);
 		expect(sent.map(message => message.title)).toEqual(['Stretch']);
-		expect((await rows())[0]?.notifications.map(n => n.taskId)).toEqual([id]);
+		expect((await rows())[0]?.notifications.map(n => n.opens.id)).toEqual([id]);
 
 		status = 201;
 		expect(await deliverDue(app.db, at + 60_000, send)).toBe(1);
@@ -146,6 +148,40 @@ describe('push', () => {
 		status = 410;
 		await deliverDue(app.db, Date.UTC(2026, 9, 14, 19, 0, 5), send);
 		expect(await rows()).toHaveLength(0);
+	});
+
+	test('tasks due at the same minute send one push that names them and opens their list', async () => {
+		const grouper = await signUp(app, 'Grouper', 'install-group-000');
+		await app.fetch('/api/push/subscription', {
+			method: 'PUT',
+			headers: grouper.headers,
+			body: JSON.stringify({ subscription: subscription('https://push.example/group') }),
+		});
+		const due = JSON.stringify({ date: '2026-10-14', time: '21:00' });
+		const ids = [crypto.randomUUID(), crypto.randomUUID()];
+		await upload(
+			app,
+			grouper,
+			['Pack', 'Charge phone'].map((title, i) => ({
+				op: 'put',
+				table: 'tasks',
+				id: ids[i] ?? '',
+				values: taskRow(ids[i] ?? '', grouper.person.id, title, { due }),
+			})),
+		);
+		const sent: PushMessage[] = [];
+		await deliverDue(app.db, Date.UTC(2026, 9, 14, 21, 0, 5), async (_subscription, message) => {
+			sent.push(message);
+			return 201;
+		});
+		expect(sent).toEqual([
+			{
+				title: '2 tasks',
+				body: 'Pack, Charge phone',
+				tag: `at:${Date.UTC(2026, 9, 14, 21, 0)}`,
+				opens: { kind: 'inbox', id: '' },
+			},
+		]);
 	});
 
 	test('a browser that paired again as a new install replaces its old entry for the same endpoint', async () => {
