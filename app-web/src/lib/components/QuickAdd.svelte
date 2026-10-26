@@ -172,7 +172,7 @@
 		const task = save();
 		if (!task) return;
 		confirmAdded(task);
-		draft.restart(reusedDefaults(task, store.labels, defaults.date));
+		draft.restart(reusedDefaults(task, store.labels, draft.defaults.date));
 		opened = [];
 		picker = null;
 		subtasks = [];
@@ -317,7 +317,7 @@
 					class="mic hit-area absolute top-1/2 right-0 grid size-9 -translate-y-1/2 place-items-center rounded-full bg-accent text-on-accent transition-transform active:scale-90"
 					aria-label="Ramble"
 					onmousedown={(e) => e.preventDefault()}
-					onclick={() => sheets.openRamble(defaults)}
+					onclick={() => sheets.openRamble(draft.defaults)}
 					transition:scale={motion({ start: 0.6, duration: 160, easing: cubicOut })}
 				>
 					<Microphone size={16} weight="fill" />
