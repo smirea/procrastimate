@@ -142,17 +142,17 @@ jobs:
       - name: Toolchain
         run: xcodebuild -version
 
-      # Sentry's xcframework zip downloads from GitHub releases on a cold resolve, and sentry-cocoa's full set (about
-      # 800 MB) once timed out a build. SwiftPM keeps it and every package's git clone in its shared cache, which resolves
-      # fully offline when warm. The key is Package.resolved, which pins every remote package, and the local packages'
-      # manifests, which pin Sentry. No restore-keys: the shared cache never prunes, so a dependency change downloads once
-      # instead of carrying the old versions forward. testflight.yml saves the same key on master, which every PR can read.
+      # The resolved packages: every package's checkout and the extracted Sentry and PowerSync xcframeworks, about 1.2 GB.
+      # With them in place the resolve below takes seconds and needs no network; on a miss it downloads and extracts
+      # everything again, which took about a minute. The key is Package.resolved, which pins every remote package, and the
+      # local packages' manifests, which pin Sentry. No restore-keys: a stale directory would resolve over old versions.
+      # testflight.yml saves the same key on master, which every PR can read.
       - uses: actions/cache@v4
         with:
-          path: ~/Library/Caches/org.swift.swiftpm
-          key: swiftpm-${{ runner.os }}-${{ hashFiles('app-ios/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'app-ios/Packages/*/Package.swift') }}
+          path: app-ios/SourcePackages
+          key: source-packages-${{ runner.os }}-${{ hashFiles('app-ios/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'app-ios/Packages/*/Package.swift') }}
 
-      # One clone directory for every xcodebuild below, so the packages extract once instead of once per call.
+      # One clone directory for every xcodebuild below and the cache above.
       - name: Resolve packages
         run: xcodebuild -resolvePackageDependencies -project App.xcodeproj -scheme App -clonedSourcePackagesDirPath SourcePackages
 
