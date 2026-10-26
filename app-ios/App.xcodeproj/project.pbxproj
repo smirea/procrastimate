@@ -120,13 +120,9 @@
         };
         A00000000000000000000054 = { isa = PBXTargetDependency; target = A00000000000000000000021; targetProxy = A00000000000000000000053; };
 
-        /* The app's package dependencies, Sentry and PowerSync with GRDB (see docs/decisions/ios.md). Only the App target
-           links them; Core stays Foundation-only. */
-        A00000000000000000000050 = {
-            isa = XCRemoteSwiftPackageReference;
-            repositoryURL = "https://github.com/getsentry/sentry-cocoa";
-            requirement = { kind = exactVersion; version = 9.30.2; };
-        };
+        /* The app's package dependencies, Sentry (a local package over sentry-cocoa's Sentry-Dynamic xcframework) and PowerSync
+           with GRDB (see docs/decisions/ios.md). Only the App target links them; Core stays Foundation-only. */
+        A00000000000000000000050 = { isa = XCLocalSwiftPackageReference; relativePath = Packages/Sentry; };
         A00000000000000000000051 = { isa = XCSwiftPackageProductDependency; package = A00000000000000000000050; productName = "Sentry-Dynamic"; };
         A00000000000000000000052 = { isa = PBXBuildFile; productRef = A00000000000000000000051; };
         A00000000000000000000063 = {
