@@ -560,7 +560,9 @@ public enum StoreRules {
     /// undos give the same result in any order: undoing a label's delete puts the label back on a task whose own delete
     /// is pending. A record an undo moves or brings back whose project, section, or parent task a pending delete holds
     /// joins that delete, and comes back with it. One whose project, section, or parent is gone for good stays gone, so
-    /// no task comes back where no view shows it. A task edited since keeps its edits.
+    /// no task comes back where no view shows it. A task edited since keeps its edits. A live task keeps only live
+    /// labels: one a pending delete holds goes into that delete's labelings, so undoing it puts the label back, and one
+    /// gone for good is dropped.
     public static func undo(_ data: StoreData, _ pending: [Undo], _ index: Int) -> (data: StoreData, pending: [Undo]) {
         guard pending.indices.contains(index) else { return (data, pending) }
         let action = pending[index]
@@ -632,11 +634,25 @@ public enum StoreRules {
             )
         }
         let live = keep(.live)
+        let liveLabels = Set(live.labels.map(\.id))
+        var moved = rest.map { _ in [API.Labeling]() }
         var next = data
         next.projects = live.projects
         next.sections = live.sections
         next.labels = live.labels
-        next.tasks = live.tasks
+        next.tasks = live.tasks.map { t in
+            guard !t.labelIds.allSatisfy(liveLabels.contains) else { return t }
+            // Each index is the one that delete would have recorded had the task been live, when the labels deleted
+            // after it were still on the task, so undoing the label deletes newest first puts them back in their order.
+            for (at, labelId) in t.labelIds.enumerated() where !liveLabels.contains(labelId) {
+                guard let held = owner[labelId] else { continue }
+                let index = t.labelIds[..<at].filter { liveLabels.contains($0) || (owner[$0] ?? -1) >= held }.count
+                moved[held].append(API.Labeling(taskId: t.id, labelId: labelId, index: index))
+            }
+            var kept = t
+            kept.labelIds = t.labelIds.filter(liveLabels.contains)
+            return kept
+        }
         let left = rest.enumerated().map { i, undo -> Undo in
             guard case var .delete(undo) = undo else { return undo }
             let held = keep(.held(i))
@@ -644,6 +660,7 @@ public enum StoreRules {
             undo.deleted.sections = held.sections
             undo.deleted.labels = held.labels
             undo.deleted.tasks = held.tasks
+            undo.deleted.labelings += moved[i]
             return .delete(undo)
         }
         return (next, left)

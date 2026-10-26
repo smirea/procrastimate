@@ -693,6 +693,7 @@ describe('stacked undos', () => {
 			() => data(),
 			[deleting(d => store.deleteLabel(d, 'calls')), deletingTask('call')],
 		],
+		['a task, then a label it had', () => data(), [deletingTask('call'), deleting(d => store.deleteLabel(d, 'calls'))]],
 		['a completion, then the task', () => data(), [completing('trip'), deletingTask('trip')]],
 		[
 			'a section, then its project',
@@ -744,6 +745,43 @@ describe('stacked undos', () => {
 		const first = undo(gone, [deletion(deletedBetween(data(), noLabel)), deletion({ tasks: removed })], 0);
 		expect(first.data).toEqual({ ...data(), tasks: data().tasks.filter(t => t.id !== 'call') });
 		expect(undo(first.data, first.pending, 0).data).toEqual(data());
+	});
+
+	test("a task undone after its label's delete expired comes back without the label", () => {
+		const { data: gone, removed } = deleteTask(data(), 'call');
+		const noLabel = deleteLabel(gone, 'calls');
+		expect(find(undo(noLabel, [deletion({ tasks: removed })], 0).data, 'call').labelIds).toEqual(['phone']);
+	});
+
+	test("a task undone while its label's delete is pending hands the label to that delete", () => {
+		const { data: gone, removed } = deleteTask(data(), 'call');
+		const noLabel = deleteLabel(gone, 'calls');
+		const first = undo(noLabel, [deletion(deletedBetween(gone, noLabel)), deletion({ tasks: removed })], 1);
+		expect(find(first.data, 'call').labelIds).toEqual(['phone']);
+		expect(first.pending).toEqual([
+			deletion({ labels: data().labels.slice(0, 1), labelings: [{ taskId: 'call', labelId: 'calls', index: 0 }] }),
+		]);
+		expect(undo(first.data, first.pending, 0).data).toEqual(data());
+	});
+
+	test("a task undone while two of its labels' deletes are pending gets them back in order, newest undone first", () => {
+		const start = updateTask(data(), 'call', { labelIds: ['calls', 'phone', 'work'] });
+		const withWork = {
+			...start,
+			labels: [...start.labels, { ...start.labels[0]!, id: 'work', name: 'Work', createdAt: 3 }],
+		};
+		const { data: gone, removed } = deleteTask(withWork, 'call');
+		const noCalls = deleteLabel(gone, 'calls');
+		const noPhone = deleteLabel(noCalls, 'phone');
+		const pending = [
+			deletion({ tasks: removed }),
+			deletion(deletedBetween(gone, noCalls)),
+			deletion(deletedBetween(noCalls, noPhone)),
+		];
+		const first = undo(noPhone, pending, 0);
+		expect(find(first.data, 'call').labelIds).toEqual(['work']);
+		const second = undo(first.data, first.pending, 1);
+		expect(undo(second.data, second.pending, 0).data).toEqual(withWork);
 	});
 
 	test('a reopened subtask undone after its parent is deleted comes back completed with its parent', () => {
