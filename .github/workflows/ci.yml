@@ -122,21 +122,30 @@ jobs:
           restore-keys: apt-${{ env.ImageOS }}-
 
       - name: Install Playwright system dependencies
+        id: install-deps
         timeout-minutes: 5
         run: bunx playwright install-deps chromium webkit
         working-directory: app-web
 
-      - name: Drop apt packages the mirror no longer serves
-        if: steps.apt-cache.outputs.cache-hit != 'true'
-        run: sudo apt-get autoclean
+      # apt writes its lock and half-fetched debs readable by root only, which the cache's tar runs as the runner user.
+      - name: Prepare apt packages for the cache
+        if: always() && steps.apt-cache.outputs.cache-hit != 'true' && steps.install-deps.outcome != 'skipped'
+        env:
+          INSTALLED: ${{ steps.install-deps.outcome == 'success' }}
+        run: |
+          if [ "$INSTALLED" = true ]; then sudo apt-get autoclean; fi
+          sudo chmod -R a+rX ~/.cache/apt-archives
 
-      # Saved right away rather than at the end of the job, so a failing test run still warms the cache.
+      # Saved right away rather than at the end of the job, so a failing test run still warms the cache. An install that
+      # timed out saves what it fetched under a per-run key the restore prefix matches, so the rerun resumes from there.
       - name: Cache apt packages
-        if: steps.apt-cache.outputs.cache-hit != 'true'
+        if: always() && steps.apt-cache.outputs.cache-hit != 'true' && steps.install-deps.outcome != 'skipped'
         uses: actions/cache/save@v4
         with:
           path: ~/.cache/apt-archives
-          key: ${{ steps.apt-cache.outputs.cache-primary-key }}
+          key: >-
+            ${{ steps.apt-cache.outputs.cache-primary-key }}${{ steps.install-deps.outcome != 'success'
+            && format('-partial-{0}-{1}', github.run_id, github.run_attempt) || '' }}
 
       # The same Postgres and PowerSync containers a worktree runs, on the main checkout's e2e ports.
       - name: Postgres and PowerSync
@@ -147,6 +156,7 @@ jobs:
         run: DATABASE_URL="$(grep '^DATABASE_URL=' .env.override | cut -d= -f2-)" REQUIRE_DATABASE=1 bun test server/src/sharing-lock.test.ts
 
       - name: End to end against the Worker, desktop Chromium
+        id: desktop
         run: bun run test:e2e --project desktop
         env:
           E2E_WORKER: '1'
@@ -154,7 +164,7 @@ jobs:
       # One worker: each WebKit test drives two or three pages, and Linux WebKit on two cores beside a second worker's
       # pages rendered so slowly that the longest specs crossed their limits in 3 of 3 runs, a different spec each time.
       - name: End to end against the Worker, mobile WebKit
-        if: success() || failure()
+        if: (success() || failure()) && steps.desktop.outcome != 'skipped'
         run: bun run test:e2e --project mobile --workers 1 --output test-results/mobile
         env:
           E2E_WORKER: '1'
