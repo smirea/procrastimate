@@ -62,16 +62,18 @@ public enum Screens {
         }
     }
 
-    /// What quick add reuses after saving `task`, while the list it saved from stays open: where the task went (its
-    /// project, section, labels, place, and event), never its date or priority, which belong to one task. A saved place
-    /// goes back among the labels, since quick add picks one there.
-    public static func reusedDefaults(_ task: TaskItem, _ labels: [Label]) -> QuickAddDraft.Defaults {
+    /// What the next task starts with after quick add saves `task`, in the same sheet or a later one on the same screen:
+    /// where the task went (its project, section, labels, place, and event), never its own date or priority, which
+    /// belong to one task. `date` is the sheet's or screen's own, so a batch typed into Tomorrow stays in Tomorrow. A
+    /// saved place goes back among the labels, since quick add picks one there.
+    public static func reusedDefaults(_ task: TaskItem, _ labels: [Label], date: DateKey?) -> QuickAddDraft.Defaults {
         QuickAddDraft.Defaults(
             projectId: task.projectId,
             sectionId: task.sectionId,
             labelIds: Triggers.pickedLabels(labels, task),
             location: task.location,
-            event: task.event
+            event: task.event,
+            date: date
         )
     }
 

@@ -28,12 +28,14 @@ final class Toasts {
     @ObservationIgnored private var next = 0
     @ObservationIgnored private var countdowns: [Int: Countdown] = [:]
 
-    func show(_ message: String, action: Action? = nil, for duration: Duration = .seconds(5)) {
+    @discardableResult
+    func show(_ message: String, action: Action? = nil, for duration: Duration = .seconds(5)) -> Int {
         next += 1
         let id = next
         withAnimation(.snappy) { items.append(Toast(id: id, message: message, action: action)) }
         countdowns[id] = Countdown(remaining: duration)
         run(id)
+        return id
     }
 
     /// Stops a toast's countdown while it is touched, hovered, or focused by VoiceOver. Each `hold` pairs with one `release`.
