@@ -286,9 +286,12 @@ public final class Store {
         writer?(RowBatch(version: version, owner: space.query ?? me, writes: writes))
     }
 
-    /// Deletes every row of the user's own space. Settings stay, since every user has them.
+    /// Deletes every row of the user's own space. Settings stay, since every user has them, and so do the comments
+    /// others wrote: the server refuses their deletion, and its purge removes them once the space is empty.
     public func deleteAll() {
-        commit(StoreData())
+        var empty = StoreData()
+        empty.comments = snapshot.data.comments.filter { $0.authorId != nil && $0.authorId != me }
+        commit(empty)
     }
 
     /// A change before the settings row arrived shows at once and patches the row once a reload brings it.
