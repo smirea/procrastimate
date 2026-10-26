@@ -5,6 +5,7 @@
  *   - shuts down claimed simulators unused for 15 minutes that no running process names
  *   - deletes Xcode DerivedData of the App project at paths that no longer exist
  *   - removes PowerSync containers and drops databases of worktrees that no longer exist
+ *   - drops a live worktree's databases that none of its env files point at, left by a branch rename
  *   - drops inactive replication slots no live PowerSync container replicates, which would hold WAL forever
  *   - prints load, booted simulators, and worktree count
  *   - lists worktrees whose PR merged, for teardown-worktree.ts
@@ -14,6 +15,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { readOverride, run, worktrees } from './lib';
 import {
+	configuredDatabaseUrls,
 	databaseOf,
 	dockerRunning,
 	dropDatabases,
@@ -21,6 +23,7 @@ import {
 	powerSyncContainers,
 	removeContainer,
 	replicationSlots,
+	staleDatabases,
 	worktreeDatabases,
 } from './local-stack';
 import { devices, owner, remove, shutdown } from './simulators';
@@ -72,9 +75,15 @@ if (dockerRunning()) {
 			removeContainer(container.name),
 		);
 	}
-	for (const { database, worktree } of await worktreeDatabases()) {
-		if (live.has(worktree)) continue;
-		await act(`Dropping database ${database}; its worktree ${worktree} is gone.`, () => dropDatabases(database));
+	const commented = Map.groupBy(await worktreeDatabases(), row => row.worktree);
+	for (const [worktree, rows] of commented) {
+		const databases = rows.map(row => row.database);
+		const reason = live.has(worktree) ? 'none of its env files point at it' : 'its worktree is gone';
+		for (const database of live.has(worktree)
+			? staleDatabases(databases, configuredDatabaseUrls(worktree))
+			: databases) {
+			await act(`Dropping database ${database} of ${worktree}; ${reason}.`, () => dropDatabases(database));
+		}
 	}
 	// A live worktree can still leave slots behind: its branch was renamed, so its old databases sit unreplicated, or
 	// its container was removed by hand. PowerSync starts a new replication stream when it finds its slot missing.
