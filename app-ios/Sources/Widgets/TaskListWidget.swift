@@ -7,7 +7,7 @@ struct TaskListWidget: Widget {
         AppIntentConfiguration(
             kind: "tasks",
             intent: TaskListConfiguration.self,
-            provider: ListProvider<TaskListConfiguration>(showsAdd: { $0.showsAdd })
+            provider: ListProvider<TaskListConfiguration> { ListEntry.Style(showsHeader: $0.showsHeader, showsAdd: $0.showsAdd) }
         ) { entry in
             TaskListView(entry: entry)
                 .containerBackground(for: .widget) { WidgetCanvas(accent: entry.accent) }
@@ -45,14 +45,15 @@ private struct HomeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 6 : 8) {
-            header
-            if listing.tasks.isEmpty {
+            if entry.style.showsHeader { header }
+            if listing.rows.isEmpty {
                 EmptyListView(listing: listing, accent: entry.accent)
             } else {
-                VStack(alignment: .leading, spacing: rowStyle == .stacked ? 8 : 4) {
-                    ForEach(listing.tasks.prefix(limit), id: \.id) { task in
+                VStack(alignment: .leading, spacing: rowStyle == .stacked ? (entry.style.showsHeader ? 8 : 6) : 4) {
+                    ForEach(listing.rows.prefix(limit), id: \.id) { task in
                         TaskRowView(
                             task: task,
+                            checked: listing.checked.contains(task.id),
                             today: entry.today,
                             project: showsProject ? task.projectId.flatMap { entry.projects[$0] } : nil,
                             style: rowStyle
@@ -61,8 +62,8 @@ private struct HomeView: View {
                     }
                 }
                 Spacer(minLength: 0)
-                if family != .systemMedium, listing.tasks.count > limit {
-                    Text("+\(listing.tasks.count - limit) more")
+                if family != .systemMedium, listing.rows.count > limit {
+                    Text("+\(listing.rows.count - limit) more")
                         .font(.caption2.weight(.medium))
                         .foregroundStyle(.faint)
                 }
@@ -93,7 +94,7 @@ private struct HomeView: View {
                 .foregroundStyle(listing.overdue > 0 ? .toneOverdue : .muted)
                 .contentTransition(.numericText(value: Double(listing.tasks.count)))
                 .accessibilityLabel("\(listing.tasks.count) open")
-            if entry.showsAdd {
+            if entry.style.showsAdd {
                 AddButton(link: .add(list: list.key), accent: entry.accent, size: compact ? 24 : 28)
             }
         }
@@ -111,12 +112,13 @@ private struct HomeView: View {
         }
     }
 
+    /// Without the header, each size fits one more row.
     private var limit: Int {
-        switch family {
-        case .systemSmall: 3
-        case .systemMedium: 3
+        let rows = switch family {
+        case .systemSmall, .systemMedium: 3
         default: 7
         }
+        return entry.style.showsHeader ? rows : rows + 1
     }
 
     private var showsProject: Bool {
@@ -135,6 +137,8 @@ struct TaskRowView: View {
     }
 
     let task: TaskItem
+    /// Checked off in the widget moments ago: struck through until it leaves.
+    let checked: Bool
     let today: DateKey
     let project: String?
     let style: Style
@@ -144,47 +148,63 @@ struct TaskRowView: View {
     var body: some View {
         HStack(alignment: .center, spacing: compact ? 7 : 10) {
             Button(intent: CompleteWidgetTaskIntent(taskID: task.id)) {
-                WidgetCheckbox(tone: task.priority.tone, size: compact ? 17 : 20)
+                WidgetCheckbox(tone: task.priority.tone, checked: checked, size: compact ? 17 : 20)
                     .frame(width: compact ? 22 : 26, height: compact ? 22 : 26)
                     .contentShape(.circle)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Complete \(task.title)")
+            .disabled(checked)
+            .accessibilityLabel("Complete \(WidgetLists.title(task.title))")
             Link(destination: AppLink.task(id: task.id).url) {
-                let title = Text(task.title)
+                let title = Text(WidgetLists.title(task.title))
                     .font(compact ? .caption : .subheadline)
-                    .foregroundStyle(.ink)
+                    .strikethrough(checked)
+                    .foregroundStyle(checked ? .muted : .ink)
                     .lineLimit(1)
                 switch style {
                 case .compact:
                     title.frame(maxWidth: .infinity, alignment: .leading)
                 case .inline:
-                    HStack(spacing: 6) {
-                        title.layoutPriority(1)
-                        Spacer(minLength: 0)
-                        detail?.font(.caption2).lineLimit(1)
+                    // The due date always shows in full; the project shows only when the title leaves room for it.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 6) {
+                            title
+                            Spacer(minLength: 0)
+                            projectText?.font(.caption2).lineLimit(1)
+                            dueText?.font(.caption2)
+                        }
+                        HStack(spacing: 6) {
+                            title
+                            Spacer(minLength: 0)
+                            dueText?.font(.caption2).fixedSize()
+                        }
                     }
                 case .stacked:
                     VStack(alignment: .leading, spacing: 1) {
                         title
-                        detail?.font(.caption2).lineLimit(1)
+                        HStack(spacing: 0) {
+                            dueText?.fixedSize()
+                            if dueText != nil, projectText != nil { Text(" · ").foregroundStyle(.faint) }
+                            projectText?.lineLimit(1)
+                        }
+                        .font(.caption2)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
+        .opacity(checked ? 0.6 : 1)
         .invalidatableContent()
     }
 
-    private var detail: Text? {
-        let due = Triggers.scheduledDue(task, today, in: .current)
-        var parts: [Text] = []
-        if let due {
-            parts.append(Text(Format.formatDue(due, today)).foregroundStyle(Format.dueTone(due, today).color))
+    private var dueText: Text? {
+        Triggers.scheduledDue(task, today, in: .current).map { due in
+            Text(WidgetLists.due(due, today)).foregroundStyle(Format.dueTone(due, today).color)
         }
-        if let project { parts.append(Text(project).foregroundStyle(.faint)) }
-        guard let first = parts.first else { return nil }
-        return parts.dropFirst().reduce(first) { Text("\($0)\(Text(" · ").foregroundStyle(.faint))\($1)") }
+    }
+
+    private var projectText: Text? {
+        project.map { Text($0).foregroundStyle(.faint) }
     }
 }
 
@@ -217,26 +237,31 @@ private struct RectangularView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {
-            HStack(spacing: 4) {
-                Image(systemName: symbol).font(.caption.weight(.bold))
-                Text(listing.name).font(.headline).lineLimit(1)
-                Spacer(minLength: 2)
-                Text("\(listing.tasks.count)").font(.headline).monospacedDigit()
-                    .contentTransition(.numericText(value: Double(listing.tasks.count)))
+            if entry.style.showsHeader {
+                HStack(spacing: 4) {
+                    Image(systemName: symbol).font(.caption.weight(.bold))
+                    Text(listing.name).font(.headline).lineLimit(1)
+                    Spacer(minLength: 2)
+                    Text("\(listing.tasks.count)").font(.headline).monospacedDigit()
+                        .contentTransition(.numericText(value: Double(listing.tasks.count)))
+                }
+                .widgetAccentable()
             }
-            .widgetAccentable()
-            if listing.tasks.isEmpty {
+            if listing.rows.isEmpty {
                 Text(listing.done > 0 ? "All done · \(listing.done) today" : "Nothing here").font(.caption)
             } else {
-                ForEach(listing.tasks.prefix(2), id: \.id) { task in
+                ForEach(listing.rows.prefix(entry.style.showsHeader ? 2 : 3), id: \.id) { task in
+                    let checked = listing.checked.contains(task.id)
                     HStack(spacing: 5) {
                         Button(intent: CompleteWidgetTaskIntent(taskID: task.id)) {
-                            Image(systemName: "circle").font(.caption.weight(.semibold))
+                            Image(systemName: checked ? "checkmark.circle.fill" : "circle").font(.caption.weight(.semibold))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Complete \(task.title)")
-                        Text(task.title).font(.caption).lineLimit(1)
+                        .disabled(checked)
+                            .accessibilityLabel("Complete \(WidgetLists.title(task.title))")
+                        Text(WidgetLists.title(task.title)).font(.caption).strikethrough(checked).lineLimit(1)
                     }
+                    .transition(.push(from: .bottom).combined(with: .opacity))
                     .invalidatableContent()
                 }
             }
@@ -252,7 +277,7 @@ private struct InlineView: View {
 
     var body: some View {
         if let next = listing.tasks.first {
-            Label("\(listing.tasks.count) · \(next.title)", systemImage: symbol)
+            Label("\(listing.tasks.count) · \(WidgetLists.title(next.title))", systemImage: symbol)
         } else {
             Label(listing.done > 0 ? "\(listing.name) done" : "\(listing.name) clear", systemImage: "checkmark.circle")
         }

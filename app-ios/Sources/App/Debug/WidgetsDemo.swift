@@ -17,6 +17,7 @@ enum WidgetsDemo {
             NewTask(title: "Buy oat milk", due: Due(date: today)),
             NewTask(title: "Water the plants", projectId: home.id, due: Due(date: today), priority: .p3),
             NewTask(title: "Book dentist", due: Due(date: today)),
+            NewTask(title: "Look into [Google Maps](https://maps.google.com) offline areas", due: Due(date: today)),
             NewTask(title: "Send invoice", due: Due(date: Dates.addDays(today, 1)), priority: .p2),
             NewTask(title: "Fix the fence", projectId: home.id),
         ]

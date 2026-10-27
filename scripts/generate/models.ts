@@ -12,6 +12,7 @@ const HAND_WRITTEN: Record<string, string> = {
 	RambleMessage: 'The Ramble socket frame, decoded only inside the capture session.',
 	Pin: "An iOS tab bar pin, kept in this device's UserDefaults and never synced.",
 	WidgetData: "The iOS widgets' copy of the user's lists, written to this device's app group and never synced.",
+	Checked: 'A row the iOS widgets just checked off, kept in WidgetData for a moment so it leaves struck through.',
 	RecentPick: "A place picked in the iOS Location sheet, kept in this device's UserDefaults and never synced.",
 };
 
