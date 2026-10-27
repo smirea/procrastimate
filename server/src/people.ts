@@ -1,9 +1,10 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { unionAll } from 'drizzle-orm/pg-core';
+import { unionAll } from 'drizzle-orm/sqlite-core';
 import { access, shares, tasks } from '../../shared/db/schema';
 import { namePrefixed, type Person } from '../../shared/sharing';
 import { user } from './db/auth-schema';
-import type { Db } from './db/postgres';
+import type { Db } from './db/sqlite';
+import { chunks } from './db/chunks';
 
 /** People are Better Auth's users. Activity, share lists, and comments name them from the `user` table. */
 
@@ -16,10 +17,13 @@ const asPerson = (row: { id: string; name: string; kind: 'human' | 'ai'; ownerId
 export async function peopleById(db: Db, ids: readonly string[]): Promise<Map<string, Person>> {
 	const wanted = [...new Set(ids)];
 	if (!wanted.length) return new Map();
-	const rows = await db
-		.select({ id: user.id, name: user.name, kind: user.kind, ownerId: user.ownerId })
-		.from(user)
-		.where(inArray(user.id, wanted));
+	const rows = chunks(wanted).flatMap(part =>
+		db
+			.select({ id: user.id, name: user.name, kind: user.kind, ownerId: user.ownerId })
+			.from(user)
+			.where(inArray(user.id, part))
+			.all(),
+	);
 	return new Map(rows.map(row => [row.id, asPerson(row)]));
 }
 

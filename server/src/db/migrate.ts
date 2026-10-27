@@ -1,72 +1,106 @@
-import { sql } from 'drizzle-orm';
-import { migrations } from './generated/migrations';
-import type { Db } from './postgres';
+import { is, SQL } from 'drizzle-orm';
+import { getTableConfig, SQLiteSyncDialect, SQLiteTable } from 'drizzle-orm/sqlite-core';
+import type { SqlDriver } from 'sync-engine/core';
+import * as schema from '../../../shared/db/schema';
+import { authSchema } from './auth-schema';
 
 /**
- * Applies `server/drizzle`, bundled into `generated/migrations.ts` because the Worker cannot read the migration
- * files. The bookkeeping table is drizzle-kit's own, so `drizzle-kit migrate` agrees with it. Every run takes a
- * transaction-level advisory lock first, so Worker isolates and dev servers starting together apply each migration
- * once. A database whose history is not a prefix of these migrations fails before a statement runs: a worktree
- * database recovers with `bun scripts/setup-worktree.ts --reset-db`; production never should.
+ * The server's tables beside the engine's: the server-only ones, Better Auth's, and the indexes the synced tables
+ * need on the server. Migrations are additive and computed from the live database, like the engine's: a missing table
+ * is created, a missing column added, a missing index created. Nothing is ever dropped or retyped, and there is no
+ * history to agree with, so every start of the Bun server or the Durable Object runs it.
  */
 
-export class MigrationHistoryError extends Error {
-	constructor(
-		readonly expected: number[],
-		readonly found: number[],
-		readonly tables: string[],
-	) {
-		const history = found.length ? `[${found.join(', ')}]` : `none, with tables ${tables.join(', ')}`;
-		super(
-			`The database's migration history is not a prefix of server/drizzle, so nothing was migrated. ` +
-				`Expected a prefix of [${expected.join(', ')}], found ${history}. ` +
-				`A worktree database recovers with \`bun scripts/setup-worktree.ts --reset-db\`.`,
-		);
-		this.name = 'MigrationHistoryError';
+const dialect = new SQLiteSyncDialect();
+const quote = (name: string) => `"${name.replaceAll('"', '""')}"`;
+const render = (value: SQL) => {
+	const query = dialect.sqlToQuery(value);
+	if (query.params.length) throw new Error(`migrate: index SQL must not take parameters: ${query.sql}`);
+	return query.sql;
+};
+
+export const SERVER_TABLES: SQLiteTable[] = [
+	...Object.values(schema as Record<string, unknown>).filter(
+		(value): value is SQLiteTable => value instanceof SQLiteTable,
+	),
+	...Object.values(authSchema),
+];
+
+type Config = ReturnType<typeof getTableConfig>;
+type ConfigColumn = Config['columns'][number];
+
+function literal(column: ConfigColumn): string | null {
+	const raw = column.default;
+	if (raw === undefined) return null;
+	if (is(raw, SQL)) return `(${render(raw)})`;
+	const value = column.mapToDriverValue(raw);
+	if (value === null) return 'NULL';
+	if (typeof value === 'number' || typeof value === 'bigint') return String(value);
+	if (typeof value === 'boolean') return value ? '1' : '0';
+	return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+function columnDdl(column: ConfigColumn, inlinePrimary: boolean): string {
+	let ddl = `${quote(column.name)} ${column.getSQLType()}`;
+	if (inlinePrimary && column.primary) {
+		ddl += ' PRIMARY KEY';
+		if ((column as { autoIncrement?: boolean }).autoIncrement) ddl += ' AUTOINCREMENT';
 	}
+	if (column.notNull && !(inlinePrimary && column.primary)) ddl += ' NOT NULL';
+	if (column.isUnique) ddl += ' UNIQUE';
+	const fallback = literal(column);
+	if (fallback !== null) ddl += ` DEFAULT ${fallback}`;
+	return ddl;
 }
 
-const TABLE = sql`${sql.identifier('drizzle')}.${sql.identifier('__drizzle_migrations')}`;
-/** Any constant; it only has to be the same in every process that migrates this database. */
-const LOCK_KEY = 7_419_201;
-
-type Applied = { created_at: string | number };
-type Table = { tablename: string };
-
-/** The migrations still to apply, or a `MigrationHistoryError` when the applied ones are not ours. */
-export function pending(applied: number[], tables: string[]): typeof migrations {
-	const history = migrations.map(migration => migration.when);
-	const ours = applied.length
-		? applied.length <= history.length && applied.every((at, index) => at === history[index])
-		: tables.length === 0;
-	if (!ours) throw new MigrationHistoryError(history, applied, tables);
-	return migrations.slice(applied.length);
+function createTable(config: Config): string {
+	const composite = config.primaryKeys[0];
+	const parts = config.columns.map(column => columnDdl(column, !composite));
+	if (composite) parts.push(`PRIMARY KEY (${composite.columns.map(column => quote(column.name)).join(', ')})`);
+	for (const key of config.foreignKeys) {
+		const reference = key.reference();
+		const onDelete = key.onDelete ? ` ON DELETE ${key.onDelete.toUpperCase()}` : '';
+		parts.push(
+			`FOREIGN KEY (${reference.columns.map(c => quote(c.name)).join(', ')}) REFERENCES ${quote(
+				getTableConfig(reference.foreignTable).name,
+			)} (${reference.foreignColumns.map(c => quote(c.name)).join(', ')})${onDelete}`,
+		);
+	}
+	return `CREATE TABLE IF NOT EXISTS ${quote(config.name)} (${parts.join(', ')})`;
 }
 
-export async function migrate(db: Db): Promise<string[]> {
-	return db.transaction(async tx => {
-		await tx.execute(sql`SELECT pg_advisory_xact_lock(${LOCK_KEY})`);
-		await tx.execute(sql`CREATE SCHEMA IF NOT EXISTS ${sql.identifier('drizzle')}`);
-		await tx.execute(
-			sql`CREATE TABLE IF NOT EXISTS ${TABLE} (id SERIAL PRIMARY KEY, hash text NOT NULL, created_at bigint)`,
-		);
-		const applied = rows<Applied>(await tx.execute(sql`SELECT created_at FROM ${TABLE} ORDER BY created_at`)).map(row =>
-			Number(row.created_at),
-		);
-		const tables = rows<Table>(
-			await tx.execute(sql`SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`),
-		).map(row => row.tablename);
-		const todo = pending(applied, tables);
-		for (const migration of todo) {
-			for (const statement of migration.statements) await tx.execute(sql.raw(statement));
-			await tx.execute(sql`INSERT INTO ${TABLE} (hash, created_at) VALUES ('', ${migration.when})`);
+function createIndex(table: string, index: Config['indexes'][number]): string {
+	const { name, columns, unique, where } = index.config;
+	const on = columns.map(column => (is(column, SQL) ? render(column) : quote(column.name))).join(', ');
+	return `CREATE ${unique ? 'UNIQUE ' : ''}INDEX IF NOT EXISTS ${quote(name)} ON ${quote(table)} (${on})${
+		where ? ` WHERE ${render(where)}` : ''
+	}`;
+}
+
+/** Every statement a database without the server's tables runs, in order. Exported for the schema test. */
+export function serverStatements(tables: readonly SQLiteTable[] = SERVER_TABLES): string[] {
+	const configs = tables.map(table => getTableConfig(table));
+	return [
+		...configs.map(createTable),
+		...configs.flatMap(config => config.indexes.map(index => createIndex(config.name, index))),
+	];
+}
+
+/** Creates what is missing. A NOT NULL column without a default cannot be added to a table that has rows. */
+export function migrateServer(driver: SqlDriver, tables: readonly SQLiteTable[] = SERVER_TABLES): void {
+	driver.transaction(() => {
+		const configs = tables.map(table => getTableConfig(table));
+		for (const config of configs) {
+			driver.exec(createTable(config));
+			const present = new Set(driver.exec(`PRAGMA table_info(${quote(config.name)})`).map(row => row.name));
+			for (const column of config.columns) {
+				if (present.has(column.name)) continue;
+				if (column.notNull && column.default === undefined) {
+					throw new Error(`${config.name}.${column.name}: a NOT NULL column without a default cannot be added`);
+				}
+				driver.exec(`ALTER TABLE ${quote(config.name)} ADD COLUMN ${columnDdl(column, false)}`);
+			}
 		}
-		return todo.map(migration => migration.tag);
+		for (const config of configs) for (const index of config.indexes) driver.exec(createIndex(config.name, index));
 	});
-}
-
-/** postgres.js answers `execute` with the row array itself; PGlite wraps it in `{ rows }`. */
-function rows<T>(result: unknown): T[] {
-	if (Array.isArray(result)) return result as T[];
-	return (result as { rows: T[] }).rows;
 }

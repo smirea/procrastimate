@@ -1,18 +1,13 @@
-/** `wrangler dev` against this worktree's local stack: `bun scripts/wrangler-dev.ts [wrangler dev args]`. */
+/**
+ * `wrangler dev` with the Worker's local stand-ins: `bun scripts/wrangler-dev.ts [wrangler dev args]`. The `App`
+ * object keeps its SQLite under `.wrangler/state`, so it needs no service.
+ */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { readOverride } from './lib';
 
 const root = join(import.meta.dir, '..');
 const passthrough = process.argv.slice(2);
-
-const override = readOverride(root);
-if (!override) throw new Error('No .env.override. Run `bun scripts/setup-worktree.ts` first.');
-const database = override.DATABASE_URL;
-const powersync = override.POWERSYNC_URL;
-if (!database || !powersync)
-	throw new Error('.env.override lacks the database or PowerSync URL. Rerun setup-worktree.');
 
 if (!existsSync(join(root, '.dev.vars'))) {
 	const written = spawnSync('bun', ['server/scripts/secrets.ts', 'dev-vars', '--generate-only'], {
@@ -24,20 +19,10 @@ if (!existsSync(join(root, '.dev.vars'))) {
 
 const result = spawnSync(
 	'bunx',
-	[
-		'wrangler',
-		'dev',
-		'--var',
-		`POWERSYNC_URL:${powersync}`,
-		'--var',
-		'AUTH_RATE_LIMIT:off',
-		'--test-scheduled',
-		...passthrough,
-	],
+	['wrangler', 'dev', '--var', 'AUTH_RATE_LIMIT:off', '--test-scheduled', ...passthrough],
 	{
 		cwd: root,
 		stdio: 'inherit',
-		env: { ...process.env, CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE: database },
 	},
 );
 process.exit(result.status ?? 1);

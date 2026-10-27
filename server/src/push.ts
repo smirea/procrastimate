@@ -8,7 +8,7 @@ import type { RowWrite } from '../../shared/rows';
 import { pushTag, type PushMessage, type PushSubscriptionInfo } from '../../shared/push';
 import type { Env } from './bindings';
 import { config } from './config';
-import type { Db } from './db/postgres';
+import type { Db } from './db/sqlite';
 import {
 	classifyDelivery,
 	FRESH_SUBSCRIPTION_MS,
@@ -19,7 +19,7 @@ import {
 	STALE_AFTER_MS,
 } from './push-schedule';
 import { reportError } from './sentry';
-import { storedZone, withSpaceLocked } from './space';
+import { storedZone } from './space';
 import { sendPush, type Vapid } from './web-push';
 
 /**
@@ -52,15 +52,13 @@ export function touchesPush(write: RowWrite): boolean {
 type PushRow = typeof push.$inferSelect;
 
 /** Every notification the owner's open tasks make, in their time zone: the two reads a plan needs. */
-async function openNotifications(db: Db, owner: string, now: number) {
-	const [open, zone] = await Promise.all([
-		db
-			.select()
-			.from(tasks)
-			.where(and(eq(tasks.userId, owner), isNull(tasks.completedAt))),
-		storedZone(db, owner),
-	]);
-	return computeNotifications(open as Task[], zone, now);
+function openNotifications(db: Db, owner: string, now: number) {
+	const open = db
+		.select()
+		.from(tasks)
+		.where(and(eq(tasks.userId, owner), isNull(tasks.completedAt)))
+		.all();
+	return computeNotifications(open as Task[], storedZone(db, owner), now);
 }
 
 const planOf = (computed: ReturnType<typeof computeNotifications>, row: PushRow, now: number) => {
@@ -69,18 +67,16 @@ const planOf = (computed: ReturnType<typeof computeNotifications>, row: PushRow,
 };
 
 /** Only an owner with a subscription reads anything: then the open tasks and the time zone, nothing else. */
-export async function replan(db: Db, owner: string, now: number): Promise<void> {
-	const rows = await db.select().from(push).where(eq(push.userId, owner));
+export function replan(db: Db, owner: string, now: number): void {
+	const rows = db.select().from(push).where(eq(push.userId, owner)).all();
 	if (!rows.length) return;
-	const computed = await openNotifications(db, owner, now);
-	await Promise.all(
-		rows.map(row =>
-			db
-				.update(push)
-				.set(planOf(computed, row, now))
-				.where(and(eq(push.userId, owner), eq(push.deviceId, row.deviceId))),
-		),
-	);
+	const computed = openNotifications(db, owner, now);
+	for (const row of rows) {
+		db.update(push)
+			.set(planOf(computed, row, now))
+			.where(and(eq(push.userId, owner), eq(push.deviceId, row.deviceId)))
+			.run();
+	}
 }
 
 /**
@@ -139,15 +135,15 @@ export async function subscribePush(
 		throw new ORPCError('BAD_REQUEST', { message: 'Invalid subscription' });
 	// Planned at once: the cron only selects rows with a `nextAt`, so a subscription that waited for the next write
 	// would miss every reminder already due before then.
-	const [rows, computed] = await Promise.all([
-		db.select().from(push).where(eq(push.userId, owner)),
-		openNotifications(db, owner, now),
-	]);
+	const rows = db.select().from(push).where(eq(push.userId, owner)).all();
+	const computed = openNotifications(db, owner, now);
 	const current = rows.find(row => row.deviceId === deviceId);
 	const replaced = rows.filter(row => row.deviceId !== deviceId && row.subscription.endpoint === subscription.endpoint);
 	if (replaced.length) {
 		const devices = replaced.map(row => row.deviceId);
-		await db.delete(push).where(and(eq(push.userId, owner), inArray(push.deviceId, devices)));
+		db.delete(push)
+			.where(and(eq(push.userId, owner), inArray(push.deviceId, devices)))
+			.run();
 	}
 	const kept = current?.subscription.endpoint === subscription.endpoint ? current : undefined;
 	const stored: PushRow = {
@@ -161,21 +157,24 @@ export async function subscribePush(
 	};
 	const row = { ...stored, ...planOf(computed, stored, now) };
 	const { userId: _, deviceId: __, ...set } = row;
-	await db
-		.insert(push)
+	db.insert(push)
 		.values(row)
-		.onConflictDoUpdate({ target: [push.userId, push.deviceId], set });
+		.onConflictDoUpdate({ target: [push.userId, push.deviceId], set })
+		.run();
 }
 
 export async function unsubscribePush(db: Db, owner: string, deviceId: string): Promise<void> {
-	await db.delete(push).where(and(eq(push.userId, owner), eq(push.deviceId, deviceId)));
+	db.delete(push)
+		.where(and(eq(push.userId, owner), eq(push.deviceId, deviceId)))
+		.run();
 }
 
 export async function pushSchedule(db: Db, owner: string, deviceId: string): Promise<PushScheduleResponse> {
-	const [row] = await db
+	const row = db
 		.select({ notifications: push.notifications })
 		.from(push)
-		.where(and(eq(push.userId, owner), eq(push.deviceId, deviceId)));
+		.where(and(eq(push.userId, owner), eq(push.deviceId, deviceId)))
+		.get();
 	return { notifications: row?.notifications ?? [] };
 }
 
@@ -191,13 +190,12 @@ function outcomeOf(outcomes: ReadonlyMap<string, Outcome>, row: PushRow): Outcom
  * The cron, every minute: for each user with a due notification, sends each install what is due, then settles and
  * replans. A sent push, or a failed one more than ten minutes stale, is settled. A 404 or 410 drops the install's
  * subscription, unless it subscribed within `FRESH_SUBSCRIPTION_MS`, when its due pushes retry a minute later. An
- * install that subscribed within `SEND_HOLD_MS` sends nothing yet and keeps what is due for the next run. The settle
- * runs under the space's lock against the rows stored now, so an upload's replan that landed
- * while sends were in flight is kept; a replan that read before the settle and lands after it can bring a sent
- * notification back for one more send, which the OS replaces by its tag.
+ * install that subscribed within `SEND_HOLD_MS` sends nothing yet and keeps what is due for the next run. Sends await
+ * the network, so other requests run meanwhile; the settle then runs with no await against the rows stored now, so a
+ * write's replan that landed while sends were in flight is kept.
  */
 export async function deliverDue(db: Db, now: number, send: SendPush): Promise<number> {
-	const due = await db.selectDistinct({ owner: push.userId }).from(push).where(lte(push.nextAt, now));
+	const due = db.selectDistinct({ owner: push.userId }).from(push).where(lte(push.nextAt, now)).all();
 	let sent = 0;
 	for (const { owner } of due) {
 		try {
@@ -212,7 +210,7 @@ export async function deliverDue(db: Db, now: number, send: SendPush): Promise<n
 async function deliverTo(db: Db, owner: string, now: number, send: SendPush): Promise<number> {
 	let sent = 0;
 	{
-		const rows = await db.select().from(push).where(eq(push.userId, owner));
+		const rows = db.select().from(push).where(eq(push.userId, owner)).all();
 		const outcomes = new Map<string, Outcome>();
 		for (const row of rows) {
 			const outcome: Outcome = { endpoint: row.subscription.endpoint, gone: false, settled: new Set() };
@@ -236,32 +234,32 @@ async function deliverTo(db: Db, owner: string, now: number, send: SendPush): Pr
 				}
 			}
 		}
-		await withSpaceLocked(db, owner, async tx => {
-			// An upload or a new subscription can land while sends are in flight, so settle against what is stored now.
-			const stored = await tx.select().from(push).where(eq(push.userId, owner));
+		// A write or a new subscription can land while sends are in flight, so settle against what is stored now.
+		db.transaction(tx => {
+			const stored = tx.select().from(push).where(eq(push.userId, owner)).all();
 			const kept = stored.filter(row => !outcomeOf(outcomes, row)?.gone);
-			const computed = kept.length ? await openNotifications(tx, owner, now) : [];
-			await Promise.all(
-				stored.map(row => {
-					const where = and(eq(push.userId, owner), eq(push.deviceId, row.deviceId));
-					const outcome = outcomeOf(outcomes, row);
-					if (outcome?.gone) return tx.delete(push).where(where);
-					if (!outcome)
-						return tx
-							.update(push)
-							.set(planOf(computed, row, now))
-							.where(where);
+			const computed = kept.length ? openNotifications(tx, owner, now) : [];
+			for (const row of stored) {
+				const where = and(eq(push.userId, owner), eq(push.deviceId, row.deviceId));
+				const outcome = outcomeOf(outcomes, row);
+				if (outcome?.gone) tx.delete(push).where(where).run();
+				else if (!outcome)
+					tx.update(push)
+						.set(planOf(computed, row, now))
+						.where(where)
+						.run();
+				else {
 					const settled = {
 						...row,
 						notifications: row.notifications.filter(pending => !outcome.settled.has(pushTag(pending))),
 						deliveredThrough: now,
 					};
-					return tx
-						.update(push)
+					tx.update(push)
 						.set({ deliveredThrough: now, ...planOf(computed, settled, now) })
-						.where(where);
-				}),
-			);
+						.where(where)
+						.run();
+				}
+			}
 		});
 	}
 	return sent;

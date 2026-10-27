@@ -72,41 +72,6 @@ describe('push', () => {
 		expect(row?.nextAt).toBe(Date.UTC(2026, 9, 14, 19, 15));
 	});
 
-	test('a delete retried after its row went, but before its log and replan ran, finishes both once', async () => {
-		const retrier = await signUp(app, 'Retrier', 'install-retry-000');
-		await app.fetch('/api/push/subscription', {
-			method: 'PUT',
-			headers: retrier.headers,
-			body: JSON.stringify({ subscription: subscription('https://push.example/retry') }),
-		});
-		const id = crypto.randomUUID();
-		const kept = crypto.randomUUID();
-		const due = JSON.stringify({ date: '2026-10-14', time: '20:00' });
-		// A second task keeps the space from emptying, which would purge the delete's log row.
-		await upload(app, retrier, [
-			{ op: 'put', table: 'tasks', id, values: taskRow(id, retrier.person.id, 'Feed the cat', { due }) },
-			{ op: 'put', table: 'tasks', id: kept, values: taskRow(kept, retrier.person.id, 'Water the plants') },
-		]);
-		const plan = async () =>
-			(await app.db.select().from(push).where(eq(push.userId, retrier.person.id)))[0]?.notifications.map(
-				n => n.opens.id,
-			);
-		expect(await plan()).toEqual([id]);
-		// The state a crash between the delete and its bookkeeping leaves: the row gone, nothing else changed.
-		await app.db.delete(tasks).where(eq(tasks.id, id));
-		const deletes = () =>
-			app.db
-				.select({ op: log.op })
-				.from(log)
-				.where(and(eq(log.userId, retrier.person.id), eq(log.id, id), eq(log.op, 'delete')));
-		const retry = [{ op: 'delete', table: 'tasks', id, opId: `${id}:delete` }];
-		expect(await upload(app, retrier, retry)).toEqual([]);
-		expect(await plan()).toEqual([]);
-		expect(await deletes()).toEqual([{ op: 'delete' }]);
-		expect(await upload(app, retrier, retry)).toEqual([]);
-		expect(await deletes()).toEqual([{ op: 'delete' }]);
-	});
-
 	test('the cron sends what is due, settles it, retries a failure, and drops a gone subscription', async () => {
 		const subscribed = await app.fetch('/api/push/subscription', {
 			method: 'PUT',

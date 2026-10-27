@@ -12,9 +12,16 @@ import type { Person } from 'shared/sharing.ts';
 import * as comments from 'shared/comments.ts';
 import * as rules from 'shared/store.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
-import { CHANGE_LOG, powerSync, readSince, storedOwner, storeOwner, trimChanges, writeRows } from './database.ts';
 import {
-	forgetDatabaseId,
+	clearDatabase,
+	localDatabase,
+	readSince,
+	storedOwner,
+	storeOwner,
+	trimChanges,
+	writeRows,
+} from './database.ts';
+import {
 	forgetLegacyDocument,
 	onOwnerChange,
 	loadPeople,
@@ -50,7 +57,7 @@ const storeData = ({ tasks, projects, sections, labels, comments, reads }: rules
 async function clearUntilDone() {
 	for (let wait = 1000; ; wait = Math.min(wait * 2, 30_000)) {
 		try {
-			await Promise.all([powerSync.disconnectAndClear(), clearLocalImages()]);
+			await Promise.all([clearDatabase(), clearLocalImages()]);
 			return;
 		} catch (error) {
 			reportError(error);
@@ -156,7 +163,8 @@ class Store {
 		forgetLegacyDocument();
 		this.people = loadPeople();
 		this.remindersCheckedAt = loadRemindersCheckedAt(Date.now());
-		powerSync.onChange({ onChange: () => this.#reload() }, { tables: [CHANGE_LOG], throttleMs: 10 });
+		// A pull names the synced tables it changed and a local write the change log too; either way the log has the ids.
+		localDatabase.onChange(() => this.#reload());
 		onOwnerChange(() => location.reload());
 	}
 
@@ -192,7 +200,6 @@ class Store {
 				const previous = await storedOwner();
 				if (previous !== null && previous !== userId) {
 					await clearUntilDone();
-					forgetDatabaseId();
 				}
 				if (this.#owner !== userId) return;
 				await storeOwner(userId);
@@ -208,7 +215,7 @@ class Store {
 		return this.#switching;
 	}
 
-	/** Resolves once every command so far is in the local database, and so in PowerSync's upload queue. */
+	/** Resolves once every command so far is in the local database, and so in the engine's outbox. */
 	written(): Promise<void> {
 		return this.#queue;
 	}
@@ -276,7 +283,7 @@ class Store {
 		const started = performance.now();
 		let read;
 		try {
-			read = await readSince(this.#cursor);
+			read = await readSince(this.#cursor, owner);
 		} catch (error) {
 			reportError(error);
 			if (owner === this.#owner && !this.loaded) this.unreadable = true;

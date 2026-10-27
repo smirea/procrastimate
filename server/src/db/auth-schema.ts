@@ -1,23 +1,23 @@
-import { bigint, boolean, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { ACTOR_KINDS } from '../../../shared/values';
 
 /** Better Auth's tables, in the shape its Drizzle adapter expects. */
-const at = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
+const at = (name: string) => integer(name, { mode: 'timestamp_ms' });
 
-export const user = pgTable('user', {
+export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
 	email: text('email').notNull().unique(),
-	emailVerified: boolean('emailVerified').notNull(),
+	emailVerified: integer('emailVerified', { mode: 'boolean' }).notNull(),
 	image: text('image'),
 	createdAt: at('createdAt').notNull(),
 	updatedAt: at('updatedAt').notNull(),
 	/** `ai` accounts have no credential, so they never sign in; they act through API tokens their owner made. */
 	kind: text('kind', { enum: ACTOR_KINDS }).notNull().default('human'),
 	ownerId: text('owner_id'),
-}).enableRLS();
+});
 
-export const session = pgTable(
+export const session = sqliteTable(
 	'session',
 	{
 		id: text('id').primaryKey(),
@@ -32,9 +32,9 @@ export const session = pgTable(
 			.references(() => user.id, { onDelete: 'cascade' }),
 	},
 	table => [index('session_userId_idx').on(table.userId)],
-).enableRLS();
+);
 
-export const account = pgTable(
+export const account = sqliteTable(
 	'account',
 	{
 		id: text('id').primaryKey(),
@@ -54,9 +54,9 @@ export const account = pgTable(
 		updatedAt: at('updatedAt').notNull(),
 	},
 	table => [index('account_userId_idx').on(table.userId)],
-).enableRLS();
+);
 
-export const verification = pgTable(
+export const verification = sqliteTable(
 	'verification',
 	{
 		id: text('id').primaryKey(),
@@ -67,14 +67,14 @@ export const verification = pgTable(
 		updatedAt: at('updatedAt').notNull(),
 	},
 	table => [index('verification_identifier_idx').on(table.identifier)],
-).enableRLS();
+);
 
-/** Sign-in rate limits, in the database so a new Worker isolate still enforces them. */
-export const rateLimit = pgTable('rateLimit', {
+/** Sign-in rate limits, in the database so every request enforces the same limits. */
+export const rateLimit = sqliteTable('rateLimit', {
 	id: text('id').primaryKey(),
 	key: text('key').notNull().unique(),
 	count: integer('count').notNull(),
-	lastRequest: bigint('lastRequest', { mode: 'number' }).notNull(),
-}).enableRLS();
+	lastRequest: integer('lastRequest').notNull(),
+});
 
 export const authSchema = { user, session, account, verification, rateLimit };

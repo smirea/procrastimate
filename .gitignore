@@ -40,3 +40,6 @@ shared/db/generated
 
 # per-worktree PowerSync config written by scripts/setup-worktree.ts
 .powersync
+
+# The Bun dev server's SQLite database
+.data/

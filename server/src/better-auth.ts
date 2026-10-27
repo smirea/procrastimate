@@ -4,11 +4,11 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer } from 'better-auth/plugins';
 import type { AuthMethods } from '../../shared/api/contract';
 import { settings } from '../../shared/db/schema';
-import { SETTINGS_ID } from '../../shared/model';
+import { eq } from 'drizzle-orm';
 import type { Person } from '../../shared/sharing';
 import type { App } from './app';
 import { authSchema } from './db/auth-schema';
-import type { Db } from './db/postgres';
+import type { Store } from './db/store';
 import type { AppleSecret, Config } from './config';
 import { reportError } from './sentry';
 import { base64Decode, signJwt } from './jwt';
@@ -136,8 +136,12 @@ function cachedProviders(config: Config) {
 	return created;
 }
 
-/** Better Auth on the app database, whose migrations create its tables. */
-export async function createAuth(config: Config, db: Db): Promise<Auth> {
+/**
+ * Better Auth on the app database, whose additive migration creates its tables. Its adapter runs without
+ * transactions: SQLite here is synchronous, and Drizzle's synchronous transaction cannot wait on the adapter's awaits.
+ */
+export async function createAuth(config: Config, store: Store): Promise<Auth> {
+	const { db } = store;
 	const registrationClosed = config.sentry?.environment === 'production';
 	const options = {
 		appName: 'procrastimate',
@@ -148,7 +152,7 @@ export async function createAuth(config: Config, db: Db): Promise<Auth> {
 			fallback: 'https://procrastimate.stf.lol',
 		},
 		trustedOrigins,
-		database: drizzleAdapter(db, { provider: 'pg', schema: authSchema, transaction: true }),
+		database: drizzleAdapter(db, { provider: 'sqlite', schema: authSchema, transaction: false }),
 		emailAndPassword: { enabled: true },
 		// `input: false` keeps sign-up from claiming to be an AI account or naming an owner.
 		user: {
@@ -168,8 +172,13 @@ export async function createAuth(config: Config, db: Db): Promise<Auth> {
 							throw new APIError('FORBIDDEN', { code: 'REGISTRATION_CLOSED', message: REGISTRATION_CLOSED });
 						}
 					},
+					// Through the engine, so the row syncs to the user's devices like any other.
 					after: async (user: { id: string }) => {
-						await db.insert(settings).values({ userId: user.id, id: SETTINGS_ID }).onConflictDoNothing();
+						store.space.change(server => {
+							if (!db.select({ id: settings.id }).from(settings).where(eq(settings.id, user.id)).get()) {
+								server.put('settings', user.id, { user_id: user.id });
+							}
+						});
 					},
 				},
 			},

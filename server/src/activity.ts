@@ -5,7 +5,8 @@ import type { Task } from '../../shared/model';
 import { sameValue } from '../../shared/rows';
 import type { ActivityAction, ActivityEntry } from '../../shared/sharing';
 import { SERVER_ACTOR, type DateKey } from '../../shared/values';
-import type { Db } from './db/postgres';
+import type { Db } from './db/sqlite';
+import { chunks } from './db/chunks';
 import { peopleById, unknownPerson } from './people';
 import { seenBy, type Sight } from './space';
 
@@ -81,7 +82,7 @@ async function rowsOn(db: Db, owner: string, taskId: string): Promise<LogRow[]> 
 					eq(log.userId, owner),
 					or(
 						and(eq(log.kind, 'task'), eq(log.id, taskId)),
-						and(eq(log.kind, 'comment'), eq(log.op, 'put'), sql`${log.fields}->>'taskId' = ${taskId}`),
+						and(eq(log.kind, 'comment'), eq(log.op, 'put'), sql`${log.fields} ->> '$.taskId' = ${taskId}`),
 					),
 				),
 			)
@@ -190,11 +191,13 @@ async function namesFor(db: Db, owner: string, sight: Sight, drafts: readonly Dr
 		kinds.map(kind => {
 			const { table, name } = NAMED[kind];
 			const ids = [...wanted[kind]];
-			if (!ids.length) return [];
-			return db
-				.select({ id: table.id, name })
-				.from(table)
-				.where(and(eq(table.userId, owner), inArray(table.id, ids), seenBy(db, sight, owner, table.id, kind)));
+			return chunks(ids).flatMap(part =>
+				db
+					.select({ id: table.id, name })
+					.from(table)
+					.where(and(eq(table.userId, owner), inArray(table.id, part), seenBy(db, sight, owner, table.id, kind)))
+					.all(),
+			);
 		}),
 	);
 	const byKind = new Map(kinds.map((kind, index) => [kind, new Map(found[index]!.map(row => [row.id, row.name]))]));
