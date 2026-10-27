@@ -120,6 +120,17 @@ export async function goOffline(context: BrowserContext) {
 	await context.setOffline(true);
 }
 
+/**
+ * Brings the browser back online with the sync routes still refused, so a reload can load the page without syncing.
+ * The engine syncs on `online`, and Chromium sends a request the route still holds when a reload ends its worker, so
+ * this returns once that sync is refused.
+ */
+export async function onlineRefusingSync(context: BrowserContext) {
+	const refused = context.waitForEvent('requestfailed', { predicate: request => SYNC_ROUTES.test(request.url()) });
+	await context.setOffline(false);
+	await refused;
+}
+
 export async function goOnline(context: BrowserContext) {
 	await context.setOffline(false);
 	await context.unroute(SYNC_ROUTES);

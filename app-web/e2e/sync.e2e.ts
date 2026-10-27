@@ -11,6 +11,7 @@ import {
 	goOffline as cut,
 	goOnline as restore,
 	NOW,
+	onlineRefusingSync,
 	test,
 	unique,
 } from './fixtures.ts';
@@ -125,7 +126,7 @@ test(
 		await a.app.details().getByRole('button', { name: 'Close' }).click();
 
 		// The page itself has to load, so only the sync routes stay refused.
-		await a.context.setOffline(false);
+		await onlineRefusingSync(a.context);
 		await a.app.reload();
 		await expect(a.app.row(later)).toBeVisible();
 		await expect(a.app.row(`${kept} renamed`)).toBeVisible();
