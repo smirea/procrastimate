@@ -5,7 +5,7 @@ import { config } from './config';
 import { mkdirSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { restoreDump } from './db/backup';
-import { bunStore } from './db/store';
+import { bunStore } from './db/bun-store';
 import { serveDev } from './dev-server';
 import env from './env';
 import { serverOptions } from './sentry';

@@ -6,7 +6,7 @@ import type { Person, ShareView } from '../../shared/sharing';
 import { handle } from './api';
 import { createApp, type App } from './app';
 import type { Env } from './bindings';
-import { bunStore } from './db/store';
+import { bunStore } from './db/bun-store';
 import type { Live } from './live';
 import { dbRambleData, rambleRoute, type ConnectUpstream } from './ramble';
 import { generateVapidKeys } from './web-push';

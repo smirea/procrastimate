@@ -7,7 +7,8 @@ import { readActor } from './actor';
 import { createApp, type App } from './app';
 import type { Env } from './bindings';
 import { BACKUP_CRON } from './crons';
-import { backupDatabase } from './db/backup';
+import { user } from './db/auth-schema';
+import { backupDatabase, RESTORE_KEY, restoreDump } from './db/backup';
 import type { Db } from './db/sqlite';
 import { openStore } from './db/store';
 import { sweepImages } from './images';
@@ -39,6 +40,7 @@ export class AppObject extends DurableObject<Env> {
 		const storage = ctx.storage;
 		this.db = drizzle(storage as never) as unknown as Db;
 		const store = openStore(this.db, durableDriver(storage));
+		void ctx.blockConcurrencyWhile(() => this.restorePending());
 		ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
 		const live: Live = {
 			accept: request => {
@@ -88,6 +90,21 @@ export class AppObject extends DurableObject<Env> {
 				return Response.json(null);
 		}
 		return Response.json({ error: 'Not found' }, { status: 404 });
+	}
+
+	/**
+	 * A dump waiting at `RESTORE_KEY` in the backups bucket is loaded into a database that holds no user yet, before
+	 * any request runs, then deleted, so it loads once. This is how production's data arrived from Postgres, and how a
+	 * backup comes back into a new object.
+	 */
+	private async restorePending(): Promise<void> {
+		const bucket = this.env.BACKUPS;
+		if (!bucket || this.db.select({ id: user.id }).from(user).limit(1).get()) return;
+		const pending = await bucket.get(RESTORE_KEY);
+		if (!pending) return;
+		const counts = restoreDump(this.db, await pending.json(), Date.now());
+		await bucket.delete(RESTORE_KEY);
+		console.log(`Restored ${RESTORE_KEY}: ${JSON.stringify(counts)}`);
 	}
 
 	/** Every minute the due pushes go out; at 09:00 UTC the database is dumped to R2 and orphaned image bytes swept. */

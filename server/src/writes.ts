@@ -1,6 +1,15 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
-import type { PulledRow, ServerWrite, ServerWriter, SpaceHooks, Values, View, Write } from 'sync-engine/core';
+import type {
+	PulledRow,
+	ServerWrite,
+	ServerWriter,
+	SpaceHooks,
+	SqlDriver,
+	Values,
+	View,
+	Write,
+} from 'sync-engine/core';
 import type { Actor } from '../../shared/auth';
 import { access, comments, ENTITY_TABLES, log, settings } from '../../shared/db/schema';
 import { syncSchema } from '../../shared/db/sync';
@@ -230,7 +239,7 @@ function landed(db: Db, writes: readonly Write[], ctx: SyncContext, server: Serv
  * their task. A delta that adds an `access` row of theirs brings the row it opens, with a task's comments, and one
  * that removes it tombstones them.
  */
-function view(db: Db, ctx: SyncContext): View {
+function view(db: Db, driver: SqlDriver, ctx: SyncContext): View {
 	const me = ctx.actor.id;
 	const granted = new Set(
 		db
@@ -250,7 +259,7 @@ function view(db: Db, ctx: SyncContext): View {
 		return granted.has(`${owner}:${kind}:${values.id}`);
 	};
 	const current = (table: string, id: string): PulledRow | null => {
-		const values = wireRow(db, table, id);
+		const values = wireRow(driver, table, id);
 		return values ? { table, id, deleted: 0, values } : null;
 	};
 	return {
@@ -278,25 +287,18 @@ function view(db: Db, ctx: SyncContext): View {
 	};
 }
 
-/** A synced row as the engine sends it: every column of the engine's schema, as stored. */
-function wireRow(db: Db, table: string, id: string): Values | null {
+/** A synced row as the engine sends it: every column of the engine's schema, as stored, read through its driver. */
+function wireRow(driver: SqlDriver, table: string, id: string): Values | null {
 	const names = syncSchema.tables.find(t => t.name === table)!.columns.map(c => c.name);
-	const columns = sql.join(
-		names.map(name => sql.identifier(name)),
-		sql`, `,
-	);
-	// A raw select answers the row as an array of its columns' values, in order.
-	const row = db.get<Values[string][] | undefined>(
-		sql`SELECT ${columns} FROM ${sql.identifier(table)} WHERE id = ${id}`,
-	);
-	return row ? Object.fromEntries(names.map((name, i) => [name, row[i]!])) : null;
+	const row = driver.exec(`SELECT ${names.join(', ')} FROM ${table} WHERE id = ?`, [id])[0];
+	return row ? (Object.fromEntries(names.map(name => [name, row[name] ?? null])) as Values) : null;
 }
 
-export function syncHooks(db: Db): SpaceHooks<SyncContext> {
+export function syncHooks(db: Db, driver: SqlDriver): SpaceHooks<SyncContext> {
 	return {
 		admit: (write, ctx) => admit(db, write, ctx),
 		landed: (writes, ctx, server) => landed(db, writes, ctx, server),
-		view: ctx => view(db, ctx),
+		view: ctx => view(db, driver, ctx),
 	};
 }
 

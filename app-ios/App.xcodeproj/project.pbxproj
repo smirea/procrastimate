@@ -120,18 +120,18 @@
         };
         A00000000000000000000054 = { isa = PBXTargetDependency; target = A00000000000000000000021; targetProxy = A00000000000000000000053; };
 
-        /* The app's package dependencies, Sentry (a local package over sentry-cocoa's Sentry-Dynamic xcframework) and PowerSync
-           with GRDB (see docs/decisions/ios.md). Only the App target links them; Core stays Foundation-only. */
+        /* The app's package dependencies, Sentry (a local package over sentry-cocoa's Sentry-Dynamic xcframework) and
+           sync-engine with its GRDB (see docs/decisions/ios.md). Only the App target links them; Core stays Foundation-only. */
         A00000000000000000000050 = { isa = XCLocalSwiftPackageReference; relativePath = Packages/Sentry; };
         A00000000000000000000051 = { isa = XCSwiftPackageProductDependency; package = A00000000000000000000050; productName = "Sentry-Dynamic"; };
         A00000000000000000000052 = { isa = PBXBuildFile; productRef = A00000000000000000000051; };
         A00000000000000000000063 = {
             isa = XCRemoteSwiftPackageReference;
-            repositoryURL = "https://github.com/powersync-ja/powersync-swift";
-            requirement = { kind = exactVersion; version = 1.16.4; };
+            repositoryURL = "https://github.com/smirea/sync-engine";
+            requirement = { kind = branch; branch = "feat/app-hooks"; };
         };
-        A00000000000000000000064 = { isa = XCSwiftPackageProductDependency; package = A00000000000000000000063; productName = PowerSync; };
-        A00000000000000000000065 = { isa = XCSwiftPackageProductDependency; package = A00000000000000000000063; productName = PowerSyncGRDB; };
+        A00000000000000000000064 = { isa = XCSwiftPackageProductDependency; package = A00000000000000000000063; productName = SyncEngine; };
+        A00000000000000000000065 = { isa = XCSwiftPackageProductDependency; package = A00000000000000000000063; productName = GRDB; };
         A00000000000000000000066 = { isa = PBXBuildFile; productRef = A00000000000000000000064; };
         A00000000000000000000067 = { isa = PBXBuildFile; productRef = A00000000000000000000065; };
 

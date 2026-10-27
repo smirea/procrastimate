@@ -2,11 +2,14 @@ import type { R2Bucket } from '@cloudflare/workers-types';
 import { getTableColumns, getTableName, sql, type Column } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { base64Decode, base64Encode } from '../jwt';
+import { user } from './auth-schema';
 import { SERVER_TABLES } from './migrate';
 import type { Db } from './sqlite';
 
 export const BACKUP_PREFIX = 'sqlite/';
 export const BACKUPS_KEPT = 30;
+/** Where the `App` object looks for a dump to load into an empty database on start. */
+export const RESTORE_KEY = 'restore/pending.json';
 
 /** Every table but the engine's bookkeeping, which a restore starts fresh. */
 export type Dump = { at: string; tables: Record<string, Record<string, unknown>[]> };
@@ -41,7 +44,7 @@ function decode(column: Column, value: unknown): unknown {
 export function restoreDump(db: Db, dump: Dump, now: number): Record<string, number> {
 	const counts: Record<string, number> = {};
 	db.transaction(tx => {
-		if (tx.get<{ n: number }>(sql`SELECT count(*) AS n FROM "user"`)!.n > 0) {
+		if (tx.select({ id: user.id }).from(user).limit(1).get()) {
 			throw new Error('restore: the database already holds users; restore only into an empty one');
 		}
 		for (const table of SERVER_TABLES as SQLiteTable[]) {
