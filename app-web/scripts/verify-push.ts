@@ -99,18 +99,7 @@ const subscription = await page.evaluate(async () => {
 	const registration = await navigator.serviceWorker.ready;
 	return (await registration.pushManager.getSubscription())?.toJSON();
 });
-check((await page.request.post('/api/push/test', { data: { subscription } })).ok(), 'test push accepted');
-const testShown = Date.now();
-while (!(await shown(page)).some(n => n.tag === 'test') && Date.now() - testShown < 20_000)
-	await page.waitForTimeout(250);
-check(
-	(await shown(page)).some(n => n.tag === 'test'),
-	'test push arrived through FCM and the service worker showed it',
-	{
-		ms: Date.now() - testShown,
-	},
-);
-await page.keyboard.press('Escape');
+const subscribedAt = Date.now();
 
 async function add(title: string) {
 	await page.locator('body').click({ position: { x: 1200, y: 700 } });
@@ -120,6 +109,8 @@ async function add(title: string) {
 	await expect(input).toBeFocused();
 	await input.fill(title);
 	await input.press('Enter');
+	await expect(input).toHaveValue('');
+	await page.keyboard.press('Escape');
 	await expect(quickAdd).toBeHidden();
 }
 
@@ -165,8 +156,15 @@ check(
 
 await page.close();
 log('app closed; waiting for the due time');
-const wait = target.getTime() + 15_000 - Date.now();
+/**
+ * The test push goes out only now. FCM is slow to accept a token Chrome just registered: for up to about 10 s it
+ * answers 410 Gone, or it accepts pushes and never delivers them, for up to about 25 s. Chrome's registration has
+ * already succeeded and the subscription never changes, so nothing on the client marks the end.
+ */
+const wait = Math.max(target.getTime() + 15_000, subscribedAt + 45_000) - Date.now();
 await new Promise(resolve => setTimeout(resolve, wait));
+const test = await context.request.post('/api/push/test', { data: { subscription } });
+check(test.ok(), 'test push accepted', test.status());
 if (LOCAL) {
 	const fired = await context.request.get(
 		`/cdn-cgi/handler/scheduled?cron=${encodeURIComponent(DELIVERY_CRON)}&time=${target.getTime()}`,
@@ -176,6 +174,10 @@ if (LOCAL) {
 
 const reopened = await context.newPage();
 await reopened.goto('/inbox');
+let testArrived = false;
+for (const start = Date.now(); Date.now() - start < 20_000; await reopened.waitForTimeout(250))
+	if ((testArrived = (await shown(reopened)).some(n => n.tag === 'test'))) break;
+check(testArrived, 'test push arrived through FCM and the service worker showed it');
 /** The push left the server, but FCM hands it to Chrome on its own schedule. */
 let delivered: Awaited<ReturnType<typeof shown>> = [];
 for (const start = Date.now(); Date.now() - start < 20_000; await reopened.waitForTimeout(250)) {
