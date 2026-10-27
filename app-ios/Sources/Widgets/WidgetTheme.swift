@@ -4,7 +4,7 @@ import WidgetKit
 
 /// The app's canvas: the theme color's warm glow at the top left and the cool one at the top right.
 struct WidgetCanvas: View {
-    let accent: API.AccentChoice
+    let accent: AccentColors
 
     var body: some View {
         Color.canvas
@@ -36,7 +36,7 @@ struct WidgetCheckbox: View {
 /// The accent-filled `+` that opens quick add.
 struct AddButton: View {
     let link: AppLink
-    let accent: API.AccentChoice
+    let accent: AccentColors
     var size: CGFloat = 28
 
     var body: some View {
@@ -54,7 +54,7 @@ struct AddButton: View {
 }
 
 struct SignedOutView: View {
-    let accent: API.AccentChoice
+    let accent: AccentColors
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -70,7 +70,7 @@ struct SignedOutView: View {
 }
 
 struct MissingListView: View {
-    let accent: API.AccentChoice
+    let accent: AccentColors
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {

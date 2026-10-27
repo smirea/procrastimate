@@ -22,13 +22,13 @@ struct ListEntry: TimelineEntry {
     /// The day the rows' due dates read against.
     let today: DateKey
     let state: State
-    let accent: API.AccentChoice
+    let accent: AccentColors
     /// Each project's name by id, for the rows' detail line.
     var projects: [String: String] = [:]
     var showsAdd = true
 
     static func make(_ list: WidgetListEntity?, at now: WidgetNow, data: WidgetData?) -> ListEntry {
-        let accent = data?.accent.flatMap(API.AccentChoice.init(rawValue:)) ?? .frost
+        let accent = AccentColors(Accents.parseAccent(data?.accent))
         guard let data, data.signedIn else { return ListEntry(date: now.date, today: now.today, state: .signedOut, accent: accent) }
         let key = list?.id ?? WidgetList.today.key
         guard let choice = WidgetLists.choice(key: key, in: data, today: now.today, in: now.zone) else {
@@ -58,7 +58,7 @@ struct ListEntry: TimelineEntry {
             date: Date(),
             today: "2026-01-02",
             state: .ready(listing, list: .today, symbol: WidgetListEntity.today.symbol),
-            accent: .frost
+            accent: AccentColors(.preset(Accents.defaultAccent))
         )
     }
 }

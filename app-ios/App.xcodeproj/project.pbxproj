@@ -171,10 +171,10 @@
             path = Widgets.appex;
             sourceTree = BUILT_PRODUCTS_DIR;
         };
-        A00000000000000000000034 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000069); runOnlyForDeploymentPostprocessing = 0; };
-        A00000000000000000000035 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000068); runOnlyForDeploymentPostprocessing = 0; };
-        A00000000000000000000068 = { isa = PBXBuildFile; fileRef = A00000000000000000000022; };
-        A00000000000000000000069 = { isa = PBXBuildFile; fileRef = A00000000000000000000043; };
+        A00000000000000000000034 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A0000000000000000000006C); runOnlyForDeploymentPostprocessing = 0; };
+        A00000000000000000000035 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A0000000000000000000006B); runOnlyForDeploymentPostprocessing = 0; };
+        A0000000000000000000006B = { isa = PBXBuildFile; fileRef = A00000000000000000000022; };
+        A0000000000000000000006C = { isa = PBXBuildFile; fileRef = A00000000000000000000043; };
         A00000000000000000000036 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 
         /* Core: Foundation-only logic, also built by Package.swift for `swift test`. */

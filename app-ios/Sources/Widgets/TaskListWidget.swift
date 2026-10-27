@@ -190,7 +190,7 @@ struct TaskRowView: View {
 
 private struct EmptyListView: View {
     let listing: WidgetLists.Listing
-    let accent: API.AccentChoice
+    let accent: AccentColors
 
     var body: some View {
         VStack(spacing: 4) {

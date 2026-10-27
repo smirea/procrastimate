@@ -49,7 +49,7 @@ private struct ProgressView: View {
 private struct SmallProgress: View {
     let listing: WidgetLists.Listing
     let symbol: String
-    let accent: API.AccentChoice
+    let accent: AccentColors
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {

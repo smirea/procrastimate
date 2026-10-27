@@ -10,13 +10,13 @@ struct QuickAddEntry: TimelineEntry {
     let name: String
     let symbol: String
     let action: QuickAddAction
-    let accent: API.AccentChoice
+    let accent: AccentColors
 }
 
 /// Nothing on it changes with time, so one entry lasts until the app reloads it.
 struct QuickAddProvider: AppIntentTimelineProvider {
     func placeholder(in _: Context) -> QuickAddEntry {
-        QuickAddEntry(date: Date(), list: nil, name: "Inbox", symbol: Pin.inbox.systemImage, action: .add, accent: .frost)
+        QuickAddEntry(date: Date(), list: nil, name: "Inbox", symbol: Pin.inbox.systemImage, action: .add, accent: AccentColors(.preset(Accents.defaultAccent)))
     }
 
     func snapshot(for configuration: QuickAddConfiguration, in _: Context) async -> QuickAddEntry { entry(configuration) }
@@ -26,7 +26,7 @@ struct QuickAddProvider: AppIntentTimelineProvider {
     }
 
     private func entry(_ configuration: QuickAddConfiguration) -> QuickAddEntry {
-        let accent = WidgetStore.read()?.accent.flatMap(API.AccentChoice.init(rawValue:)) ?? .frost
+        let accent = AccentColors(Accents.parseAccent(WidgetStore.read()?.accent))
         let list = configuration.list
         return QuickAddEntry(
             date: Date(),
