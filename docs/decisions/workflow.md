@@ -1,6 +1,7 @@
 # Workflow
 
 - **One PR per thread, never stacked.** Each thread ships one PR off `master`.
+- **Doc-only changes go straight to `master`.** A change that touches only docs (`docs/`, `AGENTS.md` files, the verify skill's feature map) is committed and pushed to `master` with no PR. Anything that touches code, config, or scripts still ships as a PR.
 - **Fold small follow-ups in.** Before starting a new thread for new work, consider folding it into an existing open PR or thread when it touches the same area or files or is a small follow-up. Start a new thread only when the work is genuinely independent.
 - **Rebase only on a real conflict.** Rebase a PR only when GitHub reports a conflict. PR CI already tests the merge with `master`, so do not rebase every open PR after each merge.
 - **Decisions live one file per area.** Each area of `docs/decisions/` is its own file, so parallel PRs don't conflict. Record a decision in the matching area file, and add a new file when no area fits.

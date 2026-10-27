@@ -7,7 +7,7 @@
 
 Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
 
-- One PR per thread, never stacked. Fold small same-area follow-ups into an open PR instead of starting a new thread.
+- One PR per thread, never stacked; doc-only changes push straight to `master`. Fold small same-area follow-ups into an open PR instead of starting a new thread.
 - Rebase only when GitHub reports a real conflict; PR CI already tests the merge with `master`.
 - Build features yourself; never hand the whole build to a helper sub-agent that can't receive messages.
 - Run only the relevant unit and e2e specs locally; CI runs the full suite.
