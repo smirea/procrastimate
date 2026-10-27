@@ -174,3 +174,44 @@ test('sharing a second list while the first share sheet still leaves starts from
 	await sheet.getByRole('textbox', { name: 'Email or name' }).fill('Gus');
 	await expect(sheet.getByRole('list', { name: 'People found' }).getByRole('button', { name: /Gus/ })).toBeVisible();
 });
+
+test('delete all data uploads no delete the server refuses for a guest’s comment, and the purge removes it', async ({
+	devices,
+}) => {
+	const guest = await devices.open({ person: 'Gus', path: '/inbox', heading: 'Inbox' });
+	const { owner, task } = await ownerWithProject(devices);
+	await shareWith(owner, guest);
+
+	const me = (await (await owner.page.request.get('/api/me')).json()) as { id: string };
+	const taskId = await owner.app.taskId(task);
+	const commentId = crypto.randomUUID();
+	const posted = await guest.page.request.post('/api/upload', {
+		data: {
+			writes: [
+				{
+					op: 'put',
+					table: 'comments',
+					id: commentId,
+					values: { id: commentId, user_id: me.id, task_id: taskId, body: 'Oat milk?', created_at: 1, edited_at: null },
+				},
+			],
+		},
+	});
+	expect((await posted.json()).rejected).toEqual([]);
+	await expect(owner.app.row(task).locator('[data-comments="unread"]')).toHaveText('1', { timeout: 10_000 });
+
+	const rejected: unknown[] = [];
+	owner.page.on('response', async response => {
+		if (response.url().includes('/api/upload')) rejected.push(...(await response.json()).rejected);
+	});
+	await owner.app.openSettings();
+	await owner.app.settings().getByRole('button', { name: 'Delete all data' }).click();
+	await owner.app.settings().getByRole('button', { name: 'Delete all data' }).click();
+	await owner.page.keyboard.press('Escape');
+	await expect(owner.app.row(task)).toHaveCount(0);
+	await expect.poll(() => owner.app.pending(), { timeout: 15_000 }).toBe(0);
+	expect(rejected).toEqual([]);
+	await expect
+		.poll(() => owner.page.evaluate(id => window.procrastimate.entity('comment', id), commentId), { timeout: 10_000 })
+		.toBeFalsy();
+});

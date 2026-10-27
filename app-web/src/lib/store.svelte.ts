@@ -339,8 +339,10 @@ class Store {
 		return this.#writing > 0;
 	}
 
+	/** Keeps the comments others wrote: the server refuses their deletion, and its purge removes them once the space is empty. */
 	deleteAll() {
-		this.#apply(emptyData());
+		const theirs = this.own.comments.filter(comment => comment.authorId !== null && comment.authorId !== this.#owner);
+		this.#apply({ ...emptyData(), comments: theirs });
 	}
 
 	get dictation(): DictationChoice {
