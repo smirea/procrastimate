@@ -31,7 +31,7 @@
 		},
 		{
 			"fn": "pills",
-			"test": "suggestionPills › a title like past ones offers their project, section, and label",
+			"test": "suggestionPills › a title like past ones offers their project and label, never their section",
 			"input": [
 				[
 					{
@@ -260,8 +260,7 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [
@@ -271,11 +270,6 @@
 					"projectIds": [
 						"home",
 						"work"
-					],
-					"sectionIds": [
-						"garden",
-						"kitchen",
-						"meetings"
 					]
 				}
 			],
@@ -283,11 +277,6 @@
 				{
 					"kind": "project",
 					"projectId": "home"
-				},
-				{
-					"kind": "section",
-					"projectId": "home",
-					"sectionId": "garden"
 				},
 				{
 					"kind": "label",
@@ -526,8 +515,7 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [
@@ -537,11 +525,6 @@
 					"projectIds": [
 						"home",
 						"work"
-					],
-					"sectionIds": [
-						"garden",
-						"kitchen",
-						"meetings"
 					]
 				}
 			],
@@ -783,8 +766,7 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [
@@ -794,11 +776,6 @@
 					"projectIds": [
 						"home",
 						"work"
-					],
-					"sectionIds": [
-						"garden",
-						"kitchen",
-						"meetings"
 					]
 				}
 			],
@@ -806,11 +783,6 @@
 				{
 					"kind": "project",
 					"projectId": "home"
-				},
-				{
-					"kind": "section",
-					"projectId": "home",
-					"sectionId": "garden"
 				}
 			]
 		},
@@ -1045,8 +1017,7 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [
@@ -1056,11 +1027,6 @@
 					"projectIds": [
 						"home",
 						"work"
-					],
-					"sectionIds": [
-						"garden",
-						"kitchen",
-						"meetings"
 					]
 				}
 			],
@@ -1309,8 +1275,7 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [
@@ -1320,11 +1285,6 @@
 					"projectIds": [
 						"home",
 						"work"
-					],
-					"sectionIds": [
-						"garden",
-						"kitchen",
-						"meetings"
 					]
 				}
 			],
@@ -1561,8 +1521,7 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [
@@ -1572,11 +1531,6 @@
 					"projectIds": [
 						"home",
 						"work"
-					],
-					"sectionIds": [
-						"garden",
-						"kitchen",
-						"meetings"
 					]
 				}
 			],
@@ -1592,8 +1546,7 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [
@@ -1603,11 +1556,6 @@
 					"projectIds": [
 						"home",
 						"work"
-					],
-					"sectionIds": [
-						"garden",
-						"kitchen",
-						"meetings"
 					]
 				}
 			],
@@ -1668,8 +1616,7 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [
@@ -1679,11 +1626,6 @@
 					"projectIds": [
 						"home",
 						"work"
-					],
-					"sectionIds": [
-						"garden",
-						"kitchen",
-						"meetings"
 					]
 				}
 			],
@@ -1927,8 +1869,7 @@
 						"weekend"
 					],
 					"location": null,
-					"projectId": "home",
-					"sectionId": null
+					"projectId": "home"
 				},
 				{
 					"labelIds": [
@@ -1938,21 +1879,10 @@
 					"projectIds": [
 						"home",
 						"work"
-					],
-					"sectionIds": [
-						"garden",
-						"kitchen",
-						"meetings"
 					]
 				}
 			],
-			"output": [
-				{
-					"kind": "section",
-					"projectId": "home",
-					"sectionId": "garden"
-				}
-			]
+			"output": []
 		},
 		{
 			"fn": "pills",
@@ -2192,8 +2122,7 @@
 						"radius": 150,
 						"trigger": "leave"
 					},
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [
@@ -2203,11 +2132,6 @@
 					"projectIds": [
 						"home",
 						"work"
-					],
-					"sectionIds": [
-						"garden",
-						"kitchen",
-						"meetings"
 					]
 				}
 			],
@@ -2215,7 +2139,7 @@
 		},
 		{
 			"fn": "pills",
-			"test": "suggestionPills › a project, section, or label the draft cannot use shows no pill",
+			"test": "suggestionPills › a project or label the draft cannot use shows no pill",
 			"input": [
 				[
 					{
@@ -2444,15 +2368,13 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [],
 					"projectIds": [
 						"home"
-					],
-					"sectionIds": []
+					]
 				}
 			],
 			"output": [
@@ -2464,7 +2386,7 @@
 		},
 		{
 			"fn": "pills",
-			"test": "suggestionPills › a project, section, or label the draft cannot use shows no pill",
+			"test": "suggestionPills › a project or label the draft cannot use shows no pill",
 			"input": [
 				[
 					{
@@ -2693,13 +2615,11 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null,
-					"sectionId": null
+					"projectId": null
 				},
 				{
 					"labelIds": [],
-					"projectIds": [],
-					"sectionIds": []
+					"projectIds": []
 				}
 			],
 			"output": []

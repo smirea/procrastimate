@@ -3,7 +3,6 @@
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
-	import Rows from 'phosphor-svelte/lib/Rows';
 	import type { SuggestionPill } from 'shared/task-suggestions.ts';
 	import ProjectGlyph from './ProjectGlyph.svelte';
 	import { store } from '../store.svelte.ts';
@@ -17,8 +16,6 @@
 		switch (pill.kind) {
 			case 'project':
 				return { key: `project:${pill.projectId}`, kind: 'project', name: store.project(pill.projectId)?.name ?? '' };
-			case 'section':
-				return { key: `section:${pill.sectionId}`, kind: 'section', name: store.section(pill.sectionId)?.name ?? '' };
 			case 'label':
 				return { key: `label:${pill.labelId}`, kind: 'label', name: store.label(pill.labelId)?.name ?? '' };
 			case 'place':
@@ -51,8 +48,6 @@
 			>
 				{#if pill.kind === 'project'}
 					<ProjectGlyph project={store.project(pill.projectId)} size={15} />
-				{:else if pill.kind === 'section'}
-					<Rows size={15} />
 				{:else if label}
 					{@const Icon = labelIcon(label)}
 					<Icon size={15} weight="fill" />

@@ -43,8 +43,6 @@ struct SuggestionPills: View {
         case let .project(projectId):
             let project = store.project(projectId)
             return ("project", project?.name ?? "", project?.systemImage ?? "number", .muted)
-        case let .section(_, sectionId):
-            return ("section", store.section(sectionId)?.name ?? "", "rectangle.split.1x2", .muted)
         case let .label(labelId):
             let label = store.label(labelId)
             return ("label", label?.name ?? "", label?.systemImage(filled: true) ?? "tag", label?.color.tone ?? .toneLabel)

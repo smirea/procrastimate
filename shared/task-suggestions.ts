@@ -6,7 +6,6 @@ import { taskLocationSchema } from './values.ts';
 export const suggestionFieldsSchema = z
 	.object({
 		projectId: z.string().nullable(),
-		sectionId: z.string().nullable(),
 		labelIds: z.array(z.string()),
 		location: taskLocationSchema.nullable(),
 	})
@@ -17,7 +16,7 @@ export const suggestionFieldsSchema = z
 	});
 export type MetadataSuggestions = z.infer<typeof suggestionFieldsSchema>;
 
-type Filed = Pick<Task, 'title' | 'createdAt' | 'projectId' | 'sectionId' | 'labelIds' | 'location'>;
+type Filed = Pick<Task, 'title' | 'createdAt' | 'projectId' | 'labelIds' | 'location'>;
 
 export type SuggestionIndex = {
 	tasks: readonly Filed[];
@@ -75,14 +74,16 @@ function norm(words: ReadonlySet<string>, idf: ReadonlyMap<string, number>): num
 }
 
 /**
- * The project, section, labels, and place that the eight past tasks sharing the most rare words with `title` agree on,
+ * The project, labels, and place that the eight past tasks sharing the most rare words with `title` agree on,
  * each past task weighted by how closely and how recently it matches. A value shows only when the tasks that hold it
  * carry at least half the vote, and a missing value votes too, so a word that sometimes means Home shows nothing.
+ * Sections are never suggested: on real history they were right only about 60% of the time, because one project's
+ * sections share their words (see docs/decisions/quick-add.md).
  */
 export function suggestMetadata(index: SuggestionIndex, title: string, now: number): MetadataSuggestions {
 	const query = suggestionWords(title);
 	const queryNorm = norm(query, index.idf);
-	const none: MetadataSuggestions = { projectId: null, sectionId: null, labelIds: [], location: null };
+	const none: MetadataSuggestions = { projectId: null, labelIds: [], location: null };
 	if (queryNorm === 0) return none;
 	const neighbors: { task: Filed; score: number }[] = [];
 	index.tasks.forEach((task, i) => {
@@ -108,13 +109,9 @@ export function suggestMetadata(index: SuggestionIndex, title: string, now: numb
 	// Two values can both hold exactly half the vote, and a tie suggests neither.
 	const only = (values: string[]) => (values.length === 1 ? values[0]! : null);
 	const projectId = only(agreed(task => (task.projectId ? [task.projectId] : [])));
-	const sectionId = projectId
-		? only(agreed(task => (task.projectId === projectId && task.sectionId ? [task.sectionId] : [])))
-		: null;
 	const place = only(agreed(task => (task.location ? [placeKey(task.location)] : [])));
 	return {
 		projectId,
-		sectionId,
 		labelIds: agreed(task => task.labelIds),
 		location: place ? near.find(({ task }) => task.location && placeKey(task.location) === place)!.task.location : null,
 	};
@@ -123,13 +120,12 @@ export function suggestMetadata(index: SuggestionIndex, title: string, now: numb
 export const suggestionPillSchema = z
 	.discriminatedUnion('kind', [
 		z.object({ kind: z.literal('project'), projectId: z.string() }),
-		z.object({ kind: z.literal('section'), projectId: z.string(), sectionId: z.string() }),
 		z.object({ kind: z.literal('label'), labelId: z.string() }),
 		z.object({ kind: z.literal('place'), location: taskLocationSchema }),
 	])
 	.meta({
 		id: 'SuggestionPill',
-		description: 'A value quick add offers under the title. A section pill also sets its project.',
+		description: 'A value quick add offers under the title.',
 		'x-inline': true,
 	});
 export type SuggestionPill = z.infer<typeof suggestionPillSchema>;
@@ -138,11 +134,11 @@ export type SuggestionPill = z.infer<typeof suggestionPillSchema>;
 export type DraftFields = MetadataSuggestions;
 
 export const suggestionAvailableSchema = z
-	.object({ projectIds: z.array(z.string()), sectionIds: z.array(z.string()), labelIds: z.array(z.string()) })
+	.object({ projectIds: z.array(z.string()), labelIds: z.array(z.string()) })
 	.meta({
 		id: 'SuggestionAvailable',
 		description:
-			'Ids the draft may still use. A suggestion naming a deleted or view-only project, section, or label never shows.',
+			'Ids the draft may still use. A suggestion naming a deleted or view-only project or label never shows.',
 	});
 export type Available = z.infer<typeof suggestionAvailableSchema>;
 
@@ -153,13 +149,9 @@ export function suggestionPills(
 	available: Available,
 ): SuggestionPill[] {
 	const pills: SuggestionPill[] = [];
-	const { projectId, sectionId, labelIds, location } = suggestions;
-	if (projectId && available.projectIds.includes(projectId)) {
-		if (draft.projectId !== projectId) pills.push({ kind: 'project', projectId });
-		if (sectionId && available.sectionIds.includes(sectionId) && draft.sectionId !== sectionId) {
-			pills.push({ kind: 'section', projectId, sectionId });
-		}
-	}
+	const { projectId, labelIds, location } = suggestions;
+	if (projectId && available.projectIds.includes(projectId) && draft.projectId !== projectId)
+		pills.push({ kind: 'project', projectId });
 	for (const labelId of labelIds) {
 		if (available.labelIds.includes(labelId) && !draft.labelIds.includes(labelId))
 			pills.push({ kind: 'label', labelId });

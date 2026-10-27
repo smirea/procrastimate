@@ -46,9 +46,9 @@ public enum TaskSuggestions {
         sqrt(words.reduce(0) { $0 + pow(idf[$1] ?? 0, 2) })
     }
 
-    /// The project, section, labels, and place that the eight past tasks sharing the most rare words with `title` agree
-    /// on, each weighted by how closely and how recently it matches. A value shows only when the tasks that hold it
-    /// carry at least half the vote, and a missing value votes too.
+    /// The project, labels, and place that the eight past tasks sharing the most rare words with `title` agree on, each
+    /// weighted by how closely and how recently it matches. A value shows only when the tasks that hold it carry at least
+    /// half the vote, and a missing value votes too. Sections are never suggested; see `shared/task-suggestions.ts`.
     public static func suggest(_ index: Index, _ title: String, now: Int) -> Fields {
         let query = words(title)
         let queryNorm = norm(query, index.idf)
@@ -80,13 +80,9 @@ public enum TaskSuggestions {
         func only(_ values: [String]) -> String? { values.count == 1 ? values[0] : nil }
 
         let projectId = only(agreed { $0.projectId.map { [$0] } ?? [] })
-        let sectionId = projectId.flatMap { projectId in
-            only(agreed { $0.projectId == projectId ? $0.sectionId.map { [$0] } ?? [] : [] })
-        }
         let place = only(agreed { $0.location.map { [Triggers.placeKey($0)] } ?? [] })
         return Fields(
             projectId: projectId,
-            sectionId: sectionId,
             labelIds: agreed(\.labelIds),
             location: place.flatMap { place in near.lazy.compactMap(\.task.location).first { Triggers.placeKey($0) == place } }
         )
@@ -95,11 +91,8 @@ public enum TaskSuggestions {
     /// The pills to show, in field order: each suggestion the draft can use and does not already hold.
     public static func pills(_ suggestions: Fields, draft: Fields, available: Available) -> [Pill] {
         var pills: [Pill] = []
-        if let projectId = suggestions.projectId, available.projectIds.contains(projectId) {
-            if draft.projectId != projectId { pills.append(.project(projectId: projectId)) }
-            if let sectionId = suggestions.sectionId, available.sectionIds.contains(sectionId), draft.sectionId != sectionId {
-                pills.append(.section(projectId: projectId, sectionId: sectionId))
-            }
+        if let projectId = suggestions.projectId, available.projectIds.contains(projectId), draft.projectId != projectId {
+            pills.append(.project(projectId: projectId))
         }
         for labelId in suggestions.labelIds where available.labelIds.contains(labelId) && !draft.labelIds.contains(labelId) {
             pills.append(.label(labelId: labelId))

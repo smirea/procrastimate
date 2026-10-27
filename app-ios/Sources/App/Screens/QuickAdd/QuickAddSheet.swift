@@ -423,20 +423,18 @@ struct QuickAddSheet: View {
         }
     }
 
-    /// Everything the pills depend on besides the index. Holding a project, section, or label that appears or goes
+    /// Everything the pills depend on besides the index. Holding a project or label that appears or goes
     /// while the card is open reruns them too.
     private func pillInputs(_ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> PillInputs {
         PillInputs(
             title: parsed.title,
             draft: .init(
                 projectId: resolved.projectId,
-                sectionId: resolved.sectionId,
                 labelIds: resolved.labelIds,
                 location: parsed.location ?? draft.picked.location
             ),
             available: .init(
                 projectIds: spaceProjects.map(\.id),
-                sectionIds: spaceSections.map(\.id),
                 labelIds: store.labels(in: store.creationSpace(projectId: resolved.projectId, labelIds: resolved.labelIds)).map(\.id)
             ),
             ready: suggestionIndex != nil
@@ -455,7 +453,6 @@ struct QuickAddSheet: View {
     private func use(_ pill: TaskSuggestions.Pill, _ parsed: QuickAdd.Parsed, _ resolved: Resolved) {
         switch pill {
         case let .project(projectId): draft.pick(projectId: projectId, sectionId: nil, context)
-        case let .section(projectId, sectionId): draft.pick(projectId: projectId, sectionId: sectionId, context)
         case let .label(labelId): draft.pick(labelIds: resolved.labelIds + [labelId], parsed, context)
         case let .place(location): draft.pick(location: location, context)
         }

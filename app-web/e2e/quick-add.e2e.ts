@@ -117,7 +117,7 @@ test('quick add reuses the last task’s project, section, and labels while the 
 	await expect(app.quickAdd().getByRole('button', { name: /^Labels/ })).toBeHidden();
 });
 
-test('quick add suggests the project, section, and label of similar past tasks, and a tap sets each', async ({
+test('quick add suggests the project and label of similar past tasks, never the section, and a tap sets each', async ({
 	app,
 	page,
 }) => {
@@ -132,11 +132,10 @@ test('quick add suggests the project, section, and label of similar past tasks, 
 	await app.openQuickAdd();
 	await app.taskInput().pressSequentially('water the roses');
 	const suggestions = app.quickAdd().getByRole('group', { name: 'Suggestions' });
-	await expect(suggestions.getByRole('button')).toHaveText(['Home', 'Garden', 'weekend']);
-	await expect(suggestions.getByRole('button', { name: 'Suggest Home as project' })).toBeVisible();
+	await expect(suggestions.getByRole('button')).toHaveText(['Home', 'weekend']);
 
-	await suggestions.getByRole('button', { name: 'Suggest Garden as section' }).click();
-	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Garden' })).toBeVisible();
+	await suggestions.getByRole('button', { name: 'Suggest Home as project' }).click();
+	await expect(app.quickAdd().getByRole('button', { name: 'Project Home', exact: true })).toBeVisible();
 	await expect(suggestions.getByRole('button')).toHaveText(['weekend']);
 	await expect(app.taskInput()).toBeFocused();
 
@@ -148,10 +147,9 @@ test('quick add suggests the project, section, and label of similar past tasks, 
 	await app.taskInput().press('Enter');
 	await expect(app.taskInput()).toHaveValue('');
 	await app.taskInput().pressSequentially('water the tulips');
-	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Garden' })).toBeVisible();
+	await expect(app.quickAdd().getByRole('button', { name: 'Project Home', exact: true })).toBeVisible();
 	await expect(suggestions).toBeHidden();
 
 	await page.getByRole('button', { name: 'Show' }).click();
-	await expect(page.getByRole('list', { name: 'Garden tasks' }).locator('[data-task="water the roses"]')).toBeVisible();
 	await expect(app.row('water the roses')).toContainText('weekend');
 });

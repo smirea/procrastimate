@@ -102,10 +102,9 @@
 		parsed.title
 			? suggestionPills(
 					suggestMetadata(index, parsed.title, clock.now),
-					{ projectId, sectionId, labelIds: draft.labelIds, location: draft.applied.location },
+					{ projectId, labelIds: draft.labelIds, location: draft.applied.location },
 					{
 						projectIds: draft.projects.map((p) => p.id),
-						sectionIds: draft.sections.map((s) => s.id),
 						labelIds: store.dataOf(draft.home).labels.map((l) => l.id),
 					},
 				)
@@ -115,7 +114,6 @@
 	function usePill(pill: SuggestionPill) {
 		pick(() => {
 			if (pill.kind === 'project') draft.pickPlace(pill.projectId, null);
-			else if (pill.kind === 'section') draft.pickPlace(pill.projectId, pill.sectionId);
 			else if (pill.kind === 'label') draft.pickLabels([...draft.labelIds, pill.labelId]);
 			else {
 				const saved = savedPlaceAt(store.labels, placeKey(pill.location));
