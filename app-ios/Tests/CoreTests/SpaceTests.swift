@@ -99,7 +99,7 @@ import Testing
         let (store, written) = store()
         let removed = store.deleteTask("paint")
         #expect(store.task("paint") == nil)
-        store.undeleteTasks(removed)
+        store.undo(store.offerUndo(.delete(.init(deleted: Deleted(tasks: removed)))))
 
         #expect(store.space(ofTask: "paint") == .shared("ann"))
         #expect(store.tasks.isEmpty)

@@ -1,5 +1,5 @@
 import { and, eq, exists, inArray, sql, type SQL } from 'drizzle-orm';
-import type { PgColumn } from 'drizzle-orm/pg-core';
+import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import type { Actor } from '../../shared/auth';
 import { resolveDangling, type Entities, type Links } from '../../shared/dangling';
 import {
@@ -12,12 +12,11 @@ import {
 	tasks,
 	type AccessRow,
 } from '../../shared/db/schema';
-import { SETTINGS_ID } from '../../shared/model';
 import { managesSpace, type Scope } from '../../shared/scope';
 import { byCreation } from '../../shared/snapshot';
 import { isTimeZone } from '../../shared/zoned-time';
 import type { ShareRow } from '../../shared/db/schema';
-import type { Db } from './db/postgres';
+import type { Db } from './db/sqlite';
 
 /** A row without its owner column, and without a `null` `sourceKey`, which the entity schemas leave out. */
 export function entity<T extends { userId: string }>(row: T): Omit<T, 'userId'> {
@@ -28,15 +27,15 @@ export function entity<T extends { userId: string }>(row: T): Omit<T, 'userId'> 
 
 /**
  * The space's tasks, projects, sections, and labels with dangling references resolved the way clients read them, in
- * creation order. Four parallel selects, which postgres.js pipelines on one connection.
+ * creation order.
  */
-export async function loadTree(db: Db, owner: string): Promise<Entities> {
-	const [taskRows, projectRows, sectionRows, labelRows] = await Promise.all([
-		db.select().from(tasks).where(eq(tasks.userId, owner)),
-		db.select().from(projects).where(eq(projects.userId, owner)),
-		db.select().from(sections).where(eq(sections.userId, owner)),
-		db.select().from(labels).where(eq(labels.userId, owner)),
-	]);
+export function loadTree(db: Db, owner: string): Entities {
+	const [taskRows, projectRows, sectionRows, labelRows] = [
+		db.select().from(tasks).where(eq(tasks.userId, owner)).all(),
+		db.select().from(projects).where(eq(projects.userId, owner)).all(),
+		db.select().from(sections).where(eq(sections.userId, owner)).all(),
+		db.select().from(labels).where(eq(labels.userId, owner)).all(),
+	];
 	return resolveDangling({
 		tasks: (taskRows.map(entity) as Entities['tasks']).toSorted(byCreation),
 		projects: (projectRows.map(entity) as Entities['projects']).toSorted(byCreation),
@@ -45,46 +44,23 @@ export async function loadTree(db: Db, owner: string): Promise<Entities> {
 	});
 }
 
-/** The rows a scope names, resolved like `loadTree`: four selects by id, which postgres.js pipelines. */
-export async function loadScope(db: Db, owner: string, scope: Scope): Promise<Entities> {
-	const ids = (set: ReadonlySet<string>) => [...set];
-	const [taskRows, projectRows, sectionRows, labelRows] = await Promise.all([
-		scope.tasks.size
-			? db
-					.select()
-					.from(tasks)
-					.where(and(eq(tasks.userId, owner), inArray(tasks.id, ids(scope.tasks))))
-			: [],
-		scope.projects.size
-			? db
-					.select()
-					.from(projects)
-					.where(and(eq(projects.userId, owner), inArray(projects.id, ids(scope.projects))))
-			: [],
-		scope.sections.size
-			? db
-					.select()
-					.from(sections)
-					.where(and(eq(sections.userId, owner), inArray(sections.id, ids(scope.sections))))
-			: [],
-		scope.labels.size
-			? db
-					.select()
-					.from(labels)
-					.where(and(eq(labels.userId, owner), inArray(labels.id, ids(scope.labels))))
-			: [],
-	]);
+/**
+ * The rows a scope names, resolved like `loadTree`. The space is read whole and filtered here: a Durable Object
+ * binds at most 100 parameters per statement, and a scope can name more ids than that.
+ */
+export function loadScope(db: Db, owner: string, scope: Scope): Entities {
+	const tree = loadTree(db, owner);
 	return resolveDangling({
-		tasks: (taskRows.map(entity) as Entities['tasks']).toSorted(byCreation),
-		projects: (projectRows.map(entity) as Entities['projects']).toSorted(byCreation),
-		sections: (sectionRows.map(entity) as Entities['sections']).toSorted(byCreation),
-		labels: (labelRows.map(entity) as Entities['labels']).toSorted(byCreation),
+		tasks: tree.tasks.filter(task => scope.tasks.has(task.id)),
+		projects: tree.projects.filter(project => scope.projects.has(project.id)),
+		sections: tree.sections.filter(section => scope.sections.has(section.id)),
+		labels: tree.labels.filter(label => scope.labels.has(label.id)),
 	});
 }
 
 /** The links between the space's rows, which is all `scopeOf` reads, resolved like `loadTree`: a few columns each. */
-export async function loadLinks(db: Db, owner: string): Promise<Links> {
-	const [taskRows, projectRows, sectionRows, labelRows] = await Promise.all([
+export function loadLinks(db: Db, owner: string): Links {
+	const [taskRows, projectRows, sectionRows, labelRows] = [
 		db
 			.select({
 				id: tasks.id,
@@ -94,44 +70,36 @@ export async function loadLinks(db: Db, owner: string): Promise<Links> {
 				labelIds: tasks.labelIds,
 			})
 			.from(tasks)
-			.where(eq(tasks.userId, owner)),
-		db.select({ id: projects.id }).from(projects).where(eq(projects.userId, owner)),
-		db.select({ id: sections.id, projectId: sections.projectId }).from(sections).where(eq(sections.userId, owner)),
-		db.select({ id: labels.id }).from(labels).where(eq(labels.userId, owner)),
-	]);
+			.where(eq(tasks.userId, owner))
+			.all(),
+		db.select({ id: projects.id }).from(projects).where(eq(projects.userId, owner)).all(),
+		db
+			.select({ id: sections.id, projectId: sections.projectId })
+			.from(sections)
+			.where(eq(sections.userId, owner))
+			.all(),
+		db.select({ id: labels.id }).from(labels).where(eq(labels.userId, owner)).all(),
+	];
 	return resolveDangling({ tasks: taskRows, projects: projectRows, sections: sectionRows, labels: labelRows });
 }
 
 /** The owner's time zone, or UTC while none is set or the setting names no zone, since any device can write it. */
-export async function storedZone(db: Db, owner: string): Promise<string> {
-	const [row] = await db
-		.select({ timeZone: settings.timeZone })
-		.from(settings)
-		.where(and(eq(settings.userId, owner), eq(settings.id, SETTINGS_ID)));
+export function storedZone(db: Db, owner: string): string {
+	const row = db.select({ timeZone: settings.timeZone }).from(settings).where(eq(settings.userId, owner)).get();
 	return row?.timeZone && isTimeZone(row.timeZone) ? row.timeZone : 'UTC';
-}
-
-/**
- * Runs `use` in a transaction that holds the space's advisory lock. Share changes and the `access` recompute after an
- * upload take it, so a recompute never reads shares a share change is still writing.
- */
-export function withSpaceLocked<T>(db: Db, owner: string, use: (tx: Db) => Promise<T>): Promise<T> {
-	return db.transaction(async tx => {
-		await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${owner}))`);
-		return use(tx);
-	});
 }
 
 /**
  * The owner, or a guest with the space's shares to them, which is the one query a guest costs. Anyone else is turned
  * away. An AI account has no space of its own; owning one would hand each token an empty writable partition.
  */
-export async function accessIn(db: Db, owner: string, actor: Actor): Promise<Access | null> {
+export function accessIn(db: Db, owner: string, actor: Actor): Access | null {
 	if (actor.id === owner) return actor.kind === 'human' ? { role: 'owner' } : null;
-	const granted = await db
+	const granted = db
 		.select()
 		.from(shares)
-		.where(and(eq(shares.userId, owner), eq(shares.grantee, actor.id)));
+		.where(and(eq(shares.userId, owner), eq(shares.grantee, actor.id)))
+		.all();
 	return granted.length ? { role: 'guest', shares: granted.map(entity) } : null;
 }
 
@@ -150,7 +118,7 @@ export function seenBy(
 	db: Db,
 	sight: Sight,
 	owner: string,
-	id: PgColumn,
+	id: SQLiteColumn,
 	kind: AccessRow['kind'] = 'task',
 ): SQL | undefined {
 	switch (sight.kind) {
@@ -174,10 +142,11 @@ export function seenBy(
 }
 
 /** Whether the caller sees task `id`: one select. */
-export async function seesTask(db: Db, owner: string, sight: Sight, id: string): Promise<boolean> {
-	const [row] = await db
+export function seesTask(db: Db, owner: string, sight: Sight, id: string): boolean {
+	const row = db
 		.select({ id: tasks.id })
 		.from(tasks)
-		.where(and(eq(tasks.userId, owner), eq(tasks.id, id), seenBy(db, sight, owner, tasks.id)));
+		.where(and(eq(tasks.userId, owner), eq(tasks.id, id), seenBy(db, sight, owner, tasks.id)))
+		.get();
 	return row !== undefined;
 }

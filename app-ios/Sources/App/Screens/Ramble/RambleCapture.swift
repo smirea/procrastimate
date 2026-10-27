@@ -8,6 +8,8 @@ struct RambleEntry: Identifiable, Hashable {
     let id: String
     var task: RambleTask
     var subtasks: [RambleEntry]
+    /// A place picked in the drawer, which wins over the spoken project and the list defaults, Inbox included.
+    var place: Place?
 
     /// The grammar reparses the whole transcript on each update and a ramble only grows at its end, so the task at
     /// a given position is the same task from one update to the next.
@@ -167,10 +169,21 @@ final class RambleCapture {
     }
 
     func update(_ id: String, _ change: (inout RambleTask) -> Void) {
+        modify(id) { change(&$0.task) }
+    }
+
+    func pick(_ id: String, _ place: Place) {
+        modify(id) {
+            $0.place = place
+            $0.task.projectId = place.projectId
+        }
+    }
+
+    private func modify(_ id: String, _ change: (inout RambleEntry) -> Void) {
         func apply(_ list: inout [RambleEntry]) -> Bool {
             for index in list.indices {
                 if list[index].id == id {
-                    change(&list[index].task)
+                    change(&list[index])
                     return true
                 }
                 if apply(&list[index].subtasks) { return true }

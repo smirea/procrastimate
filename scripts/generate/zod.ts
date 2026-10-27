@@ -1,5 +1,5 @@
 import { getTableColumns, getTableName, is, SQL } from 'drizzle-orm';
-import { PgTable } from 'drizzle-orm/pg-core';
+import { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { COLUMN_VALUES } from '../../shared/db/json';
 import * as schema from '../../shared/db/schema';
 import { COLUMN_TYPES } from './columns';
@@ -12,19 +12,19 @@ import { COLUMN_TYPES } from './columns';
 
 type Column = { columnType: string; notNull: boolean; enumValues?: readonly string[] };
 
-export const pgTables = () =>
+export const schemaTables = () =>
 	Object.entries(schema as Record<string, unknown>).filter(
-		(entry): entry is [string, PgTable] => entry[1] instanceof PgTable,
+		(entry): entry is [string, SQLiteTable] => entry[1] instanceof SQLiteTable,
 	);
 
 export function zodModule(): string {
-	const tables = pgTables();
+	const tables = schemaTables();
 	const blocks = tables.map(([name, table]) => {
 		const values: Record<string, unknown> = (COLUMN_VALUES as Record<string, Record<string, unknown>>)[name] ?? {};
 		const fields = Object.entries(getTableColumns(table) as Record<string, Column>).map(([key, column]) => {
 			let code: string;
 			if (key in values) code = `COLUMN_VALUES.${name}.${key}`;
-			else if (column.columnType === 'PgText' && column.enumValues?.length) {
+			else if (column.columnType === 'SQLiteText' && column.enumValues?.length) {
 				code = `z.enum(${JSON.stringify(column.enumValues)})`;
 			} else if (COLUMN_TYPES[column.columnType]?.zod) code = COLUMN_TYPES[column.columnType]!.zod!;
 			else throw new Error(`${getTableName(table)}.${key}: add its ${column.columnType} values to COLUMN_VALUES`);
@@ -51,7 +51,7 @@ export function zodModule(): string {
 }
 
 export function tableDefaults(): Record<string, Record<string, unknown>> {
-	const tables = pgTables();
+	const tables = schemaTables();
 	return Object.fromEntries(
 		tables.map(([name, table]) => [
 			name,

@@ -1,13 +1,12 @@
 /**
  * Removes an agent's worktree once its PR is merged: `bun scripts/teardown-worktree.ts <worktree path | branch> [--force]`.
  * A worktree on a detached HEAD has no branch: pass its path or directory name with --force instead.
- * Run it from the main checkout. Stops its servers, removes its PowerSync container and databases, deletes its
- * simulators, worktree, and branches, and updates master.
+ * Run it from the main checkout. Stops its servers, deletes its simulators, worktree (its SQLite database with it), and
+ * branches, and updates master.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { readOverride, run, worktrees } from './lib';
-import { databaseOf, dockerRunning, dropDatabases, stopPowerSync, worktreeDatabases } from './local-stack';
 import { devices, owner, remove } from './simulators';
 
 const args = process.argv.slice(2);
@@ -44,24 +43,6 @@ if (worktree) {
 			.split('\n')
 			.filter(Boolean);
 		if (pids.length) run(['kill', ...new Set(pids)], { allowFail: true });
-	}
-
-	const database = readOverride(worktree)?.DATABASE_URL;
-	if (!dockerRunning()) {
-		console.warn(
-			'Docker is not running; the PowerSync container and databases stay. `bun scripts/worktree-gc.ts` removes them later.',
-		);
-	} else {
-		stopPowerSync(worktree);
-		// A renamed branch leaves the databases of its old name behind, each holding its replication slot's WAL.
-		const databases = new Set(
-			(await worktreeDatabases()).filter(row => row.worktree === worktree).map(row => row.database),
-		);
-		if (database) databases.add(databaseOf(database));
-		for (const name of databases) await dropDatabases(name);
-		console.log(
-			`Removed the PowerSync container and databases ${[...databases].join(', ') || '(none)'}, with their replication slots.`,
-		);
 	}
 
 	const sim = join(worktree, 'sim');

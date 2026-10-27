@@ -1,5 +1,6 @@
 import { ORPCError } from '@orpc/server';
-import { and, asc, desc, eq, getTableColumns, inArray } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import type { Actor } from '../../shared/auth';
 import { addComment, commentsOn, deleteComment, editComment } from '../../shared/comments';
 import { comments as commentTable, log, tasks as taskTable } from '../../shared/db/schema';
@@ -60,23 +61,25 @@ import { applyPickedLabels, isSavedPlace } from '../../shared/triggers';
 import type { Client, ClientStamp } from '../../shared/values';
 import { wallDate, zonedDateKey } from '../../shared/zoned-time';
 import type { Access } from './space';
-import type { Db } from './db/postgres';
+import type { Db } from './db/sqlite';
+import type { Store } from './db/store';
+import type { Live } from './live';
 import { peopleById, personOf, unknownPerson } from './people';
 import { accessIn, entity, loadTree, seesTask, sightOf, storedZone } from './space';
-import { applyAs, type Authority, type Write } from './writes';
+import { serverWrite, syncContext } from './writes';
 
 /**
  * The agent command API: the store's rules run on the server over the space's snapshot, the before and after are
- * diffed into row writes, and those go through `applyAs`, the same single-statement writes a client's upload meets,
- * with the caller's standing in the space decided here from the caller's own grants. `memo-tasks.ts` writes the same
- * way for Notouroboros.
+ * diffed into row writes, and those go through `space.write`, the same hooks a device's sync meets, with the caller's
+ * standing in the space decided here from the caller's own grants. A command lands whole or not at all.
+ * `memo-tasks.ts` writes the same way for Notouroboros.
  */
 
-export type Command = { db: Db; owner: string; actor: Actor; client: Client; now: number };
+export type Command = { db: Db; store: Store; live: Live; owner: string; actor: Actor; client: Client; now: number };
 
 /** The owner, or a guest the space is shared with. Anyone else is turned away before reading anything. */
-export async function requireAccess(db: Db, owner: string, actor: Actor): Promise<Access> {
-	const access = await accessIn(db, owner, actor);
+export function requireAccess(db: Db, owner: string, actor: Actor): Access {
+	const access = accessIn(db, owner, actor);
 	if (!access) throw new ORPCError('FORBIDDEN', { message: 'Not shared with you' });
 	return access;
 }
@@ -92,84 +95,65 @@ type Visible = ReturnType<typeof visibleOf>;
 
 const NO_CLIENTS: TaskClients = { created: null, edited: null };
 
-async function clientRows(db: Db, owner: string, ids: readonly string[]) {
-	const end = (order: typeof asc, name: string) =>
-		db
-			.select({ client: log.client, at: log.at })
-			.from(log)
-			.where(and(eq(log.userId, owner), eq(log.kind, 'task'), eq(log.id, taskTable.id)))
-			.orderBy(order(log.seq))
-			.limit(1)
-			.as(name);
-	const first = end(asc, 'first');
-	const latest = end(desc, 'latest');
-	const stamp = ({ client, at }: { client: Client | null; at: number }): ClientStamp | null =>
-		client ? { ...client, at } : null;
-	const rows = await db
+/**
+ * Each task's first and latest log rows, which name the app that made it and the one that last changed it: one
+ * grouped read of the space's task log, joined back for the two rows. The space is read whole rather than by id,
+ * since a Durable Object binds at most 100 parameters.
+ */
+function clientsOf(db: Db, owner: string, only?: string): Map<string, TaskClients> {
+	const ends = db
 		.select({
-			row: getTableColumns(taskTable),
+			id: log.id,
+			first: sql<number>`min(${log.seq})`.as('first'),
+			last: sql<number>`max(${log.seq})`.as('last'),
+		})
+		.from(log)
+		.where(and(eq(log.userId, owner), eq(log.kind, 'task'), only === undefined ? undefined : eq(log.id, only)))
+		.groupBy(log.id)
+		.as('ends');
+	const first = alias(log, 'first_row');
+	const latest = alias(log, 'latest_row');
+	const rows = db
+		.select({
+			id: ends.id,
 			created: { client: first.client, at: first.at },
 			edited: { client: latest.client, at: latest.at },
 		})
-		.from(taskTable)
-		.crossJoinLateral(first)
-		.crossJoinLateral(latest)
-		.where(and(eq(taskTable.userId, owner), inArray(taskTable.id, [...ids])));
-	return rows.map(({ row, created, edited }) => ({
-		row,
-		clients: { created: stamp(created), edited: stamp(edited) } satisfies TaskClients,
-	}));
+		.from(ends)
+		.innerJoin(first, eq(first.seq, ends.first))
+		.innerJoin(latest, eq(latest.seq, ends.last))
+		.all();
+	const stamp = ({ client, at }: { client: Client | null; at: number }): ClientStamp | null =>
+		client ? { ...client, at } : null;
+	return new Map(rows.map(row => [row.id, { created: stamp(row.created), edited: stamp(row.edited) }]));
 }
 
-async function withClients(db: Db, owner: string, tasks: readonly Task[]): Promise<AgentTask[]> {
+function withClients(db: Db, owner: string, tasks: readonly Task[]): AgentTask[] {
 	if (!tasks.length) return [];
-	const rows = await clientRows(
-		db,
-		owner,
-		tasks.map(task => task.id),
-	);
-	const clients = new Map(rows.map(({ row, clients }) => [row.id, clients]));
+	const clients = clientsOf(db, owner, tasks.length === 1 ? tasks[0]!.id : undefined);
 	return tasks.map(task => ({ ...task, clients: clients.get(task.id) ?? NO_CLIENTS }));
 }
 
 export async function view({ db, owner, actor }: Command): Promise<SpaceView> {
 	const access = await requireAccess(db, owner, actor);
 	const visible = visibleOf(await loadTree(db, owner), access);
-	return { ...visible, tasks: await withClients(db, owner, visible.tasks) };
-}
-
-/** The caller's standing for `applyAs`: a human guest's writes are checked against their `access` rows. */
-function authorityOf(access: Access, snapshot: Snapshot): Authority {
-	if (access.role === 'owner') return { role: 'owner' };
-	if (managesSpace(access.shares)) return { role: 'manager' };
-	return {
-		role: 'guest',
-		stored: ({ kind, id }) => {
-			if (kind === 'task') {
-				const task = snapshot.tasks.find(task => task.id === id);
-				return task && { projectId: task.projectId, parentId: task.parentId };
-			}
-			if (kind === 'comment') return snapshot.comments.find(comment => comment.id === id);
-			return undefined;
-		},
-	};
+	return { ...visible, tasks: withClients(db, owner, visible.tasks) };
 }
 
 /**
  * The rows a store rule reads: the tree, the one comment a comment command names, and the time zone. No agent
  * command changes read markers or settings, so neither is loaded and the diff writes neither.
  */
-async function loadSnapshot(db: Db, owner: string, comment: string | undefined) {
-	const [tree, commentRows, zone] = await Promise.all([
-		loadTree(db, owner),
-		comment
-			? db
-					.select()
-					.from(commentTable)
-					.where(and(eq(commentTable.userId, owner), eq(commentTable.id, comment)))
-			: Promise.resolve<(typeof commentTable.$inferSelect)[]>([]),
-		storedZone(db, owner),
-	]);
+function loadSnapshot(db: Db, owner: string, comment: string | undefined) {
+	const tree = loadTree(db, owner);
+	const commentRows = comment
+		? db
+				.select()
+				.from(commentTable)
+				.where(and(eq(commentTable.userId, owner), eq(commentTable.id, comment)))
+				.all()
+		: [];
+	const zone = storedZone(db, owner);
 	const snapshot: Snapshot = { ...tree, comments: commentRows.map(entity), reads: [], settings: DEFAULT_SETTINGS };
 	return { snapshot, zone };
 }
@@ -180,17 +164,18 @@ async function run(
 	change: (data: StoreData, visible: Visible, zone: string, access: Access) => StoreData,
 	comment?: string,
 ): Promise<Snapshot> {
-	const { db, owner, actor, client, now } = command;
-	const access = await requireAccess(db, owner, actor);
-	const { snapshot, zone } = await loadSnapshot(db, owner, comment);
+	const { db, store, live, owner, actor, client, now } = command;
+	const access = requireAccess(db, owner, actor);
+	const { snapshot, zone } = loadSnapshot(db, owner, comment);
 	const visible = visibleOf(snapshot, access);
 	const { settings: _, ...data } = snapshot;
 	const after = { ...snapshot, ...change(data, visible, zone, access) };
-	const writes: Write[] = rowWrites(snapshot, after).map(write => ({ ...write, opId: newId() }));
+	const writes = rowWrites(snapshot, after).map(write => serverWrite(write, owner));
 	if (!writes.length) return after;
-	const authority = authorityOf(access, snapshot);
-	const { rejected } = await applyAs(db, { actor, client, now }, owner, authority, writes);
+	const manages = access.role === 'guest' && managesSpace(access.shares) ? [owner] : [];
+	const { rejected, head } = store.space.write(writes, syncContext(actor, client, { now, manages }), { atomic: true });
 	if (rejected.length) throw new ORPCError('FORBIDDEN', { message: rejected[0]!.reason });
+	live.publish(head);
 	return after;
 }
 
@@ -201,10 +186,14 @@ function visibleTask(visible: Visible, id: string): Task {
 }
 
 /** The row as stored, since the statement stamped `createdBy` and `completedBy`, which the rule in memory did not. */
-async function taskAfter({ db, owner }: Command, id: string): Promise<AgentTask> {
-	const [found] = await clientRows(db, owner, [id]);
-	if (!found) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
-	return { ...(entity(found.row) as Task), clients: found.clients };
+function taskAfter({ db, owner }: Command, id: string): AgentTask {
+	const row = db
+		.select()
+		.from(taskTable)
+		.where(and(eq(taskTable.userId, owner), eq(taskTable.id, id)))
+		.get();
+	if (!row) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
+	return withClients(db, owner, [entity(row) as Task])[0]!;
 }
 
 /** `text` is read like the app's quick add, against the space's projects and labels; explicit fields win over it. */
@@ -294,13 +283,12 @@ export async function removeTask(command: Command, id: string): Promise<void> {
 export async function listComments({ db, owner, actor }: Command, taskId: string): Promise<TaskComment[]> {
 	const access = await requireAccess(db, owner, actor);
 	const sight = sightOf(actor, access);
-	const [seen, rows] = await Promise.all([
-		seesTask(db, owner, sight, taskId),
-		db
-			.select()
-			.from(commentTable)
-			.where(and(eq(commentTable.userId, owner), eq(commentTable.taskId, taskId))),
-	]);
+	const seen = seesTask(db, owner, sight, taskId);
+	const rows = db
+		.select()
+		.from(commentTable)
+		.where(and(eq(commentTable.userId, owner), eq(commentTable.taskId, taskId)))
+		.all();
 	if (!seen) throw new ORPCError('NOT_FOUND', { message: 'No such task' });
 	const comments = commentsOn(rows.map(entity), taskId);
 	const authors = await peopleById(

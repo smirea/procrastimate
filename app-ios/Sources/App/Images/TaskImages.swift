@@ -5,7 +5,7 @@ import UIKit
 
 /// Task images on iOS, as on the web: a task's `images` field syncs like any other and the bytes stay out of it.
 /// Attaching writes the new image's bytes to the upload queue and the cache before the edit is recorded, and every upload
-/// drains that queue before PowerSync sends the edits, so the server never hears of an image it cannot serve. See
+/// drains that queue before sync-engine sends the edits (its `beforePush`), so the server never hears of an image it cannot serve. See
 /// `docs/decisions/images.md`.
 @MainActor @Observable
 final class TaskImages {
@@ -84,15 +84,10 @@ final class TaskImages {
         let removed = task.images[index]
         store.updateTask(taskID, TaskPatch(images: task.images.filter { $0.id != imageID }))
         if viewing?.imageID == imageID { viewing = nil }
-        toasts.show("Deleted image", action: .init(label: "Undo") { [store] in
-            // Back where it was, into the list as it is now, so changes made since stay.
-            guard var current = store.task(taskID)?.images, !current.contains(where: { $0.id == imageID }) else { return }
-            current.insert(removed, at: min(index, current.count))
-            store.updateTask(taskID, TaskPatch(images: current))
-        })
+        toasts.show("Deleted image", undo: .image(.init(taskId: taskID, image: removed, index: index)), in: store)
     }
 
-    /// Uploads every queued image, before PowerSync uploads the edits that list them. Throws when the server cannot be
+    /// Uploads every queued image, before sync-engine sends the edits that list them. Throws when the server cannot be
     /// reached, so the upload waits too; an upload the server refuses for good is dropped instead of blocking it.
     nonisolated static func uploadQueued(token: String) async throws {
         for (space, file) in Files.queued() {

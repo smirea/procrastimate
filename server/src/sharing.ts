@@ -9,11 +9,12 @@ import { syncAccess } from './access';
 import type { App } from './app';
 import { sha256 } from './actor';
 import { user } from './db/auth-schema';
-import type { Db } from './db/postgres';
+import type { Db } from './db/sqlite';
+import type { Store } from './db/store';
 import { requireManager } from './commands';
 import { agentPrompt } from './docs';
 import { peopleById, personById, unknownPerson } from './people';
-import { entity, loadLinks, loadScope, withSpaceLocked } from './space';
+import { entity, loadLinks, loadScope } from './space';
 import type { Access } from './space';
 import { base64urlEncode } from './jwt';
 
@@ -55,12 +56,15 @@ async function shareViews(db: Db, owner: string, origin: string, list: readonly 
 	);
 }
 
+/** Oldest first, so the share sheet and the agent's links list them in one order on every server. */
 const sharesOf = (db: Db, owner: string, where?: SQL) =>
 	db
 		.select()
 		.from(shares)
 		.where(and(eq(shares.userId, owner), where))
-		.then(rows => rows.map(entity));
+		.orderBy(shares.createdAt, shares.id)
+		.all()
+		.map(entity);
 
 export const listShares = async (db: Db, owner: string, origin: string) =>
 	shareViews(db, owner, origin, await sharesOf(db, owner));
@@ -68,43 +72,42 @@ export const listShares = async (db: Db, owner: string, origin: string) =>
 const TARGET_TABLES = { project: projects, label: labels, task: tasks };
 
 /** A target must be a row of the space. The whole space has no id. */
-async function targetExists(db: Db, owner: string, target: ShareTarget): Promise<boolean> {
+function targetExists(db: Db, owner: string, target: ShareTarget): boolean {
 	if (target.kind === 'space') return true;
 	const table = TARGET_TABLES[target.kind];
-	const [row] = await db
+	const row = db
 		.select({ id: table.id })
 		.from(table)
-		.where(and(eq(table.userId, owner), eq(table.id, target.id)));
+		.where(and(eq(table.userId, owner), eq(table.id, target.id)))
+		.get();
 	return row !== undefined;
 }
 
 /**
- * Writes the share under the space's lock, so a recompute of `access` after an upload cannot run from the shares it
- * read before. A link is always read only. Sharing the same target with the same audience again keeps the row, so a
+ * Writes the share and its grantee's `access` rows in one transaction, the rows through the engine so the grantee's
+ * devices pull them. A link is always read only. Sharing the same target with the same audience again keeps the row, so a
  * link's URL stays stable and a user's role is simply updated.
  */
 export function createShare(
-	db: Db,
+	{ db, space }: Store,
 	owner: string,
 	origin: string,
 	target: ShareTarget,
 	grantee: Person | null,
 	role: Role,
 	now: number,
-): Promise<ShareView> {
-	return withSpaceLocked(db, owner, async tx => {
-		const [found, [existing]] = await Promise.all([
-			targetExists(tx, owner, target),
-			sharesOf(
-				tx,
-				owner,
-				and(
-					eq(shares.targetKind, target.kind),
-					eq(shares.targetId, target.id),
-					grantee ? eq(shares.grantee, grantee.id) : isNull(shares.grantee),
-				),
+): ShareView {
+	return space.change(server => {
+		const found = targetExists(db, owner, target);
+		const [existing] = sharesOf(
+			db,
+			owner,
+			and(
+				eq(shares.targetKind, target.kind),
+				eq(shares.targetId, target.id),
+				grantee ? eq(shares.grantee, grantee.id) : isNull(shares.grantee),
 			),
-		]);
+		);
 		if (!found) throw new ORPCError('NOT_FOUND', { message: 'No such target' });
 		const share: ShareRow = existing
 			? { ...existing, role: grantee ? role : 'view' }
@@ -116,23 +119,24 @@ export function createShare(
 					role: grantee ? role : 'view',
 					createdAt: now,
 				};
-		await tx
-			.insert(shares)
+		db.insert(shares)
 			.values({ userId: owner, ...share })
-			.onConflictDoUpdate({ target: [shares.userId, shares.id], set: { role: share.role } });
-		if (grantee) await syncAccess(tx, owner, grantee.id);
+			.onConflictDoUpdate({ target: [shares.userId, shares.id], set: { role: share.role } })
+			.run();
+		if (grantee) syncAccess(db, server, owner, grantee.id);
 		return shareView(owner, origin, share, grantee);
 	});
 }
 
-export function deleteShare(db: Db, owner: string, id: string): Promise<void> {
-	return withSpaceLocked(db, owner, async tx => {
-		const [share] = await tx
+export function deleteShare({ db, space }: Store, owner: string, id: string): void {
+	space.change(server => {
+		const share = db
 			.delete(shares)
 			.where(and(eq(shares.userId, owner), eq(shares.id, id)))
-			.returning({ grantee: shares.grantee });
+			.returning({ grantee: shares.grantee })
+			.get();
 		if (!share) throw new ORPCError('NOT_FOUND', { message: 'No such share' });
-		if (share.grantee) await syncAccess(tx, owner, share.grantee);
+		if (share.grantee) syncAccess(db, server, owner, share.grantee);
 	});
 }
 
@@ -143,9 +147,16 @@ export async function listLinks(db: Db, owner: string, access: Access, origin: s
 	return shareViews(db, owner, origin, await sharesOf(db, owner, isNull(shares.grantee)));
 }
 
-export function createLink(db: Db, owner: string, access: Access, origin: string, target: ShareTarget, now: number) {
+export function createLink(
+	store: Store,
+	owner: string,
+	access: Access,
+	origin: string,
+	target: ShareTarget,
+	now: number,
+) {
 	requireManager(access);
-	return createShare(db, owner, origin, target, null, 'view', now);
+	return createShare(store, owner, origin, target, null, 'view', now);
 }
 
 /** A link moves no one's `access` rows, so its delete takes no lock. */
@@ -241,10 +252,14 @@ export async function deleteToken(db: Db, owner: string, id: string): Promise<vo
 }
 
 /** An AI account was deleted: its tokens, shares, and `access` rows go. */
-export function revokeAi(db: Db, owner: string, aiUserId: string): Promise<void> {
-	return withSpaceLocked(db, owner, async tx => {
-		await tx.delete(apiTokens).where(and(eq(apiTokens.userId, owner), eq(apiTokens.aiUserId, aiUserId)));
-		await tx.delete(shares).where(and(eq(shares.userId, owner), eq(shares.grantee, aiUserId)));
-		await syncAccess(tx, owner, aiUserId);
+export function revokeAi({ db, space }: Store, owner: string, aiUserId: string): void {
+	space.change(server => {
+		db.delete(apiTokens)
+			.where(and(eq(apiTokens.userId, owner), eq(apiTokens.aiUserId, aiUserId)))
+			.run();
+		db.delete(shares)
+			.where(and(eq(shares.userId, owner), eq(shares.grantee, aiUserId)))
+			.run();
+		syncAccess(db, server, owner, aiUserId);
 	});
 }

@@ -21,8 +21,9 @@ enum NotificationStatus: Equatable {
     }
 }
 
-/// Local notifications: the device schedules the soonest moments of open tasks from `Core`'s notification times, with
-/// the same `<taskId>:<epoch ms>` identifiers as the web's push tags, and replaces the schedule after every change.
+/// Local notifications: the device schedules the soonest moments of open tasks from `Core`'s notification times, one
+/// per moment however many tasks share it, with the same `at:<epoch ms>` identifiers as the web's push tags, and
+/// replaces the schedule after every change.
 @MainActor @Observable
 final class LocalNotifications: NSObject {
     nonisolated static let refreshTaskID = "com.stefan.procrastimate.refresh"
@@ -120,8 +121,8 @@ final class LocalNotifications: NSObject {
         content.body = item.body
         content.sound = .default
         content.interruptionLevel = .timeSensitive
-        content.threadIdentifier = item.taskId
-        content.userInfo = ["taskId": item.taskId]
+        content.threadIdentifier = "\(item.opens.kind.rawValue):\(item.opens.id)"
+        content.userInfo = item.opens.userInfo
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, item.at.timeIntervalSince(now)), repeats: false)
         return UNNotificationRequest(identifier: item.tag, content: content, trigger: trigger)
     }
@@ -141,7 +142,9 @@ final class LocalNotifications: NSObject {
             store.openTasks, now: now, limit: Notifications.maxScheduled, in: clock.timeZone
         )
         let held = await center.pendingNotificationRequests().map {
-            Notifications.Pending(id: $0.identifier, title: $0.content.title, body: $0.content.body)
+            Notifications.Pending(
+                id: $0.identifier, title: $0.content.title, body: $0.content.body, opens: API.NotificationTarget(userInfo: $0.content.userInfo)
+            )
         }
         let change = Notifications.scheduleChange(schedule, pending: held)
         center.removePendingNotificationRequests(withIdentifiers: change.remove)
@@ -159,9 +162,27 @@ final class LocalNotifications: NSObject {
         Task { try? await BGTaskScheduler.shared.submitTaskRequest(request) }
     }
 
-    fileprivate func open(_ taskId: String) {
-        guard store.task(taskId) != nil else { return }
-        navigator.openTask(taskId)
+    /// A task's details, or the list a group's tasks share. A task deleted since the notification showed opens nothing.
+    fileprivate func open(_ opens: API.NotificationTarget) {
+        if opens.kind != .task { navigator.sheet = nil }
+        switch opens.kind {
+        case .task: if store.task(opens.id) != nil { navigator.openTask(opens.id) }
+        case .place: navigator.open(.place(key: opens.id))
+        case .event: navigator.open(.event(id: opens.id))
+        case .project: navigator.open(.project(id: opens.id))
+        case .inbox: navigator.open(.inbox)
+        }
+    }
+}
+
+/// What a notification opens, kept in its `userInfo`, which holds only property-list values.
+extension API.NotificationTarget {
+    var userInfo: [String: String] { ["opensKind": kind.rawValue, "opensId": id] }
+
+    init?(userInfo: [AnyHashable: Any]) {
+        guard let kind = (userInfo["opensKind"] as? String).flatMap(API.NotificationTargetKind.init(rawValue:)),
+              let id = userInfo["opensId"] as? String else { return nil }
+        self.init(kind: kind, id: id)
     }
 }
 
@@ -180,10 +201,10 @@ extension LocalNotifications: UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        let taskId = response.notification.request.content.userInfo["taskId"] as? String
+        let opens = API.NotificationTarget(userInfo: response.notification.request.content.userInfo)
         nonisolated(unsafe) let done = completionHandler
         Task { @MainActor in
-            if let taskId { self.open(taskId) }
+            if let opens { self.open(opens) }
             done()
         }
     }

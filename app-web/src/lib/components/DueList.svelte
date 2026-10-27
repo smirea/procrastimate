@@ -65,19 +65,20 @@
 	{/if}
 	{#if due.today.length}
 		<section class="mb-6" aria-label="Today">
-			<SectionHeading heading="Today" tasks={due.today} />
+			<SectionHeading heading="Today" tasks={due.today} add={screenOn(clock.today)} />
 			<TaskList tasks={due.today} showProject="assigned" timeOnly label="Today tasks" />
-			<AddTaskButton to={screenOn(clock.today)} group="Today" />
 		</section>
 	{/if}
 	{#each due.days as group (group.date)}
 		{@const heading = dayHeading(group.date, clock.today)}
 		<section {@attach leaving} class="mb-6" aria-label={heading} animate:flip={motion({ duration: 240, easing: cubicOut })} transition:fade={motion({ duration: 160 })}>
 			{#if headed}
-				<SectionHeading {heading} tasks={group.tasks} />
+				<SectionHeading {heading} tasks={group.tasks} add={screenOn(group.date)} />
 			{/if}
 			<TaskList tasks={group.tasks} showProject="assigned" label={`Tasks on ${group.date}`} />
-			<AddTaskButton to={screenOn(group.date)} group={heading} />
+			{#if !headed}
+				<AddTaskButton to={screenOn(group.date)} group={heading} />
+			{/if}
 		</section>
 	{/each}
 </View>

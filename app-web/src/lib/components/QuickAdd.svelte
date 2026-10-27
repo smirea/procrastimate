@@ -15,6 +15,7 @@
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
+	import { suggestionIndex, suggestionPills, suggestMetadata, type SuggestionPill } from 'shared/task-suggestions.ts';
 	import { DEFAULT_PRIORITY } from 'shared/task.ts';
 	import Sheet from './Sheet.svelte';
 	import SmartInput from './SmartInput.svelte';
@@ -25,6 +26,7 @@
 	import LabelPicker from './LabelPicker.svelte';
 	import RecurrencePicker from './RecurrencePicker.svelte';
 	import QuickAddMenu from './QuickAddMenu.svelte';
+	import SuggestionPills from './SuggestionPills.svelte';
 	import { rowButtons } from 'shared/quick-add-buttons.ts';
 	import { WEB_BUTTONS, type WebButton } from '../quick-add-buttons.ts';
 	import { store } from '../store.svelte.ts';
@@ -32,14 +34,14 @@
 	import { labelIcon } from '../label-icon.ts';
 	import { clock, sheets, motion } from '../ui.svelte.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
-	import { formatEvent, formatLocation } from 'shared/triggers.ts';
-	import type { ListDefaults } from 'shared/screens.ts';
+	import { formatEvent, formatLocation, placeKey, savedPlaceAt } from 'shared/triggers.ts';
+	import { reusedDefaults, type ListDefaults } from 'shared/screens.ts';
 	import type { NewTask } from 'shared/store.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { QuickAddDraft } from '../quick-add-draft.svelte.ts';
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { NAME_SOURCES } from '../names.ts';
-	import { showAdded } from '../show-added.ts';
+	import { confirmAdded, showAdded } from '../show-added.ts';
 	import { imageFiles, images } from '../images/images.svelte.ts';
 	import { reuseAdded } from '../screen.ts';
 	import { page } from '$app/state';
@@ -93,6 +95,34 @@
 	const unknown = $derived(
 		unknownNames(draft.text, parsed.tokens, store.projects, store.labels).filter((name) => name.start !== listAt),
 	);
+
+	/** Built on the first keystroke, not on open, and again only when the tasks change. */
+	const index = $derived(suggestionIndex(store.tasks.filter((t) => t.parentId === null)));
+	const pills = $derived(
+		parsed.title
+			? suggestionPills(
+					suggestMetadata(index, parsed.title, clock.now),
+					{ projectId, labelIds: draft.labelIds, location: draft.applied.location },
+					{
+						projectIds: draft.projects.map((p) => p.id),
+						labelIds: store.dataOf(draft.home).labels.map((l) => l.id),
+					},
+				)
+			: [],
+	);
+
+	function usePill(pill: SuggestionPill) {
+		pick(() => {
+			if (pill.kind === 'project') draft.pickPlace(pill.projectId, null);
+			else if (pill.kind === 'label') draft.pickLabels([...draft.labelIds, pill.labelId]);
+			else {
+				const saved = savedPlaceAt(store.labels, placeKey(pill.location));
+				// A checked saved place wins over a picked location, so the pill checks its own and unchecks any other.
+				draft.pickLabels([...draft.labelIds.filter((id) => !store.label(id)?.place), ...(saved ? [saved.id] : [])]);
+				draft.picked.location = pill.location;
+			}
+		});
+	}
 
 	function create(name: UnknownName) {
 		NAME_SOURCES[name.sigil === '#' ? 'project' : 'label'].create(name.name);
@@ -154,7 +184,7 @@
 		return () => observer.disconnect();
 	});
 
-	/** Saves the task and its subtasks, closes quick add, and shows the task in its list. */
+	/** Saves the task with its subtasks and images. */
 	function save() {
 		const next = draft.task();
 		if (!next) return null;
@@ -163,20 +193,33 @@
 		const typing = subtaskTask(subtaskParsed);
 		for (const child of [...subtasks.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
 		if (drafted.length) void images.attach(task.id, drafted.map((d) => d.file));
-		sheets.close();
-		const from = page.url.pathname;
-		if (showAdded(task) === from) reuseAdded(from, task);
+		reuseAdded(page.url.pathname, task);
 		return task;
 	}
 
+	/** Quick add stays open for the next task, which starts where this one went. */
 	function submit() {
-		save();
+		const task = save();
+		if (!task) return;
+		confirmAdded(task);
+		draft.restart(reusedDefaults(task, store.labels, draft.defaults.date));
+		opened = [];
+		picker = null;
+		subtasks = [];
+		subtaskText = '';
+		subtasksOpen = false;
+		for (const { url } of drafted) URL.revokeObjectURL(url);
+		drafted = [];
+		input.focus();
 	}
 
-	/** The full editor is task details, so expanding saves the draft and opens it there. */
+	/** The full editor is task details, so expanding saves the draft, closes quick add, and opens it there. */
 	function expand() {
 		const task = save();
-		if (task) sheets.openTask(task.id);
+		if (!task) return;
+		sheets.close();
+		showAdded(task);
+		sheets.openTask(task.id);
 	}
 
 	function addImages(files: File[]) {
@@ -304,7 +347,7 @@
 					class="mic hit-area absolute top-1/2 right-0 grid size-9 -translate-y-1/2 place-items-center rounded-full bg-accent text-on-accent transition-transform active:scale-90"
 					aria-label="Ramble"
 					onmousedown={(e) => e.preventDefault()}
-					onclick={() => sheets.openRamble(defaults)}
+					onclick={() => sheets.openRamble(draft.defaults)}
 					transition:scale={motion({ start: 0.6, duration: 160, easing: cubicOut })}
 				>
 					<Microphone size={16} weight="fill" />
@@ -397,6 +440,7 @@
 			</div>
 		</div>
 	{/if}
+	<SuggestionPills {pills} onpick={usePill} />
 	<div class="flex items-center gap-1.5 px-4 pb-3">
 		<div
 			bind:this={row}
@@ -490,7 +534,7 @@
 				<ArrowsOutSimple size={16} weight="bold" />
 			</button>
 			<button type="button" class="btn btn-quiet" onclick={() => sheets.close()}>Cancel</button>
-			<button type="button" class="btn btn-primary" disabled={!parsed.title} onclick={submit}>Add task</button>
+			<button type="button" class="btn btn-primary" disabled={!parsed.title} onmousedown={(e) => e.preventDefault()} onclick={submit}>Add task</button>
 		</div>
 	</div>
 	<input bind:this={imagePicker} type="file" accept="image/*" multiple class="hidden" aria-hidden="true" tabindex="-1" onchange={pickedImages} />

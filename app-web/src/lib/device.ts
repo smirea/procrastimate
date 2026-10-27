@@ -5,7 +5,6 @@ import { personSchema, type Person } from 'shared/sharing.ts';
 /** The account this browser's database was last opened for, so other tabs reload when it changes. */
 const OWNER_KEY = 'procrastimate-owner';
 const INSTALL_KEY = 'procrastimate-install';
-const DATABASE_KEY = 'procrastimate-database';
 const PEOPLE_KEY = 'procrastimate-people';
 const REMINDERS_KEY = 'procrastimate-reminders-checked-at';
 const UNWRITTEN_KEY = 'procrastimate-unwritten';
@@ -15,6 +14,7 @@ export const DEVICE_KEYS = {
 	user: 'procrastimate-user',
 	theme: 'procrastimate-theme',
 	accent: 'procrastimate-accent',
+	accentCss: 'procrastimate-accent-css',
 	pushRekey: 'procrastimate-push-rekey',
 	pushRefusedAt: 'procrastimate-push-refused-at',
 	completedRange: 'procrastimate.completedRange',
@@ -50,22 +50,6 @@ export function installId(): string {
 	const id = crypto.randomUUID();
 	localStorage.setItem(INSTALL_KEY, id);
 	return id;
-}
-
-/**
- * Names this local database, so an upload's op ids (`<database>:<queue id>`) never repeat: PowerSync's queue ids
- * restart when the database is cleared, so a cleared database gets a new name.
- */
-export function databaseId(): string {
-	const known = localStorage.getItem(DATABASE_KEY);
-	if (known) return known;
-	const id = crypto.randomUUID();
-	localStorage.setItem(DATABASE_KEY, id);
-	return id;
-}
-
-export function forgetDatabaseId() {
-	localStorage.removeItem(DATABASE_KEY);
 }
 
 export function loadPeople(): Person[] {

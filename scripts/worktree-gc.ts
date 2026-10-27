@@ -4,25 +4,13 @@
  *   - deletes simulators claimed by a worktree that no longer exists
  *   - shuts down claimed simulators unused for 15 minutes that no running process names
  *   - deletes Xcode DerivedData of the App project at paths that no longer exist
- *   - removes PowerSync containers and drops databases of worktrees that no longer exist
- *   - drops inactive replication slots no live PowerSync container replicates, which would hold WAL forever
  *   - prints load, booted simulators, and worktree count
  *   - lists worktrees whose PR merged, for teardown-worktree.ts
  */
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { readOverride, run, worktrees } from './lib';
-import {
-	databaseOf,
-	dockerRunning,
-	dropDatabases,
-	dropInactiveSlot,
-	powerSyncContainers,
-	removeContainer,
-	replicationSlots,
-	worktreeDatabases,
-} from './local-stack';
+import { run, worktrees } from './lib';
 import { devices, owner, remove, shutdown } from './simulators';
 
 const dryRun = process.argv.includes('--dry-run');
@@ -63,36 +51,6 @@ for (const entry of existsSync(derivedData) ? readdirSync(derivedData) : []) {
 	await act(`Deleting DerivedData ${entry} of the removed ${workspace}.`, () =>
 		rmSync(join(derivedData, entry), { recursive: true, force: true }),
 	);
-}
-
-if (dockerRunning()) {
-	for (const container of powerSyncContainers()) {
-		if (live.has(container.worktree)) continue;
-		await act(`Removing ${container.name}; its worktree ${container.worktree} is gone.`, () =>
-			removeContainer(container.name),
-		);
-	}
-	for (const { database, worktree } of await worktreeDatabases()) {
-		if (live.has(worktree)) continue;
-		await act(`Dropping database ${database}; its worktree ${worktree} is gone.`, () => dropDatabases(database));
-	}
-	// A live worktree can still leave slots behind: its branch was renamed, so its old databases sit unreplicated, or
-	// its container was removed by hand. PowerSync starts a new replication stream when it finds its slot missing.
-	const replicated = new Set(
-		powerSyncContainers()
-			.filter(container => live.has(container.worktree))
-			.flatMap(container => readOverride(container.worktree)?.DATABASE_URL ?? [])
-			.map(databaseOf),
-	);
-	for (const slot of await replicationSlots()) {
-		if (slot.active || replicated.has(slot.database)) continue;
-		await act(
-			`Dropping replication slot ${slot.name} of ${slot.database}, holding ${slot.held} of WAL; no PowerSync replicates it.`,
-			async () => {
-				if (!(await dropInactiveSlot(slot.name))) console.log(`Kept ${slot.name}; a PowerSync took it up meanwhile.`);
-			},
-		);
-	}
 }
 
 const booted = devices()

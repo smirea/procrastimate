@@ -395,23 +395,6 @@ describe('sharing a task', () => {
 		expect(await names(owner)).toContain('Coguest');
 	});
 
-	test('a guest’s delete retried after its row went still lands in the owner’s log and access', async () => {
-		const helper = await signUp(app, 'Helper');
-		const id = await newTask('Return the drill');
-		await share({ kind: 'task', id }, helper, 'edit');
-		expect(await accessRows(helper.person.id)).toEqual([`task:${id}:edit`]);
-		// The state a crash between the delete and its bookkeeping leaves: the row gone, nothing else changed.
-		await app.db.delete(tasks).where(eq(tasks.id, id));
-		const retry = [{ op: 'delete', table: 'tasks', id, opId: `${id}:delete` }];
-		expect(await upload(app, helper, retry)).toEqual([]);
-		const logged = await app.db
-			.select({ owner: log.userId, actor: log.actor, op: log.op })
-			.from(log)
-			.where(and(eq(log.id, id), eq(log.op, 'delete')));
-		expect(logged).toEqual([{ owner: owner.person.id, actor: helper.person.id, op: 'delete' }]);
-		expect(await accessRows(helper.person.id)).toEqual([]);
-	});
-
 	test('a guest’s delete that fully landed, retried, logs nothing more in either space', async () => {
 		const helper = await signUp(app, 'Helper');
 		const id = await newTask('Lend the ladder');

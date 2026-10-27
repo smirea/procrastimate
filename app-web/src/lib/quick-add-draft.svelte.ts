@@ -1,5 +1,5 @@
 import { parseQuickAdd, type TokenKind } from 'shared/quick-add.ts';
-import type { ListDefaults } from 'shared/screens.ts';
+import { NO_DEFAULTS, type ListDefaults } from 'shared/screens.ts';
 import { creationHome } from 'shared/space-routing.ts';
 import type { Due, Priority, Recurrence } from 'shared/task.ts';
 import { applyPickedLabels } from 'shared/triggers.ts';
@@ -19,12 +19,20 @@ import { clock } from './ui.svelte.ts';
 /** The quick add sheet's state: the typed text and the picked values, with the rules in `quick-add-draft.ts`. */
 export class QuickAddDraft {
 	text = $state('');
-	picked: Picked = $state(
-		initialPicked({ projectId: null, sectionId: null, labelIds: [], location: null, event: null, date: null }),
-	);
+	picked: Picked = $state(initialPicked(NO_DEFAULTS));
 
-	constructor(readonly defaults: ListDefaults) {
-		this.picked = initialPicked(defaults);
+	/** What the draft starts from: the sheet's opening defaults, then each restart's. */
+	defaults: ListDefaults = $state.raw(NO_DEFAULTS);
+
+	constructor(defaults: ListDefaults) {
+		this.restart(defaults);
+	}
+
+	/** Clears the draft for the next task in the same sheet, starting from `next`. */
+	restart(next: ListDefaults) {
+		this.defaults = next;
+		this.text = '';
+		this.picked = initialPicked(next);
 	}
 
 	/** Every space's projects and labels a new task may land on. Picking one moves the task into its space. */

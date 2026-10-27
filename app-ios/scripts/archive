@@ -67,8 +67,9 @@ PLIST
 echo "Archiving version $(bun ../scripts/app-version.mts) build $build_number"
 # Unsigned archive. Automatic signing here asks for an iOS App Development certificate, and a
 # fresh runner creates another "Created via API" one. Export signs with Apple Distribution.
+# SourcePackages is the clone directory testflight.yml caches.
 xcodebuild archive -project App.xcodeproj -scheme App -configuration Release \
-    -destination 'generic/platform=iOS' -archivePath "$archive" \
+    -destination 'generic/platform=iOS' -archivePath "$archive" -clonedSourcePackagesDirPath SourcePackages \
     CURRENT_PROJECT_VERSION="$build_number" \
     CODE_SIGNING_ALLOWED=NO \
     CODE_SIGNING_REQUIRED=NO \

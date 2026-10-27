@@ -2,10 +2,10 @@ import Core
 import Foundation
 import GRDB
 import Observation
-import PowerSync
+import SyncEngine
 
-/// The store over the local database, and PowerSync's connection while a session token exists. Commits reach the
-/// database through one serial queue, in order. Every change to the synced tables, local or streamed, lands in the change
+/// The store over the local database, and sync-engine's client while a session token exists. Commits reach the
+/// database through one serial queue, in order. Every change to the synced tables, local or pulled, lands in the change
 /// log, and each read of it rebuilds only the spaces whose rows changed. App Intents and Spotlight use the same instance.
 @MainActor @Observable
 final class SyncClient {
@@ -24,6 +24,9 @@ final class SyncClient {
 
     let store: Store
     @ObservationIgnored let database: LocalDatabase
+    /// Syncs the local database: the session token as its bearer, the app's header on every request, and the queued
+    /// image bytes uploaded before any writes, so the server never hears of an image it cannot serve.
+    @ObservationIgnored let engine: SyncEngine.SyncClient
     private let unsynced = UnsyncedTasks()
     @ObservationIgnored private let clock: AppClock
     @ObservationIgnored private let ready: Task<Void, any Error>
@@ -36,14 +39,14 @@ final class SyncClient {
     /// covers every change that asks for another.
     @ObservationIgnored private var lastRead: Task<Void, Never>?
     @ObservationIgnored private var readQueued = false
-    /// The session check fetches a sync token anyway, so the first connect uses it instead of asking again.
-    @ObservationIgnored private var prefetched: PowerSyncCredentials?
     /// True while the local database cannot be read and no read for the current user ever worked, so the screen says so
     /// instead of showing an empty list nothing could be saved to.
     private(set) var unreadable = false
     @ObservationIgnored private var loaded = false
     @ObservationIgnored private var askedForPeople: Set<String> = []
-    @ObservationIgnored private var connecting: Task<Void, Never>?
+    @ObservationIgnored private var watching: Task<Void, Never>?
+    /// The newest refusal already shown; the engine lists them newest first, so each shows once.
+    @ObservationIgnored private var newestShown: SyncRejection?
     #if DEBUG
     /// The `access` rows the sharing demo shows. The client never writes the `access` table, so they live here.
     @ObservationIgnored private var demoAccess: [Access] = []
@@ -60,15 +63,28 @@ final class SyncClient {
             fatalError("Could not open the local database at \(LocalDatabase.url.path): \(error)")
         }
         self.database = database
+        let engine = SyncEngine.SyncClient(
+            database: database.pool,
+            schema: syncSchema,
+            endpoint: AppEnvironment.apiURL.appending(path: "api"),
+            token: { SessionToken.read() },
+            session: APIClient.session,
+            headers: [AppClient.header: AppClient.value],
+            beforePush: {
+                guard let token = SessionToken.read() else { return }
+                try await TaskImages.uploadQueued(token: token)
+            }
+        )
+        self.engine = engine
         // The Keychain keeps the owner beside the token, so only an app killed between storing the token and the session
         // check that names the owner leaves a token without one. Signing in again is simpler than filing rows under no one.
         if SessionToken.read() != nil, Session.userID == nil { SessionToken.clear() }
         let me = Session.userID ?? Self.localOwner
-        // The views exist from the last launch, so the first frame shows the data. A fresh file has none yet, and after a
+        // The tables exist from the last launch, so the first frame shows the data. A fresh file has none yet, and after a
         // schema change they lack its new columns until `ready`, so the first read waits for it then.
         let rows = LocalRows(me: me)
         if let read = try? database.pool.read({ db in
-            try LocalDatabase.viewsMatchSchema(db) ? try LocalDatabase.read(since: nil, db) : nil
+            try LocalDatabase.tablesMatchSchema(db) ? try LocalDatabase.read(since: nil, me: me, db) : nil
         }) {
             rows.apply(read.changes)
             cursor = read.cursor
@@ -78,7 +94,10 @@ final class SyncClient {
         store = Telemetry.trace("Load store", operation: "store.load") {
             Store(me: me, spaces: rows.spaces, people: DeviceDefaults.people, clock: clock)
         }
-        ready = Task { try await database.ready() }
+        ready = Task {
+            try engine.migrate()
+            try await database.ready()
+        }
         let (batches, writes) = AsyncStream.makeStream(of: RowBatch.self)
         self.writes = writes
         store.writer = { writes.yield($0) }
@@ -145,7 +164,8 @@ final class SyncClient {
         let cursor = self.cursor
         let read: LocalDatabase.Read
         do {
-            read = try await database.pool.read { try LocalDatabase.read(since: cursor, $0) }
+            let me = rows.me
+            read = try await database.pool.read { try LocalDatabase.read(since: cursor, me: me, $0) }
         } catch {
             ErrorReport.log("Could not read the local database", error: error)
             if !loaded { unreadable = true }
@@ -179,44 +199,40 @@ final class SyncClient {
         }
     }
 
-    private var connector: SyncConnector {
-        SyncConnector(
-            prefetched: { [weak self] in await self?.takePrefetched() },
-            rejected: { [weak self] rows in await self?.rejected(rows) },
-            signedOut: { [weak self] in await self?.reject() }
-        )
-    }
-
-    func prefetch(_ sync: API.SyncToken) {
-        prefetched = PowerSyncCredentials(endpoint: sync.endpoint, token: sync.token)
-    }
-
-    private func takePrefetched() -> PowerSyncCredentials? {
-        defer { prefetched = nil }
-        return prefetched
-    }
-
-    /// Connects while a real session token is in the Keychain. The DEBUG launch flag is not a token. Until PowerSync
-    /// reports the attempt, a second call joins it rather than connecting again.
+    /// Starts sync while a real session token is in the Keychain. The DEBUG launch flag is not a token. Starting twice
+    /// is harmless.
     func start() {
-        guard SessionToken.read() != nil, !Launch.offline, store.me != Self.localOwner, connecting == nil else { return }
-        connecting = Task { await connect() }
+        guard SessionToken.read() != nil, !Launch.offline, store.me != Self.localOwner else { return }
+        Task {
+            do {
+                try await ready.value
+            } catch {
+                ErrorReport.log("Could not start sync", error: error)
+                return
+            }
+            engine.start()
+            watch()
+            await loadPeople()
+        }
     }
 
-    private func connect() async {
-        do {
-            try await ready.value
-            // The web's values: an edit reaches another device within about a second, and a failed upload retries soon.
-            try await database.powerSync.connect(
-                connector: connector, options: ConnectOptions(crudThrottle: 0.1, retryDelay: 2)
-            )
-            connecting = nil
-        } catch {
-            connecting = nil
-            ErrorReport.log("Could not start sync", error: error)
-            return
+    /// Shows each refusal once, and checks the session again on a 401: a gone session signs out, a good one syncs.
+    private func watch() {
+        guard watching == nil else { return }
+        watching = Task { [weak self] in
+            guard let engine = self?.engine else { return }
+            for await (status, rejected) in Observations({ (engine.status, engine.rejected) }) {
+                guard let self else { return }
+                if status == .unauthorized { await session?.refresh() }
+                let fresh = rejected.prefix { $0 != newestShown }
+                newestShown = rejected.first ?? newestShown
+                if !fresh.isEmpty { self.rejected(fresh.compactMap(Self.row)) }
+            }
         }
-        await loadPeople()
+    }
+
+    private static func row(_ rejection: SyncRejection) -> (kind: EntityKind, id: String)? {
+        Rows.kinds.first { Rows.table(of: $0) == rejection.table }.map { ($0, rejection.id) }
     }
 
     /// A change to the task waits in this device's upload queue. Rows written without a session never sync, so they
@@ -225,28 +241,27 @@ final class SyncClient {
         (store.me != Self.localOwner || Launch.offline) && unsynced.contains(taskID)
     }
 
+    /// The engine syncs on its own when the app comes to the foreground; this starts it if the session came meanwhile.
     func resume() {
-        let status = database.powerSync.currentStatus
-        guard !status.connected, !status.connecting else { return }
         start()
     }
 
-    /// Pull to refresh: reconnects if needed and waits, up to five seconds, for the stream to catch up.
+    /// Pull to refresh: one sync, then the names of anyone new.
     func refresh() async {
-        guard !Launch.offline else { return }
-        if !database.powerSync.currentStatus.connected {
-            start()
-            await connecting?.value
-        }
+        guard !Launch.offline, SessionToken.read() != nil else { return }
+        await engine.sync()
         await loadPeople()
-        await waitUntil(.seconds(5)) { status, _ in status.connected && !status.downloading && !status.uploading }
     }
 
     /// Waits, up to ten seconds, until this device's queued writes reached the server, for a request the server can only
     /// answer once it has them, like sharing a task just created.
     func flush() async {
         await store.saved()
-        await waitUntil(.seconds(10)) { _, pending in !pending }
+        let deadline = ContinuousClock.now + .seconds(10)
+        while engine.pending > 0, ContinuousClock.now < deadline, SessionToken.read() != nil {
+            await engine.sync()
+            if engine.pending > 0 { try? await Task.sleep(for: .milliseconds(100)) }
+        }
     }
 
     /// Waits until the local database holds every commit made so far.
@@ -254,23 +269,8 @@ final class SyncClient {
         await store.saved()
     }
 
-    private func waitUntil(_ limit: Duration, _ done: (any SyncStatusData, Bool) -> Bool) async {
-        let deadline = ContinuousClock.now + limit
-        while ContinuousClock.now < deadline {
-            let pending: Bool
-            do {
-                pending = try await database.powerSync.getCrudBatch(limit: 1) != nil
-            } catch {
-                pending = true
-            }
-            if done(database.powerSync.currentStatus, pending) { return }
-            try? await Task.sleep(for: .milliseconds(100))
-        }
-    }
-
     func disconnect() {
-        prefetched = nil
-        Task { try? await database.powerSync.disconnect() }
+        engine.stop()
     }
 
     func signOut() {
@@ -298,10 +298,12 @@ final class SyncClient {
     private func switchUser(to id: String) async {
         try? await ready.value
         await store.saved()
+        engine.stop()
         var delay = Duration.seconds(1)
         while true {
             do {
-                try await database.powerSync.disconnectAndClear()
+                try await engine.reset()
+                try await database.pool.write { try $0.execute(sql: "DELETE FROM \(changeLogTable)") }
                 break
             } catch {
                 ErrorReport.log("Could not clear the previous user's data", error: error)
@@ -309,7 +311,8 @@ final class SyncClient {
                 delay = min(delay * 2, .seconds(30))
             }
         }
-        DeviceDefaults.forgetDatabaseID()
+        newestShown = nil
+        unsynced.reset()
         store.switchUser(to: id)
         store.noteTimeZone(clock.timeZone.identifier)
         rows = LocalRows(me: id)
@@ -364,7 +367,6 @@ final class SyncClient {
 enum DeviceDefaults {
     private static let peopleKey = "procrastimate-people"
     private static let installKey = "procrastimate-install-id"
-    private static let databaseKey = "procrastimate-database"
 
     /// The people cache, so names show offline.
     static var people: [Person] {
@@ -382,14 +384,4 @@ enum DeviceDefaults {
         return id
     }
 
-    /// Names this local database, so an upload's op ids (`<database>:<queue id>`) never repeat. PowerSync's queue ids
-    /// can restart when the database is cleared, so a cleared database gets a new name.
-    static var databaseID: String {
-        if let id = UserDefaults.standard.string(forKey: databaseKey) { return id }
-        let id = UUID().uuidString.lowercased()
-        UserDefaults.standard.set(id, forKey: databaseKey)
-        return id
-    }
-
-    static func forgetDatabaseID() { UserDefaults.standard.removeObject(forKey: databaseKey) }
 }

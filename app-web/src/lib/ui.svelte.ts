@@ -60,7 +60,12 @@ class Clock {
 
 export const clock = new Clock();
 
-export type Toast = { id: number; message: string; action?: { label: string; run: () => void } };
+export type Toast = {
+	id: number;
+	message: string;
+	/** `dismissed` runs once the toast goes, whether or not the action ran. */
+	action?: { label: string; run: () => void; dismissed?: () => void };
+};
 
 class Toasts {
 	items = $state<Toast[]>([]);
@@ -75,6 +80,7 @@ class Toasts {
 		this.items.push({ id, message, action });
 		this.#timers.set(id, { remaining: duration, startedAt: 0, holds: 0 });
 		this.#run(id);
+		return id;
 	}
 
 	/** Stops a toast's countdown while it is hovered, focused, or touched. Each `hold` pairs with one `release`. */
@@ -95,6 +101,7 @@ class Toasts {
 	dismiss(id: number) {
 		clearTimeout(this.#timers.get(id)?.timeout);
 		this.#timers.delete(id);
+		this.items.find(t => t.id === id)?.action?.dismissed?.();
 		this.items = this.items.filter(t => t.id !== id);
 	}
 

@@ -18,9 +18,6 @@ test(
 		await app.add(title);
 		await expect.poll(() => app.pending(), { timeout: 15_000 }).toBe(0);
 		expect([...origins]).toEqual([new URL(page.url()).origin]);
-		// Chromium runs PowerSync's stream in a SharedWorker, whose requests Playwright never reports; WebKit's are seen.
-		if (test.info().project.name === 'mobile') {
-			expect([...paths].filter(path => path.startsWith('/api/powersync/'))).not.toEqual([]);
-		}
+		expect([...paths].filter(path => path === '/api/sync')).not.toEqual([]);
 	},
 );

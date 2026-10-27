@@ -1,1 +1,0 @@
-ALTER TABLE "api_tokens" DROP COLUMN "last_used_at";

@@ -419,7 +419,10 @@ struct RambleDrawer: View {
             DueChip(due: entry.task.due) { due in capture.update(entry.id) { $0.due = due } }
             PriorityChip(priority: entry.task.priority ?? .p4) { priority in capture.update(entry.id) { $0.priority = priority } }
             LabelsChip(labelIds: entry.task.labelIds) { ids in capture.update(entry.id) { $0.labelIds = ids } }
-            ProjectChip(projectId: entry.task.projectId, showsSections: false) { id, _ in capture.update(entry.id) { $0.projectId = id } }
+            let new = newTask(entry)
+            ProjectChip(projectId: new.projectId, sectionId: new.sectionId, showsSections: false) { id, _ in
+                capture.pick(entry.id, Place(projectId: id, sectionId: nil))
+            }
             if let recurrence = entry.task.recurrence {
                 Button { capture.update(entry.id) { $0.recurrence = nil } } label: {
                     Chip(systemImage: "repeat", text: Format.formatRecurrence(recurrence, entry.task.due), tone: .toneRepeat)
@@ -436,13 +439,22 @@ struct RambleDrawer: View {
             }
         }
         // The labels picker lists, and creates in, the space the task will land in, as quick add's does.
-        .environment(\.space, landing(entry.task))
+        .environment(\.space, landing(entry))
         .transition(.opacity)
     }
 
-    private func landing(_ task: RambleTask) -> SpaceKey {
-        let new = Ramble.newTask(task, defaults: defaults, labels: spaceLabels)
+    private func landing(_ entry: RambleEntry) -> SpaceKey {
+        let new = newTask(entry)
         return store.creationSpace(projectId: new.projectId, labelIds: new.labelIds)
+    }
+
+    private func newTask(_ entry: RambleEntry) -> NewTask {
+        var new = Ramble.newTask(entry.task, defaults: defaults, labels: spaceLabels)
+        if let place = entry.place {
+            new.projectId = place.projectId
+            new.sectionId = place.sectionId
+        }
+        return new
     }
 
     @ViewBuilder
@@ -521,7 +533,7 @@ struct RambleDrawer: View {
         let today = clock.today
         let added = withAnimation(.snappy) {
             saving.compactMap { entry -> TaskItem? in
-                guard let added = store.addTask(Ramble.newTask(entry.task, defaults: defaults, labels: spaceLabels)) else { return nil }
+                guard let added = store.addTask(newTask(entry)) else { return nil }
                 if !entry.task.notes.isEmpty { store.updateTask(added.id, TaskPatch(notes: entry.task.notes)) }
                 addSubtasks(entry.subtasks, under: added.id)
                 return added

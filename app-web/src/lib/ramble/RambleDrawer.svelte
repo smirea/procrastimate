@@ -173,8 +173,10 @@
 		phase = 'review';
 	}
 
+	const newTask = (entry: RambleEntry) => ({ ...rambleNewTask(entry, defaults, store.labels), ...entry.place });
+
 	/** The space an entry will land in, whose labels its picker lists and creates in. */
-	const landing = (entry: RambleEntry) => creationHome(store.homes, rambleNewTask(entry, defaults, store.labels), null);
+	const landing = (entry: RambleEntry) => creationHome(store.homes, newTask(entry), null);
 
 	function start() {
 		const token = ++generation;
@@ -269,7 +271,7 @@
 	function save() {
 		if (listening || !saving.length) return;
 		const added = saving.flatMap((entry) => {
-			const task = store.addTask(rambleNewTask(entry, defaults, store.labels));
+			const task = store.addTask(newTask(entry));
 			if (!task) return [];
 			if (entry.notes) store.updateTask(task.id, { notes: entry.notes });
 			addSubtasks(entry.subtasks, task.id);
@@ -527,11 +529,21 @@
 				{/if}
 				{#if expanded}
 					{@const home = landing(entry)}
+					{@const place = newTask(entry)}
 					<div class="mt-2 flex flex-wrap items-center gap-1.5" in:fade={motion({ duration: 160 })}>
 						<DuePicker due={entry.due} onchange={(due) => (entry.due = due)} />
 						<PriorityPicker priority={entry.priority ?? DEFAULT_PRIORITY} onchange={(priority) => (entry.priority = priority)} />
 						<LabelPicker labelIds={entry.labelIds} labels={store.dataOf(home).labels} canCreate={home === null} onchange={(labelIds) => (entry.labelIds = labelIds)} />
-						<ProjectPicker projectId={entry.projectId} projects={names.projects} sections={[]} onchange={(place) => (entry.projectId = place.projectId)} />
+						<ProjectPicker
+							projectId={place.projectId}
+							sectionId={place.sectionId}
+							projects={names.projects}
+							sections={[]}
+							onchange={(picked) => {
+								entry.place = picked;
+								entry.projectId = picked.projectId;
+							}}
+						/>
 						{#if entry.recurrence}
 							<button type="button" class="chip" data-active="true" style="color: var(--tone-repeat)" aria-label="Remove repeat" onclick={() => (entry.recurrence = null)}>
 								<Repeat size={15} weight="bold" />{formatRecurrence(entry.recurrence, entry.due)}<X size={11} weight="bold" />

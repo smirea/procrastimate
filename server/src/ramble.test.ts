@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, jest, setSystemTime, 
 import { eq } from 'drizzle-orm';
 import { rambleUsage } from '../../shared/db/schema';
 import { RAMBLE_BYTES_PER_SECOND, RAMBLE_DAILY_SECONDS, RAMBLE_SESSION_SECONDS } from '../../shared/ramble/protocol';
-import { rambleRoute, type ConnectUpstream, type RambleRoute } from './ramble';
+import { dbRambleData, rambleRoute, type ConnectUpstream, type RambleRoute } from './ramble';
 import type { Socket, StreamEvents } from './sockets';
 import { shareWith, signUp, testApp, upload, type Session, type TestApp } from './test-app';
 
@@ -34,7 +34,7 @@ beforeAll(async () => {
 	app = await testApp();
 	me = await signUp(app, 'Rambler');
 	route = rambleRoute(
-		app.db,
+		dbRambleData(app.db),
 		(_request, _protocol, start) => {
 			pending = start;
 			return new Response(null);
@@ -131,7 +131,7 @@ describe('a Ramble session', () => {
 		const night = await signUp(app, 'Nightowl');
 		expect(
 			await upload(app, night, [
-				{ op: 'patch', table: 'settings', id: 'settings', values: { time_zone: 'America/New_York' } },
+				{ op: 'patch', table: 'settings', id: night.person.id, values: { time_zone: 'America/New_York' } },
 			]),
 		).toEqual([]);
 		setSystemTime(new Date(Date.UTC(2026, 9, 20, 3, 59, 59)));

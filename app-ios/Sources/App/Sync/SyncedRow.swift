@@ -3,7 +3,7 @@ import Foundation
 import GRDB
 
 /// A synced table's columns in Core's terms, generated from the server schema into `Generated/SyncedTables.swift`:
-/// which key of the Core type each column holds, and how PowerSync stores it.
+/// which key of the Core type each column holds, and how the database stores it.
 struct RowLayout: Sendable {
     enum Kind: Sendable { case text, integer, real, json }
 
@@ -17,6 +17,9 @@ struct RowLayout: Sendable {
 
     let table: String
     let columns: [Column]
+
+    /// The kind whose rows the table holds; none for `access`.
+    var kind: EntityKind? { Rows.kinds.first { Rows.table(of: $0) == table } }
 }
 
 protocol SyncedValue: Codable, Hashable, Sendable {
@@ -27,9 +30,9 @@ struct RowCodingError: Error, CustomStringConvertible {
     let description: String
 }
 
-/// One row of a synced table: its id, the `user_id` of the space it lives in (none for `access`), and the Core value it
-/// holds. GRDB reads and writes it as a record over PowerSync's views. JSON columns go through JSON text, so a row
-/// decodes with the same rules as the API's JSON.
+/// One row of a synced table: its row id, the `user_id` of the space it lives in (none for `access`), and the Core value
+/// it holds, whose id is the domain's (`Rows.entityID`). GRDB reads and writes it as a record. JSON columns go through
+/// JSON text, so a row decodes with the same rules as the API's JSON.
 struct SyncedRow<Value: SyncedValue>: FetchableRecord, PersistableRecord, Sendable {
     var id: String
     var owner: String?
@@ -59,6 +62,7 @@ struct SyncedRow<Value: SyncedValue>: FetchableRecord, PersistableRecord, Sendab
         guard case let .string(id) = fields["id"] else { throw RowCodingError(description: "\(Value.layout.table) row without an id") }
         self.id = id
         self.owner = owner
+        if let kind = Value.layout.kind, let owner { fields["id"] = .string(Rows.entityID(kind, id, owner: owner)) }
         value = try JSONValue.object(fields).decoded()
     }
 

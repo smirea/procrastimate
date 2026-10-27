@@ -1,9 +1,0 @@
-{
-	"comment": "NOT A SECRET. The Ed25519 key the local Docker PowerSync and CI trust. It is committed on purpose, so every worktree and CI run signs sync tokens the same way. Production signs with POWERSYNC_JWT_PRIVATE_KEY from env-manager and never trusts this key.",
-	"kty": "OKP",
-	"crv": "Ed25519",
-	"kid": "insecure-local-dev-5d7cc3c8",
-	"alg": "EdDSA",
-	"x": "DEkzG_aA70UQ6hC0YrN_kHGNrZPL6vkgWpx4KKTdpoA",
-	"d": "hwryOH0oKJKHLXLl8Hf7S_f_3FWv41l-C6pfYSIonmg"
-}

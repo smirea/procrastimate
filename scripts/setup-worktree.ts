@@ -1,22 +1,12 @@
 /**
  * Prepares a linked git worktree for an agent: `bun scripts/setup-worktree.ts [branch] [--reset-db]`.
- * `branch` renames the worktree's branch first, so the simulator, the database, the PR, and teardown all share the
- * final name. `--reset-db` drops and recreates the worktree's databases. Safe to rerun. Never touches AWS.
+ * `branch` renames the worktree's branch first, so the simulator, the PR, and teardown all share the final name.
+ * `--reset-db` deletes the worktree's SQLite database in `.data/`. Safe to rerun. Never touches AWS.
  */
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { basename, join } from 'node:path';
-import {
-	databaseName,
-	databaseOf,
-	databaseUrl,
-	ensureDatabases,
-	ensurePostgres,
-	requireDocker,
-	startPowerSync,
-	stopPowerSync,
-} from './local-stack';
-import { parseDotenv, readOverride, run as runCommand, worktrees } from './lib';
+import { readOverride, run as runCommand, worktrees } from './lib';
 
 const run = (cmd: string[]) => runCommand(cmd, { stdio: 'inherit-stderr' });
 const git = (...args: string[]) => runCommand(['git', ...args]);
@@ -34,9 +24,6 @@ if (wanted && wanted !== git('branch', '--show-current')) {
 	if (git('branch', '--show-current')) git('branch', '-m', wanted);
 	else git('switch', '-c', wanted);
 }
-
-// Before anything slow, so a Mac without Docker fails in a second with the fix named.
-requireDocker();
 
 run(['bun', 'install', '--frozen-lockfile']);
 
@@ -56,9 +43,9 @@ function portFree(port: number): Promise<boolean> {
 	});
 }
 
-// Each block holds web/api/powersync at +0/+1/+2 and the e2e web/api at +10/+11 (playwright.config.ts derives its ports
-// from CLIENT_PORT), which share the worktree's database and PowerSync with `bun run start`.
-const OFFSETS = [0, 1, 2, 10, 11];
+// Each block holds web/api at +0/+1 and the e2e web/api at +10/+11 (playwright.config.ts derives its ports from
+// CLIENT_PORT).
+const OFFSETS = [0, 1, 10, 11];
 async function pickBlock(): Promise<number> {
 	const previous = readPort(root);
 	if (previous) return previous;
@@ -73,10 +60,6 @@ async function pickBlock(): Promise<number> {
 
 // A detached HEAD (mid-rebase) has no branch; the worktree directory is unique too, and teardown reads the name back from ./sim.
 const branch = git('branch', '--show-current') || basename(root);
-// A rerun keeps the names the first run recorded: T3 renames a thread's branch seconds after setup starts, and naming
-// them from the new branch would hand the worktree an empty database and orphan the old one and its simulator.
-const recordedDatabase = readOverride(root)?.DATABASE_URL;
-const database = recordedDatabase ? databaseOf(recordedDatabase) : databaseName(branch);
 
 // Parallel setups would otherwise pick the same unclaimed block; mkdir is atomic, so it serves as the lock.
 const lock = join(git('rev-parse', '--git-common-dir'), 'setup-worktree.lock');
@@ -95,36 +78,20 @@ try {
 	base = await pickBlock();
 	writeFileSync(
 		join(root, '.env.override'),
-		[
-			`CLIENT_PORT=${base}`,
-			`API_PORT=${base + 1}`,
-			`API_URL=http://127.0.0.1:${base + 1}`,
-			`DATABASE_URL=${databaseUrl(database)}`,
-			`POWERSYNC_URL=http://127.0.0.1:${base + 2}`,
-			'',
-		].join('\n'),
+		[`CLIENT_PORT=${base}`, `API_PORT=${base + 1}`, `API_URL=http://127.0.0.1:${base + 1}`, ''].join('\n'),
 	);
 } finally {
 	rmSync(lock, { recursive: true, force: true });
 }
 const apiUrl = `http://127.0.0.1:${base + 1}`;
 
-// Never `env-manager down`: the dev environment holds cloud credentials, and a worktree runs on Docker alone.
+// Never `env-manager down`: the dev environment holds cloud credentials, and a worktree needs none.
 run(['env-manager', 'gen', '--local']);
-
-const serverDatabase = parseDotenv(readFileSync(join(root, 'server/.env.local'), 'utf8')).DATABASE_URL;
-if (!serverDatabase || !/^postgres:\/\/[^@]*@(127\.0\.0\.1|localhost):/.test(serverDatabase)) {
-	throw new Error(`server/.env.local must point DATABASE_URL at the local Docker Postgres, not ${serverDatabase}.`);
-}
-
-// The stack migrates with the bundled migrations, which generate writes.
 run(['bun', 'run', 'generate']);
 
-ensurePostgres();
-// PowerSync holds its slot open, and a reset drops the databases it replicates.
-if (resetDb) stopPowerSync(root);
-await ensureDatabases(database, root, resetDb);
-await startPowerSync(root, database, base + 2);
+// The Bun server creates and migrates its database on start (server/src/index.ts names the file).
+const databaseFile = join(root, '.data', `${basename(root)}.sqlite`);
+if (resetDb) for (const suffix of ['', '-wal', '-shm']) rmSync(`${databaseFile}${suffix}`, { force: true });
 
 const sim = join(root, 'sim');
 // Restricted to shell-safe characters because ./sim embeds it in single quotes.
@@ -138,7 +105,6 @@ console.log(`
 Worktree ready on ${branch}.
   web        http://127.0.0.1:${base}  (bun run start)
   api        ${apiUrl}
-  powersync  http://127.0.0.1:${base + 2}  (container procrastimate-powersync-${basename(root)})
-  database   ${databaseUrl(database)}${resetDb ? '  (reset)' : ''}
-  e2e        ports ${base + 10}-${base + 11}, same database and PowerSync  (bun run test:e2e)
+  database   ${databaseFile}${resetDb ? '  (reset)' : ''}
+  e2e        ports ${base + 10}-${base + 11}, with a database of their own  (bun run test:e2e)
   ios        ./sim  (simulator "${simulator}", created on first run; ./sim 2 for a second one)`);

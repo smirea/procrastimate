@@ -113,11 +113,11 @@ jobs:
       - name: Toolchain
         run: xcodebuild -version
 
-      # The same SwiftPM cache as ios.yml's app job. Saved here on master, it is the one every PR restores first.
+      # The same resolved packages as ios.yml's app job. Saved here on master, it is the one every PR restores first.
       - uses: actions/cache@v4
         with:
-          path: ~/Library/Caches/org.swift.swiftpm
-          key: swiftpm-${{ runner.os }}-${{ hashFiles('app-ios/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          path: app-ios/SourcePackages
+          key: source-packages-${{ runner.os }}-${{ hashFiles('app-ios/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'app-ios/Packages/*/Package.swift') }}
 
       # The key comes from env-manager `prod` through `bun run secrets:github`. It lives outside the repo, as the
       # archive script requires, and is deleted when the job ends.

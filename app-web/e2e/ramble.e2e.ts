@@ -112,6 +112,45 @@ test('Ramble offers projects shared to edit but not to view, and a task picked i
 	await expect(owner.app.row('Call mom')).toBeVisible({ timeout: 15_000 });
 });
 
+test('Ramble from a quick add that stayed open after a save starts in the saved task’s project, and its chip says so', async ({
+	app,
+	page,
+}) => {
+	await app.openSettings();
+	await app.dictationOption('ElevenLabs').click();
+	await page.keyboard.press('Escape');
+	await app.createProject('Home');
+	await app.go('Inbox');
+
+	await app.openQuickAdd();
+	await app.taskInput().fill('Paint shed #Home');
+	await app.quickAdd().getByRole('button', { name: 'Add task' }).click();
+	await expect(app.quickAdd().getByRole('button', { name: 'Project Home', exact: true })).toBeVisible();
+	await app.quickAdd().getByRole('button', { name: 'Ramble' }).click();
+
+	const drawer = page.getByRole('dialog', { name: 'Ramble' });
+	await expect(drawer.getByRole('list', { name: 'Spoken tasks' }).getByText('Renew the passport')).toBeVisible({
+		timeout: 15_000,
+	});
+	await drawer.getByRole('button', { name: 'Stop listening' }).click();
+	const titles = drawer.getByRole('textbox', { name: 'Task title', exact: true });
+	await titles.nth(0).focus();
+	await expect(drawer.getByRole('button', { name: 'Project Home', exact: true })).toBeVisible();
+	await titles.nth(1).focus();
+	await drawer.getByRole('button', { name: 'Project Home', exact: true }).click();
+	await page.getByRole('dialog', { name: 'Project' }).getByRole('button', { name: 'Inbox' }).click();
+	await expect(drawer.getByRole('button', { name: 'Project Inbox', exact: true })).toBeVisible();
+	await drawer.getByRole('button', { name: 'Add 3 tasks' }).click();
+	await expect(drawer).toBeHidden();
+
+	await app.nav('Home').click();
+	await expect(app.row('Paint shed')).toBeVisible();
+	await expect(app.row('Buy groceries for the party')).toBeVisible();
+	await expect(app.row('Call mom')).toHaveCount(0);
+	await app.go('Inbox');
+	await expect(app.row('Call mom')).toBeVisible();
+});
+
 const outlineTask = (title: string, fields: Record<string, unknown> = {}) => ({
 	title,
 	when: '',

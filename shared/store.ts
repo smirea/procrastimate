@@ -7,7 +7,7 @@ import { labelSchema, projectSchema, sectionSchema, snapshotSchema, taskSchema }
 import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Section, type Task } from './task.ts';
 import { byCreation } from './snapshot.ts';
 import { placeKey } from './triggers.ts';
-import type { SavedPlace, TaskLocation } from './values.ts';
+import { imageRefSchema, type SavedPlace, type TaskLocation } from './values.ts';
 
 /**
  * The store's commands as pure functions over its data, so the web store and the Swift store apply the same
@@ -138,7 +138,8 @@ export const deletedSchema = z
 	})
 	.meta({
 		id: 'Deleted',
-		description: 'What deleting a project, section, or label removed, as it was, so undo can put it back.',
+		description:
+			'What a delete removed, as it was, so undo can put it back. While its undo is pending, other undos apply to these records too.',
 	});
 export type Deleted = z.infer<typeof deletedSchema>;
 
@@ -268,11 +269,6 @@ export function deleteTask(data: StoreData, id: string): { data: StoreData; remo
 	const removed = [task, ...subtasks.descendantsOf(data.tasks, id)];
 	const ids = new Set(removed.map(t => t.id));
 	return { data: { ...data, tasks: data.tasks.filter(t => !ids.has(t.id)) }, removed };
-}
-
-export function undeleteTasks(data: StoreData, removed: readonly Task[]): StoreData {
-	const ids = new Set(data.tasks.map(t => t.id));
-	return { ...data, tasks: sortTasks([...data.tasks, ...removed.filter(t => !ids.has(t.id))]) };
 }
 
 /**
@@ -449,43 +445,228 @@ export function deletedBetween(before: StoreData, after: StoreData): Deleted {
 	};
 }
 
+export const undoSchema = z
+	.discriminatedUnion('kind', [
+		z.object({ kind: z.literal('completion'), previous: z.array(completionStateSchema) }),
+		z.object({ kind: z.literal('reopen'), reopened: z.array(reopenedTaskSchema) }),
+		z.object({ kind: z.literal('explode'), previous: z.array(explodedStateSchema) }),
+		z.object({ kind: z.literal('postpone'), id: taskShape.id, due: taskShape.due }),
+		z.object({ kind: z.literal('image'), taskId: taskShape.id, image: imageRefSchema, index: z.number().int() }),
+		z.object({ kind: z.literal('delete'), deleted: deletedSchema }),
+	])
+	.meta({
+		id: 'Undo',
+		description:
+			'What one undo puts back: only what its own action changed, so it merges onto the data as it is when it runs.',
+	});
+export type Undo = z.infer<typeof undoSchema>;
+
+const heldLists = ['projects', 'sections', 'labels', 'tasks'] as const;
+
+/** Each one goes in at its place in creation order, the order every synced list keeps. */
+function insertByCreation<T extends { id: string; createdAt: number }>(live: readonly T[], added: readonly T[]): T[] {
+	const list = [...live];
+	const ids = new Set(live.map(e => e.id));
+	for (const e of added) {
+		if (ids.has(e.id)) continue;
+		const at = list.findIndex(x => byCreation(x, e) > 0);
+		list.splice(at === -1 ? list.length : at, 0, e);
+	}
+	return list;
+}
+
 /**
- * Puts back what a delete removed. A task edited since keeps its edits, and gets each removed label back at its old
- * place in `labelIds`, or last when the list has since shrunk. A section or task whose project was deleted since stays
- * gone, since undoing a section delete after its project's delete must not bring back tasks no view shows.
+ * Puts the labels `pending[index]` released back where they sat, and recounts the other deletes' labelings around them.
+ * Each delete counted its indexes on the task as it stood then, with older deletes' labels gone and newer ones' still
+ * on, so replaying every pending delete newest first rebuilds the task's order from before the oldest. Taking the
+ * released labels' places from that order, rather than their own indexes, keeps them right in any undo order.
  */
-export function undelete(data: StoreData, deleted: Deleted): StoreData {
-	const missing = <T extends { id: string }>(live: readonly T[], gone: readonly T[]) => {
-		const ids = new Set(live.map(e => e.id));
-		return gone.filter(e => !ids.has(e.id));
-	};
-	// Synced lists stay in creation order, so each one comes back at its place in it.
-	const restore = <T extends { id: string; createdAt: number }>(live: readonly T[], gone: readonly T[]) => {
-		const list = [...live];
-		for (const e of missing(live, gone)) {
-			const at = list.findIndex(x => byCreation(x, e) > 0);
-			list.splice(at === -1 ? list.length : at, 0, e);
-		}
-		return list;
-	};
-	const projects = restore(data.projects, deleted.projects);
-	const live = new Set(projects.map(p => p.id));
-	const sections = deleted.sections.filter(x => live.has(x.projectId));
-	const returning = deleted.tasks.filter(t => t.projectId === null || live.has(t.projectId));
-	const tasks = [...data.tasks, ...missing(data.tasks, returning)].map(t => {
-		const back = deleted.labelings.filter(l => l.taskId === t.id && !t.labelIds.includes(l.labelId));
+function relabel(
+	data: StoreData,
+	pending: readonly Undo[],
+	index: number,
+): { data: StoreData; labelings: Deleted['labelings'][] } {
+	const labelings = pending.map(u => (u.kind === 'delete' ? u.deleted.labelings : []));
+	const released = labelings[index]!;
+	const orders = new Map<string, { full: string[]; now: string[] }>();
+	const tasks = data.tasks.map(t => {
+		const back = released.filter(l => l.taskId === t.id && !t.labelIds.includes(l.labelId)).map(l => l.labelId);
 		if (!back.length) return t;
-		const labelIds = [...t.labelIds];
-		for (const { labelId, index } of back.toSorted((a, b) => a.index - b.index))
-			labelIds.splice(Math.min(index, labelIds.length), 0, labelId);
-		return { ...t, labelIds };
+		const full = [...t.labelIds];
+		for (const own of labelings.toReversed())
+			for (const { labelId, index } of own.filter(l => l.taskId === t.id).toSorted((a, b) => a.index - b.index))
+				if (!full.includes(labelId)) full.splice(Math.min(index, full.length), 0, labelId);
+		const now = full.filter(id => t.labelIds.includes(id) || back.includes(id));
+		orders.set(t.id, { full, now });
+		return { ...t, labelIds: now };
+	});
+	const recounted = labelings.map((own, i) =>
+		own.map(l => {
+			const order = orders.get(l.taskId);
+			if (!order || !order.full.includes(l.labelId)) return l;
+			const newer = labelings.slice(i + 1).flatMap(n => n.filter(m => m.taskId === l.taskId).map(m => m.labelId));
+			const on = (id: string) => order.now.includes(id) || newer.includes(id);
+			return { ...l, index: order.full.slice(0, order.full.indexOf(l.labelId)).filter(on).length };
+		}),
+	);
+	return { data: { ...data, tasks }, labelings: recounted.filter((_, i) => i !== index) };
+}
+
+function applyUndo(data: StoreData, action: Undo): StoreData {
+	switch (action.kind) {
+		case 'completion':
+			return restoreCompletion(data, action.previous);
+		case 'reopen':
+			return { ...data, tasks: put(data.tasks, action.reopened) };
+		case 'explode':
+			return restoreExploded(data, action.previous);
+		case 'postpone':
+			return { ...data, tasks: put(data.tasks, [{ id: action.id, due: action.due }]) };
+		case 'image': {
+			const { taskId, image, index } = action;
+			const tasks = data.tasks.map(t =>
+				t.id !== taskId || t.images.some(other => other.id === image.id)
+					? t
+					: { ...t, images: t.images.toSpliced(index, 0, image) },
+			);
+			return { ...data, tasks };
+		}
+		case 'delete':
+			return data;
+	}
+}
+
+export function undoTargets(action: Undo): string[] {
+	switch (action.kind) {
+		case 'completion':
+		case 'explode':
+			return action.previous.map(p => p.id);
+		case 'reopen':
+			return action.reopened.map(r => r.id);
+		case 'postpone':
+			return [action.id];
+		case 'image':
+			return [action.taskId];
+		case 'delete':
+			return heldLists.flatMap(list => action.deleted[list].map(e => e.id));
+	}
+}
+
+/**
+ * Takes `pending[index]`, one of the undos the user can still take, and returns the data and the undos left. A pending
+ * delete holds what it removed, and an undo applies to those held records as to the live ones, so pending undos give
+ * the same result in any order: undoing a label's delete puts the label back on a task whose own delete is pending.
+ * A record an undo moves or brings back whose project, section, or parent task a pending delete holds joins that
+ * delete, and comes back with it. One whose project, section, or parent is gone for good stays gone, so no task comes
+ * back where no view shows it. A task edited since keeps its edits. A live task keeps only live labels: one a pending
+ * delete holds goes into that delete's labelings, so undoing it puts the label back, and one gone for good is dropped.
+ */
+export function undo(data: StoreData, pending: readonly Undo[], index: number): { data: StoreData; pending: Undo[] } {
+	const action = pending[index];
+	const rest = pending.filter((_, i) => i !== index);
+	if (!action) return { data, pending: rest };
+	const holds = rest.map(u => (u.kind === 'delete' ? u.deleted : null));
+	const owner = new Map<string, number>();
+	holds.forEach((held, i) => {
+		for (const list of heldLists) for (const e of held?.[list] ?? []) owner.set(e.id, i);
+	});
+	const released = action.kind === 'delete' ? action.deleted : null;
+	const all = [...holds, released];
+	const relabeled = relabel(
+		{
+			...data,
+			projects: insertByCreation(
+				data.projects,
+				all.flatMap(held => held?.projects ?? []),
+			),
+			sections: insertByCreation(
+				data.sections,
+				all.flatMap(held => held?.sections ?? []),
+			),
+			labels: insertByCreation(
+				data.labels,
+				all.flatMap(held => held?.labels ?? []),
+			),
+			tasks: sortTasks(
+				insertByCreation(
+					data.tasks,
+					all.flatMap(held => held?.tasks ?? []),
+				),
+			),
+		},
+		pending,
+		index,
+	);
+	const after = applyUndo(relabeled.data, action);
+
+	type Place = number | 'live' | 'gone';
+	const targets = new Set(undoTargets(action));
+	const projects = new Map(after.projects.map(p => [p.id, p]));
+	const sections = new Map(after.sections.map(s => [s.id, s]));
+	const tasks = new Map(after.tasks.map(t => [t.id, t]));
+	const places = new Map<string, Place>();
+	const placeOf = (e: Project | Section | Label | Task): Place => {
+		let place = places.get(e.id);
+		if (place !== undefined) return place;
+		place = owner.get(e.id) ?? (targets.has(e.id) ? parentPlace(e) : followParent(e));
+		places.set(e.id, place);
+		return place;
+	};
+	// A subtask follows its parent into a pending delete, since the undo moved the parent with its whole subtree.
+	const followParent = (e: Project | Section | Label | Task): Place => {
+		const parent = 'parentId' in e && e.parentId !== null && !owner.has(e.parentId) ? tasks.get(e.parentId) : undefined;
+		const place = parent ? placeOf(parent) : 'live';
+		return typeof place === 'number' ? place : 'live';
+	};
+	const parentPlace = (e: Project | Section | Label | Task): Place => {
+		const parents: [string | null, ReadonlyMap<string, Project | Section | Task>][] =
+			'parentId' in e
+				? [
+						[e.projectId, projects],
+						[e.sectionId, sections],
+						[e.parentId, tasks],
+					]
+				: 'projectId' in e
+					? [[e.projectId, projects]]
+					: [];
+		for (const [id, records] of parents) {
+			if (id === null) continue;
+			const parent = records.get(id);
+			if (!parent) return released ? 'gone' : 'live';
+			const place = placeOf(parent);
+			if (place !== 'live') return place;
+		}
+		return 'live';
+	};
+	const at = (place: Place) => ({
+		projects: after.projects.filter(e => placeOf(e) === place),
+		sections: after.sections.filter(e => placeOf(e) === place),
+		labels: after.labels.filter(e => placeOf(e) === place),
+		tasks: after.tasks.filter(e => placeOf(e) === place),
+	});
+	const live = at('live');
+	const liveLabels = new Set(live.labels.map(l => l.id));
+	const moved = rest.map((): Deleted['labelings'] => []);
+	live.tasks = live.tasks.map(t => {
+		if (t.labelIds.every(id => liveLabels.has(id))) return t;
+		// Each index is the one that delete would have recorded had the task been live, when the labels deleted after it
+		// were still on the task, so undoing the label deletes newest first puts them back in their order.
+		const since = (id: string, held: number) => liveLabels.has(id) || (owner.get(id) ?? -1) >= held;
+		t.labelIds.forEach((labelId, at) => {
+			const held = owner.get(labelId);
+			if (liveLabels.has(labelId) || held === undefined) return;
+			const index = t.labelIds.slice(0, at).filter(id => since(id, held)).length;
+			moved[held]!.push({ taskId: t.id, labelId, index });
+		});
+		return { ...t, labelIds: t.labelIds.filter(id => liveLabels.has(id)) };
 	});
 	return {
-		...data,
-		projects,
-		sections: restore(data.sections, sections),
-		labels: restore(data.labels, deleted.labels),
-		tasks: sortTasks(tasks),
+		data: { ...data, ...live },
+		pending: rest.map((u, i) =>
+			u.kind === 'delete'
+				? { ...u, deleted: { ...u.deleted, ...at(i), labelings: [...relabeled.labelings[i]!, ...moved[i]!] } }
+				: u,
+		),
 	};
 }
 

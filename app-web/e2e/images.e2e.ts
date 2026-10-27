@@ -131,8 +131,8 @@ test('images pasted or picked in quick add attach to the new task, and pasting o
 	await app.quickAdd().getByRole('button', { name: 'Remove image 3' }).click();
 	await expect(drafted).toHaveCount(2);
 
-	await app.taskInput().press('Enter');
-	await expect(app.quickAdd()).toBeHidden();
+	await app.save();
+	await app.showAdded();
 	await expect(app.row(title).getByRole('img', { name: '2 images' })).toBeVisible();
 	const id = await app.taskId(title);
 	const stored = await page.evaluate(id => window.procrastimate.entity('task', id)?.images, id);

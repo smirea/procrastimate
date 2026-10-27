@@ -3,7 +3,7 @@ import GRDB
 import Network
 import Observation
 
-/// The tasks with a write in PowerSync's upload queue that has not reached the server, read from the queue itself, as
+/// The tasks with a write in sync-engine's outbox that the server has not acknowledged, read from the outbox itself, as
 /// on the web. Online, an upload leaves within the 100 ms throttle and lands a moment later, so a task shows only once
 /// its oldest queued write has waited `grace`, and typing that uploads keystroke by keystroke, each one queued before
 /// the last lands, never shows it. Offline it shows at once.
@@ -29,18 +29,12 @@ final class UnsyncedTasks {
     func start(in pool: DatabasePool, offline forced: Bool) {
         offline = forced
         observation = ValueObservation.tracking { db -> [String: Int64] in
-            // PowerSync queues a write from inside its own virtual table, which GRDB never sees change, so the change log
-            // that every local write also lands in is tracked too. Emptying the queue is a plain delete GRDB does see.
-            _ = try LocalDatabase.lastChange(db)
-            let rows = try Row.fetchAll(
-                db,
-                sql: "SELECT json_extract(data, '$.id') AS id, MIN(id) AS row FROM ps_crud WHERE json_extract(data, '$.type') = 'tasks' GROUP BY 1"
-            )
+            let rows = try Row.fetchAll(db, sql: #"SELECT id, MIN(seq) AS row FROM _outbox WHERE "table" = 'tasks' GROUP BY id"#)
             return Dictionary(uniqueKeysWithValues: rows.map { ($0["id"] as String, $0["row"] as Int64) })
         }
         .start(
             in: pool,
-            onError: { ErrorReport.log("The upload queue stopped updating", error: $0) },
+            onError: { ErrorReport.log("The outbox stopped updating", error: $0) },
             onChange: { [weak self] in self?.update($0) }
         )
         guard !forced else { return }
@@ -51,6 +45,12 @@ final class UnsyncedTasks {
                 show()
             }
         }
+    }
+
+    /// For another user: the previous one's ids go at once, before the reset's delete reaches the observation.
+    func reset() {
+        queued = [:]
+        if !shown.isEmpty { shown = [] }
     }
 
     /// One grace per read covers every task whose oldest write changed in it, so an import ripens in one update.

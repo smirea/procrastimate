@@ -118,7 +118,7 @@
 		{#if !home}
 			{#if addingSection}
 				<InlineEdit
-					class="field mt-6 w-full text-[13px] font-semibold"
+					class="field mt-6 w-full text-[15px] font-semibold"
 					label="New section name"
 					placeholder="Section name"
 					oncommit={(name) => store.addSection(project.id, name)}

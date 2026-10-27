@@ -10,6 +10,7 @@ public typealias Completion = API.Completion
 public typealias ExplodeMethod = API.ExplodeMethod
 public typealias ExplodedState = API.ExplodedState
 public typealias Deleted = API.Deleted
+public typealias Undo = API.Undo
 
 extension API.TaskEdit {
     func apply(to task: inout TaskItem) {
@@ -167,13 +168,6 @@ public enum StoreRules {
         var next = data
         next.tasks = data.tasks.filter { !ids.contains($0.id) }
         return (next, removed)
-    }
-
-    public static func undeleteTasks(_ data: StoreData, _ removed: [TaskItem]) -> StoreData {
-        let ids = Set(data.tasks.map(\.id))
-        var next = data
-        next.tasks = sortTasks(data.tasks + removed.filter { !ids.contains($0.id) })
-        return next
     }
 
     /// Turns a task's direct subtasks into tasks of their own, one level up: top-level tasks for a top-level parent,
@@ -455,7 +449,7 @@ public enum StoreRules {
         return next
     }
 
-    /// What a delete took out of `before` to leave `after`, for `undelete`.
+    /// What a delete took out of `before` to leave `after`, for its undo.
     public static func deletedBetween(_ before: StoreData, _ after: StoreData) -> Deleted {
         func gone<T: Created>(_ was: [T], _ now: [T]) -> [T] {
             let live = Set(now.map(\.id))
@@ -476,40 +470,222 @@ public enum StoreRules {
         )
     }
 
-    /// Puts back what a delete removed. A task edited since keeps its edits, and gets each removed label back at its
-    /// old place in `labelIds`, or last when the list has since shrunk. A section or task whose project was deleted
-    /// since stays gone, since undoing a section delete after its project's delete must not bring back tasks no view
-    /// shows.
-    public static func undelete(_ data: StoreData, _ deleted: Deleted) -> StoreData {
-        func missing<T: Created>(_ live: [T], _ gone: [T]) -> [T] {
-            let ids = Set(live.map(\.id))
-            return gone.filter { !ids.contains($0.id) }
+    /// Each one goes in at its place in creation order, the order every synced list keeps.
+    static func insertByCreation<T: Created>(_ live: [T], _ added: [T]) -> [T] {
+        let ids = Set(live.map(\.id))
+        var list = live
+        for e in added where !ids.contains(e.id) {
+            list.insert(e, at: list.firstIndex { byCreation(e, $0) == true } ?? list.endIndex)
         }
-        // Synced lists stay in creation order, so each one comes back at its place in it.
-        func restore<T: Created>(_ live: [T], _ gone: [T]) -> [T] {
-            var list = live
-            for e in missing(live, gone) {
-                let at = list.firstIndex { byCreation(e, $0) == true } ?? list.endIndex
-                list.insert(e, at: at)
-            }
-            return list
-        }
-        var next = data
-        next.projects = restore(data.projects, deleted.projects)
-        let live = Set(next.projects.map(\.id))
-        next.sections = restore(data.sections, deleted.sections.filter { live.contains($0.projectId) })
-        next.labels = restore(data.labels, deleted.labels)
-        let returning = deleted.tasks.filter { $0.projectId.map(live.contains) ?? true }
-        next.tasks = sortTasks((data.tasks + missing(data.tasks, returning)).map { t in
-            let back = deleted.labelings
-                .filter { $0.taskId == t.id && !t.labelIds.contains($0.labelId) }
-                .stableSorted { a, b in a.index == b.index ? nil : a.index < b.index }
+        return list
+    }
+
+    /// Puts the labels `pending[index]` released back where they sat, and recounts the other deletes' labelings around
+    /// them. Each delete counted its indexes on the task as it stood then, with older deletes' labels gone and newer
+    /// ones' still on, so replaying every pending delete newest first rebuilds the task's order from before the oldest.
+    /// Taking the released labels' places from that order, rather than their own indexes, keeps them right in any undo
+    /// order.
+    static func relabel(_ tasks: [TaskItem], _ pending: [Undo], _ index: Int) -> (tasks: [TaskItem], labelings: [[API.Labeling]]) {
+        let labelings = pending.map { undo -> [API.Labeling] in if case let .delete(undo) = undo { undo.deleted.labelings } else { [] } }
+        let released = labelings[index]
+        var orders: [String: (full: [String], now: [String])] = [:]
+        let relabeled = tasks.map { t in
+            let back = released.filter { $0.taskId == t.id && !t.labelIds.contains($0.labelId) }.map(\.labelId)
             guard !back.isEmpty else { return t }
+            var full = t.labelIds
+            for own in labelings.reversed() {
+                let mine = own.filter { $0.taskId == t.id }.stableSorted { a, b in a.index == b.index ? nil : a.index < b.index }
+                for labeling in mine where !full.contains(labeling.labelId) {
+                    full.insert(labeling.labelId, at: min(labeling.index, full.count))
+                }
+            }
+            let now = full.filter { t.labelIds.contains($0) || back.contains($0) }
+            orders[t.id] = (full, now)
             var t = t
-            for labeling in back { t.labelIds.insert(labeling.labelId, at: min(labeling.index, t.labelIds.count)) }
+            t.labelIds = now
             return t
-        })
-        return next
+        }
+        let recounted = labelings.enumerated().map { i, own in
+            own.map { l -> API.Labeling in
+                guard let order = orders[l.taskId], let at = order.full.firstIndex(of: l.labelId) else { return l }
+                let newer = labelings[(i + 1)...].flatMap { $0.filter { $0.taskId == l.taskId }.map(\.labelId) }
+                let count = order.full[..<at].filter { order.now.contains($0) || newer.contains($0) }.count
+                return API.Labeling(taskId: l.taskId, labelId: l.labelId, index: count)
+            }
+        }
+        return (relabeled, recounted.enumerated().filter { $0.offset != index }.map(\.element))
+    }
+
+    static func apply(_ undo: Undo, to data: StoreData) -> StoreData {
+        func edit(_ id: String, _ change: (inout TaskItem) -> Void) -> StoreData {
+            var next = data
+            next.tasks = data.tasks.map { t in
+                guard t.id == id else { return t }
+                var t = t
+                change(&t)
+                return t
+            }
+            return next
+        }
+        switch undo {
+        case let .completion(undo):
+            return restoreCompletion(data, undo.previous)
+        case let .reopen(undo):
+            let completedAt = Dictionary(undo.reopened.map { ($0.id, $0.completedAt) }, uniquingKeysWith: { _, last in last })
+            var next = data
+            next.tasks = data.tasks.map { t in
+                guard let at = completedAt[t.id] else { return t }
+                var t = t
+                t.completedAt = at
+                return t
+            }
+            return next
+        case let .explode(undo):
+            return restoreExploded(data, undo.previous)
+        case let .postpone(undo):
+            return edit(undo.id) { $0.due = undo.due }
+        case let .image(undo):
+            return edit(undo.taskId) { t in
+                guard !t.images.contains(where: { $0.id == undo.image.id }) else { return }
+                t.images.insert(undo.image, at: min(undo.index, t.images.count))
+            }
+        case .delete:
+            return data
+        }
+    }
+
+    /// The ids of what an undo changes: the tasks it writes back, or every record a delete holds.
+    public static func undoTargets(_ undo: Undo) -> [String] {
+        switch undo {
+        case let .completion(undo): undo.previous.map(\.id)
+        case let .reopen(undo): undo.reopened.map(\.id)
+        case let .explode(undo): undo.previous.map(\.id)
+        case let .postpone(undo): [undo.id]
+        case let .image(undo): [undo.taskId]
+        case let .delete(undo):
+            undo.deleted.projects.map(\.id) + undo.deleted.sections.map(\.id) + undo.deleted.labels.map(\.id)
+                + undo.deleted.tasks.map(\.id)
+        }
+    }
+
+    private enum Place: Hashable {
+        case live, gone, held(Int)
+    }
+
+    private enum Ref {
+        case project(String), section(String), label(String), task(String)
+    }
+
+    /// Takes `pending[index]`, one of the undos the user can still take, and returns the data and the undos left. A
+    /// pending delete holds what it removed, and an undo applies to those held records as to the live ones, so pending
+    /// undos give the same result in any order: undoing a label's delete puts the label back on a task whose own delete
+    /// is pending. A record an undo moves or brings back whose project, section, or parent task a pending delete holds
+    /// joins that delete, and comes back with it. One whose project, section, or parent is gone for good stays gone, so
+    /// no task comes back where no view shows it. A task edited since keeps its edits. A live task keeps only live
+    /// labels: one a pending delete holds goes into that delete's labelings, so undoing it puts the label back, and one
+    /// gone for good is dropped.
+    public static func undo(_ data: StoreData, _ pending: [Undo], _ index: Int) -> (data: StoreData, pending: [Undo]) {
+        guard pending.indices.contains(index) else { return (data, pending) }
+        let action = pending[index]
+        var rest = pending
+        rest.remove(at: index)
+        let holds: [Deleted?] = rest.map { if case let .delete(undo) = $0 { undo.deleted } else { nil } }
+        var owner: [String: Int] = [:]
+        for (i, held) in holds.enumerated() {
+            guard let held else { continue }
+            let ids = held.projects.map(\.id) + held.sections.map(\.id) + held.labels.map(\.id) + held.tasks.map(\.id)
+            for id in ids { owner[id] = i }
+        }
+        let released: Deleted? = if case let .delete(undo) = action { undo.deleted } else { nil }
+        let all = (holds + [released]).compactMap { $0 }
+        var merged = data
+        merged.projects = insertByCreation(data.projects, all.flatMap(\.projects))
+        merged.sections = insertByCreation(data.sections, all.flatMap(\.sections))
+        merged.labels = insertByCreation(data.labels, all.flatMap(\.labels))
+        let relabeled = relabel(sortTasks(insertByCreation(data.tasks, all.flatMap(\.tasks))), pending, index)
+        merged.tasks = relabeled.tasks
+        let after = apply(action, to: merged)
+
+        let targets = Set(undoTargets(action))
+        let projects = Set(after.projects.map(\.id))
+        let sections = Dictionary(after.sections.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let tasks = Dictionary(after.tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var places: [String: Place] = [:]
+        func place(_ ref: Ref) -> Place {
+            let id: String, parents: [Ref?]
+            switch ref {
+            case let .project(key), let .label(key):
+                (id, parents) = (key, [])
+            case let .section(key):
+                (id, parents) = (key, [sections[key].map { .project($0.projectId) }])
+            case let .task(key):
+                let t = tasks[key]
+                (id, parents) = (key, [t?.projectId.map(Ref.project), t?.sectionId.map(Ref.section), t?.parentId.map(Ref.task)])
+            }
+            if let known = places[id] { return known }
+            var result = owner[id].map(Place.held) ?? .live
+            // A subtask follows its parent into a pending delete, since the undo moved the parent with its whole subtree.
+            if owner[id] == nil, !targets.contains(id), case let .task(key) = ref, let parentId = tasks[key]?.parentId,
+               owner[parentId] == nil, tasks[parentId] != nil, case .held = place(.task(parentId)) {
+                result = place(.task(parentId))
+            }
+            if owner[id] == nil, targets.contains(id) {
+                for case let parent? in parents {
+                    let exists = switch parent {
+                    case let .project(key): projects.contains(key)
+                    case let .section(key): sections[key] != nil
+                    case let .task(key): tasks[key] != nil
+                    case .label: true
+                    }
+                    let at = exists ? place(parent) : released == nil ? .live : .gone
+                    if !exists || at != .live {
+                        result = at
+                        break
+                    }
+                }
+            }
+            places[id] = result
+            return result
+        }
+        func keep(_ want: Place) -> Deleted {
+            Deleted(
+                projects: after.projects.filter { place(.project($0.id)) == want },
+                sections: after.sections.filter { place(.section($0.id)) == want },
+                labels: after.labels.filter { place(.label($0.id)) == want },
+                tasks: after.tasks.filter { place(.task($0.id)) == want }
+            )
+        }
+        let live = keep(.live)
+        let liveLabels = Set(live.labels.map(\.id))
+        var moved = rest.map { _ in [API.Labeling]() }
+        var next = data
+        next.projects = live.projects
+        next.sections = live.sections
+        next.labels = live.labels
+        next.tasks = live.tasks.map { t in
+            guard !t.labelIds.allSatisfy(liveLabels.contains) else { return t }
+            // Each index is the one that delete would have recorded had the task been live, when the labels deleted
+            // after it were still on the task, so undoing the label deletes newest first puts them back in their order.
+            for (at, labelId) in t.labelIds.enumerated() where !liveLabels.contains(labelId) {
+                guard let held = owner[labelId] else { continue }
+                let index = t.labelIds[..<at].filter { liveLabels.contains($0) || (owner[$0] ?? -1) >= held }.count
+                moved[held].append(API.Labeling(taskId: t.id, labelId: labelId, index: index))
+            }
+            var kept = t
+            kept.labelIds = t.labelIds.filter(liveLabels.contains)
+            return kept
+        }
+        let left = rest.enumerated().map { i, undo -> Undo in
+            guard case var .delete(undo) = undo else { return undo }
+            let held = keep(.held(i))
+            undo.deleted.projects = held.projects
+            undo.deleted.sections = held.sections
+            undo.deleted.labels = held.labels
+            undo.deleted.tasks = held.tasks
+            undo.deleted.labelings = relabeled.labelings[i] + moved[i]
+            return .delete(undo)
+        }
+        return (next, left)
     }
 }
 

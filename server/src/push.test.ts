@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, setSystem
 import { and, eq } from 'drizzle-orm';
 import { log, push, tasks } from '../../shared/db/schema';
 import type { PushMessage } from '../../shared/push';
-import { deliverDue, isAllowedEndpoint } from './push';
+import { deliverDue, isAllowedEndpoint, touchesPush } from './push';
 import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
 
 const NOW = Date.UTC(2026, 9, 14, 18, 0);
@@ -37,12 +37,12 @@ describe('push', () => {
 			{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Call mum', { due: JSON.stringify(due) }) },
 		]);
 		const [row] = await rows();
-		expect(row?.notifications.map(n => n.taskId)).toEqual([id]);
+		expect(row?.notifications.map(n => n.opens.id)).toEqual([id]);
 		expect(row?.nextAt).toBe(Date.UTC(2026, 9, 14, 18, 30));
-		const schedule = await json<{ notifications: { taskId: string }[] }>(
+		const schedule = await json<{ notifications: { opens: { id: string } }[] }>(
 			app.fetch('/api/push/schedule', { headers: owner.headers }),
 		);
-		expect(schedule.notifications.map(n => n.taskId)).toEqual([id]);
+		expect(schedule.notifications.map(n => n.opens.id)).toEqual([id]);
 
 		await upload(app, owner, [{ op: 'patch', table: 'tasks', id, values: { completed_at: NOW } }]);
 		expect((await rows())[0]?.notifications).toEqual([]);
@@ -68,38 +68,8 @@ describe('push', () => {
 		});
 		expect(subscribed.status).toBe(200);
 		const [row] = await app.db.select().from(push).where(eq(push.userId, late.person.id));
-		expect(row?.notifications.map(n => n.taskId)).toEqual([id]);
+		expect(row?.notifications.map(n => n.opens.id)).toEqual([id]);
 		expect(row?.nextAt).toBe(Date.UTC(2026, 9, 14, 19, 15));
-	});
-
-	test('a delete retried after its row went, but before its log and replan ran, finishes both once', async () => {
-		const retrier = await signUp(app, 'Retrier', 'install-retry-000');
-		await app.fetch('/api/push/subscription', {
-			method: 'PUT',
-			headers: retrier.headers,
-			body: JSON.stringify({ subscription: subscription('https://push.example/retry') }),
-		});
-		const id = crypto.randomUUID();
-		const due = JSON.stringify({ date: '2026-10-14', time: '20:00' });
-		await upload(app, retrier, [
-			{ op: 'put', table: 'tasks', id, values: taskRow(id, retrier.person.id, 'Feed the cat', { due }) },
-		]);
-		const plan = async () =>
-			(await app.db.select().from(push).where(eq(push.userId, retrier.person.id)))[0]?.notifications.map(n => n.taskId);
-		expect(await plan()).toEqual([id]);
-		// The state a crash between the delete and its bookkeeping leaves: the row gone, nothing else changed.
-		await app.db.delete(tasks).where(eq(tasks.id, id));
-		const deletes = () =>
-			app.db
-				.select({ op: log.op })
-				.from(log)
-				.where(and(eq(log.userId, retrier.person.id), eq(log.id, id), eq(log.op, 'delete')));
-		const retry = [{ op: 'delete', table: 'tasks', id, opId: `${id}:delete` }];
-		expect(await upload(app, retrier, retry)).toEqual([]);
-		expect(await plan()).toEqual([]);
-		expect(await deletes()).toEqual([{ op: 'delete' }]);
-		expect(await upload(app, retrier, retry)).toEqual([]);
-		expect(await deletes()).toEqual([{ op: 'delete' }]);
 	});
 
 	test('the cron sends what is due, settles it, retries a failure, and drops a gone subscription', async () => {
@@ -126,7 +96,7 @@ describe('push', () => {
 		const at = Date.UTC(2026, 9, 14, 18, 45, 10);
 		expect(await deliverDue(app.db, at, send)).toBe(0);
 		expect(sent.map(message => message.title)).toEqual(['Stretch']);
-		expect((await rows())[0]?.notifications.map(n => n.taskId)).toEqual([id]);
+		expect((await rows())[0]?.notifications.map(n => n.opens.id)).toEqual([id]);
 
 		status = 201;
 		expect(await deliverDue(app.db, at + 60_000, send)).toBe(1);
@@ -148,6 +118,126 @@ describe('push', () => {
 		expect(await rows()).toHaveLength(0);
 	});
 
+	test('a 410 for a subscription made within two minutes retries, and one for an older subscription drops it', async () => {
+		const fresh = await signUp(app, 'Fresh', 'install-fresh-000');
+		const rowsOf = () => app.db.select().from(push).where(eq(push.userId, fresh.person.id));
+		await app.fetch('/api/push/subscription', {
+			method: 'PUT',
+			headers: fresh.headers,
+			body: JSON.stringify({ subscription: subscription('https://push.example/fresh') }),
+		});
+		const soon = crypto.randomUUID();
+		const later = crypto.randomUUID();
+		await upload(app, fresh, [
+			{
+				op: 'put',
+				table: 'tasks',
+				id: soon,
+				values: taskRow(soon, fresh.person.id, 'Soon', { due: JSON.stringify({ date: '2026-10-14', time: '18:01' }) }),
+			},
+			{
+				op: 'put',
+				table: 'tasks',
+				id: later,
+				values: taskRow(later, fresh.person.id, 'Later', {
+					due: JSON.stringify({ date: '2026-10-14', time: '18:30' }),
+				}),
+			},
+		]);
+		let status = 410;
+		const sent: string[] = [];
+		const send = async (_subscription: unknown, message: PushMessage) => {
+			sent.push(message.title);
+			return status;
+		};
+
+		expect(await deliverDue(app.db, Date.UTC(2026, 9, 14, 18, 1), send)).toBe(0);
+		expect((await rowsOf())[0]?.notifications.map(n => n.opens.id)).toEqual([soon, later]);
+		expect((await rowsOf())[0]?.nextAt).toBe(Date.UTC(2026, 9, 14, 18, 2));
+
+		status = 201;
+		expect(await deliverDue(app.db, Date.UTC(2026, 9, 14, 18, 2), send)).toBe(1);
+		expect(sent).toEqual(['Soon', 'Soon']);
+
+		status = 410;
+		expect(await deliverDue(app.db, Date.UTC(2026, 9, 14, 18, 30), send)).toBe(0);
+		expect(sent).toEqual(['Soon', 'Soon', 'Later']);
+		expect(await rowsOf()).toEqual([]);
+	});
+
+	test('a subscription under a minute old holds what is due until the next run, and an older one sends at once', async () => {
+		const subscribeWithTask = async (name: string, device: string, at: number) => {
+			setSystemTime(at);
+			const session = await signUp(app, name, device);
+			await app.fetch('/api/push/subscription', {
+				method: 'PUT',
+				headers: session.headers,
+				body: JSON.stringify({ subscription: subscription(`https://push.example/${device}`) }),
+			});
+			const id = crypto.randomUUID();
+			await upload(app, session, [
+				{
+					op: 'put',
+					table: 'tasks',
+					id,
+					values: taskRow(id, session.person.id, name, { due: JSON.stringify({ date: '2026-10-14', time: '18:00' }) }),
+				},
+			]);
+			return session;
+		};
+		const young = await subscribeWithTask('Young', 'install-young-000', Date.UTC(2026, 9, 14, 17, 59, 40));
+		await subscribeWithTask('Old', 'install-old-00000', Date.UTC(2026, 9, 14, 17, 58));
+		setSystemTime(NOW);
+		const sent: string[] = [];
+		const send = async (_subscription: unknown, message: PushMessage) => {
+			sent.push(message.title);
+			return 201;
+		};
+
+		expect(await deliverDue(app.db, NOW, send)).toBe(1);
+		expect(sent).toEqual(['Old']);
+		const [held] = await app.db.select().from(push).where(eq(push.userId, young.person.id));
+		expect(held?.notifications.map(n => n.title)).toEqual(['Young']);
+		expect(held?.nextAt).toBe(Date.UTC(2026, 9, 14, 18, 1));
+
+		expect(await deliverDue(app.db, Date.UTC(2026, 9, 14, 18, 1), send)).toBe(1);
+		expect(sent).toEqual(['Old', 'Young']);
+	});
+
+	test('tasks due at the same minute send one push that names them and opens their list', async () => {
+		const grouper = await signUp(app, 'Grouper', 'install-group-000');
+		await app.fetch('/api/push/subscription', {
+			method: 'PUT',
+			headers: grouper.headers,
+			body: JSON.stringify({ subscription: subscription('https://push.example/group') }),
+		});
+		const due = JSON.stringify({ date: '2026-10-14', time: '21:00' });
+		const ids = [crypto.randomUUID(), crypto.randomUUID()];
+		await upload(
+			app,
+			grouper,
+			['Pack', 'Charge phone'].map((title, i) => ({
+				op: 'put',
+				table: 'tasks',
+				id: ids[i] ?? '',
+				values: taskRow(ids[i] ?? '', grouper.person.id, title, { due }),
+			})),
+		);
+		const sent: PushMessage[] = [];
+		await deliverDue(app.db, Date.UTC(2026, 9, 14, 21, 0, 5), async (_subscription, message) => {
+			sent.push(message);
+			return 201;
+		});
+		expect(sent).toEqual([
+			{
+				title: '2 tasks',
+				body: 'Pack, Charge phone',
+				tag: `at:${Date.UTC(2026, 9, 14, 21, 0)}`,
+				opens: { kind: 'inbox', id: '' },
+			},
+		]);
+	});
+
 	test('a browser that paired again as a new install replaces its old entry for the same endpoint', async () => {
 		const again = await signUp(app, 'Again', 'install-b-0000000');
 		const subscribe = (session: Session) =>
@@ -163,6 +253,13 @@ describe('push', () => {
 		expect(stored.map(row => row.deviceId)).toEqual(['install-c-0000000']);
 		expect((await app.fetch('/api/push/subscription', { method: 'DELETE', headers: second.headers })).status).toBe(200);
 		expect(await app.db.select().from(push).where(eq(push.userId, again.person.id))).toEqual([]);
+	});
+});
+
+describe('touchesPush', () => {
+	test('moving a task to another project replans, since a group opens the project its tasks share', () => {
+		expect(touchesPush({ op: 'patch', kind: 'task', id: 't', values: { projectId: 'work' } })).toBe(true);
+		expect(touchesPush({ op: 'patch', kind: 'task', id: 't', values: { title: 'Pack' } })).toBe(false);
 	});
 });
 

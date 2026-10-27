@@ -120,10 +120,12 @@ let handlers: [String: Handler] = [
     "csv": csvVector,
     "search": searchVector,
     "name-search": nameSearchVector,
+    "task-suggestions": taskSuggestionsVector,
     "todoist": todoistVector,
     "dictation": dictationVector,
     "quick-add-buttons": quickAddButtonsVector,
     "label-colors": labelColorsVector,
+    "accents": accentsVector,
     "triggers": triggersVector,
     "ramble": rambleVector,
     "ramble-fill": rambleFillVector,
@@ -271,9 +273,9 @@ private struct Occurrence: Decodable {
         return .array(scheduled.map { n in
             object([
                 "at": .number(Double(n.at.epochMilliseconds)),
-                "taskId": .string(n.taskId),
                 "title": .string(n.title),
                 "body": .string(n.body),
+                "opens": object(["kind": .string(n.opens.kind.rawValue), "id": .string(n.opens.id)]),
             ])
         })
     default: throw unknown(fn)
@@ -357,7 +359,6 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     case "deleteTask":
         let result = StoreRules.deleteTask(try data(), try a(1))
         return object(["data": try json(result.data), "removed": try json(result.removed)])
-    case "undeleteTasks": return try json(StoreRules.undeleteTasks(data(), a(1)))
     case "explodeSubtasks":
         let result = StoreRules.explodeSubtasks(try data(), try a(1), try a(2))
         return object(["data": try json(result.data), "previous": try json(result.previous)])
@@ -389,7 +390,9 @@ private func completion(_ completion: Completion) throws -> JSONValue {
     case "projectsInOrder": return try json(StoreRules.projectsInOrder(a(0)))
     case "deleteSection": return try json(StoreRules.deleteSection(data(), a(1)))
     case "deletedBetween": return try json(StoreRules.deletedBetween(data(), a(1)))
-    case "undelete": return try json(StoreRules.undelete(data(), a(1)))
+    case "undo":
+        let result = StoreRules.undo(try data(), try a(1), try a(2))
+        return object(["data": try json(result.data), "pending": try json(result.pending)])
     default: throw unknown(fn)
     }
 }
@@ -464,6 +467,24 @@ private struct ParseInput: Decodable {
     case "toggleButton": return try json(QuickAddButtons.toggleButton(a(0), a(1)))
     case "rowButtons": return try json(QuickAddButtons.rowButtons(a(0), a(1), a(2)))
     case "moveButton": return try json(QuickAddButtons.moveButton(a(0), a(1), a(2) as QuickAddButton?))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func accentsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    func tokens(_ t: Accents.Tokens) throws -> JSONValue {
+        object([
+            "accent": try json(t.accent),
+            "onAccent": try json(t.onAccent),
+            "glow": try json(t.glow),
+            "glowAlpha": .number(t.glowAlpha),
+        ])
+    }
+    switch fn {
+    case "deriveAccent":
+        let derived = Accents.deriveAccent(try a(0))
+        return object(["light": try tokens(derived.light), "dark": try tokens(derived.dark)])
+    case "parseAccent": return .string(Accents.parseAccent(try a(0, as: String?.self)).rawValue)
     default: throw unknown(fn)
     }
 }
@@ -573,7 +594,7 @@ private struct SharedSpaceInput: Decodable {
 }
 
 @Sendable func screensVector(_ fn: String, _ a: Args) throws -> JSONValue {
-    if fn == "reusedDefaults" { return try json(ListDefaultsJSON(Screens.reusedDefaults(a(0), a(1)))) }
+    if fn == "reusedDefaults" { return try json(ListDefaultsJSON(Screens.reusedDefaults(a(0), a(1), date: a(2)))) }
     let screen = try a(0, as: ScreenInput?.self)?.screen()
     switch fn {
     case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.access, today: a(3))))
@@ -709,6 +730,8 @@ private struct RejectedInput: Decodable {
     case "rejectionNotice":
         let rejected = try a(1, as: [RejectedInput].self).map { (kind: $0.kind, id: $0.id) }
         return try json(Rows.rejectionNotice(try a(0), rejected))
+    case "rowIdOf": return .string(Rows.rowID(try a(0), try a(1), owner: try a(2)))
+    case "entityIdOf": return .string(Rows.entityID(try a(0), try a(1), owner: try a(2)))
     default: throw unknown(fn)
     }
 }
