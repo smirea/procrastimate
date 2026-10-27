@@ -1,6 +1,6 @@
 # sync-engine migration
 
-ProcrastiMate drops Postgres, Supabase, Hyperdrive, Docker, and PowerSync for [sync-engine](https://github.com/smirea/sync-engine), the SQLite sync engine a-better-me already runs on. This file holds the requirements, the target design, and the order of the work; the area files in `docs/decisions/` carry the decisions as they stand. The decision trail of the move is `.audit/sync-engine-migration.tsv`.
+ProcrastiMate drops Postgres, Supabase, Hyperdrive, Docker, and PowerSync for [sync-engine](https://github.com/smirea/sync-engine), the SQLite sync engine a-better-me already runs on. This file holds the requirements, the target design, and the order of the work; the area files in `docs/decisions/` carry the decisions as they stand. The decision trail of the move is `scripts/sync-engine-migration/trail.tsv`.
 
 ## Why
 
