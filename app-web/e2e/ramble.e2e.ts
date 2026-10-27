@@ -112,7 +112,7 @@ test('Ramble offers projects shared to edit but not to view, and a task picked i
 	await expect(owner.app.row('Call mom')).toBeVisible({ timeout: 15_000 });
 });
 
-test('Ramble from a quick add that stayed open after a save starts in the saved task’s project', async ({
+test('Ramble from a quick add that stayed open after a save starts in the saved task’s project, and its chip says so', async ({
 	app,
 	page,
 }) => {
@@ -133,13 +133,22 @@ test('Ramble from a quick add that stayed open after a save starts in the saved 
 		timeout: 15_000,
 	});
 	await drawer.getByRole('button', { name: 'Stop listening' }).click();
+	const titles = drawer.getByRole('textbox', { name: 'Task title', exact: true });
+	await titles.nth(0).focus();
+	await expect(drawer.getByRole('button', { name: 'Project Home', exact: true })).toBeVisible();
+	await titles.nth(1).focus();
+	await drawer.getByRole('button', { name: 'Project Home', exact: true }).click();
+	await page.getByRole('dialog', { name: 'Project' }).getByRole('button', { name: 'Inbox' }).click();
+	await expect(drawer.getByRole('button', { name: 'Project Inbox', exact: true })).toBeVisible();
 	await drawer.getByRole('button', { name: 'Add 3 tasks' }).click();
 	await expect(drawer).toBeHidden();
 
 	await app.nav('Home').click();
 	await expect(app.row('Paint shed')).toBeVisible();
-	await expect(app.row('Call mom')).toBeVisible();
 	await expect(app.row('Buy groceries for the party')).toBeVisible();
+	await expect(app.row('Call mom')).toHaveCount(0);
+	await app.go('Inbox');
+	await expect(app.row('Call mom')).toBeVisible();
 });
 
 const outlineTask = (title: string, fields: Record<string, unknown> = {}) => ({
