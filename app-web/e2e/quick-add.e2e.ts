@@ -153,3 +153,98 @@ test('quick add suggests the project and label of similar past tasks, never the 
 	await page.getByRole('button', { name: 'Show' }).click();
 	await expect(app.row('water the roses')).toContainText('weekend');
 });
+
+test('expanding an untitled draft opens a new task in details with its metadata, the title focused', async ({
+	app,
+	page,
+}) => {
+	await app.openQuickAdd();
+	await app.taskInput().pressSequentially('tomorrow p2');
+	await app.quickAdd().getByRole('button', { name: 'Open in task details' }).click();
+	await expect(app.quickAdd()).toBeHidden();
+	const details = app.details();
+	const title = details.getByRole('textbox', { name: 'Title' });
+	await expect(title).toBeFocused();
+	await expect(title).toHaveValue('');
+	await expect(details.getByRole('button', { name: 'Due Tomorrow' })).toBeVisible();
+	await expect(details.getByRole('button', { name: 'Priority 2' })).toBeVisible();
+
+	await title.pressSequentially('Plan trip');
+	await details.getByRole('button', { name: 'Close' }).click();
+	await expect(app.details()).toBeHidden();
+	await app.reload();
+	await expect(app.row('Plan trip')).toContainText('Tomorrow');
+	await expect(page.locator('[data-task=""]')).toHaveCount(0);
+});
+
+test('an expanded task closed untitled is gone, with no undo', async ({ app, page }) => {
+	await app.openQuickAdd();
+	await app.taskInput().pressSequentially('p1');
+	await app.quickAdd().getByRole('button', { name: 'Open in task details' }).click();
+	await expect(app.details().getByRole('textbox', { name: 'Title' })).toBeFocused();
+	await page.keyboard.press('Escape');
+	await expect(app.details()).toBeHidden();
+	await expect(page.getByRole('button', { name: 'Undo' })).toHaveCount(0);
+	await expect(page.locator('[data-task=""]')).toHaveCount(0);
+	await app.go('No date');
+	await expect(page.locator('[data-task=""]')).toHaveCount(0);
+	await app.reload();
+	await expect(page.locator('[data-task=""]')).toHaveCount(0);
+});
+
+test('an untitled expanded task keeps its subtasks while they open, and goes with them if closed untitled', async ({
+	app,
+	page,
+}) => {
+	const expandUntitled = async () => {
+		await app.openQuickAdd();
+		await app.taskInput().pressSequentially('p1');
+		await app.quickAdd().getByRole('button', { name: 'Open in task details' }).click();
+		const add = app.details().getByRole('textbox', { name: 'Add subtask' });
+		await add.fill('Passport');
+		await add.press('Enter');
+		await app.details().getByRole('button', { name: 'Passport', exact: true }).click();
+		await expect(app.details().getByRole('button', { name: /^Back to/ })).toBeVisible();
+	};
+
+	await expandUntitled();
+	await app
+		.details()
+		.getByRole('button', { name: /^Back to/ })
+		.click();
+	await app.details().getByRole('textbox', { name: 'Title' }).fill('Pack for trip');
+	await app.details().getByRole('button', { name: 'Close' }).click();
+	await app.go('No date');
+	await expect(app.row('Pack for trip')).toContainText('0/1');
+
+	await expandUntitled();
+	await app.details().getByRole('button', { name: 'Close' }).click();
+	await expect(app.details()).toBeHidden();
+	await expect(page.locator('[data-task=""]')).toHaveCount(0);
+	await expect(page.locator('[data-task="Pack for trip"]')).toHaveCount(1);
+});
+
+test('expanding a titled draft saves it and opens it in task details', async ({ app }) => {
+	await app.openQuickAdd();
+	await app.taskInput().pressSequentially('Plan trip tomorrow p2');
+	await app.quickAdd().getByRole('button', { name: 'Open in task details' }).click();
+	await expect(app.quickAdd()).toBeHidden();
+	const details = app.details();
+	await expect(details.getByRole('textbox', { name: 'Title' })).toHaveValue('Plan trip');
+	await expect(details.getByRole('button', { name: 'Due Tomorrow' })).toBeVisible();
+	await expect(details.getByRole('button', { name: 'Priority 2' })).toBeVisible();
+});
+
+test.describe('on a phone', () => {
+	test.use({ viewport: { width: 393, height: 852 } });
+
+	test('quick add fits its chips and footer on screen', async ({ app, page }) => {
+		await app.openQuickAdd();
+		await app.taskInput().pressSequentially('Plan trip tomorrow p2');
+		await app.settle();
+		for (const name of ['Due Tomorrow', 'Open in task details', 'Cancel', 'Add task']) {
+			await expect(app.quickAdd().getByRole('button', { name })).toBeInViewport({ ratio: 1 });
+		}
+		await page.screenshot({ path: 'test-results/quick-add/phone.png' });
+	});
+});

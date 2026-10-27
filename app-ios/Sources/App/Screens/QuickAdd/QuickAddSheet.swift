@@ -124,7 +124,7 @@ struct QuickAddSheet: View {
         .padding(.top, 20)
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity)
-        .overlay(alignment: .top) { grabber(canExpand: !parsed.title.isEmpty) }
+        .overlay(alignment: .top) { grabber }
         .background {
             // Runs under the home indicator when the keyboard is down, and on behind the keyboard when it is up, so the
             // keyboard's rounded top corners show the card instead of the scrim.
@@ -247,9 +247,9 @@ struct QuickAddSheet: View {
     }
 
     /// Dragging the grabber up, or tapping it, opens the draft in task details, the full editor.
-    private func grabber(canExpand: Bool) -> some View {
+    private var grabber: some View {
         Capsule()
-            .fill(Color.ink.opacity(canExpand ? 0.25 : 0.12))
+            .fill(Color.ink.opacity(0.25))
             .frame(width: 36, height: 5)
             .frame(maxWidth: .infinity, minHeight: 20)
             .contentShape(.rect)
@@ -257,12 +257,10 @@ struct QuickAddSheet: View {
                 DragGesture(minimumDistance: 4)
                     .onChanged { value in
                         let pull = -value.translation.height
-                        // Without a title there is nothing to open, so the card only gives a little.
-                        let reach: CGFloat = canExpand ? 1 : 0.3
-                        lift = pull > 0 ? -pow(pull, 0.7) * reach : min(-pull, 40) * 0.25
+                        lift = pull > 0 ? -pow(pull, 0.7) : min(-pull, 40) * 0.25
                     }
                     .onEnded { value in
-                        let opens = canExpand && (value.translation.height < -60 || value.predictedEndTranslation.height < -160)
+                        let opens = value.translation.height < -60 || value.predictedEndTranslation.height < -160
                         withAnimation(.snappy) { lift = 0 }
                         if opens { expand() }
                     }
@@ -470,9 +468,9 @@ struct QuickAddSheet: View {
     }
 
     /// Saves the task with its subtasks and images.
-    private func save() -> TaskItem? {
+    private func save(untitled: Bool = false) -> TaskItem? {
         guard loadingImages == 0 else { return nil }
-        guard let task = draft.resolve(draft.parse(context)) else { return nil }
+        guard let task = draft.resolve(draft.parse(context), untitled: untitled) else { return nil }
         let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
         let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])
         let added: TaskItem? = withAnimation(.snappy) {
@@ -524,9 +522,9 @@ struct QuickAddSheet: View {
         })
     }
 
-    /// The full editor is task details, so expanding saves the draft, closes quick add, and opens it there.
+    /// The full editor is task details, so expanding saves the draft, even untitled, closes quick add, and opens it there.
     private func expand() {
-        guard let added = save() else { return }
+        guard let added = save(untitled: true) else { return }
         navigator.sheet = nil
         navigator.reveal(added, labels: store.labels, today: clock.today, in: clock.timeZone)
         navigator.sheet = .details(taskID: added.id)

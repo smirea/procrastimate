@@ -99,10 +99,10 @@ import Testing
         #expect(WidgetLists.choice(key: "project:p-house", in: gone, today: today, in: zone) == nil)
     }
 
-    @Test func theFileKeepsOpenTasksAndTodaysCompletionsOnly() {
+    @Test func theFileKeepsOpenTitledTasksAndTodaysCompletionsOnly() {
         let made = WidgetData.make(
             signedIn: true,
-            tasks: data.tasks,
+            tasks: data.tasks + [task("", due: today)],
             projects: [house],
             labels: [calls],
             accent: "teal",

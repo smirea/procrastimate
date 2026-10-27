@@ -29,6 +29,7 @@ struct TaskDetailsPage: View {
 
 private struct TaskDetailsForm: View {
     @Environment(Store.self) private var store
+    @Environment(Navigator.self) private var navigator
     @Environment(SyncClient.self) private var sync
     @Environment(TaskActions.self) private var actions
     @Environment(TaskImages.self) private var images
@@ -208,7 +209,15 @@ private struct TaskDetailsForm: View {
             title = task.title
             base = task.title
         }
-        .onDisappear { commitTitle() }
+        // Quick add expanded with no title yet, so the title is the first thing to type.
+        .onAppear { if task.title.isEmpty { titleFocused = true } }
+        .onDisappear {
+            commitTitle()
+            // Left untitled, quick add's expanded draft was never a task, so it goes without an undo. A pushed subtask
+            // or the image viewer keeps the sheet on this task, so only closing or replacing the sheet discards it.
+            guard navigator.sheet != .details(taskID: task.id), store.task(task.id)?.title.isEmpty == true else { return }
+            _ = store.deleteTask(task.id)
+        }
     }
 
     /// Hidden while typing so they never cover the field above the keyboard.

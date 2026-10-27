@@ -40,6 +40,22 @@
 		if (sheets.current.kind === 'task' && store.loaded && !openTask) untrack(() => sheets.close());
 	});
 
+	/** The top-level task whose details, or a subtask's under it, are up, or were before a share sheet opened from them. */
+	let shownRoot: string | null = null;
+	$effect(() => {
+		const current = sheets.current;
+		const id = current.kind === 'task' ? current.id : current.kind === 'share' ? current.from : null;
+		const left = shownRoot;
+		untrack(() => {
+			let root = id ? store.task(id) : undefined;
+			while (root?.parentId) root = store.task(root.parentId);
+			shownRoot = root?.id ?? id;
+			// Quick add expands an untitled draft into details. Left untitled, it was never a task, so it goes without an
+			// undo, subtasks and all, as quick add's Cancel discards them. Opening its subtasks keeps it.
+			if (left && left !== shownRoot && store.task(left)?.title === '') store.deleteTask(left);
+		});
+	});
+
 	afterNavigate(({ to }) => forgetAdded(to?.url.pathname ?? ''));
 
 	function openQuickAdd() {

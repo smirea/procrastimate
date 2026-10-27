@@ -185,8 +185,8 @@
 	});
 
 	/** Saves the task with its subtasks and images. */
-	function save() {
-		const next = draft.task();
+	function save(options?: { untitled: boolean }) {
+		const next = draft.task(options);
 		if (!next) return null;
 		const task = store.addTask(next);
 		if (!task) return null;
@@ -213,9 +213,9 @@
 		input.focus();
 	}
 
-	/** The full editor is task details, so expanding saves the draft, closes quick add, and opens it there. */
+	/** The full editor is task details, so expanding saves the draft, even untitled, closes quick add, and opens it there. */
 	function expand() {
-		const task = save();
+		const task = save({ untitled: true });
 		if (!task) return;
 		sheets.close();
 		showAdded(task);
@@ -524,10 +524,9 @@
 		<div class="flex items-center gap-1.5">
 			<button
 				type="button"
-				class="icon-btn hit-area disabled:opacity-40"
+				class="icon-btn hit-area"
 				aria-label="Open in task details"
 				title="Open in task details"
-				disabled={!parsed.title}
 				onmousedown={(e) => e.preventDefault()}
 				onclick={expand}
 			>
