@@ -6,6 +6,8 @@ export const STALE_AFTER_MS = 10 * 60_000;
 export const RETRY_DELAY_MS = 60_000;
 /** FCM answers 410 Gone for up to about 10 s after it issues a token, so a 404 or 410 this soon is retried instead. */
 export const FRESH_SUBSCRIPTION_MS = 2 * 60_000;
+/** FCM accepts pushes for up to about 25 s after it issues a token and never delivers them, so sends wait this long. */
+export const SEND_HOLD_MS = 60_000;
 
 export type Delivery = 'sent' | 'gone' | 'retry';
 
