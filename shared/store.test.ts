@@ -684,6 +684,12 @@ describe('stacked undos', () => {
 		return current;
 	}
 
+	/** The call task with three labels, so deleting two of them leaves one to place them around. */
+	const threeLabels = (): StoreData => {
+		const start = store.updateTask(data(), 'call', { labelIds: ['calls', 'phone', 'work'] });
+		return { ...start, labels: [...start.labels, { ...start.labels[0]!, id: 'work', name: 'Work', createdAt: 3 }] };
+	};
+
 	const orders = (n: number): number[][] =>
 		n === 1 ? [[0]] : orders(n - 1).flatMap(o => Array.from({ length: n }, (_, i) => o.toSpliced(i, 0, n - 1)));
 
@@ -735,6 +741,20 @@ describe('stacked undos', () => {
 				deletingTask('call'),
 			],
 		],
+		[
+			'two labels on one task',
+			threeLabels,
+			[deleting(d => store.deleteLabel(d, 'calls')), deleting(d => store.deleteLabel(d, 'phone'))],
+		],
+		[
+			'two labels on one task, then the task',
+			threeLabels,
+			[
+				deleting(d => store.deleteLabel(d, 'calls')),
+				deleting(d => store.deleteLabel(d, 'phone')),
+				deletingTask('call'),
+			],
+		],
 	] as [string, () => StoreData, Step[]][])('undoing %s in any order restores the start', (_, start, steps) => {
 		for (const order of orders(steps.length)) expect(undoAll(start(), steps, order)).toEqual(start());
 	});
@@ -782,6 +802,18 @@ describe('stacked undos', () => {
 		expect(find(first.data, 'call').labelIds).toEqual(['work']);
 		const second = undo(first.data, first.pending, 1);
 		expect(undo(second.data, second.pending, 0).data).toEqual(withWork);
+	});
+
+	test.each([
+		['older', 0],
+		['newer', 1],
+	])('two label deletes on one task undone %s first put the labels back in their order', (_, first) => {
+		const noCalls = deleteLabel(threeLabels(), 'calls');
+		const noPhone = deleteLabel(noCalls, 'phone');
+		const pending = [deletion(deletedBetween(threeLabels(), noCalls)), deletion(deletedBetween(noCalls, noPhone))];
+		const once = undo(noPhone, pending, first);
+		expect(find(once.data, 'call').labelIds).toEqual(first === 0 ? ['calls', 'work'] : ['phone', 'work']);
+		expect(undo(once.data, once.pending, 0).data).toEqual(threeLabels());
 	});
 
 	test('a reopened subtask undone after its parent is deleted comes back completed with its parent', () => {

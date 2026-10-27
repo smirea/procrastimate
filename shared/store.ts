@@ -475,17 +475,41 @@ function insertByCreation<T extends { id: string; createdAt: number }>(live: rea
 	return list;
 }
 
-/** A label goes back at its old place in `labelIds`, or last when the list has since shrunk. */
-function relabel(data: StoreData, labelings: Deleted['labelings']): StoreData {
+/**
+ * Puts the labels `pending[index]` released back where they sat, and recounts the other deletes' labelings around them.
+ * Each delete counted its indexes on the task as it stood then, with older deletes' labels gone and newer ones' still
+ * on, so replaying every pending delete newest first rebuilds the task's order from before the oldest. Taking the
+ * released labels' places from that order, rather than their own indexes, keeps them right in any undo order.
+ */
+function relabel(
+	data: StoreData,
+	pending: readonly Undo[],
+	index: number,
+): { data: StoreData; labelings: Deleted['labelings'][] } {
+	const labelings = pending.map(u => (u.kind === 'delete' ? u.deleted.labelings : []));
+	const released = labelings[index]!;
+	const orders = new Map<string, { full: string[]; now: string[] }>();
 	const tasks = data.tasks.map(t => {
-		const back = labelings.filter(l => l.taskId === t.id && !t.labelIds.includes(l.labelId));
+		const back = released.filter(l => l.taskId === t.id && !t.labelIds.includes(l.labelId)).map(l => l.labelId);
 		if (!back.length) return t;
-		const labelIds = [...t.labelIds];
-		for (const { labelId, index } of back.toSorted((a, b) => a.index - b.index))
-			labelIds.splice(Math.min(index, labelIds.length), 0, labelId);
-		return { ...t, labelIds };
+		const full = [...t.labelIds];
+		for (const own of labelings.toReversed())
+			for (const { labelId, index } of own.filter(l => l.taskId === t.id).toSorted((a, b) => a.index - b.index))
+				if (!full.includes(labelId)) full.splice(Math.min(index, full.length), 0, labelId);
+		const now = full.filter(id => t.labelIds.includes(id) || back.includes(id));
+		orders.set(t.id, { full, now });
+		return { ...t, labelIds: now };
 	});
-	return { ...data, tasks };
+	const recounted = labelings.map((own, i) =>
+		own.map(l => {
+			const order = orders.get(l.taskId);
+			if (!order || !order.full.includes(l.labelId)) return l;
+			const newer = labelings.slice(i + 1).flatMap(n => n.filter(m => m.taskId === l.taskId).map(m => m.labelId));
+			const on = (id: string) => order.now.includes(id) || newer.includes(id);
+			return { ...l, index: order.full.slice(0, order.full.indexOf(l.labelId)).filter(on).length };
+		}),
+	);
+	return { data: { ...data, tasks }, labelings: recounted.filter((_, i) => i !== index) };
 }
 
 function applyUndo(data: StoreData, action: Undo): StoreData {
@@ -508,7 +532,7 @@ function applyUndo(data: StoreData, action: Undo): StoreData {
 			return { ...data, tasks };
 		}
 		case 'delete':
-			return relabel(data, action.deleted.labelings);
+			return data;
 	}
 }
 
@@ -548,7 +572,7 @@ export function undo(data: StoreData, pending: readonly Undo[], index: number): 
 	});
 	const released = action.kind === 'delete' ? action.deleted : null;
 	const all = [...holds, released];
-	const after = applyUndo(
+	const relabeled = relabel(
 		{
 			...data,
 			projects: insertByCreation(
@@ -570,8 +594,10 @@ export function undo(data: StoreData, pending: readonly Undo[], index: number): 
 				),
 			),
 		},
-		action,
+		pending,
+		index,
 	);
+	const after = applyUndo(relabeled.data, action);
 
 	type Place = number | 'live' | 'gone';
 	const targets = new Set(undoTargets(action));
@@ -638,7 +664,7 @@ export function undo(data: StoreData, pending: readonly Undo[], index: number): 
 		data: { ...data, ...live },
 		pending: rest.map((u, i) =>
 			u.kind === 'delete'
-				? { ...u, deleted: { ...u.deleted, ...at(i), labelings: [...u.deleted.labelings, ...moved[i]!] } }
+				? { ...u, deleted: { ...u.deleted, ...at(i), labelings: [...relabeled.labelings[i]!, ...moved[i]!] } }
 				: u,
 		),
 	};
