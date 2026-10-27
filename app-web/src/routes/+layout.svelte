@@ -26,7 +26,7 @@
 	import { session } from '#lib/session.svelte.ts';
 	import { runSentrySmoke } from '#lib/sentry.ts';
 	import SignIn from '#lib/components/SignIn.svelte';
-	import { startSync } from '#lib/powersync.svelte.ts';
+	import { startSync } from '#lib/sync.svelte.ts';
 	import { keepStorage } from '#lib/device.ts';
 	import { applyTheme, theme } from '#lib/theme.svelte.ts';
 

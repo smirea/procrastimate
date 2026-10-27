@@ -1,5 +1,14 @@
 import type { Page } from '@playwright/test';
-import { type Device, deviceContext, expect, ownerWithProject, shareWith, test, unique } from './fixtures.ts';
+import {
+	type Device,
+	deviceContext,
+	expect,
+	ownerWithProject,
+	shareWith,
+	syncWrites,
+	test,
+	unique,
+} from './fixtures.ts';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -185,24 +194,21 @@ test('delete all data uploads no delete the server refuses for a guest’s comme
 	const me = (await (await owner.page.request.get('/api/me')).json()) as { id: string };
 	const taskId = await owner.app.taskId(task);
 	const commentId = crypto.randomUUID();
-	const posted = await guest.page.request.post('/api/upload', {
-		data: {
-			writes: [
-				{
-					op: 'put',
-					table: 'comments',
-					id: commentId,
-					values: { id: commentId, user_id: me.id, task_id: taskId, body: 'Oat milk?', created_at: 1, edited_at: null },
-				},
-			],
-		},
-	});
-	expect((await posted.json()).rejected).toEqual([]);
+	expect(
+		await syncWrites(guest.page.request, [
+			{
+				op: 'put',
+				table: 'comments',
+				id: commentId,
+				values: { user_id: me.id, task_id: taskId, body: 'Oat milk?', created_at: 1, edited_at: null },
+			},
+		]),
+	).toEqual([]);
 	await expect(owner.app.row(task).locator('[data-comments="unread"]')).toHaveText('1', { timeout: 10_000 });
 
 	const rejected: unknown[] = [];
-	owner.page.on('response', async response => {
-		if (response.url().includes('/api/upload')) rejected.push(...(await response.json()).rejected);
+	owner.context.on('response', async response => {
+		if (new URL(response.url()).pathname === '/api/sync') rejected.push(...(await response.json()).rejected);
 	});
 	await owner.app.openSettings();
 	await owner.app.settings().getByRole('button', { name: 'Delete all data' }).click();

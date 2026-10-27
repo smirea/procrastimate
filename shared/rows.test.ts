@@ -6,6 +6,8 @@ import { describe, recorded, test } from './vectors/record.ts';
 const rowWrites = recorded('rows', rows.rowWrites);
 const coalesce = recorded('rows', rows.coalesce);
 const rejectionNotice = recorded('rows', rows.rejectionNotice);
+const rowIdOf = recorded('rows', rows.rowIdOf);
+const entityIdOf = recorded('rows', rows.entityIdOf);
 
 describe('rowWrites', () => {
 	test('puts a new entity with every field', () => {
@@ -168,5 +170,21 @@ describe('rejectionNotice', () => {
 				{ kind: 'comment', id: 'c' },
 			]),
 		).toBe('Couldn’t save changes to 3 items');
+	});
+});
+
+describe('row ids', () => {
+	test('a settings row is its user, a read is reader and task, and every other row keeps its id', () => {
+		expect(rowIdOf('settings', 'settings', 'ann')).toBe('ann');
+		expect(rowIdOf('read', 't1', 'ann')).toBe('ann:t1');
+		expect(rowIdOf('task', 't1', 'ann')).toBe('t1');
+		expect(rowIdOf('comment', 'c1', 'ann')).toBe('c1');
+	});
+
+	test('the domain id comes back from each, and a read of someone else stays whole', () => {
+		expect(entityIdOf('settings', 'ann', 'ann')).toBe('settings');
+		expect(entityIdOf('read', 'ann:t1', 'ann')).toBe('t1');
+		expect(entityIdOf('read', 'bob:t1', 'ann')).toBe('bob:t1');
+		expect(entityIdOf('project', 'p1', 'ann')).toBe('p1');
 	});
 });

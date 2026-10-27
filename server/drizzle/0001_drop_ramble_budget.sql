@@ -1,1 +1,0 @@
-DROP TABLE "ramble_budget" CASCADE;

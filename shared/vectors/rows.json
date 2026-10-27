@@ -1293,6 +1293,86 @@
 				]
 			],
 			"output": "Couldn’t save changes to 3 items"
+		},
+		{
+			"fn": "rowIdOf",
+			"test": "row ids › a settings row is its user, a read is reader and task, and every other row keeps its id",
+			"input": [
+				"settings",
+				"settings",
+				"ann"
+			],
+			"output": "ann"
+		},
+		{
+			"fn": "rowIdOf",
+			"test": "row ids › a settings row is its user, a read is reader and task, and every other row keeps its id",
+			"input": [
+				"read",
+				"t1",
+				"ann"
+			],
+			"output": "ann:t1"
+		},
+		{
+			"fn": "rowIdOf",
+			"test": "row ids › a settings row is its user, a read is reader and task, and every other row keeps its id",
+			"input": [
+				"task",
+				"t1",
+				"ann"
+			],
+			"output": "t1"
+		},
+		{
+			"fn": "rowIdOf",
+			"test": "row ids › a settings row is its user, a read is reader and task, and every other row keeps its id",
+			"input": [
+				"comment",
+				"c1",
+				"ann"
+			],
+			"output": "c1"
+		},
+		{
+			"fn": "entityIdOf",
+			"test": "row ids › the domain id comes back from each, and a read of someone else stays whole",
+			"input": [
+				"settings",
+				"ann",
+				"ann"
+			],
+			"output": "settings"
+		},
+		{
+			"fn": "entityIdOf",
+			"test": "row ids › the domain id comes back from each, and a read of someone else stays whole",
+			"input": [
+				"read",
+				"ann:t1",
+				"ann"
+			],
+			"output": "t1"
+		},
+		{
+			"fn": "entityIdOf",
+			"test": "row ids › the domain id comes back from each, and a read of someone else stays whole",
+			"input": [
+				"read",
+				"bob:t1",
+				"ann"
+			],
+			"output": "bob:t1"
+		},
+		{
+			"fn": "entityIdOf",
+			"test": "row ids › the domain id comes back from each, and a read of someone else stays whole",
+			"input": [
+				"project",
+				"p1",
+				"ann"
+			],
+			"output": "p1"
 		}
 	]
 }

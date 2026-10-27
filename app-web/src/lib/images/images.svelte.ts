@@ -5,17 +5,16 @@ import { store } from '../store.svelte.ts';
 import { toastUndo } from '../completion.ts';
 import { toasts } from '../ui.svelte.ts';
 import { encodeImage } from './encode.ts';
-import { imageKey, keepNew, pendingUploads, readBytes, uploaded, writeBytes } from './local.ts';
+import { imageKey, keepNew, readBytes, writeBytes } from './local.ts';
 
 /**
- * Every upload of queued writes sends the queued images first, so the server never hears of an image it cannot serve.
- * See `docs/decisions/images.md`.
+ * The database worker sends the queued images before every sync that carries writes (`upload.ts`), so the server
+ * never hears of an image it cannot serve. See `docs/decisions/images.md`.
  */
 
 /** How long a missing image waits before it is asked for again, as when another device has not uploaded it yet. */
 const RETRY_MISSING = 30_000;
 const MAX_RETRIES = 20;
-const PERMANENT = new Set([400, 403, 404, 413, 415]);
 
 export const imageFiles = (data: DataTransfer | null) =>
 	[...(data?.files ?? [])].filter(file => file.type.startsWith('image/'));
@@ -92,30 +91,6 @@ class Images {
 		store.updateTask(taskId, { images: task.images.filter(image => image.id !== id) });
 		if (this.viewing?.id === id) this.viewing = null;
 		toastUndo('Deleted image', { kind: 'image', taskId, image: removed, index });
-	}
-
-	/**
-	 * Uploads every queued image, each to its own space, before the writes that list them. Throws when the server
-	 * cannot be reached, so those writes wait too; an upload the server refuses for good is dropped instead of
-	 * blocking them.
-	 */
-	async upload() {
-		const pending = await pendingUploads().catch(() => []);
-		for (const { key, space, id, size } of pending) {
-			// A failed read throws and stops the upload; only bytes that are truly gone leave the queue unsent.
-			const blob = await readBytes(id, size);
-			if (blob) {
-				const response = await fetch(imageUrl(space, id, size), {
-					method: 'PUT',
-					body: blob,
-					headers: { 'content-type': blob.type },
-					credentials: 'include',
-					signal: AbortSignal.timeout(60_000),
-				});
-				if (!response.ok && !PERMANENT.has(response.status)) throw new Error(`Image upload failed: ${response.status}`);
-			}
-			await uploaded(key);
-		}
 	}
 }
 

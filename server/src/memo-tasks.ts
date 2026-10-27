@@ -17,23 +17,26 @@ import { descendantsOf, detachOrphans } from '../../shared/subtasks';
 import { DEFAULT_PRIORITY } from '../../shared/values';
 import { wallDate } from '../../shared/zoned-time';
 import type { Command } from './commands';
-import type { Db } from './db/postgres';
+import type { Db } from './db/sqlite';
+import { chunks } from './db/chunks';
 import { entity, storedZone } from './space';
-import { applyAs, type Write } from './writes';
+import { serverWrite, syncContext } from './writes';
+import type { RowWrite } from '../../shared/rows';
 
 /**
- * Notouroboros's routes, for the owner's own space. Writes go through `applyAs` like every other, so they land in
- * the log and reach every device through PowerSync. A memo's tasks are found by their source key's prefix.
+ * Notouroboros's routes, for the owner's own space. Writes go through `space.write` like every other, so they land
+ * in the log and reach every device. A memo's tasks are found by their source key's prefix.
  */
 
 const memoPrefix = (memoId: string) => `${memoSourceKey({ memoId, taskKey: '' })}%`;
 
 /** The memo's live tasks, oldest first. The prefix narrows the select; `parseMemoSource` decides. */
-async function tasksOfMemo(db: Db, owner: string, memoId: string): Promise<Task[]> {
-	const rows = await db
+function tasksOfMemo(db: Db, owner: string, memoId: string): Task[] {
+	const rows = db
 		.select()
 		.from(tasks)
-		.where(and(eq(tasks.userId, owner), like(tasks.sourceKey, memoPrefix(memoId))));
+		.where(and(eq(tasks.userId, owner), like(tasks.sourceKey, memoPrefix(memoId))))
+		.all();
 	return (rows.map(entity) as Task[])
 		.filter(task => parseMemoSource(task.sourceKey)?.memoId === memoId)
 		.toSorted(byCreation);
@@ -52,20 +55,22 @@ function memoTasks(list: readonly Task[]): MemoTasks {
 	};
 }
 
-export const listMemoTasks = async (db: Db, owner: string, memoId: string) =>
-	memoTasks(await tasksOfMemo(db, owner, memoId));
+export const listMemoTasks = (db: Db, owner: string, memoId: string) => memoTasks(tasksOfMemo(db, owner, memoId));
 
 /**
  * Which of `keys` a task of the space has held, deleted tasks' included, so a deleted memo task never comes back. A
  * delete removes the row, so the history is the log's, read through its source key index.
  */
-async function loggedSourceKeys(db: Db, owner: string, keys: readonly string[]): Promise<string[]> {
-	const key = sql<string>`${log.fields}->>'sourceKey'`;
-	const rows = await db
-		.selectDistinct({ key })
-		.from(log)
-		.where(and(eq(log.userId, owner), eq(log.kind, 'task'), sql`${log.fields} ? 'sourceKey'`, inArray(key, keys)));
-	return rows.map(row => row.key);
+function loggedSourceKeys(db: Db, owner: string, keys: readonly string[]): string[] {
+	const key = sql<string>`${log.fields} ->> '$.sourceKey'`;
+	return chunks(keys).flatMap(part =>
+		db
+			.selectDistinct({ key })
+			.from(log)
+			.where(and(eq(log.userId, owner), eq(log.kind, 'task'), sql`${key} is not null`, inArray(key, part)))
+			.all()
+			.map(row => row.key),
+	);
 }
 
 /** A memo task's id, the same for every send of the memo, as a version 8 UUID of a SHA-256 of what names it. */
@@ -86,31 +91,29 @@ function schedule({ when, event }: MemoTaskInput, recordedAt: number, zone: stri
 }
 
 export async function putMemoTasks(command: Command, request: MemoTasksRequest): Promise<MemoTasks> {
-	const { db, owner, actor, client, now } = command;
+	const { db, owner, now } = command;
 	const keys = request.tasks.map(input => memoSourceKey({ memoId: request.memoId, taskKey: input.key }));
-	const [live, logged] = await Promise.all([
-		tasksOfMemo(db, owner, request.memoId),
-		keys.length ? loggedSourceKeys(db, owner, keys) : [],
-	]);
+	// Before any read, so nothing awaits between the reads and the write and an overlapping send finds these tasks.
+	const ids = await Promise.all(request.tasks.map(input => memoTaskId(owner, request.memoId, input.key)));
+	const live = tasksOfMemo(db, owner, request.memoId);
+	const logged = keys.length ? loggedSourceKeys(db, owner, keys) : [];
 	const known = new Set([...logged, ...live.map(task => task.sourceKey!)]);
-	const fresh = request.tasks.filter((_, index) => {
-		if (known.has(keys[index]!)) return false;
+	const fresh = request.tasks.flatMap((input, index) => {
+		if (known.has(keys[index]!)) return [];
 		known.add(keys[index]!);
-		return true;
+		return [{ input, id: ids[index]! }];
 	});
 	if (!fresh.length) return memoTasks(live);
-	const [zone, [newest]] = await Promise.all([
-		storedZone(db, owner),
-		db
-			.select({ createdAt: max(tasks.createdAt) })
-			.from(tasks)
-			.where(eq(tasks.userId, owner)),
-	]);
+	const zone = storedZone(db, owner);
+	const newest = db
+		.select({ createdAt: max(tasks.createdAt) })
+		.from(tasks)
+		.where(eq(tasks.userId, owner))
+		.get();
 	// Past the newest task, like `addTask`, so the memo's tasks keep the order they were sent in.
 	let createdAt = Math.max(now, (newest?.createdAt ?? -Infinity) + 1);
-	const ids = await Promise.all(fresh.map(input => memoTaskId(owner, request.memoId, input.key)));
-	const added: Task[] = fresh.map((input, index) => ({
-		id: ids[index]!,
+	const added: Task[] = fresh.map(({ input, id }) => ({
+		id,
 		parentId: null,
 		order: 0,
 		title: input.title,
@@ -131,24 +134,20 @@ export async function putMemoTasks(command: Command, request: MemoTasksRequest):
 		lastCompletedAt: null,
 		sourceKey: memoSourceKey({ memoId: request.memoId, taskKey: input.key }),
 	}));
-	// Two overlapping sends both find a key fresh, and their puts of the one id converge on one task; the source key
-	// names the write in the log, so the log keeps one row too.
-	const writes: Write[] = added.map(task => ({
+	const writes: RowWrite[] = added.map(task => ({
 		op: 'put',
 		kind: 'task',
 		id: task.id,
 		values: fieldsOf('task', task),
-		opId: task.sourceKey!,
 	}));
-	const { rejected } = await applyAs(db, { actor, client, now }, owner, { role: 'owner' }, writes);
-	if (rejected.length) throw new ORPCError('BAD_REQUEST', { message: rejected[0]!.reason });
+	write(command, writes);
 	return memoTasks([...live, ...added]);
 }
 
 /** The memo's tasks and every subtask under them, found over the space's parent links alone. */
 export async function deleteMemoTasks(command: Command, memoId: string): Promise<void> {
-	const { db, owner, actor, client, now } = command;
-	const links = await db
+	const { db, owner } = command;
+	const links = db
 		.select({
 			id: tasks.id,
 			parentId: tasks.parentId,
@@ -157,7 +156,8 @@ export async function deleteMemoTasks(command: Command, memoId: string): Promise
 			sourceKey: tasks.sourceKey,
 		})
 		.from(tasks)
-		.where(eq(tasks.userId, owner));
+		.where(eq(tasks.userId, owner))
+		.all();
 	const tree = detachOrphans(links);
 	const gone = new Set<string>();
 	for (const task of tree) {
@@ -165,8 +165,17 @@ export async function deleteMemoTasks(command: Command, memoId: string): Promise
 		gone.add(task.id);
 		for (const subtask of descendantsOf(tree, task.id)) gone.add(subtask.id);
 	}
-	const writes: Write[] = [...gone].map(id => ({ op: 'delete', kind: 'task', id, opId: newId() }));
-	if (!writes.length) return;
-	const { rejected } = await applyAs(db, { actor, client, now }, owner, { role: 'owner' }, writes);
+	const writes: RowWrite[] = [...gone].map(id => ({ op: 'delete', kind: 'task', id }));
+	if (writes.length) write(command, writes);
+}
+
+/** The owner's own writes, as one command: all of them or, on a refusal, none. */
+function write({ store, live, owner, actor, client, now }: Command, writes: readonly RowWrite[]): void {
+	const { rejected, head } = store.space.write(
+		writes.map(change => serverWrite(change, owner)),
+		syncContext(actor, client, { now }),
+		{ atomic: true },
+	);
 	if (rejected.length) throw new ORPCError('BAD_REQUEST', { message: rejected[0]!.reason });
+	live.publish(head);
 }

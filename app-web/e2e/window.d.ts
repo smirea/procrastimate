@@ -1,4 +1,4 @@
-/** The handle `app-web/src/lib/powersync.svelte.ts` puts on the page for these specs. */
+/** The handle `app-web/src/lib/sync.svelte.ts` puts on the page for these specs. */
 declare global {
 	interface Window {
 		procrastimate: {

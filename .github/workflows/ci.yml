@@ -26,25 +26,6 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup
 
-      # drizzle-kit writes a new migration when the schema has changed without one.
-      - name: Migrations match the schema
-        run: |
-          bunx drizzle-kit generate
-          stale=$(git status --porcelain server/drizzle)
-          if [ -n "$stale" ]; then
-            echo "$stale"
-            echo "::error::server/drizzle is missing a migration. Run 'bun run db:generate' and commit the result."
-            exit 1
-          fi
-
-      # A push compares with the master it replaced, since origin/master is then the commit under test.
-      - name: Migrations extend master's history
-        env:
-          BASE: ${{ github.event_name == 'push' && github.event.before || 'master' }}
-        run: |
-          git fetch --no-tags origin "+$BASE:refs/remotes/ci/base"
-          bun server/scripts/migration-history.ts ci/base
-
       - name: Typecheck
         run: bun run check
 
@@ -150,14 +131,6 @@ jobs:
             ${{ steps.apt-cache.outputs.cache-primary-key }}${{ steps.install-deps.outcome != 'success'
             && format('-partial-{0}-{1}', github.run_id, github.run_attempt) || '' }}
 
-      # The same Postgres and PowerSync containers a worktree runs, on the main checkout's e2e ports.
-      - name: Postgres and PowerSync
-        run: bun scripts/ci-stack.ts
-
-      # The lock tests need two connections, which PGlite cannot give the unit run; this is the one job with a Postgres.
-      - name: Advisory lock tests
-        run: DATABASE_URL="$(grep '^DATABASE_URL=' .env.override | cut -d= -f2-)" REQUIRE_DATABASE=1 bun test server/src/sharing-lock.test.ts
-
       - name: End to end against the Worker, desktop Chromium
         id: desktop
         run: bun run test:e2e --project desktop
@@ -171,10 +144,6 @@ jobs:
         run: bun run test:e2e --project mobile --workers 1 --output test-results/mobile
         env:
           E2E_WORKER: '1'
-
-      - name: PowerSync logs
-        if: failure()
-        run: docker ps -a --filter label=procrastimate.worktree --format '{{.Names}}' | xargs -rn1 docker logs
 
       # Traces of the failed specs. They hold only the throwaway accounts each spec signs up.
       - name: Playwright results

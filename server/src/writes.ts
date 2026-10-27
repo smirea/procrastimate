@@ -1,581 +1,315 @@
-import { and, desc, eq, getTableColumns, inArray, sql, type SQL } from 'drizzle-orm';
-import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { and, eq } from 'drizzle-orm';
+import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
+import type {
+	PulledRow,
+	ServerWrite,
+	ServerWriter,
+	SpaceHooks,
+	SqlDriver,
+	Values,
+	View,
+	Write,
+} from 'sync-engine/core';
 import type { Actor } from '../../shared/auth';
-import { access, comments, ENTITY_TABLES, log, tasks } from '../../shared/db/schema';
+import { access, comments, ENTITY_TABLES, log, settings } from '../../shared/db/schema';
+import { syncSchema } from '../../shared/db/sync';
+import { fromWire, toWire } from '../../shared/db/wire';
+import { newId } from '../../shared/id';
 import type { Kind } from '../../shared/model';
-import { coalesce, TABLE_OF, type RowWrite } from '../../shared/rows';
+import { KIND_OF, rowIdOf, TABLE_OF, type RowWrite, type SyncedTable } from '../../shared/rows';
+import { authorOnly, guestRefusal, type GuestRows, type StoredRow } from '../../shared/scope';
 import type { Fields } from '../../shared/snapshot';
-import {
-	authorOnly,
-	guestRefusal,
-	type CommentFields,
-	type GuestRows,
-	type StoredRow,
-	type TaskFields,
-} from '../../shared/scope';
 import type { Client } from '../../shared/values';
-import { asGuest, recomputeAccess, touchesAccess } from './access';
-import type { Db } from './db/postgres';
+import { recomputeAccess, touchesAccess } from './access';
+import type { Db } from './db/sqlite';
 import { purgeIfEmptied } from './purge';
 import { replan, touchesPush } from './push';
 
 /**
- * The one way rows change. Every write is one single-row statement with the ownership check and the authorship
- * stamps inside it, so it needs no transaction, no lock, and no read of the space: Postgres makes the row atomic, and
- * every write converges when replayed (a put upserts, a patch sets values, a delete removes), so PowerSync resending
- * a batch is harmless. A batch's statements run without waiting on each other. Afterwards one `log` insert records
- * the writes that changed a row, and the `access` rows and the push plan are recomputed only when a write touched
- * what they derive from.
+ * The server's rules for every row write, as sync-engine hooks. A device's sync and the agent API's commands reach the
+ * same hooks, inside the engine's transaction, so a write and everything derived from it commit together. The Durable
+ * Object runs one request at a time and its SQL is synchronous, so nothing here locks.
+ *
+ * `admit` decides each write: the space it lands in, whether the actor may write there (a guest's write is checked
+ * against their `access` rows with `guestRefusal`), and the stamps the server owns (`createdBy`, `completedBy`,
+ * `authorId`), whatever the client sent. `landed` logs the writes that counted with their actor and app, then
+ * recomputes what derives from them: the push plan, the `access` rows, and the purge of an emptied space.
  */
 
-export type Write = RowWrite & { opId: string };
-/** A write with the space it names: a `put` carries its `user_id`; a `patch` or `delete` learns it from the row. */
-export type OwnedWrite = Write & { owner: string | null };
-export type Rejected = { table: string; id: string; reason: string };
-export type WriteContext = { actor: Actor; client: Client; now: number };
-export type Applied = { rejected: Rejected[] };
+export type SyncContext = {
+	actor: Actor;
+	client: Client;
+	now: number;
+	/** The engine client the writes came from, which names each write's op id; the agent API's have none. */
+	clientId: string | null;
+	/** Spaces whose owner's rights the actor holds: an AI account that manages them through the agent API. */
+	manages: ReadonlySet<string>;
+	/** What `admit` learned about each write it let through, by `table:id:seq`, for `landed`. */
+	landing: Map<string, Landing>;
+	/** The actor's `access` rows per space it wrote to as a guest, grown by the tasks a batch adds. */
+	guestRows: Map<string, GuestRowsList>;
+};
 
-/**
- * The actor's standing in one space, which the agent API decides from the loaded space before it writes: the owner,
- * an AI manager with the owner's rights, or a guest whose writes are checked against their `access` rows, read with
- * the writes by `asGuest`, with `stored` answering what the space holds for a row they write to.
- */
-export type Authority =
-	| { role: 'owner' }
-	| { role: 'manager' }
-	| { role: 'guest'; stored: (write: Pick<RowWrite, 'kind' | 'id'>) => StoredRow | undefined };
+type GuestRowsList = Pick<typeof access.$inferSelect, 'kind' | 'entityId' | 'role'>[];
+type Landing = { owner: string; kind: Kind; fields: Fields };
 
-const OTHER_SPACE = 'Belongs to another space';
-const DB_REFUSED = 'The database refused the write';
-
-/** The tables whose rows are keyed by `(user_id, id)` and always the actor's own; the rest are keyed by `id` alone. */
-const PER_USER: ReadonlySet<Kind> = new Set<Kind>(['read', 'settings']);
-
-const columnsOf = (kind: Kind) => getTableColumns(ENTITY_TABLES[kind] as PgTable) as Record<string, PgColumn>;
-
-const rowKey = (write: Pick<RowWrite, 'kind' | 'id'>) => `${write.kind}:${write.id}`;
-const reject = (write: Pick<RowWrite, 'kind' | 'id'>, reason: string): Rejected => ({
-	table: TABLE_OF[write.kind],
-	id: write.id,
-	reason,
-});
-
-/** `excluded.<column>` for each named field, which an upsert's update reads from the row it tried to insert. */
-function excluded(columns: Record<string, PgColumn>, names: readonly string[]): Record<string, SQL> {
-	return Object.fromEntries(
-		names.filter(name => columns[name]).map(name => [name, sql`excluded.${sql.identifier(columns[name]!.name)}`]),
-	);
+export function syncContext(
+	actor: Actor,
+	client: Client,
+	options: { now?: number; clientId?: string | null; manages?: Iterable<string> } = {},
+): SyncContext {
+	return {
+		actor,
+		client,
+		now: options.now ?? Date.now(),
+		clientId: options.clientId ?? null,
+		manages: new Set(options.manages ?? []),
+		landing: new Map(),
+		guestRows: new Map(),
+	};
 }
 
-/**
- * `completed_by` follows `completed_at`, a recurring roll included through `last_completed_at`: the actor when either
- * moves, null when `completed_at` clears, and otherwise what the row holds. `completedAt` and `lastCompletedAt` are
- * the new values as SQL (`excluded.*` in an upsert, the parameter in a patch), present when the write sets them.
- */
-function completedBy(actor: string, completedAt: { value: SQL; cleared: SQL } | null, lastCompletedAt: SQL | null) {
-	const cases: SQL[] = [];
-	if (completedAt) {
-		cases.push(
-			sql`WHEN ${tasks.completedAt} IS DISTINCT FROM ${completedAt.value} THEN CASE WHEN ${completedAt.cleared} THEN NULL ELSE ${actor} END`,
-		);
+export const OTHER_SPACE = 'Belongs to another space';
+const NOT_SHARED = 'Not shared with you';
+
+/** One write of a request: a device's carries its sequence, and the server's own write one per row. */
+const key = (write: Pick<Write, 'table' | 'id' | 'seq'>) => `${write.table}:${write.id}:${write.seq}`;
+const tableOf = (kind: Kind) => ENTITY_TABLES[kind] as SQLiteTable;
+
+type StoredEntity = Fields & { userId: string };
+
+function stored(db: Db, kind: Kind, id: string): StoredEntity | undefined {
+	const table = ENTITY_TABLES[kind];
+	return db.select().from(table).where(eq(table.id, id)).get() as StoredEntity | undefined;
+}
+
+function guestRows(db: Db, ctx: SyncContext, owner: string): GuestRowsList {
+	let rows = ctx.guestRows.get(owner);
+	if (!rows) {
+		rows = db
+			.select({ kind: access.kind, entityId: access.entityId, role: access.role })
+			.from(access)
+			.where(and(eq(access.grantee, ctx.actor.id), eq(access.owner, owner)))
+			.all();
+		ctx.guestRows.set(owner, rows);
 	}
-	if (lastCompletedAt) cases.push(sql`WHEN ${tasks.lastCompletedAt} IS DISTINCT FROM ${lastCompletedAt} THEN ${actor}`);
-	return sql`CASE ${sql.join(cases, sql` `)} ELSE ${tasks.completedBy} END`;
+	return rows;
 }
 
-/** What a write's results are filed into, for the log and derived work or for the client's notice. */
-type Results = { landed: Landed[]; rejected: Rejected[] };
-
-/** The kinds whose own-space puts go in one statement per batch. Comments stamp their author and settings never update. */
-const BATCHED: ReadonlySet<Kind> = new Set<Kind>(['task', 'project', 'section', 'label']);
+const without = (fields: Fields, ...names: string[]) =>
+	Object.fromEntries(Object.entries(fields).filter(([name]) => !names.includes(name)));
 
 /**
- * One upsert for every put of one kind with the same columns, as `statement` would run them one by one: a large
- * upload or a long offline stretch lands in a few statements instead of one per row. Answers the ids that changed; a
- * put that changed nothing met a row in another space. A refused statement refuses the whole group, so the caller
- * retries the rows one at a time to find the one at fault.
+ * `completedBy` follows `completedAt`, a recurring roll included through `lastCompletedAt`: the actor when either
+ * moves, null when `completedAt` clears, and otherwise what the row holds.
  */
-async function upsertMany(
+function completedBy(actor: string, fields: Fields, before: StoredEntity | undefined): string | null {
+	const prior = before ?? { completedAt: null, lastCompletedAt: null, completedBy: null };
+	if ('completedAt' in fields && fields.completedAt !== prior.completedAt) {
+		return fields.completedAt === null ? null : actor;
+	}
+	if ('lastCompletedAt' in fields && fields.lastCompletedAt !== prior.lastCompletedAt) return actor;
+	return (prior.completedBy as string | null) ?? null;
+}
+
+/** The per-user kinds: always the actor's own, and their row ids name the actor. */
+function admitOwn(
 	db: Db,
-	owner: string,
-	actor: string,
-	kind: Kind,
-	writes: readonly Write[],
-): Promise<Set<string>> {
-	const columns = columnsOf(kind);
-	const names = Object.keys(writes[0]!.values ?? {}).filter(name => name !== 'createdBy' && name !== 'completedBy');
-	const returning = { id: columns.id! };
+	ctx: SyncContext,
+	kind: 'read' | 'settings',
+	write: Write,
+	fields: Fields,
+): Fields | string | null {
+	const actor = ctx.actor.id;
+	if (kind === 'settings') {
+		if (write.id !== rowIdOf('settings', '', actor)) return 'Settings belong to their user';
+		if (write.op === 'delete') return 'Settings cannot be deleted';
+		// The server made the row at sign-up; a client's put only fills it in when it is missing.
+		if (write.op === 'put' && db.select({ id: settings.id }).from(settings).where(eq(settings.id, write.id)).get()) {
+			return null;
+		}
+	} else if (!write.id.startsWith(`${actor}:`)) {
+		return 'Read markers belong to their reader';
+	}
+	return write.op === 'put' ? { ...fields, userId: actor } : without(fields, 'userId');
+}
+
+function admitEntity(db: Db, ctx: SyncContext, kind: Kind, write: Write, fields: Fields): Fields | string | null {
+	const actor = ctx.actor.id;
+	const before = stored(db, kind, write.id);
+	// Already gone: the device's tombstone comes back with the response, and nothing derives from a row that is not here.
+	if (write.op === 'delete' && !before) return null;
+	if (write.op === 'put' && before && before.userId !== fields.userId) return OTHER_SPACE;
+	const owner = before?.userId ?? (write.op === 'put' ? String(fields.userId) : actor);
+	let next = write.op === 'put' ? fields : without(fields, 'userId');
+
+	if (owner !== actor && !ctx.manages.has(owner)) {
+		const rows = guestRows(db, ctx, owner);
+		if (!rows.length) return NOT_SHARED;
+		// A guest's undo of a deleted import restores the task without its key, and a re-put keeps the stored one.
+		if (kind === 'task')
+			next = { ...without(next, 'sourceKey'), ...(write.op === 'put' ? { sourceKey: before?.sourceKey ?? null } : {}) };
+		const domain: RowWrite = { op: write.op, kind, id: write.id, values: without(next, 'userId') };
+		const reason = guestRefusal(rows as GuestRows, domain, actor, before as StoredRow | undefined);
+		if (reason) return reason;
+		if (kind === 'task' && write.op === 'put' && !before) rows.push({ kind: 'task', entityId: write.id, role: 'edit' });
+	}
+
+	if (kind === 'comment') {
+		if (before && before.authorId !== actor) return authorOnly(write.op);
+		if (write.op === 'put') {
+			next = { ...next, authorId: actor, ...(before ? { taskId: before.taskId, createdAt: before.createdAt } : {}) };
+		} else {
+			next = without(next, 'authorId', 'taskId', 'createdAt');
+		}
+	}
 	if (kind === 'task') {
-		const rows = writes.map(write => {
-			const { createdBy: _, completedBy: __, ...fields } = write.values as TaskFields;
-			const completed = (fields.completedAt ?? null) !== null || (fields.lastCompletedAt ?? null) !== null;
-			return {
-				...(fields as typeof tasks.$inferInsert),
-				id: write.id,
-				userId: owner,
-				createdBy: actor,
-				completedBy: completed ? actor : null,
+		if (write.op === 'put') {
+			const completed = next.completedAt != null || next.lastCompletedAt != null;
+			next = {
+				...next,
+				createdBy: before ? (before.createdBy as string | null) : actor,
+				completedBy: before ? completedBy(actor, next, before) : completed ? actor : null,
 			};
-		});
-		const landed = await db
-			.insert(tasks)
-			.values(rows)
-			.onConflictDoUpdate({
-				target: tasks.id,
-				set: {
-					...excluded(columns, names),
-					completedBy: completedBy(
-						actor,
-						{ value: sql`excluded.completed_at`, cleared: sql`excluded.completed_at IS NULL` },
-						sql`excluded.last_completed_at`,
-					),
-				},
-				setWhere: eq(tasks.userId, sql`excluded.user_id`),
+		} else if (write.op === 'patch') {
+			next = without(next, 'createdBy', 'completedBy');
+			if ('completedAt' in next || 'lastCompletedAt' in next) next.completedBy = completedBy(actor, next, before);
+		}
+	}
+	ctx.landing.set(key(write), { owner, kind, fields: without(next, 'userId', 'id') });
+	return next;
+}
+
+function admit(db: Db, write: Write, ctx: SyncContext): Write | string | null {
+	const kind = KIND_OF[write.table as SyncedTable] as Kind | undefined;
+	if (!kind) return `Only the server writes ${write.table}`;
+	const table = tableOf(kind);
+	const fields = write.op === 'delete' ? {} : fromWire(table, write.values);
+	const next =
+		kind === 'read' || kind === 'settings'
+			? admitOwn(db, ctx, kind, write, fields)
+			: admitEntity(db, ctx, kind, write, fields);
+	if (next === null || typeof next === 'string') return next;
+	if (kind === 'read' || kind === 'settings') {
+		ctx.landing.set(key(write), { owner: ctx.actor.id, kind, fields: without(next, 'userId', 'id') });
+	}
+	if (write.op === 'delete') return write;
+	return { ...write, values: toWire(table, without(next, 'id')) };
+}
+
+function opId(ctx: SyncContext, write: Write): string {
+	return ctx.clientId && write.seq ? `${ctx.clientId}:${write.seq}` : newId();
+}
+
+function landed(db: Db, writes: readonly Write[], ctx: SyncContext, server: ServerWriter): void {
+	const entries = writes.flatMap(write => {
+		const landing = ctx.landing.get(key(write));
+		return landing ? [{ write, landing }] : [];
+	});
+	if (!entries.length) return;
+	// One row per statement: a Durable Object binds at most 100 parameters, and a log row takes ten.
+	for (const { write, landing } of entries) {
+		db.insert(log)
+			.values({
+				userId: landing.owner,
+				opId: opId(ctx, write),
+				kind: landing.kind,
+				id: write.id,
+				op: write.op,
+				fields: write.op === 'delete' ? {} : landing.fields,
+				actor: ctx.actor.id,
+				client: ctx.client,
+				at: ctx.now,
 			})
-			.returning({ id: tasks.id });
-		return new Set(landed.map(row => row.id));
+			.onConflictDoNothing()
+			.run();
 	}
-	const landed = await db
-		.insert(ENTITY_TABLES[kind] as PgTable)
-		.values(writes.map(write => ({ ...write.values, id: write.id, userId: owner })))
-		.onConflictDoUpdate({
-			target: columns.id!,
-			set: excluded(columns, names),
-			setWhere: eq(columns.userId!, sql`excluded.user_id`),
-		})
-		.returning(returning);
-	return new Set(landed.map(row => String(row.id)));
-}
-
-/** Lands a group of same-kind puts in one statement, or one by one when the database refuses the group. */
-async function landMany(db: Db, actor: string, writes: readonly Write[], results: Results): Promise<void> {
-	let landed: Set<string>;
-	try {
-		landed = await upsertMany(db, actor, actor, writes[0]!.kind, writes);
-	} catch (error) {
-		if (!refusedByDatabase(error)) throw error;
-		for (const write of writes) {
-			if (await land(db, actor, actor, write, results)) results.rejected.push(reject(write, OTHER_SPACE));
-		}
-		return;
-	}
-	for (const write of writes) {
-		if (landed.has(write.id)) results.landed.push({ owner: actor, write });
-		else results.rejected.push(reject(write, OTHER_SPACE));
+	for (const [owner, group] of Map.groupBy(entries, entry => entry.landing.owner)) {
+		const domain: RowWrite[] = group.map(({ write, landing }) => ({
+			op: write.op,
+			kind: landing.kind,
+			id: write.id,
+			values: landing.fields,
+		}));
+		if (domain.some(touchesPush)) replan(db, owner, ctx.now);
+		if (domain.some(touchesAccess)) recomputeAccess(db, owner, server);
+		if (owner === ctx.actor.id && domain.some(write => write.op === 'delete')) purgeIfEmptied(db, owner, server);
 	}
 }
 
 /**
- * Runs one write in `owner`'s space, files a change in `landed` and a data or integrity error (SQLSTATE 22xxx or
- * 23xxx, the client's data's fault) in `rejected`, and answers whether it changed nothing. Inside a transaction a
- * refused statement would abort the rest, so there each write gets a savepoint of its own.
+ * What a reader pulls: their own rows, their `access` rows, and what those name in other spaces, comments through
+ * their task. A delta that adds an `access` row of theirs brings the row it opens, with a task's comments, and one
+ * that removes it tombstones them.
  */
-async function land(db: Db, owner: string, actor: string, write: Write, results: Results, inTransaction = false) {
-	let changed: boolean;
-	try {
-		changed = inTransaction
-			? await db.transaction(savepoint => statement(savepoint, owner, actor, write))
-			: await statement(db, owner, actor, write);
-	} catch (error) {
-		if (!refusedByDatabase(error)) throw error;
-		results.rejected.push(reject(write, DB_REFUSED));
-		return false;
-	}
-	if (changed) results.landed.push({ owner, write });
-	return !changed;
-}
-
-/**
- * One row, one statement, in `owner`'s space. A put inserts with the stamps and otherwise updates the row only while
- * it is in that space; a patch or a delete names the space in its `WHERE`. A comment's author is stamped on insert,
- * and its edits and deletes only ever match the author's own row. Answers whether a row changed.
- */
-async function statement(db: Db, owner: string, actor: string, write: Write): Promise<boolean> {
-	const table: PgTable = ENTITY_TABLES[write.kind];
-	const columns = columnsOf(write.kind);
-	const own = PER_USER.has(write.kind)
-		? and(eq(columns.userId!, actor), eq(columns.id!, write.id))
-		: and(eq(columns.userId!, owner), eq(columns.id!, write.id));
-	const returning = { id: columns.id! };
-
-	if (write.op === 'delete') {
-		const where = write.kind === 'comment' ? and(own, eq(comments.authorId, actor)) : own;
-		return (await db.delete(table).where(where).returning(returning)).length > 0;
-	}
-
-	if (write.kind === 'task') {
-		const { createdBy: _, completedBy: __, ...fields } = write.values as TaskFields;
-		const names = Object.keys(fields);
-		if (write.op === 'put') {
-			const completed = (fields.completedAt ?? null) !== null || (fields.lastCompletedAt ?? null) !== null;
-			const rows = await db
-				.insert(tasks)
-				.values({
-					...(fields as typeof tasks.$inferInsert),
-					id: write.id,
-					userId: owner,
-					createdBy: actor,
-					completedBy: completed ? actor : null,
-				})
-				.onConflictDoUpdate({
-					target: tasks.id,
-					set: {
-						...excluded(columns, names),
-						completedBy: completedBy(
-							actor,
-							{ value: sql`excluded.completed_at`, cleared: sql`excluded.completed_at IS NULL` },
-							sql`excluded.last_completed_at`,
-						),
-					},
-					setWhere: eq(tasks.userId, sql`excluded.user_id`),
-				})
-				.returning(returning);
-			return rows.length > 0;
-		}
-		if (!names.length) return false;
-		const stamps =
-			'completedAt' in fields || 'lastCompletedAt' in fields
-				? {
-						completedBy: completedBy(
-							actor,
-							'completedAt' in fields
-								? { value: sql`${fields.completedAt}`, cleared: sql`${fields.completedAt === null}` }
-								: null,
-							'lastCompletedAt' in fields ? sql`${fields.lastCompletedAt}` : null,
-						),
-					}
-				: {};
-		return (
-			(
-				await db
-					.update(tasks)
-					.set({ ...fields, ...stamps })
-					.where(own)
-					.returning(returning)
-			).length > 0
-		);
-	}
-
-	if (write.kind === 'comment') {
-		const { authorId: _, taskId, createdAt, ...fields } = write.values as CommentFields;
-		if (write.op === 'put') {
-			const rows = await db
-				.insert(comments)
-				.values({
-					...(fields as typeof comments.$inferInsert),
-					taskId: taskId!,
-					createdAt: createdAt!,
-					id: write.id,
-					userId: owner,
-					authorId: actor,
-				})
-				.onConflictDoUpdate({
-					target: comments.id,
-					set: excluded(columns, Object.keys(fields)),
-					setWhere: and(eq(comments.userId, sql`excluded.user_id`), eq(comments.authorId, actor)),
-				})
-				.returning(returning);
-			return rows.length > 0;
-		}
-		if (!Object.keys(fields).length) return false;
-		const where = and(own, eq(comments.authorId, actor));
-		return (await db.update(comments).set(fields).where(where).returning(returning)).length > 0;
-	}
-
-	const values = write.values ?? {};
-	if (write.op === 'put') {
-		const row = { ...values, id: write.id, userId: PER_USER.has(write.kind) ? actor : owner };
-		const insert = db.insert(table).values(row);
-		const upsert =
-			write.kind === 'settings'
-				? insert.onConflictDoNothing()
-				: PER_USER.has(write.kind)
-					? insert.onConflictDoUpdate({
-							target: [columns.userId!, columns.id!],
-							set: excluded(columns, Object.keys(values)),
-						})
-					: insert.onConflictDoUpdate({
-							target: columns.id!,
-							set: excluded(columns, Object.keys(values)),
-							setWhere: eq(columns.userId!, sql`excluded.user_id`),
-						});
-		return (await upsert.returning(returning)).length > 0;
-	}
-	if (!Object.keys(values).length) return false;
-	return (await db.update(table).set(values).where(own).returning(returning)).length > 0;
-}
-
-type Stored = { userId: string } & StoredRow;
-
-/** The stored row behind each write, for the writes whose first statement changed nothing: one select per table. */
-async function storedRows(db: Db, writes: readonly Write[]): Promise<Map<string, Stored>> {
-	const found = new Map<string, Stored>();
-	await Promise.all(
-		[...Map.groupBy(writes, write => write.kind)].map(async ([kind, group]) => {
-			const ids = [...new Set(group.map(write => write.id))];
-			if (kind === 'comment') {
-				const rows = await db
-					.select({ id: comments.id, userId: comments.userId, taskId: comments.taskId, authorId: comments.authorId })
-					.from(comments)
-					.where(inArray(comments.id, ids));
-				for (const { id, ...rest } of rows) found.set(`${kind}:${id}`, rest);
-				return;
-			}
-			if (kind === 'task') {
-				const rows = await db
-					.select({ id: tasks.id, userId: tasks.userId, projectId: tasks.projectId, parentId: tasks.parentId })
-					.from(tasks)
-					.where(inArray(tasks.id, ids));
-				for (const { id, ...rest } of rows) found.set(`${kind}:${id}`, rest);
-				return;
-			}
-			const columns = columnsOf(kind);
-			const rows = await db
-				.select({ id: columns.id!, userId: columns.userId! })
-				.from(ENTITY_TABLES[kind] as PgTable)
-				.where(inArray(columns.id!, ids));
-			for (const row of rows) found.set(`${kind}:${row.id as string}`, { userId: row.userId as string });
-		}),
-	);
-	return found;
-}
-
-type Landed = { owner: string; write: Write };
-
-/** A guest's writes lock their rows in one transaction; running them in id order keeps two batches from deadlocking. */
-const inLockOrder = <T extends Pick<RowWrite, 'kind' | 'id'>>(writes: readonly T[]) =>
-	writes.toSorted((a, b) => rowKey(a).localeCompare(rowKey(b)));
-
-type GuestWrite = Write & { stored?: StoredRow };
-
-function withoutSourceKey<T extends Write>(write: T): T {
-	if (write.kind !== 'task' || !write.values || !('sourceKey' in write.values)) return write;
-	const { sourceKey: _, ...values } = write.values;
-	return { ...write, values };
-}
-
-function admit(rows: GuestRows, group: readonly GuestWrite[], actor: string, rejected: Rejected[]): Write[] {
-	const seen = [...rows];
-	const admitted: Write[] = [];
-	for (const { stored, ...raw } of group) {
-		const write = withoutSourceKey(raw);
-		const reason = PER_USER.has(write.kind) ? null : guestRefusal(seen, write, actor, stored);
-		if (reason) {
-			rejected.push(reject(write, reason));
-			continue;
-		}
-		if (write.kind === 'task' && write.op === 'put' && !stored) {
-			seen.push({ kind: 'task', entityId: write.id, role: 'edit' });
-		}
-		admitted.push(write);
-	}
-	return admitted;
-}
-
-async function firstRejection(work: readonly Promise<void>[]): Promise<unknown> {
-	const settled = await Promise.allSettled(work);
-	return settled.find(result => result.status === 'rejected')?.reason;
-}
-
-/**
- * The upload route's writes, to whichever spaces they name. A write to the actor's own space runs at once. A put
- * that then changed nothing names a row stored in another space. A patch or a delete that changed nothing is looked
- * up: gone, which is how a delete beats an edit that arrives after it, or stored in another space, which makes it a
- * guest's write. A put into another space is looked up too, so a guest cannot rewrite a row it holds no `edit` row
- * for. A guest's writes are checked against the guest's `access` rows in that space, one query per space.
- */
-export async function applyWrites(db: Db, ctx: WriteContext, writes: readonly OwnedWrite[]): Promise<Applied> {
-	const actor = ctx.actor.id;
-	const results: Results = { landed: [], rejected: [] };
-	const { landed, rejected } = results;
-	const unresolved: Write[] = [];
-	const puts: (Write & { owner: string })[] = [];
-	const own: Write[] = [];
-	for (const { owner, ...write } of coalesce(writes)) {
-		if (write.op === 'put' && !PER_USER.has(write.kind) && owner !== actor) puts.push({ ...write, owner: owner! });
-		else own.push(write);
-	}
-
-	const groups = Map.groupBy(
-		own.filter(write => write.op === 'put' && BATCHED.has(write.kind)),
-		write =>
-			`${write.kind}:${Object.keys(write.values ?? {})
-				.toSorted()
-				.join(',')}`,
-	);
-	const batched = new Set([...groups.values()].filter(group => group.length > 1).flat());
-	const failure = await firstRejection([
-		...[...groups.values()].filter(group => group.length > 1).map(group => landMany(db, actor, group, results)),
-		...own
-			.filter(write => !batched.has(write))
-			.map(write =>
-				land(db, actor, actor, write, results).then(missed => {
-					if (!missed) return;
-					// A settings put that found the row changed nothing on purpose; a comment put may have met another's row.
-					if (write.op !== 'put' || write.kind === 'comment') unresolved.push(write);
-					else if (!PER_USER.has(write.kind)) rejected.push(reject(write, OTHER_SPACE));
-				}),
-			),
-	]);
-
-	const stored = await storedRows(db, [...puts, ...unresolved.filter(write => !PER_USER.has(write.kind))]);
-	const gone = unresolved.filter(write => write.op === 'delete' && !stored.has(rowKey(write)));
-	if (gone.length) landed.push(...(await spacesOfGone(db, actor, gone)));
-	const foreign: (GuestWrite & { owner: string })[] = [];
-	for (const write of puts) {
-		const row = stored.get(rowKey(write));
-		if (row && row.userId !== write.owner) rejected.push(reject(write, OTHER_SPACE));
-		else foreign.push({ ...write, stored: row });
-	}
-	for (const write of unresolved) {
-		const row = stored.get(rowKey(write));
-		if (!row) continue;
-		if (row.userId === actor) rejected.push(reject(write, authorOnly(write.op)));
-		else foreign.push({ ...write, owner: row.userId, stored: row });
-	}
-
-	for (const [owner, group] of Map.groupBy(foreign, write => write.owner)) {
-		await asGuest(db, actor, owner, async (tx, rows) => {
-			if (!rows.length) {
-				rejected.push(...group.map(write => reject(write, 'Not shared with you')));
-				return;
-			}
-			for (const write of inLockOrder(admit(rows, group, actor, rejected))) {
-				if (await land(tx, owner, actor, write, results, true)) missedPut(rejected, write);
-			}
-		});
-	}
-
-	await finish(db, ctx, landed);
-	if (failure) throw failure;
-	return { rejected };
-}
-
-/**
- * A delete whose row is already gone may be the retry of one that removed it and then failed before its log row and
- * derived work, so it counts as landed: the log insert ignores an op id it already holds, and the derived work
- * converges. The row was in the space where the actor last wrote it, which a retry of a delete that did reach the log
- * finds even after its recompute dropped the actor's `access` row; else in the space of a task the actor holds an
- * `edit` row for; else in the actor's own.
- */
-async function spacesOfGone(db: Db, actor: string, gone: readonly Write[]): Promise<Landed[]> {
-	const taskIds = gone.filter(write => write.kind === 'task').map(write => write.id);
-	const [written, shared] = await Promise.all([
+function view(db: Db, driver: SqlDriver, ctx: SyncContext): View {
+	const me = ctx.actor.id;
+	const granted = new Set(
 		db
-			.selectDistinctOn([log.kind, log.id], { kind: log.kind, id: log.id, owner: log.userId })
-			.from(log)
-			.where(
-				and(
-					inArray(
-						log.id,
-						gone.map(write => write.id),
-					),
-					eq(log.actor, actor),
-				),
-			)
-			.orderBy(log.kind, log.id, desc(log.seq)),
-		taskIds.length
-			? db
-					.select({ id: access.entityId, owner: access.owner })
-					.from(access)
-					.where(
-						and(
-							eq(access.grantee, actor),
-							eq(access.kind, 'task'),
-							eq(access.role, 'edit'),
-							inArray(access.entityId, taskIds),
-						),
-					)
-			: [],
-	]);
-	const ownerOf = new Map<string, string>([
-		...shared.map(row => [`task:${row.id}`, row.owner] as const),
-		...written.map(row => [`${row.kind}:${row.id}`, row.owner] as const),
-	]);
-	return gone.map(write => ({ owner: ownerOf.get(rowKey(write)) ?? actor, write }));
-}
-
-/** A put into a known space that changed nothing met a row it may not rewrite; a patch or delete met none. */
-function missedPut(rejected: Rejected[], missed: Write) {
-	if (missed.op !== 'put' || PER_USER.has(missed.kind)) return;
-	rejected.push(reject(missed, missed.kind === 'comment' ? authorOnly('put') : OTHER_SPACE));
-}
-
-/**
- * The agent API's writes to one space, whose authority the caller decided from the loaded space. A write that
- * changed nothing names a row that is gone, or a comment that is not the actor's, which the agent rules already
- * refused in memory. A guest's command lands whole or not at all: one refused write rejects the command, and nothing
- * of it is written.
- */
-export async function applyAs(
-	db: Db,
-	ctx: WriteContext,
-	owner: string,
-	authority: Authority,
-	writes: readonly Write[],
-): Promise<Applied> {
-	const actor = ctx.actor.id;
-	const results: Results = { landed: [], rejected: [] };
-	const { landed, rejected } = results;
-	const coalesced = coalesce(writes);
-	let failure: unknown;
-	if (authority.role !== 'guest') {
-		failure = await firstRejection(
-			coalesced.map(async write => {
-				if (await land(db, owner, actor, write, results)) missedPut(rejected, write);
-			}),
-		);
-	} else {
-		await asGuest(db, actor, owner, async (tx, rows) => {
-			const group = coalesced.map(write => ({ ...write, stored: authority.stored(write) }));
-			const admitted = admit(rows, group, actor, rejected);
-			if (admitted.length < group.length) return;
-			for (const write of inLockOrder(admitted)) {
-				if (await land(tx, owner, actor, write, results, true)) missedPut(rejected, write);
-			}
-		});
-	}
-	await finish(db, ctx, landed);
-	if (failure) throw failure;
-	return { rejected };
-}
-
-const logRow = ({ owner, write }: Landed, { actor, client, now }: WriteContext): typeof log.$inferInsert => ({
-	userId: owner,
-	opId: write.opId,
-	kind: write.kind,
-	id: write.id,
-	op: write.op,
-	fields: (write.values ?? {}) as Fields,
-	actor: actor.id,
-	client,
-	at: now,
-});
-
-/**
- * One log insert for the writes that changed a row, which a retried batch's op ids make a no-op, then the derived
- * work each space needs: the `access` rows when a write moved what a guest may see, the push plan when a write moved
- * when a notification is due.
- */
-async function finish(db: Db, ctx: WriteContext, landed: readonly Landed[]): Promise<void> {
-	if (!landed.length) return;
-	await db
-		.insert(log)
-		.values(landed.map(entry => logRow(entry, ctx)))
-		.onConflictDoNothing({ target: [log.userId, log.opId] });
-	await Promise.all(
-		[...Map.groupBy(landed, entry => entry.owner)].map(async ([owner, group]) => {
-			const writes = group.map(entry => entry.write);
-			if (writes.some(touchesPush)) await replan(db, owner, ctx.now);
-			if (writes.some(touchesAccess)) await recomputeAccess(db, owner);
-			if (owner === ctx.actor.id && writes.some(write => write.op === 'delete')) await purgeIfEmptied(db, owner);
-		}),
+			.select({ kind: access.kind, entityId: access.entityId, owner: access.owner })
+			.from(access)
+			.where(eq(access.grantee, me))
+			.all()
+			.map(row => `${row.owner}:${row.kind}:${row.entityId}`),
 	);
+	const sees = (table: string, values: Values): boolean => {
+		if (table === 'access') return values.grantee === me;
+		const owner = values.user_id;
+		if (owner === me) return true;
+		if (table === 'reads' || table === 'settings') return false;
+		if (table === 'comments') return granted.has(`${owner}:task:${values.task_id}`);
+		const kind = KIND_OF[table as SyncedTable];
+		return granted.has(`${owner}:${kind}:${values.id}`);
+	};
+	const current = (table: string, id: string): PulledRow | null => {
+		const values = wireRow(driver, table, id);
+		return values ? { table, id, deleted: 0, values } : null;
+	};
+	return {
+		sees,
+		expand(rows) {
+			const added: PulledRow[] = [];
+			for (const row of rows) {
+				if (row.table !== 'access' || !row.id.startsWith(`${me}:`)) continue;
+				const [, kind, entityId] = row.id.split(':') as [string, Kind, string];
+				const table = TABLE_OF[kind];
+				const opened = row.deleted ? null : current(table, entityId);
+				added.push(opened ?? { table, id: entityId, deleted: 1 });
+				if (kind !== 'task') continue;
+				for (const comment of db
+					.select({ id: comments.id })
+					.from(comments)
+					.where(eq(comments.taskId, entityId))
+					.all()) {
+					const found = row.deleted ? null : current('comments', comment.id);
+					added.push(found ?? { table: 'comments', id: comment.id, deleted: 1 });
+				}
+			}
+			return added;
+		},
+	};
 }
 
-/** Drizzle wraps the driver's error, which holds the SQLSTATE, as `cause`. */
-function refusedByDatabase(error: unknown): boolean {
-	const wrapped = error as { code?: unknown; cause?: { code?: unknown } } | null;
-	const code = wrapped?.code ?? wrapped?.cause?.code;
-	return typeof code === 'string' && (code.startsWith('22') || code.startsWith('23'));
+/** A synced row as the engine sends it: every column of the engine's schema, as stored, read through its driver. */
+function wireRow(driver: SqlDriver, table: string, id: string): Values | null {
+	const names = syncSchema.tables.find(t => t.name === table)!.columns.map(c => c.name);
+	const row = driver.exec(`SELECT ${names.join(', ')} FROM ${table} WHERE id = ?`, [id])[0];
+	return row ? (Object.fromEntries(names.map(name => [name, row[name] ?? null])) as Values) : null;
+}
+
+export function syncHooks(db: Db, driver: SqlDriver): SpaceHooks<SyncContext> {
+	return {
+		admit: (write, ctx) => admit(db, write, ctx),
+		landed: (writes, ctx, server) => landed(db, writes, ctx, server),
+		view: ctx => view(db, driver, ctx),
+	};
+}
+
+/** A domain row write as the server's own engine write, for the agent API. */
+export function serverWrite(write: RowWrite, owner: string): ServerWrite {
+	const table = TABLE_OF[write.kind];
+	const id = rowIdOf(write.kind, write.id, owner);
+	if (write.op === 'delete') return { table, id, op: 'delete' };
+	const fields = write.op === 'put' ? { ...write.values, userId: owner } : (write.values ?? {});
+	return { table, id, op: write.op, values: toWire(tableOf(write.kind), fields) };
 }

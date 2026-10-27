@@ -28,7 +28,7 @@ test('emptying the space drops the history of every row that is gone, and leaves
 	const taskId = crypto.randomUUID();
 	const theirsId = crypto.randomUUID();
 	await upload(owner, [
-		{ op: 'patch', table: 'settings', id: 'settings', values: { dictation: 'elevenlabs' } },
+		{ op: 'patch', table: 'settings', id: me, values: { dictation: 'elevenlabs' } },
 		{
 			op: 'put',
 			table: 'projects',
@@ -37,7 +37,7 @@ test('emptying the space drops the history of every row that is gone, and leaves
 		},
 		{ op: 'put', table: 'labels', id: labelId, values: { id: labelId, user_id: me, name: 'Home', created_at: 1 } },
 		{ op: 'put', table: 'tasks', id: taskId, values: taskRow(taskId, me, 'Shared', { projectId }) },
-		{ op: 'put', table: 'reads', id: taskId, values: { id: taskId, user_id: me, read_at: 1 } },
+		{ op: 'put', table: 'reads', id: `${me}:${taskId}`, values: { user_id: me, read_at: 1 } },
 	]);
 	await upload(guest, [
 		{ op: 'put', table: 'tasks', id: theirsId, values: taskRow(theirsId, guest.person.id, 'Theirs') },
@@ -51,18 +51,18 @@ test('emptying the space drops the history of every row that is gone, and leaves
 
 	const deleteTask = [
 		{ op: 'delete', table: 'tasks', id: taskId, opId: 'delete-task' },
-		{ op: 'delete', table: 'reads', id: taskId, opId: 'delete-read' },
+		{ op: 'delete', table: 'reads', id: `${me}:${taskId}`, opId: 'delete-read' },
 	];
 	await upload(owner, deleteTask);
 	expect(await logOf(me)).toEqual([
-		'settings patch settings by owner',
+		`settings patch ${me} by owner`,
 		`project put ${projectId} by owner`,
 		`label put ${labelId} by owner`,
 		`task put ${taskId} by owner`,
-		`read put ${taskId} by owner`,
+		`read put ${me}:${taskId} by owner`,
 		`task patch ${taskId} by guest`,
 		`task delete ${taskId} by owner`,
-		`read delete ${taskId} by owner`,
+		`read delete ${me}:${taskId} by owner`,
 	]);
 
 	const deleteRest = [
@@ -70,15 +70,15 @@ test('emptying the space drops the history of every row that is gone, and leaves
 		{ op: 'delete', table: 'labels', id: labelId, opId: 'delete-label' },
 	];
 	await upload(owner, deleteRest);
-	expect(await logOf(me)).toEqual(['settings patch settings by owner']);
+	expect(await logOf(me)).toEqual([`settings patch ${me} by owner`]);
 	expect(await logOf(guest.person.id)).toEqual(guestLog);
 
 	await upload(owner, [...deleteTask, ...deleteRest]);
-	expect(await logOf(me)).toEqual(['settings patch settings by owner']);
+	expect(await logOf(me)).toEqual([`settings patch ${me} by owner`]);
 
 	const nextId = crypto.randomUUID();
 	await upload(owner, [{ op: 'put', table: 'tasks', id: nextId, values: taskRow(nextId, me, 'Fresh start') }]);
-	expect(await logOf(me)).toEqual(['settings patch settings by owner', `task put ${nextId} by owner`]);
+	expect(await logOf(me)).toEqual([`settings patch ${me} by owner`, `task put ${nextId} by owner`]);
 });
 
 test('a guest’s delete that empties the owner’s space purges nothing', async () => {

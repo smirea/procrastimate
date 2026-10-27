@@ -16,7 +16,7 @@ describe('the bearer session cache', () => {
 		expect((await app.fetch('/api/me', { headers: me.headers })).status).toBe(200);
 		expect(app.statements).toEqual([]);
 
-		await app.db.execute(sql`DELETE FROM "session" WHERE "userId" = ${me.person.id}`);
+		app.db.run(sql`DELETE FROM "session" WHERE "userId" = ${me.person.id}`);
 		expect((await app.fetch('/api/me', { headers: me.headers })).status).toBe(200);
 
 		await app.fetch('/api/auth/sign-out', { method: 'POST', headers: me.headers, body: '{}' });

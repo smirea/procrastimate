@@ -1,5 +1,5 @@
 import { and, eq, exists, or, sql } from 'drizzle-orm';
-import type { PgColumn } from 'drizzle-orm/pg-core';
+import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { base64Encode } from './jwt';
 import type { Actor } from '../../shared/auth';
 import { access, labels, projects, rambleUsage, tasks, type AccessRow } from '../../shared/db/schema';
@@ -18,7 +18,7 @@ import {
 import { addDays, type DateKey } from '../../shared/task';
 import { zonedDateKey, zonedTime, zonedTimeOfDay } from '../../shared/zoned-time';
 import type { RambleOutline, RambleOutlineInput } from '../../shared/ramble/outline';
-import type { Db } from './db/postgres';
+import type { Db } from './db/sqlite';
 import { cassetteUpstream } from './ramble-cassette';
 import { geminiUpstream, type OpenSocket } from './ramble-gemini';
 import type { Config } from './config';
@@ -70,8 +70,8 @@ export type KeytermSource = {
  * View-only shares are left out. Recency reads the user's own tasks and every shared task they can see. A whole-space
  * share makes a manager with no rows, but only AI accounts hold one, and Ramble refuses them.
  */
-export async function loadKeytermSource(db: Db, userId: string): Promise<KeytermSource> {
-	const sharedTo = (kind: AccessRow['kind'], id: PgColumn, owner: PgColumn, role?: AccessRow['role']) =>
+export function loadKeytermSource(db: Db, userId: string): KeytermSource {
+	const sharedTo = (kind: AccessRow['kind'], id: SQLiteColumn, owner: SQLiteColumn, role?: AccessRow['role']) =>
 		exists(
 			db
 				.select({ one: sql`1` })
@@ -86,20 +86,23 @@ export async function loadKeytermSource(db: Db, userId: string): Promise<Keyterm
 					),
 				),
 		);
-	const [taskRows, projectRows, labelRows] = await Promise.all([
+	const [taskRows, projectRows, labelRows] = [
 		db
 			.select({ projectId: tasks.projectId, labelIds: tasks.labelIds, createdAt: tasks.createdAt })
 			.from(tasks)
-			.where(or(eq(tasks.userId, userId), sharedTo('task', tasks.id, tasks.userId))),
+			.where(or(eq(tasks.userId, userId), sharedTo('task', tasks.id, tasks.userId)))
+			.all(),
 		db
 			.select({ id: projects.id, name: projects.name })
 			.from(projects)
-			.where(or(eq(projects.userId, userId), sharedTo('project', projects.id, projects.userId, 'edit'))),
+			.where(or(eq(projects.userId, userId), sharedTo('project', projects.id, projects.userId, 'edit')))
+			.all(),
 		db
 			.select({ id: labels.id, name: labels.name })
 			.from(labels)
-			.where(or(eq(labels.userId, userId), sharedTo('label', labels.id, labels.userId, 'edit'))),
-	]);
+			.where(or(eq(labels.userId, userId), sharedTo('label', labels.id, labels.userId, 'edit')))
+			.all(),
+	];
 	return { tasks: taskRows, projects: projectRows, labels: labelRows };
 }
 
@@ -252,26 +255,43 @@ function charge(usage: RambleUsage, day: Day, seconds: number): Promise<void> {
 
 export type RambleUsage = { stored(day: string): Promise<number>; add(day: string, seconds: number): Promise<void> };
 
-export function pgRambleUsage(db: Db, owner: string): RambleUsage {
+/**
+ * What a session reads from the database: the user's time zone, the names its keyterms come from, and the day's
+ * usage. The Bun dev server reads its own database; the Worker's `Ramble` object asks the `App` object.
+ */
+export type RambleData = {
+	zone(userId: string): Promise<string>;
+	keyterms(userId: string): Promise<KeytermSource>;
+	usage(userId: string): RambleUsage;
+};
+
+export function dbRambleUsage(db: Db, owner: string): RambleUsage {
 	return {
 		async stored(day) {
-			const [row] = await db
+			const row = db
 				.select({ seconds: rambleUsage.seconds })
 				.from(rambleUsage)
-				.where(and(eq(rambleUsage.userId, owner), eq(rambleUsage.day, day)));
+				.where(and(eq(rambleUsage.userId, owner), eq(rambleUsage.day, day)))
+				.get();
 			return row?.seconds ?? 0;
 		},
 		async add(day, seconds) {
-			await db
-				.insert(rambleUsage)
+			db.insert(rambleUsage)
 				.values({ userId: owner, day, seconds })
 				.onConflictDoUpdate({
 					target: [rambleUsage.userId, rambleUsage.day],
 					set: { seconds: sql`${rambleUsage.seconds} + excluded.seconds` },
-				});
+				})
+				.run();
 		},
 	};
 }
+
+export const dbRambleData = (db: Db): RambleData => ({
+	zone: async userId => storedZone(db, userId),
+	keyterms: async userId => loadKeytermSource(db, userId),
+	usage: userId => dbRambleUsage(db, userId),
+});
 
 /** Gemini Live may still be calling tools for the last words when the audio ends. */
 const FINAL_COMMIT_MS: Record<RambleEngine, number> = { elevenlabs: 3000, gemini: 6000 };
@@ -534,19 +554,19 @@ export type RambleRoute = (request: Request, actor: Actor) => Promise<Response>;
  * The upgrade for one signed-in human's session, after the caller authenticated the request, over one database. The
  * route holds the users' days, so one route serves every session of a host.
  */
-export function rambleRoute(db: Db, stream: StreamHost, connect: ConnectUpstream | null): RambleRoute {
+export function rambleRoute(data: RambleData, stream: StreamHost, connect: ConnectUpstream | null): RambleRoute {
 	const ramble: Ramble = { stream, days: new Map() };
 	return async (request, actor) => {
 		if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return refuse(426, 'Expected a WebSocket');
 		if (!connect) return refuse(503, 'Ramble is not configured');
 		const now = Date.now();
-		const usage = pgRambleUsage(db, actor.id);
-		const zone = await storedZone(db, actor.id);
+		const usage = data.usage(actor.id);
+		const zone = await data.zone(actor.id);
 		const day = dayOf(ramble, usage, actor.id, zonedDateKey(now, zone));
 		await day.loaded;
 		const remaining = RAMBLE_DAILY_SECONDS - day.stored - liveSeconds(day);
 		if (remaining <= 0) return refuseDaily(ramble, request, zonedTime(addDays(day.key, 1), '00:00', zone));
-		const source = await loadKeytermSource(db, actor.id);
+		const source = await data.keyterms(actor.id);
 		const keyterms = rambleKeyterms(source);
 		const params = new URL(request.url).searchParams;
 		const cassette = params.get('cassette');

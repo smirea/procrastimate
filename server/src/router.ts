@@ -50,12 +50,13 @@ import { personById, searchPeople } from './people';
 import { OUTLINE_TIMEOUT_MS, outlineRamble, RAMBLE_GEMINI } from './ramble-outline';
 import { reportError } from './sentry';
 import { seesTask, sightOf } from './space';
-import { POWERSYNC_PATH, signSyncToken } from './sync';
-import { upload } from './upload';
 
 type Ctx = { app: App; request: Request };
 
 const os = implement(contract).$context<Ctx>();
+
+/** A share change moved `access` rows, which a guest's devices pull on the head. */
+const publishHead = (app: App) => app.live.publish(app.store.space.head());
 
 function requireClient(request: Request) {
 	const client = clientOf(request);
@@ -73,7 +74,15 @@ function requireDevice(request: Request): string {
 /** An agent route: any signed-in actor, on the space the query names. Access is checked where the space loads. */
 async function command({ app, request }: Ctx, space?: string): Promise<Command> {
 	const actor = await requireActor(request, app);
-	return { db: app.db, owner: spaceOf(actor, space), actor, client: requireClient(request), now: Date.now() };
+	return {
+		db: app.db,
+		store: app.store,
+		live: app.live,
+		owner: spaceOf(actor, space),
+		actor,
+		client: requireClient(request),
+		now: Date.now(),
+	};
 }
 
 async function shared(ctx: Ctx, space?: string) {
@@ -145,7 +154,7 @@ export const router = os.router({
 			const name = input.name.trim();
 			if (!name) throw new ORPCError('BAD_REQUEST', { message: 'An AI account needs a name' });
 			const ai = await createAiUser(app, actor.id, name);
-			await createShare(app.db, actor.id, origin, { kind: 'space', id: '' }, ai, 'edit', now);
+			createShare(app.store, actor.id, origin, { kind: 'space', id: '' }, ai, 'edit', now);
 			return ai;
 		}),
 		delete: os.ai.delete.handler(async ({ input, context }) => {
@@ -155,7 +164,8 @@ export const router = os.router({
 				throw new ORPCError('NOT_FOUND', { message: 'No such AI account' });
 			}
 			await deleteUser(context.app, ai.id);
-			await revokeAi(context.app.db, actor.id, ai.id);
+			revokeAi(context.app.store, actor.id, ai.id);
+			publishHead(context.app);
 			return ok;
 		}),
 	},
@@ -181,7 +191,9 @@ export const router = os.router({
 				throw new ORPCError('BAD_REQUEST', { message: 'Only an AI account can be given the whole space' });
 			}
 			const role = audience.kind === 'user' ? audience.role : 'view';
-			return createShare(app.db, actor.id, origin, target, grantee, role, now);
+			const view = createShare(app.store, actor.id, origin, target, grantee, role, now);
+			publishHead(app);
+			return view;
 		}),
 		list: os.shares.list.handler(async ({ context }) => {
 			const { app, actor, origin } = await own(context);
@@ -189,7 +201,8 @@ export const router = os.router({
 		}),
 		delete: os.shares.delete.handler(async ({ input, context }) => {
 			const { app, actor } = await own(context);
-			await deleteShare(app.db, actor.id, input.query.id);
+			deleteShare(app.store, actor.id, input.query.id);
+			publishHead(app);
 			return ok;
 		}),
 	},
@@ -242,16 +255,11 @@ export const router = os.router({
 	sync: {
 		token: os.sync.token.handler(async ({ context }) => {
 			const actor = await requireHuman(context.request, context.app);
-			return {
-				token: await signSyncToken(context.app.config.powersync.key, actor.id),
-				// The request's own origin, not the Origin header: a same-origin GET sends none, and iOS calls the API directly.
-				endpoint: `${new URL(context.request.url).origin}${POWERSYNC_PATH}`,
-				user: { id: actor.id, name: actor.name, email: actor.email ?? '' },
-			};
-		}),
-		upload: os.sync.upload.handler(async ({ input, context }) => {
-			const actor = await requireHuman(context.request, context.app);
-			return upload(context.app.db, actor, requireClient(context.request), input.writes);
+			const session = (await context.app.auth.api.getSession({ headers: context.request.headers })) as {
+				session?: { token: string };
+			} | null;
+			if (!session?.session) throw new ORPCError('UNAUTHORIZED', { message: 'Not signed in' });
+			return { token: session.session.token, user: { id: actor.id, name: actor.name, email: actor.email ?? '' } };
 		}),
 	},
 	view: os.view.handler(async ({ input, context }) => view(await command(context, input.query.space))),
@@ -343,7 +351,7 @@ export const router = os.router({
 		}),
 		create: os.links.create.handler(async ({ input, context }) => {
 			const { db, owner, access, origin, now } = await shared(context, input.query.space);
-			return createLink(db, owner, access, origin, input.body.target, now);
+			return createLink(context.app.store, owner, access, origin, input.body.target, now);
 		}),
 		delete: os.links.delete.handler(async ({ input, context }) => {
 			const { db, owner, access } = await shared(context, input.query.space);

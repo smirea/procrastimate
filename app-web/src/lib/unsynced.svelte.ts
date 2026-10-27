@@ -1,5 +1,5 @@
 import { SvelteSet } from 'svelte/reactivity';
-import { powerSync } from './database.ts';
+import { localDatabase, queuedTasks } from './database.ts';
 import { reportError } from './sentry.ts';
 import { UnsyncedQueue } from './unsynced-queue.ts';
 
@@ -9,12 +9,10 @@ import { UnsyncedQueue } from './unsynced-queue.ts';
  */
 const UNSYNCED_GRACE = 3000;
 
-/** Each queued task with its oldest queued write, which is what has been waiting. */
-const QUEUED_TASKS = `SELECT json_extract(data, '$.id') AS id, MIN(id) AS row FROM ps_crud WHERE json_extract(data, '$.type') = 'tasks' GROUP BY 1`;
-
 /**
- * The tasks with a write in PowerSync's upload queue that has not reached the server, read from the queue itself. The
- * grace runs on timers rather than clock readings, since the end-to-end specs pin the clock.
+ * The tasks with a write in the engine's outbox that the server has not acknowledged, read from the outbox itself,
+ * after every local write and every sync. The grace runs on timers rather than clock readings, since the end-to-end
+ * specs pin the clock.
  */
 class Unsynced {
 	#run: object | null = null;
@@ -40,13 +38,15 @@ class Unsynced {
 		this.#run = run;
 		const refresh = () => void this.#read(run).catch(reportError);
 		const show = () => this.#queue.show();
-		const dispose = powerSync.onChange({ onChange: refresh }, { tables: ['ps_crud'], throttleMs: 50 });
+		const stopChanges = localDatabase.onChange(refresh);
+		const stopStatus = localDatabase.onStatus(refresh);
 		addEventListener('online', show);
 		addEventListener('offline', show);
 		refresh();
 		return () => {
 			this.#run = null;
-			dispose();
+			stopChanges();
+			stopStatus();
 			removeEventListener('online', show);
 			removeEventListener('offline', show);
 			for (const timer of this.#timers) clearTimeout(timer);
@@ -56,7 +56,7 @@ class Unsynced {
 	}
 
 	async #read(run: object) {
-		const rows = await powerSync.getAll<{ id: string; row: number }>(QUEUED_TASKS);
+		const rows = await queuedTasks();
 		if (this.#run === run) this.#queue.read(rows);
 	}
 }

@@ -72,8 +72,9 @@ test(
 	async ({ devices }) => {
 		const [a, b] = [await devices.open(), await devices.open()];
 		const other = await a.context.newPage();
-		await other.clock.setFixedTime(NOW);
+		// WebKit's persistent contexts install the clock only in a page that has loaded a document.
 		await other.goto('/no-date');
+		await other.clock.setFixedTime(NOW);
 		const tab = new App(other);
 
 		const first = unique('Added in the first tab');
@@ -167,7 +168,7 @@ test('an edit the server rejects goes back to the server value with a notice, an
 
 	const refused = `${title} refused`;
 	// Stands in for a write only a client bug could build: it reaches the server with a priority the schema refuses.
-	await a.context.route('**/api/upload', async route => {
+	await a.context.route('**/api/sync', async route => {
 		const body = route.request().postDataJSON() as { writes: { values?: Record<string, unknown> }[] };
 		for (const write of body.writes) if (write.values?.title === refused) write.values.priority = 99;
 		await route.continue({ postData: JSON.stringify(body) });
@@ -178,7 +179,7 @@ test('an edit the server rejects goes back to the server value with a notice, an
 	});
 	await expect(a.app.row(title)).toBeVisible({ timeout: 10_000 });
 	await expect(a.app.row(refused)).toHaveCount(0);
-	await a.context.unroute('**/api/upload');
+	await a.context.unroute('**/api/sync');
 
 	const next = unique('After the rejection');
 	await a.app.add(next);
@@ -254,7 +255,7 @@ test('a new device holds its settings changes until the account’s settings arr
 	// also the session check that opens the app.
 	const context = await deviceContext(browser, { timezoneId: 'Europe/Berlin' });
 	await signInAccount(context);
-	const stream = /\/api\/(powersync\/|upload)/;
+	const stream = /\/api\/(sync|live)$/;
 	await context.route(stream, route => route.abort('internetdisconnected'));
 	const page = await context.newPage();
 	await page.clock.setFixedTime(NOW);
@@ -411,12 +412,14 @@ test('one command’s writes upload in one request, and an edit reads back only 
 	await expect(a.app.importSummary()).toContainText('150 tasks');
 	await a.page.keyboard.press('Escape');
 	const uploads: number[] = [];
-	a.page.on('request', request => {
-		if (request.url().endsWith('/api/upload')) uploads.push((request.postDataJSON() as { writes: [] }).writes.length);
+	a.context.on('request', request => {
+		if (!request.url().endsWith('/api/sync')) return;
+		const { writes } = request.postDataJSON() as { writes: [] };
+		if (writes.length) uploads.push(writes.length);
 	});
 	await goOnline(a);
 	await settled(a);
-	// A retried request carries the same whole batch, so every request holds all 151 writes, however many there are.
+	// The outbox goes whole in one request, and a retried request carries the same writes again.
 	expect(new Set(uploads)).toEqual(new Set([151]));
 	const has = (device: Device, title: string) =>
 		expect.poll(() => device.page.evaluate(t => window.procrastimate.taskId(t) !== undefined, title), {

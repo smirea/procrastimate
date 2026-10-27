@@ -10,12 +10,11 @@
 import { chmod, copyFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import devJwtKey from '../../powersync/local/INSECURE-dev-jwt-key.json' with { type: 'json' };
 import { REQUIRED_WORKER_SECRETS } from '../src/config';
 import { generateVapidKeys } from '../src/web-push';
 import { parseDotenv, type Values } from '../../scripts/lib';
 
-/** The Bun dev server's stand-in; `wrangler dev` gets the same through `.dev.vars`, so the local PowerSync trusts both. */
+/** The Bun dev server's stand-in; `wrangler dev` gets the same through `.dev.vars`. */
 const INSECURE_DEV_AUTH_SECRET = 'insecure-local-dev-better-auth-secret-0123456789';
 
 export const WORKER_SECRETS = [
@@ -23,7 +22,6 @@ export const WORKER_SECRETS = [
 	'VAPID_PRIVATE_KEY',
 	'ELEVENLABS_API_KEY',
 	'GEMINI_API_KEY',
-	'POWERSYNC_JWT_PRIVATE_KEY',
 	'BETTER_AUTH_SECRET',
 	'GOOGLE_CLIENT_ID',
 	'GOOGLE_CLIENT_SECRET',
@@ -191,7 +189,6 @@ async function devVars(env: string, generateOnly: boolean) {
 	const file = Bun.file(devVarsPath);
 	const existing = parseDotenv((await file.exists()) ? await file.text() : '');
 	const secrets: Values = { ...existing, ...workerSecrets(values) };
-	secrets.POWERSYNC_JWT_PRIVATE_KEY ||= JSON.stringify(devJwtKey);
 	secrets.BETTER_AUTH_SECRET ||= INSECURE_DEV_AUTH_SECRET;
 	if (!secrets.VAPID_PUBLIC_KEY || !secrets.VAPID_PRIVATE_KEY) {
 		const keys = await generateVapidKeys();

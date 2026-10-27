@@ -1,34 +1,91 @@
-import { wrapPowerSyncWithDrizzle } from '@powersync/drizzle-driver';
-import { PowerSyncDatabase } from '@powersync/web';
-import { and, eq, getTableName, gt, inArray, lte, max, min } from 'drizzle-orm';
+import { and, eq, gt, inArray, lte, max, min } from 'drizzle-orm';
+import { integer, sqliteTable, text, type SQLiteTable } from 'drizzle-orm/sqlite-core';
+import { drizzleSyncDatabase, openSyncDatabase, type WebDatabase } from 'sync-engine/client-web';
+import workerUrl from './sync/worker.ts?worker&url';
+import { access, comments, labels, projects, reads, sections, settings, tasks } from 'shared/db/schema.ts';
+import { CHANGE_LOG, changeLogStatements, DATABASE_FILE_KEY } from 'shared/local-database.ts';
 import type { RowsRead, StoredRow, TableRead } from 'shared/local-rows.ts';
 import type { Kind } from 'shared/model.ts';
-import { KIND_OF, TABLE_OF, type RowWrite, type SyncedTable } from 'shared/rows.ts';
-import { AppSchema, changeLog, databaseOwner, localTables, SETUP_STATEMENTS } from './generated/tables.ts';
+import { entityIdOf, KIND_OF, rowIdOf, TABLE_OF, type RowWrite, type SyncedTable } from 'shared/rows.ts';
+import { client } from './api.ts';
 
-export const powerSync = new PowerSyncDatabase({ schema: AppSchema, database: { dbFilename: 'procrastimate.db' } });
-const db = wrapPowerSyncWithDrizzle(powerSync, { schema: localTables });
+/**
+ * The browser's database: sync-engine's SQLite in OPFS, one per browser profile, held by one tab's worker and shared
+ * by every tab. Drizzle runs on it through the engine's proxy; the engine's triggers capture every write for sync.
+ */
+let opened: WebDatabase | null = null;
 
-/** The change log's table, which `onChange` watches instead of every synced table. */
-export const CHANGE_LOG = getTableName(changeLog);
-export type AccessRow = typeof localTables.access.$inferSelect;
+/**
+ * The worker starts on first use, so a browser that refuses it (a locked-down profile, private browsing in some)
+ * fails that use, which the store reports as a database it could not open, instead of failing the page's imports.
+ */
+function open(): WebDatabase {
+	const query = new URLSearchParams({
+		client: JSON.stringify(client()),
+		file: localStorage.getItem(DATABASE_FILE_KEY) ?? '',
+	});
+	opened ??= openSyncDatabase({ worker: new Worker(`${workerUrl}?${query}`, { type: 'module' }) });
+	return opened;
+}
+
+const listen =
+	<A extends unknown[]>(subscribe: (database: WebDatabase) => (...args: A) => () => void) =>
+	(...args: A): (() => void) => {
+		try {
+			return subscribe(open())(...args);
+		} catch {
+			return () => {};
+		}
+	};
+
+export const localDatabase: WebDatabase = {
+	exec: async (...args) => open().exec(...args),
+	batch: async statements => open().batch(statements),
+	sync: async () => open().sync(),
+	status: async () => open().status(),
+	setToken: async token => open().setToken(token),
+	reset: async () => open().reset(),
+	onChange: listen(database => database.onChange),
+	onStatus: listen(database => database.onStatus),
+	close: async () => opened?.close(),
+};
+const db = drizzleSyncDatabase(localDatabase);
+
+export const localTables = { tasks, projects, sections, labels, comments, reads, settings, access } as const;
+export type AccessRow = typeof access.$inferSelect;
+
+/**
+ * Every row change any writer made, in order: this tab, another tab, a sync, or a reset. Local only: the engine syncs
+ * only its schema's tables. Triggers fill it, so a reader reads only what changed.
+ */
+const changeLog = sqliteTable(CHANGE_LOG, {
+	seq: integer('seq').primaryKey({ autoIncrement: true }),
+	tbl: text('tbl').notNull(),
+	id: text('id').notNull(),
+});
+
+/** Whose rows the database holds. Local only, like the change log. */
+const databaseOwner = sqliteTable('procrastimate_owner', { owner: text('owner').primaryKey() });
+
+const SETUP_STATEMENTS = [
+	...changeLogStatements(Object.keys(localTables)),
+	'CREATE TABLE IF NOT EXISTS procrastimate_owner (owner TEXT PRIMARY KEY)',
+];
+
 /** `cursor` is the newest change the read covers, and `logged` how many changes the log holds. */
 export type Read = { cursor: number; full: boolean; logged: number; changes: RowsRead };
 
 /** Past this many entries a reader trims the log to the newest `KEPT_CHANGES`; a tab further behind reads everything. */
 const TRIM_ABOVE = 10_000;
 const KEPT_CHANGES = 1000;
-/** Past this many changed ids a table is read whole, which also keeps its query under SQLite's variable limit. */
-const WHOLE_TABLE_ABOVE = 500;
 
 let settingUp: Promise<void> | null = null;
 
-/** Creates the change log, its triggers, and the owner table (`SETUP_STATEMENTS`) once per database; every tab may. */
+/** Creates the change log, its triggers, and the owner table once per database; every tab may. */
 function setUp(): Promise<void> {
-	settingUp ??= powerSync
-		.writeTransaction(async tx => {
-			for (const statement of SETUP_STATEMENTS) await tx.execute(statement);
-		})
+	settingUp ??= localDatabase
+		.batch(SETUP_STATEMENTS.map(statement => ({ sql: statement })))
+		.then(() => {})
 		.catch(error => {
 			settingUp = null;
 			throw error;
@@ -45,57 +102,74 @@ export async function storedOwner(): Promise<string | null> {
 
 /**
  * Names the database `owner`'s, inside the database rather than in `localStorage`: the browser's storage may drop the
- * last commits when a page closes right after them, but never out of order, so this lands only with the clear before it.
- * A name in `localStorage` outlived a lost clear and showed the previous account's rows.
+ * last commits when a page closes right after them, but never out of order, so this lands only with the reset before
+ * it. A name in `localStorage` outlived a lost clear and showed the previous account's rows.
  */
 export async function storeOwner(owner: string): Promise<void> {
 	await setUp();
-	await db.transaction(async tx => {
-		await tx.delete(databaseOwner);
-		await tx.insert(databaseOwner).values({ owner });
-	});
+	await db.batch([db.delete(databaseOwner), db.insert(databaseOwner).values({ owner })]);
 }
 
-const READ_TABLES = [...Object.values(TABLE_OF), 'access'] as const satisfies readonly (SyncedTable | 'access')[];
-type ReadTable = (typeof READ_TABLES)[number];
-const kindOf = (table: ReadTable): Kind | 'access' => (table === 'access' ? 'access' : KIND_OF[table]);
+/** Empties the synced tables, the outbox, and the change log for every tab, so the next account starts fresh. */
+export async function clearDatabase(): Promise<void> {
+	await setUp();
+	// The loop may still hold the previous account's token, and a pull after the reset would bring its rows back.
+	await localDatabase.setToken(null);
+	await localDatabase.reset();
+	await db.delete(changeLog);
+}
+
+type ReadTable = keyof typeof localTables;
+const READ_TABLES = Object.keys(localTables) as ReadTable[];
+const kindOf = (table: ReadTable): Kind | 'access' => (table === 'access' ? 'access' : KIND_OF[table as SyncedTable]);
+
+/** The per-user kinds keep the owner in their row ids; the store keys them as the domain does. */
+function asEntityRows(kind: Kind | 'access', me: string, read: TableRead<StoredRow | AccessRow>) {
+	if (kind !== 'read' && kind !== 'settings') return read;
+	const rows = (read.rows as StoredRow[]).map(row => ({ ...row, id: entityIdOf(kind, row.id, row.userId) }));
+	const ids = read.ids === 'all' ? read.ids : read.ids.map(id => entityIdOf(kind, id, me));
+	return { ids, rows };
+}
 
 /**
- * What changed since `cursor`, in one read-only transaction so a sync applying between two tables cannot tear the
- * result: the ids the log names and the rows that still have them. Every table whole when there is no cursor yet or
- * the log no longer reaches back to it.
+ * What changed since `cursor`, in one transaction (the engine's `batch`) so a sync applying between two tables cannot
+ * tear the result: the log's bounds, and the rows of each table the log names past the cursor. Every table whole when
+ * there is no cursor yet or the log no longer reaches back to it.
  */
-export async function readSince(cursor: number | null): Promise<Read> {
+export async function readSince(cursor: number | null, me: string): Promise<Read> {
 	await setUp();
-	return db.transaction(
-		async tx => {
-			const [bounds] = await tx.select({ first: min(changeLog.seq), last: max(changeLog.seq) }).from(changeLog);
-			const last = bounds?.last ?? 0;
-			const logged = bounds?.first == null ? 0 : last - bounds.first + 1;
-			const changes: Record<string, TableRead<StoredRow | AccessRow>> = {};
-			if (cursor === null || (bounds?.first != null && bounds.first > cursor + 1)) {
-				for (const table of READ_TABLES) {
-					changes[kindOf(table)] = { ids: 'all', rows: (await tx.select().from(localTables[table])) as StoredRow[] };
-				}
-				return { cursor: last, full: true, logged, changes: changes as RowsRead };
-			}
-			if (last <= cursor) return { cursor, full: false, logged, changes: {} };
-			const named = await tx
-				.selectDistinct({ tbl: changeLog.tbl, id: changeLog.id })
-				.from(changeLog)
-				.where(and(gt(changeLog.seq, cursor), lte(changeLog.seq, last)));
-			for (const [table, entries] of Map.groupBy(named, entry => entry.tbl as ReadTable)) {
-				const columns = localTables[table];
-				const ids = entries.map(entry => entry.id);
-				changes[kindOf(table)] =
-					ids.length > WHOLE_TABLE_ABOVE
-						? { ids: 'all', rows: (await tx.select().from(columns)) as StoredRow[] }
-						: { ids, rows: (await tx.select().from(columns).where(inArray(columns.id, ids))) as StoredRow[] };
-			}
-			return { cursor: last, full: false, logged, changes: changes as RowsRead };
-		},
-		{ accessMode: 'read only' },
-	);
+	const bounds = db.select({ first: min(changeLog.seq), last: max(changeLog.seq) }).from(changeLog);
+	const after = cursor ?? 0;
+	const named = db
+		.selectDistinct({ tbl: changeLog.tbl, id: changeLog.id })
+		.from(changeLog)
+		.where(gt(changeLog.seq, after));
+	const tableRows = READ_TABLES.map(table => {
+		const columns = localTables[table] as SQLiteTable & { id: typeof tasks.id };
+		const changed = db
+			.select({ id: changeLog.id })
+			.from(changeLog)
+			.where(and(eq(changeLog.tbl, table), gt(changeLog.seq, after)));
+		return cursor === null ? db.select().from(columns) : db.select().from(columns).where(inArray(columns.id, changed));
+	});
+	const [[range], ids, ...rows] = (await db.batch([bounds, named, ...tableRows] as never)) as [
+		{ first: number | null; last: number | null }[],
+		{ tbl: string; id: string }[],
+		...StoredRow[][],
+	];
+	const last = range?.last ?? 0;
+	const logged = range?.first == null ? 0 : last - range.first + 1;
+	const full = cursor === null || (range?.first != null && range.first > cursor + 1);
+	if (full && cursor !== null) return readSince(null, me);
+	const changes: Record<string, TableRead<StoredRow | AccessRow>> = {};
+	const byTable = Map.groupBy(ids, entry => entry.tbl as ReadTable);
+	READ_TABLES.forEach((table, index) => {
+		const tableIds = full ? 'all' : byTable.get(table)?.map(entry => entry.id);
+		if (!tableIds) return;
+		const kind = kindOf(table);
+		changes[kind] = asEntityRows(kind, me, { ids: tableIds, rows: rows[index]! });
+	});
+	return { cursor: full ? last : Math.max(last, after), full, logged, changes: changes as RowsRead };
 }
 
 /** Trims the log once it is long; every reader may, and trimming twice is harmless. */
@@ -105,43 +179,29 @@ export async function trimChanges({ cursor, logged }: Read): Promise<void> {
 }
 
 /**
- * PowerSync's tables are views that refuse an upsert, so a put of a row that is already here, as after a reload raced
- * the command, updates it instead.
+ * One command's rows in one transaction. A put upserts, so one of a row already here, as after a reload raced the
+ * command, updates it; the engine's triggers then record only the columns that changed.
  */
-export function writeRows(owner: string, writes: readonly RowWrite[]): Promise<void> {
-	return db.transaction(async tx => {
-		// One select per kind says which puts update, kept current as the batch inserts and deletes.
-		const stored = new Map<Kind, Set<string>>();
-		for (const [kind, group] of Map.groupBy(
-			writes.filter(write => write.op === 'put'),
-			write => write.kind,
-		)) {
-			const table = localTables[TABLE_OF[kind]];
-			const ids = [...new Set(group.map(write => write.id))];
-			const found = new Set<string>();
-			for (let at = 0; at < ids.length; at += WHOLE_TABLE_ABOVE) {
-				const rows = await tx
-					.select({ id: table.id })
-					.from(table)
-					.where(inArray(table.id, ids.slice(at, at + WHOLE_TABLE_ABOVE)));
-				for (const row of rows) found.add(row.id);
-			}
-			stored.set(kind, found);
-		}
-		for (const { op, kind, id, values } of writes) {
-			const table = localTables[TABLE_OF[kind]];
-			const where = eq(table.id, id);
-			if (op === 'delete') {
-				await tx.delete(table).where(where);
-				stored.get(kind)?.delete(id);
-				continue;
-			}
-			if (op === 'patch' || stored.get(kind)?.has(id)) {
-				await tx.update(table).set(values!).where(where);
-			} else {
-				await tx.insert(table).values({ ...values, id, userId: owner } as never);
-				stored.get(kind)?.add(id);
-			}
-		}
+export async function writeRows(owner: string, writes: readonly RowWrite[]): Promise<void> {
+	if (!writes.length) return;
+	const statements = writes.map(({ op, kind, id: entityId, values }) => {
+		const table = localTables[TABLE_OF[kind]] as typeof tasks;
+		const id = rowIdOf(kind, entityId, owner);
+		if (op === 'delete') return db.delete(table).where(eq(table.id, id));
+		if (op === 'patch') return db.update(table).set(values!).where(eq(table.id, id));
+		const row = { ...values, id, userId: owner };
+		return db
+			.insert(table)
+			.values(row as never)
+			.onConflictDoUpdate({ target: table.id, set: values as never });
 	});
+	await db.batch(statements as never);
+}
+
+/** Every task with a write the server has not acknowledged, with the oldest such write's sequence. */
+export async function queuedTasks(): Promise<{ id: string; row: number }[]> {
+	const { rows } = await localDatabase.exec(
+		`SELECT id, MIN(seq) AS row FROM _outbox WHERE "table" = 'tasks' GROUP BY id`,
+	);
+	return rows.map(([id, row]) => ({ id: String(id), row: Number(row) }));
 }

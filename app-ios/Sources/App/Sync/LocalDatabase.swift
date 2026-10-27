@@ -1,42 +1,31 @@
 import Core
 import Foundation
 import GRDB
-import PowerSync
-import PowerSyncGRDB
 
-/// The device's PowerSync database, `Application Support/procrastimate/procrastimate.sqlite`. GRDB reads and writes
-/// it through PowerSync's views of the synced tables; PowerSync queues every local write for upload and applies
-/// what the server streams.
+/// The device's database, `Application Support/procrastimate/sync.sqlite`: plain tables that sync-engine's triggers
+/// watch, so every local write GRDB makes is queued for sync, and that the engine fills with what the server sends.
+/// The file is new with the engine; PowerSync's `procrastimate.sqlite` beside it is the previous app's.
 final class LocalDatabase: Sendable {
-    static var url: URL { StoreLocation.directory.appending(path: "procrastimate.sqlite") }
+    static var url: URL { StoreLocation.directory.appending(path: "sync.sqlite") }
 
     let pool: DatabasePool
-    let powerSync: PowerSyncDatabaseProtocol
 
     init() throws {
         try FileManager.default.createDirectory(at: StoreLocation.directory, withIntermediateDirectories: true)
-        var configuration = Configuration()
-        try configuration.configurePowerSync(schema: syncSchema)
-        pool = try DatabasePool(path: Self.url.path, configuration: configuration)
-        powerSync = openPowerSyncWithGRDB(
-            pool: pool, schema: syncSchema, identifier: Self.url.lastPathComponent,
-            logger: DefaultLogger(minSeverity: .warning)
-        )
+        pool = try DatabasePool(path: Self.url.path)
     }
 
-    /// PowerSync creates its tables on its first call, so a fresh file has none until this returns. The change log and
-    /// its triggers come after them.
+    /// After the engine's `migrate`, which creates the synced tables: the change log and its triggers on them.
     func ready() async throws {
-        _ = try await powerSync.getPowerSyncVersion()
         try await pool.write { db in
             for statement in changeLogStatements { try db.execute(sql: statement) }
         }
     }
 
-    /// Until `ready` returns, the views keep the columns of the schema the last launch opened with, and GRDB traps on a
-    /// column a row lacks. A read before then checks this first, so a schema change skips the early read instead of
-    /// crashing the launch.
-    static func viewsMatchSchema(_ db: Database) throws -> Bool {
+    /// A fresh file has no tables until the engine migrates, and an older one may lack a newer column, on which GRDB
+    /// traps. A read before `ready` checks this first, so it skips instead of crashing the launch.
+    static func tablesMatchSchema(_ db: Database) throws -> Bool {
+        guard try db.tableExists(changeLogTable) else { return false }
         for type in syncedValues.values {
             let present = Set(try db.columns(in: type.layout.table).map(\.name))
             if type.layout.columns.contains(where: { !present.contains($0.name) }) { return false }
@@ -77,13 +66,13 @@ final class LocalDatabase: Sendable {
     /// What changed since `cursor`: the ids the log names and the rows that still have them. Every table whole when
     /// there is no cursor yet or the log no longer reaches back to it. GRDB reads in one transaction, so a sync applying
     /// between two tables cannot tear the result.
-    static func read(since cursor: Int64?, _ db: Database) throws -> Read {
+    static func read(since cursor: Int64?, me: String, _ db: Database) throws -> Read {
         let bounds = try Row.fetchOne(db, Change.select(min(Change.seq), max(Change.seq)))
         let first: Int64? = bounds?[0]
         let last: Int64 = bounds?[1] ?? 0
         let logged = first.map { last - $0 + 1 } ?? 0
         guard let cursor, first.map({ $0 <= cursor + 1 }) ?? true else {
-            return Read(cursor: last, logged: logged, changes: RowsRead(everything: try rows(db)))
+            return Read(cursor: last, logged: logged, changes: RowsRead(everything: try rows(db, me: me)))
         }
         guard last > cursor else { return Read(cursor: cursor, logged: logged, changes: RowsRead()) }
         let named = try Row.fetchAll(
@@ -91,13 +80,13 @@ final class LocalDatabase: Sendable {
         )
         let ids = Dictionary(grouping: named) { $0[Change.table] as String }.mapValues { $0.map { $0[Change.id] as String } }
         var changes = RowsRead()
-        changes.tasks = try changed(db, TaskItem.self, ids)
-        changes.projects = try changed(db, Project.self, ids)
-        changes.sections = try changed(db, ProjectSection.self, ids)
-        changes.labels = try changed(db, Label.self, ids)
-        changes.comments = try changed(db, Comment.self, ids)
-        changes.reads = try changed(db, CommentRead.self, ids)
-        changes.settings = try changed(db, API.Settings.self, ids)
+        changes.tasks = try changed(db, TaskItem.self, ids, me: me)
+        changes.projects = try changed(db, Project.self, ids, me: me)
+        changes.sections = try changed(db, ProjectSection.self, ids, me: me)
+        changes.labels = try changed(db, Label.self, ids, me: me)
+        changes.comments = try changed(db, Comment.self, ids, me: me)
+        changes.reads = try changed(db, CommentRead.self, ids, me: me)
+        changes.settings = try changed(db, API.Settings.self, ids, me: me)
         changes.access = try ids[Access.layout.table].map { ids in
             let whole = ids.count > wholeTableAbove
             return TableRead(ids: whole ? .all : .some(ids), rows: try decoded(db, Access.self, whole ? nil : ids).map(\.value))
@@ -112,7 +101,7 @@ final class LocalDatabase: Sendable {
     }
 
     /// Every synced row. A row that does not decode is left out and logged, so one bad row never hides the rest.
-    static func rows(_ db: Database) throws -> StoredRows {
+    static func rows(_ db: Database, me: String) throws -> StoredRows {
         var rows = StoredRows()
         rows.tasks = try owned(db, TaskItem.self)
         rows.projects = try owned(db, Project.self)
@@ -125,10 +114,13 @@ final class LocalDatabase: Sendable {
         return rows
     }
 
-    private static func changed<V: SyncedValue>(_ db: Database, _: V.Type, _ ids: [String: [String]]) throws -> TableRead<Owned<V>>? {
+    /// The log names rows by their row ids; the store keys a read by its task and the settings by `settingsID`.
+    private static func changed<V: SyncedValue>(_ db: Database, _: V.Type, _ ids: [String: [String]], me: String) throws -> TableRead<Owned<V>>? {
         guard let ids = ids[V.layout.table] else { return nil }
         let whole = ids.count > wholeTableAbove
-        return TableRead(ids: whole ? .all : .some(ids), rows: try owned(db, V.self, whole ? nil : ids))
+        let kind = V.layout.kind
+        let named = ids.map { id in kind.map { Rows.entityID($0, id, owner: me) } ?? id }
+        return TableRead(ids: whole ? .all : .some(named), rows: try owned(db, V.self, whole ? nil : ids))
     }
 
     private static func owned<V: SyncedValue>(_ db: Database, _: V.Type, _ ids: [String]? = nil) throws -> [Owned<V>] {
@@ -158,15 +150,16 @@ final class LocalDatabase: Sendable {
         }
     }
 
-    /// GRDB's `upsert` fails on a view and `save` of a new record writes nothing, so each op picks `insert`,
-    /// `updateChanges`, or `delete` itself. `updateChanges` compares GRDB's own encoding of the row before and after,
-    /// so only the columns that changed are written and queued, never a JSON column the server spelled differently.
+    /// Each op picks `insert`, `updateChanges`, or `delete` itself. `updateChanges` compares GRDB's own encoding of the
+    /// row before and after, so only the columns that changed are written and queued, never a JSON column the server
+    /// spelled differently.
     private static func apply<V: SyncedValue>(_ write: RowWrite, owner: String, _: V.Type, _ db: Database) throws {
+        let rowID = Rows.rowID(write.kind, write.id, owner: owner)
         if write.op == .delete {
-            try SyncedRow<V>.deleteOne(db, key: write.id)
+            try SyncedRow<V>.deleteOne(db, key: rowID)
             return
         }
-        let existing = try SyncedRow<V>.fetchOne(db, key: write.id)
+        let existing = try SyncedRow<V>.fetchOne(db, key: rowID)
         let base: JSONValue
         if let existing {
             base = try JSONValue.encoded(existing.value)
@@ -188,7 +181,7 @@ final class LocalDatabase: Sendable {
         if var existing {
             try existing.updateChanges(db) { $0.value = value }
         } else {
-            try SyncedRow(id: write.id, owner: owner, value: value).insert(db)
+            try SyncedRow(id: rowID, owner: owner, value: value).insert(db)
         }
     }
 }
