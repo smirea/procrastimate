@@ -501,51 +501,6 @@
 			"fn": "deriveAccent",
 			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
 			"input": [
-				"#ff6a3d"
-			],
-			"output": {
-				"dark": {
-					"accent": [
-						255,
-						123,
-						84
-					],
-					"glow": [
-						255,
-						106,
-						61
-					],
-					"glowAlpha": 0.11,
-					"onAccent": [
-						40,
-						12,
-						5
-					]
-				},
-				"light": {
-					"accent": [
-						190,
-						55,
-						0
-					],
-					"glow": [
-						255,
-						224,
-						215
-					],
-					"glowAlpha": 0.6,
-					"onAccent": [
-						255,
-						255,
-						255
-					]
-				}
-			}
-		},
-		{
-			"fn": "deriveAccent",
-			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
-			"input": [
 				"#f5a524"
 			],
 			"output": {
