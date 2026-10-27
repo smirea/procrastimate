@@ -730,6 +730,8 @@ private struct RejectedInput: Decodable {
     case "rejectionNotice":
         let rejected = try a(1, as: [RejectedInput].self).map { (kind: $0.kind, id: $0.id) }
         return try json(Rows.rejectionNotice(try a(0), rejected))
+    case "rowIdOf": return .string(Rows.rowID(try a(0), try a(1), owner: try a(2)))
+    case "entityIdOf": return .string(Rows.entityID(try a(0), try a(1), owner: try a(2)))
     default: throw unknown(fn)
     }
 }
