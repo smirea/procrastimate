@@ -58,7 +58,7 @@ export function sentryOptions(env: Env): CloudflareOptions {
 			// The default caps a body at 10 KB; a sync body is the one worth reading whole.
 			httpServerIntegration({ maxRequestBodySize: 'always', ignoreRequestBody: isTunnel }),
 			// A Sentry cron monitor per trigger, so a cron that never runs alerts, not only one that throws.
-			cronTriggersIntegration({ monitorSlug: cron => (cron === BACKUP_CRON ? 'postgres-backup' : 'push-delivery') }),
+			cronTriggersIntegration({ monitorSlug: cron => (cron === BACKUP_CRON ? 'daily-backup' : 'push-delivery') }),
 		],
 	};
 }

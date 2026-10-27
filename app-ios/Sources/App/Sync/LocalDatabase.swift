@@ -4,7 +4,6 @@ import GRDB
 
 /// The device's database, `Application Support/procrastimate/sync.sqlite`: plain tables that sync-engine's triggers
 /// watch, so every local write GRDB makes is queued for sync, and that the engine fills with what the server sends.
-/// The file is new with the engine; PowerSync's `procrastimate.sqlite` beside it is the previous app's.
 final class LocalDatabase: Sendable {
     static var url: URL { StoreLocation.directory.appending(path: "sync.sqlite") }
 
@@ -12,7 +11,15 @@ final class LocalDatabase: Sendable {
 
     init() throws {
         try FileManager.default.createDirectory(at: StoreLocation.directory, withIntermediateDirectories: true)
+        Self.removePowerSyncDatabase()
         pool = try DatabasePool(path: Self.url.path)
+    }
+
+    /// PowerSync's `procrastimate.sqlite` from before sync-engine. Nothing reads it, so it only takes up space.
+    private static func removePowerSyncDatabase() {
+        for suffix in ["", "-wal", "-shm"] {
+            try? FileManager.default.removeItem(at: StoreLocation.directory.appending(path: "procrastimate.sqlite\(suffix)"))
+        }
     }
 
     /// After the engine's `migrate`, which creates the synced tables: the change log and its triggers on them.
