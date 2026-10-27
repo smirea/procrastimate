@@ -227,7 +227,7 @@
 		{/if}
 		{#if editable}
 			<LinkedField text={title} class="px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre-wrap [overflow-wrap:anywhere]">
-				<SmartInput bind:value={() => title, (value) => (typed = value)} autofocus={untitled} tokens={parsed.tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+				<SmartInput bind:value={() => title, (value) => (typed = value)} autofocus={untitled} placeholder="Task name" tokens={parsed.tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
 			</LinkedField>
 		{:else}
 			<h2 class="text-[19px] font-semibold break-words"><LinkedText text={task.title} /></h2>

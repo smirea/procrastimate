@@ -48,7 +48,11 @@
 		const left = shownTask;
 		shownTask = id;
 		// Quick add expands an untitled draft into details. Left untitled, it was never a task, so it goes without an undo.
-		if (left && left !== id && untrack(() => store.task(left)?.title === '')) store.deleteTask(left);
+		if (left && left !== id) {
+			untrack(() => {
+				if (store.task(left)?.title === '') store.deleteTask(left);
+			});
+		}
 	});
 
 	afterNavigate(({ to }) => forgetAdded(to?.url.pathname ?? ''));
