@@ -260,6 +260,18 @@ iOS only. The web client has no App Intents. New features that can be done from 
 | `intent-delete-all`: deletes every task, project, and label                                                   | n/a | Built | Intents | —                                                                                    | n/a        | —          |
 | `intent-ramble`: Start Ramble opens quick add and starts the mic                                              | n/a | Built | R5      | —                                                                                    | n/a        | —          |
 
+### Widgets and controls
+
+iOS only. Browsers have no widget surface. See [iOS app](decisions/ios.md#widgets-and-controls).
+
+| Feature                                                                                         | Web | iOS   | Slice   | XCUITest                                                      | Playwright | Screenshot |
+| ----------------------------------------------------------------------------------------------- | --- | ----- | ------- | ------------------------------------------------------------- | ---------- | ---------- |
+| `widget-tasks`, `widget-config`: Tasks lists Today or any own list, configurable                | n/a | Built | Widgets | throwaway SpringBoard test; `swift test` (`WidgetListsTests`) | n/a        | —          |
+| `widget-complete`: the checkbox completes the task in the app and every widget updates          | n/a | Built | Widgets | throwaway SpringBoard test                                    | n/a        | —          |
+| `widget-open`, `widget-add`: rows, header, and `+` open the task, the list, or quick add        | n/a | Built | Widgets | throwaway SpringBoard test; `swift test` (`linksRoundTrip`)   | n/a        | —          |
+| `widget-progress`, `widget-quick-add`: the done-today ring and the quick add and Ramble buttons | n/a | Built | Widgets | throwaway SpringBoard test                                    | n/a        | —          |
+| `widget-lock-screen`, `widget-controls`: Lock Screen families and Control Center controls       | n/a | Built | Widgets | —                                                             | n/a        | —          |
+
 ## Thread split
 
 One PR per slice, each off `master`, never stacked. A slice starts once the slices it depends on have merged.

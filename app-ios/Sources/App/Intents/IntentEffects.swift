@@ -121,6 +121,23 @@ enum IntentEffects {
         }
     }
 
+    /// A widget's checkbox names the task it drew, so there is no title to resolve. A task already done or gone, such
+    /// as one completed on another device since, is left alone.
+    static func complete(id: String) async {
+        await withStore { store, _, _ in
+            guard let task = store.task(id), task.completedAt == nil else { return }
+            _ = store.completeTask(task.id)
+            note("widget-completed \(task.title)")
+        }
+    }
+
+    static func open(_ url: URL) {
+        let session = IntentSession.current!
+        guard let link = AppLink(url) else { return }
+        session.navigator.open(link, in: session.store, today: session.clock.today)
+        note("opened-link \(url.absoluteString)")
+    }
+
     static func reopen(_ entity: TaskEntity) async -> String {
         await withStore { store, _, session in
             guard let target = IntentRules.completionTarget(
@@ -255,6 +272,7 @@ enum IntentEffects {
         let session = IntentSession.current!
         let result = body(session.store, session.clock, session)
         SpotlightIndex.schedule(session)
+        WidgetSync.write(session.store, clock: session.clock)
         await session.notifications.resync()
         await SyncClient.shared(clock: session.clock).saved()
         return result

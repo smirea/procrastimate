@@ -112,8 +112,8 @@
             remoteInfo = Widgets;
         };
         A0000000000000000000003D = { isa = PBXTargetDependency; target = A00000000000000000000032; targetProxy = A0000000000000000000003C; };
-        /* Widgets links nothing from Core; it depends on it so Core's Generate phase writes Version.h before the
-           extension's Info.plist is processed. */
+        /* Widgets links Core for the list rules. The dependency also makes Core's Generate phase write Version.h and
+           Tokens.swift before the extension builds. */
         A00000000000000000000053 = {
             isa = PBXContainerItemProxy;
             containerPortal = A00000000000000000000001;
@@ -138,14 +138,15 @@
         A00000000000000000000066 = { isa = PBXBuildFile; productRef = A00000000000000000000064; };
         A00000000000000000000067 = { isa = PBXBuildFile; productRef = A00000000000000000000065; };
 
-        /* Activity: the Live Activity attributes, built into both the app and the widget extension. */
+        /* Shared: what both the app and the widget extension build, such as the widget intents, the app group, the Live
+           Activity attributes, and the theme's colors and symbols. */
         A00000000000000000000030 = {
             isa = PBXFileSystemSynchronizedRootGroup;
-            path = Sources/Activity;
+            path = Sources/Shared;
             sourceTree = "<group>";
         };
 
-        /* Widgets: the extension that draws the place Live Activity. */
+        /* Widgets: the extension that draws the home and lock screen widgets, the controls, and the place Live Activity. */
         A00000000000000000000031 = {
             isa = PBXFileSystemSynchronizedRootGroup;
             path = Sources/Widgets;
@@ -170,8 +171,10 @@
             path = Widgets.appex;
             sourceTree = BUILT_PRODUCTS_DIR;
         };
-        A00000000000000000000034 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-        A00000000000000000000035 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        A00000000000000000000034 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A0000000000000000000006C); runOnlyForDeploymentPostprocessing = 0; };
+        A00000000000000000000035 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A0000000000000000000006B); runOnlyForDeploymentPostprocessing = 0; };
+        A0000000000000000000006B = { isa = PBXBuildFile; fileRef = A00000000000000000000022; };
+        A0000000000000000000006C = { isa = PBXBuildFile; fileRef = A00000000000000000000043; };
         A00000000000000000000036 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 
         /* Core: Foundation-only logic, also built by Package.swift for `swift test`. */
@@ -318,6 +321,7 @@
         A00000000000000000000038 = {
             isa = XCBuildConfiguration;
             buildSettings = {
+                CODE_SIGN_ENTITLEMENTS = Config/Widgets.entitlements;
                 CODE_SIGN_STYLE = Automatic;
                 CURRENT_PROJECT_VERSION = 1;
                 DEVELOPMENT_TEAM = FNYFHG5SV7;
@@ -332,6 +336,7 @@
         A00000000000000000000039 = {
             isa = XCBuildConfiguration;
             buildSettings = {
+                CODE_SIGN_ENTITLEMENTS = Config/Widgets.entitlements;
                 CODE_SIGN_STYLE = Automatic;
                 CURRENT_PROJECT_VERSION = 1;
                 DEVELOPMENT_TEAM = FNYFHG5SV7;

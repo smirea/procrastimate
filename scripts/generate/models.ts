@@ -11,6 +11,7 @@ const HAND_WRITTEN: Record<string, string> = {
 	ContentState: "A Live Activity's state, which ActivityKit encodes on the device and never syncs.",
 	RambleMessage: 'The Ramble socket frame, decoded only inside the capture session.',
 	Pin: "An iOS tab bar pin, kept in this device's UserDefaults and never synced.",
+	WidgetData: "The iOS widgets' copy of the user's lists, written to this device's app group and never synced.",
 	RecentPick: "A place picked in the iOS Location sheet, kept in this device's UserDefaults and never synced.",
 };
 

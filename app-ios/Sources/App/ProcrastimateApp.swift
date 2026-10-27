@@ -113,11 +113,13 @@ struct ProcrastimateApp: App {
                 .onChange(of: store.projects) { _, _ in SpotlightIndex.schedule(session) }
                 .onChange(of: store.labels) { _, _ in SpotlightIndex.schedule(session) }
                 .task { SpotlightIndex.schedule(session) }
+                .modifier(WidgetSync.Follow(store: store, theme: theme, auth: auth, clock: clock))
                 .task { await PerfDemo.run(store: store, clock: clock, navigator: navigator, actions: actions) }
                 .task { await IntentHarness.run() }
                 .task { await SharingDemo.run(sync: sync) }
                 .task {
                     SectionsDemo.run(store: store, navigator: navigator)
+                    WidgetsDemo.run(store: store, clock: clock)
                     await PlacesDemo.run(store: store, calendar: calendar, navigator: navigator, clock: clock)
                 }
                 // An overlay sits outside the `.environment` calls above, so it gets the router itself; without it every
@@ -157,8 +159,8 @@ struct ProcrastimateApp: App {
             navigator.sheet = .settings
         } else if let token = SharedLinks.token(in: url) {
             navigator.sheet = .sharedLink(token: token)
-        } else if let id = Navigator.taskID(in: url), store.task(id) != nil {
-            navigator.openTask(id)
+        } else if let link = AppLink(url) {
+            navigator.open(link, in: store, today: clock.today)
         }
     }
 }

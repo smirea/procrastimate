@@ -148,10 +148,27 @@ final class Navigator {
         focusSearch = true
     }
 
-    /// The task a `procrastimate://task/<id>` link names, such as one from Notouroboros.
-    static func taskID(in url: URL) -> String? {
-        guard url.scheme == "procrastimate", url.host() == "task", url.pathComponents.count == 2 else { return nil }
-        return url.pathComponents[1]
+    /// Follows a `procrastimate://` link from a widget, a control, or another app such as Notouroboros. A task that is
+    /// gone, or a list the catalog no longer has, opens nothing; quick add and Ramble then open with no context.
+    func open(_ link: AppLink, in store: Store, today: DateKey) {
+        func list(_ key: String?) -> WidgetList? {
+            guard let key else { return nil }
+            if key == WidgetList.today.key { return .today }
+            return store.listCatalog(today: today).lazy.flatMap(\.entries).map(Pin.init).first { $0.key == key }.map(WidgetList.pin)
+        }
+        switch link {
+        case let .task(id):
+            guard store.task(id) != nil else { return }
+            openTask(id)
+        case let .list(key):
+            guard let list = list(key) else { return }
+            sheet = nil
+            open(list.route)
+        case let .add(key):
+            sheet = .quickAdd(store.quickAddDefaults(list(key)?.screen(today: today)))
+        case let .ramble(key):
+            sheet = .ramble(store.quickAddDefaults(list(key)?.screen(today: today)))
+        }
     }
 
     /// Opens what a share link points at in a space this user is already a member of, instead of the read-only
