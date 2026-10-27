@@ -39,6 +39,8 @@ run([
 	`id=${udid}`,
 	'-derivedDataPath',
 	derived,
+	'-clonedSourcePackagesDirPath',
+	`${root}app-ios/DerivedData/SourcePackages`,
 	'CODE_SIGN_IDENTITY=-',
 	'SENTRY_ENVIRONMENT=development',
 	`API_URL=${api.replaceAll('//', '/$()/')}`,
