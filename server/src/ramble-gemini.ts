@@ -168,7 +168,7 @@ export class LiveTasks {
 
 	#delete(id: string) {
 		this.#nodes.delete(id);
-		for (const node of [...this.#nodes.values()]) if (node.parent === id) this.#delete(node.id);
+		for (const node of this.#nodes.values()) if (node.parent === id) this.#delete(node.id);
 	}
 }
 

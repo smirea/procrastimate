@@ -7,6 +7,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, write
 import { createServer } from 'node:net';
 import { basename, join } from 'node:path';
 import { readOverride, run as runCommand, worktrees } from './lib';
+import { MAX_WORKTREE, OFFSET, worktreeOf, worktreePort } from './ports.mts';
 
 const run = (cmd: string[]) => runCommand(cmd, { stdio: 'inherit-stderr' });
 const git = (...args: string[]) => runCommand(['git', ...args]);
@@ -27,12 +28,8 @@ if (wanted && wanted !== git('branch', '--show-current')) {
 
 run(['bun', 'install', '--frozen-lockfile']);
 
-const FIRST_BLOCK = 6200;
-const LAST_BLOCK = 6980;
-
-function readPort(worktree: string): number | undefined {
-	const port = Number(readOverride(worktree)?.CLIENT_PORT);
-	return port >= FIRST_BLOCK ? port : undefined;
+function worktreeNumber(worktree: string): number | undefined {
+	return worktreeOf(Number(readOverride(worktree)?.CLIENT_PORT));
 }
 
 function portFree(port: number): Promise<boolean> {
@@ -43,25 +40,25 @@ function portFree(port: number): Promise<boolean> {
 	});
 }
 
-// Each block holds web/api at +0/+1 and the e2e web/api at +10/+11 (playwright.config.ts derives its ports from
-// CLIENT_PORT).
-const OFFSETS = [0, 1, 10, 11];
-async function pickBlock(): Promise<number> {
-	const previous = readPort(root);
+// A worktree set up under an older scheme has no number yet, so a rerun moves it into the current one.
+async function pickWorktreeNumber(): Promise<number> {
+	const previous = worktreeNumber(root);
 	if (previous) return previous;
-	const claimed = new Set(worktrees(root).map(entry => readPort(entry.path)));
-	for (let base = FIRST_BLOCK; base <= LAST_BLOCK; base += 20) {
-		if (claimed.has(base)) continue;
-		const free = await Promise.all(OFFSETS.map(offset => portFree(base + offset)));
-		if (free.every(Boolean)) return base;
+	const claimed = new Set(worktrees(root).map(entry => worktreeNumber(entry.path)));
+	for (let n = 1; n <= MAX_WORKTREE; n++) {
+		if (claimed.has(n)) continue;
+		const free = await Promise.all(Object.values(OFFSET).map(offset => portFree(worktreePort(n) + offset)));
+		if (free.every(Boolean)) return n;
 	}
-	throw new Error(`No free port block between ${FIRST_BLOCK} and ${LAST_BLOCK}.`);
+	throw new Error(
+		`All ${MAX_WORKTREE} worktree port blocks (${worktreePort(1)} to ${worktreePort(MAX_WORKTREE) + 9}) are claimed or busy. Tear down merged worktrees first: bun scripts/worktree-gc.ts lists them.`,
+	);
 }
 
 // A detached HEAD (mid-rebase) has no branch; the worktree directory is unique too, and teardown reads the name back from ./sim.
 const branch = git('branch', '--show-current') || basename(root);
 
-// Parallel setups would otherwise pick the same unclaimed block; mkdir is atomic, so it serves as the lock.
+// Parallel setups would otherwise pick the same unclaimed number; mkdir is atomic, so it serves as the lock.
 const lock = join(git('rev-parse', '--git-common-dir'), 'setup-worktree.lock');
 for (const started = Date.now(); ; await Bun.sleep(100)) {
 	try {
@@ -75,15 +72,17 @@ for (const started = Date.now(); ; await Bun.sleep(100)) {
 }
 let base: number;
 try {
-	base = await pickBlock();
+	base = worktreePort(await pickWorktreeNumber());
 	writeFileSync(
 		join(root, '.env.override'),
-		[`CLIENT_PORT=${base}`, `API_PORT=${base + 1}`, `API_URL=http://127.0.0.1:${base + 1}`, ''].join('\n'),
+		[`CLIENT_PORT=${base}`, `API_PORT=${base + OFFSET.api}`, `API_URL=http://127.0.0.1:${base + OFFSET.api}`, ''].join(
+			'\n',
+		),
 	);
 } finally {
 	rmSync(lock, { recursive: true, force: true });
 }
-const apiUrl = `http://127.0.0.1:${base + 1}`;
+const apiUrl = `http://127.0.0.1:${base + OFFSET.api}`;
 
 // Never `env-manager down`: the dev environment holds cloud credentials, and a worktree needs none.
 run(['env-manager', 'gen', '--local']);
@@ -106,5 +105,5 @@ Worktree ready on ${branch}.
   web        http://127.0.0.1:${base}  (bun run start)
   api        ${apiUrl}
   database   ${databaseFile}${resetDb ? '  (reset)' : ''}
-  e2e        ports ${base + 10}-${base + 11}, with a database of their own  (bun run test:e2e)
+  e2e        ports ${base + OFFSET.e2eWeb}-${base + OFFSET.e2eApi}, with a database of their own  (bun run test:e2e)
   ios        ./sim  (simulator "${simulator}", created on first run; ./sim 2 for a second one)`);

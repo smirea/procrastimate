@@ -504,8 +504,10 @@ function relabel(
 		own.map(l => {
 			const order = orders.get(l.taskId);
 			if (!order || !order.full.includes(l.labelId)) return l;
-			const newer = labelings.slice(i + 1).flatMap(n => n.filter(m => m.taskId === l.taskId).map(m => m.labelId));
-			const on = (id: string) => order.now.includes(id) || newer.includes(id);
+			const newer = new Set(
+				labelings.slice(i + 1).flatMap(n => n.filter(m => m.taskId === l.taskId).map(m => m.labelId)),
+			);
+			const on = (id: string) => order.now.includes(id) || newer.has(id);
 			return { ...l, index: order.full.slice(0, order.full.indexOf(l.labelId)).filter(on).length };
 		}),
 	);
