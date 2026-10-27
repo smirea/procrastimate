@@ -44,7 +44,7 @@ export type SyncContext = {
 	clientId: string | null;
 	/** Spaces whose owner's rights the actor holds: an AI account that manages them through the agent API. */
 	manages: ReadonlySet<string>;
-	/** What `admit` learned about each write it let through, by `table:id`, for `landed`. */
+	/** What `admit` learned about each write it let through, by `table:id:seq`, for `landed`. */
 	landing: Map<string, Landing>;
 	/** The actor's `access` rows per space it wrote to as a guest, grown by the tasks a batch adds. */
 	guestRows: Map<string, GuestRowsList>;
@@ -72,7 +72,8 @@ export function syncContext(
 export const OTHER_SPACE = 'Belongs to another space';
 const NOT_SHARED = 'Not shared with you';
 
-const key = (table: string, id: string) => `${table}:${id}`;
+/** One write of a request: a device's carries its sequence, and the server's own write one per row. */
+const key = (write: Pick<Write, 'table' | 'id' | 'seq'>) => `${write.table}:${write.id}:${write.seq}`;
 const tableOf = (kind: Kind) => ENTITY_TABLES[kind] as SQLiteTable;
 
 type StoredEntity = Fields & { userId: string };
@@ -133,9 +134,11 @@ function admitOwn(
 	return write.op === 'put' ? { ...fields, userId: actor } : without(fields, 'userId');
 }
 
-function admitEntity(db: Db, ctx: SyncContext, kind: Kind, write: Write, fields: Fields): Fields | string {
+function admitEntity(db: Db, ctx: SyncContext, kind: Kind, write: Write, fields: Fields): Fields | string | null {
 	const actor = ctx.actor.id;
 	const before = stored(db, kind, write.id);
+	// Already gone: the device's tombstone comes back with the response, and nothing derives from a row that is not here.
+	if (write.op === 'delete' && !before) return null;
 	if (write.op === 'put' && before && before.userId !== fields.userId) return OTHER_SPACE;
 	const owner = before?.userId ?? (write.op === 'put' ? String(fields.userId) : actor);
 	let next = write.op === 'put' ? fields : without(fields, 'userId');
@@ -173,7 +176,7 @@ function admitEntity(db: Db, ctx: SyncContext, kind: Kind, write: Write, fields:
 			if ('completedAt' in next || 'lastCompletedAt' in next) next.completedBy = completedBy(actor, next, before);
 		}
 	}
-	ctx.landing.set(key(write.table, write.id), { owner, kind, fields: without(next, 'userId', 'id') });
+	ctx.landing.set(key(write), { owner, kind, fields: without(next, 'userId', 'id') });
 	return next;
 }
 
@@ -188,7 +191,7 @@ function admit(db: Db, write: Write, ctx: SyncContext): Write | string | null {
 			: admitEntity(db, ctx, kind, write, fields);
 	if (next === null || typeof next === 'string') return next;
 	if (kind === 'read' || kind === 'settings') {
-		ctx.landing.set(key(write.table, write.id), { owner: ctx.actor.id, kind, fields: without(next, 'userId', 'id') });
+		ctx.landing.set(key(write), { owner: ctx.actor.id, kind, fields: without(next, 'userId', 'id') });
 	}
 	if (write.op === 'delete') return write;
 	return { ...write, values: toWire(table, without(next, 'id')) };
@@ -200,7 +203,7 @@ function opId(ctx: SyncContext, write: Write): string {
 
 function landed(db: Db, writes: readonly Write[], ctx: SyncContext, server: ServerWriter): void {
 	const entries = writes.flatMap(write => {
-		const landing = ctx.landing.get(key(write.table, write.id));
+		const landing = ctx.landing.get(key(write));
 		return landing ? [{ write, landing }] : [];
 	});
 	if (!entries.length) return;

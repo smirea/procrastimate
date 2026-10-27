@@ -34,11 +34,16 @@ async function syncRoute(request: Request, app: App): Promise<Response> {
 		return Response.json({ error: 'AI accounts write through the agent API' }, { status: 403 });
 	const client = clientOf(request);
 	if (!client) return Response.json({ error: 'Invalid client header' }, { status: 400 });
-	const body = await request.text();
+	// The engine keeps each client's last sequence by client id; scoping it to the user keeps anyone who learned another
+	// device's id from acknowledging that device's writes away.
+	let body = await request.text();
 	let clientId: string | null = null;
 	try {
 		const parsed = JSON.parse(body) as { client?: unknown };
-		if (typeof parsed.client === 'string') clientId = parsed.client;
+		if (typeof parsed.client === 'string') {
+			clientId = `${actor.id}:${parsed.client}`;
+			body = JSON.stringify({ ...parsed, client: clientId });
+		}
 	} catch {
 		// handleSync answers 400 for a body that is not JSON.
 	}

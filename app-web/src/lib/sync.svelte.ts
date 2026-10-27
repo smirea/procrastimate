@@ -76,19 +76,28 @@ async function refreshPeople() {
 export function startSync(userId: string): () => void {
 	let stopped = false;
 	const shown = new Set<string>();
-	// Offline or a failing server, the token fetch is tried again until it lands or sync stops.
-	const connect = async (): Promise<void> => {
-		for (let wait = RETRY_DELAY; !stopped; wait = Math.min(wait * 2, MAX_RETRY_DELAY)) {
-			try {
-				const next = await token();
-				if (!stopped && next) await localDatabase.setToken(next);
-				return;
-			} catch (error) {
-				if (navigator.onLine) reportError(error);
-				await new Promise(resolve => setTimeout(resolve, wait));
+	// Offline or a failing server, the token fetch is tried again until it lands or sync stops. One attempt runs at a
+	// time. A token that comes back unchanged after a 401 changes nothing in the worker, so the explicit sync restarts
+	// the loop; a session that is really gone fails the token fetch instead, which signs out.
+	let connecting: Promise<void> | null = null;
+	const connect = (): Promise<void> =>
+		(connecting ??= (async () => {
+			for (let wait = RETRY_DELAY; !stopped; wait = Math.min(wait * 2, MAX_RETRY_DELAY)) {
+				try {
+					const next = await token();
+					if (!stopped && next) {
+						await localDatabase.setToken(next);
+						await localDatabase.sync().catch(() => {});
+					}
+					return;
+				} catch (error) {
+					if (navigator.onLine) reportError(error);
+					await new Promise(resolve => setTimeout(resolve, wait));
+				}
 			}
-		}
-	};
+		})().finally(() => {
+			connecting = null;
+		}));
 	store
 		.open(userId)
 		.then(() => (stopped ? undefined : connect()))

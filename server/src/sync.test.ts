@@ -309,7 +309,7 @@ describe('POST /api/sync', () => {
 			kind: 'task',
 			op: 'put',
 			actor: owner.person.id,
-			opId: `${phone.client}:1`,
+			opId: `${owner.person.id}:${phone.client}:1`,
 			client: { kind: 'web', device: 'test' },
 		});
 		expect(rows[0]!.fields).toMatchObject({ title: 'Logged' });
@@ -484,5 +484,19 @@ describe('POST /api/sync', () => {
 		]);
 		expect(response.rejected.map(r => r.reason)).toEqual(['Not shared with you']);
 		expect(response.rows.filter(row => row.table === 'tasks')).toEqual([{ table: 'tasks', id, deleted: 1 }]);
+	});
+
+	test('a revoked guest loses a task that changed in the same delta', async () => {
+		const host = await signUp(app, 'Host');
+		const guest = await signUp(app, 'Guest');
+		const id = crypto.randomUUID();
+		await upload(host, [{ op: 'put', table: 'tasks', id, values: taskRow(id, host.person.id, 'Shared') }]);
+		const share = await shareWith(app, host, { kind: 'task', id }, guest.person.id, 'view');
+		const phone = device(guest);
+		await syncAs(app, phone);
+		await upload(host, [{ op: 'patch', table: 'tasks', id, values: { title: 'Renamed, then unshared' } }]);
+		await app.fetch(`/api/shares?id=${share.id}`, { method: 'DELETE', headers: host.headers });
+		const rows = (await syncAs(app, phone)).rows.filter(row => row.table === 'tasks');
+		expect(rows).toEqual([{ table: 'tasks', id, deleted: 1 }]);
 	});
 });

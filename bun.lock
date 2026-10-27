@@ -20,7 +20,7 @@
         "lefthook": "^2.2.1",
         "oxfmt": "^0.72.0",
         "oxlint": "^1.87.0",
-        "sync-engine": "github:smirea/sync-engine#4a9fd29",
+        "sync-engine": "github:smirea/sync-engine#46a688c",
         "tailwindcss": "^4.3.3",
         "typescript": "^7.0.2",
         "vite": "^8.3.4",
@@ -788,7 +788,7 @@
 
     "svelte": ["svelte@5.57.2", "", { "dependencies": { "@jridgewell/remapping": "^2.3.5", "@jridgewell/sourcemap-codec": "^1.6.0", "@sveltejs/acorn-typescript": "^1.0.13", "@types/estree": "^1.0.9", "acorn": "^8.18.0", "aria-query": "5.3.1", "axobject-query": "^4.1.0", "clsx": "^2.1.1", "devalue": "^5.9.2", "esm-env": "^1.2.1", "esrap": "^2.3.6", "is-reference": "^3.0.3", "locate-character": "^3.0.0", "magic-string": "^0.30.11", "zimmerframe": "^1.1.2" } }, "sha512-1YiPCAXT0Ct6g1vOMmSLa0Nsc3QRMvtDF32ihgglGVrugIuIK38RyDiFNXVDhtQ81TJjSO57NdMw6DyYLqSGDQ=="],
 
-    "sync-engine": ["sync-engine@github:smirea/sync-engine#4a9fd29", { "dependencies": { "drizzle-orm": "^0.45.1", "zod": "^4.1.13" }, "peerDependencies": { "@cloudflare/workers-types": "^4.20251011.0", "@sqlite.org/sqlite-wasm": "3.54.1-build1" }, "optionalPeers": ["@cloudflare/workers-types", "@sqlite.org/sqlite-wasm"], "hasInstallScript": true }, "smirea-sync-engine-4a9fd29", "sha512-W9sKzUyedXrfKKhmakqewv1sWdAJqFWU/OQ1nmKtKbcAxUtKaHP0s0QiG3hty5oMRxTF9rvBBHBqeaoVusqZOg=="],
+    "sync-engine": ["sync-engine@github:smirea/sync-engine#46a688c", { "dependencies": { "drizzle-orm": "^0.45.1", "zod": "^4.1.13" }, "peerDependencies": { "@cloudflare/workers-types": "^4.20251011.0", "@sqlite.org/sqlite-wasm": "3.54.1-build1" }, "optionalPeers": ["@cloudflare/workers-types", "@sqlite.org/sqlite-wasm"], "hasInstallScript": true }, "smirea-sync-engine-46a688c", "sha512-hOp/O8gqTeM/tvT9EUkh5V+4cxyVEvY8HOxl3ldyPUzgVtSQqyOwH2ZVLAD5ZyQ4hRA6/fjNU3TPZTgCgyk7Bg=="],
 
     "tagged-tag": ["tagged-tag@1.0.0", "", {}, "sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng=="],
 
