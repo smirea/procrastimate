@@ -24,7 +24,11 @@ function open(): WebDatabase {
 		client: JSON.stringify(client()),
 		file: localStorage.getItem(DATABASE_FILE_KEY) ?? '',
 	});
-	opened ??= openSyncDatabase({ worker: new Worker(`${workerUrl}?${query}`, { type: 'module' }) });
+	if (!opened) {
+		opened = openSyncDatabase({ worker: new Worker(`${workerUrl}?${query}`, { type: 'module' }) });
+		// PowerSync's IndexedDB database from before sync-engine. Nothing reads it, so it only takes up the quota.
+		indexedDB.deleteDatabase('procrastimate.db');
+	}
 	return opened;
 }
 
