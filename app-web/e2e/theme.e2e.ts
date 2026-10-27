@@ -71,7 +71,7 @@ test('a custom theme color derives a readable accent in each theme, survives a r
 	await app.customAccent().fill('#ffff00');
 	await expect.poll(() => app.accent()).toBe('#6b6b00');
 	await expect(app.accentOption('Frost')).toHaveAttribute('aria-checked', 'false');
-	await expect(app.settings().getByText('#ffff00')).toBeVisible();
+	await expect(app.settings().getByTitle('#FFFF00')).toHaveAttribute('data-checked', 'true');
 	await page.emulateMedia({ colorScheme: 'dark' });
 	await expect.poll(() => app.accent()).toBe('#aeae00');
 

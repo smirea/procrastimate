@@ -2,53 +2,55 @@ import Core
 import SwiftUI
 import UIKit
 
-/// The theme colors as a grid of swatches, each drawn in its own derived accent for the current appearance, and a
-/// custom color from the system picker under them.
+/// The theme colors as two rows of swatches, each drawn in its own derived accent for the current appearance; the last
+/// one opens the system picker for a custom color, and shows it once picked.
 struct AccentPicker: View {
     @Environment(ThemeSettings.self) private var theme
 
     var body: some View {
-        VStack(spacing: 12) {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 12) {
-                ForEach(AccentChoice.allCases) { choice in
-                    let colors = AccentColors.presets[choice]!
-                    Button {
-                        withAnimation(.snappy) { theme.chooseAccent(.preset(choice)) }
-                    } label: {
-                        Swatch(colors: colors, selected: theme.accent == .preset(choice))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(choice.name)
-                    .accessibilityIdentifier("Accent \(choice.name)")
-                    .accessibilityAddTraits(theme.accent == .preset(choice) ? .isSelected : [])
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 12) {
+            ForEach(AccentChoice.allCases) { choice in
+                let colors = AccentColors.presets[choice]!
+                Button {
+                    withAnimation(.snappy) { theme.chooseAccent(.preset(choice)) }
+                } label: {
+                    Swatch(fill: AnyShapeStyle(colors.tint), onFill: colors.onTint, ring: colors.tint, selected: theme.accent == .preset(choice))
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel(choice.name)
+                .accessibilityIdentifier("Accent \(choice.name)")
+                .accessibilityAddTraits(theme.accent == .preset(choice) ? .isSelected : [])
             }
-
-            ColorPicker(selection: custom, supportsOpacity: false) {
-                HStack(spacing: 12) {
-                    if theme.accent.preset == nil {
-                        Swatch(colors: theme.colors, selected: true, size: 28)
-                    } else {
-                        Circle()
-                            .fill(AngularGradient(colors: [.red, .orange, .yellow, .green, .cyan, .blue, .purple, .pink, .red], center: .center))
-                            .frame(width: 28, height: 28)
-                            .padding(3)
-                    }
-                    Text("Custom")
-                    if theme.accent.preset == nil {
-                        Spacer()
-                        Text(theme.accent.base.uppercased())
-                            .font(.footnote.monospaced())
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .padding(.horizontal, 8)
-            .accessibilityIdentifier("Accent Custom")
-            .accessibilityAddTraits(theme.accent.preset == nil ? .isSelected : [])
+            customSwatch
         }
         .padding(.vertical, 4)
     }
+
+    /// The system well can't be restyled, so the swatch covers it and lets taps through. A transparent well stops
+    /// opening the picker.
+    private var customSwatch: some View {
+        let selected = theme.accent.preset == nil
+        return ColorPicker("Custom", selection: custom, supportsOpacity: false)
+            .labelsHidden()
+            .overlay {
+                Swatch(
+                    fill: selected ? AnyShapeStyle(theme.colors.tint) : AnyShapeStyle(Self.rainbow),
+                    onFill: theme.colors.onTint,
+                    ring: theme.colors.tint,
+                    selected: selected
+                )
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+            }
+            .accessibilityValue(selected ? theme.accent.base.uppercased() : "")
+            .accessibilityIdentifier("Accent Custom")
+            .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    private static let rainbow = AngularGradient(
+        colors: [.red, .orange, .yellow, .green, .cyan, .blue, .purple, .pink, .red],
+        center: .center
+    )
 
     /// Opens on the current base color; a pick is stored as its sRGB `#rrggbb`, which the web reads the same way.
     private var custom: Binding<Color> {
@@ -67,23 +69,24 @@ struct AccentPicker: View {
 }
 
 private struct Swatch: View {
-    let colors: AccentColors
+    let fill: AnyShapeStyle
+    let onFill: Color
+    let ring: Color
     let selected: Bool
-    var size: CGFloat = 44
 
     var body: some View {
         Circle()
-            .fill(colors.tint)
-            .frame(width: size, height: size)
+            .fill(fill)
+            .frame(width: 44, height: 44)
             .overlay {
                 if selected {
                     Image(systemName: "checkmark")
-                        .font(size < 40 ? .caption.weight(.bold) : .subheadline.weight(.bold))
-                        .foregroundStyle(colors.onTint)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(onFill)
                         .transition(.scale.combined(with: .opacity))
                 }
             }
             .padding(3)
-            .overlay { Circle().strokeBorder(colors.tint, lineWidth: selected ? 2 : 0) }
+            .overlay { Circle().strokeBorder(ring, lineWidth: selected ? 2 : 0) }
     }
 }

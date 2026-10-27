@@ -11,7 +11,6 @@ export const ACCENTS = {
 	violet: { name: 'Violet', base: '#9b5cff' },
 	pink: { name: 'Pink', base: '#f0479b' },
 	red: { name: 'Red', base: '#ef4444' },
-	orange: { name: 'Orange', base: '#ff6a3d' },
 	amber: { name: 'Amber', base: '#f5a524' },
 	green: { name: 'Green', base: '#22c55e' },
 	teal: { name: 'Teal', base: '#14b8a6' },
