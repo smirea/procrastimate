@@ -1,11 +1,23 @@
-import { expect, test as base, type Browser, type BrowserContext, type Page } from '@playwright/test';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import {
+	expect,
+	test as base,
+	type APIRequestContext,
+	type Browser,
+	type BrowserContext,
+	type BrowserContextOptions,
+	type Page,
+} from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
 import { getTableColumns } from 'drizzle-orm';
 import { ENTITY_TABLES } from '../../shared/db/schema';
 import type { Kind } from '../../shared/model';
-import { KIND_OF, TABLE_OF } from '../../shared/rows';
+import { KIND_OF, rowIdOf, TABLE_OF } from '../../shared/rows';
 import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
 import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
+import { DATABASE_FILE_KEY } from '../../shared/local-database';
 
 export const NOW = new Date('2026-10-14T10:00:00Z');
 
@@ -13,9 +25,8 @@ export const E2E_PASSWORD = 'e2e-password-1';
 
 /**
  * How long a page may take to open its local database and show its first heading. A fresh WebKit context builds its
- * SQLite database on IndexedDB from nothing: 0.3 to 0.5 s with one worker, but 2 to 15 s with eight WebKit workers at
- * once on a Mac shared with other agents, against Chromium's 1.6 s. PowerSync's open of its IndexedDB database after
- * an account switch took up to 11.4 s in CI's Linux WebKit (#185). Assertions after it keep the default.
+ * SQLite database from nothing, which took 2 to 15 s with eight WebKit workers at once on a Mac shared with other
+ * agents, against Chromium's 1.6 s. Assertions after it keep the default.
  */
 export const BOOT_TIMEOUT = 30_000;
 
@@ -54,7 +65,7 @@ export const unique = (name: string) => `${name} x${crypto.randomUUID().slice(0,
  */
 export async function deviceContext(browser: Browser, { timezoneId }: { timezoneId?: string } = {}) {
 	const { baseURL, viewport, isMobile, hasTouch, userAgent, deviceScaleFactor, ...use } = test.info().project.use;
-	return browser.newContext({
+	return freshContext(browser, {
 		baseURL,
 		timezoneId: timezoneId ?? use.timezoneId,
 		viewport,
@@ -66,11 +77,58 @@ export async function deviceContext(browser: Browser, { timezoneId }: { timezone
 	});
 }
 
-const SYNC_ROUTES = /\/api\/(powersync\/|upload|sync\/token)/;
+/** Watches a context `freshContext` launched outside `browser.newContext`, which `sentryOff` cannot see. */
+let watchLaunched: ((context: BrowserContext) => BrowserContext) | null = null;
+
+/**
+ * A context of its own. WebKit fails every OPFS call in Playwright's ephemeral contexts, and the app keeps its
+ * database in OPFS, so a WebKit context is a persistent one in a temporary profile, as Safari's own is. Playwright's
+ * persistent WebKit contexts all share one OPFS store, whatever their profile, so each gets a database file of its own
+ * through the app's test-only `DATABASE_FILE_KEY`; their `localStorage` is their own.
+ */
+async function freshContext(browser: Browser, options: BrowserContextOptions): Promise<BrowserContext> {
+	if (browser.browserType().name() !== 'webkit') return browser.newContext(options);
+	const profile = mkdtempSync(join(tmpdir(), 'procrastimate-webkit-'));
+	const context = await browser.browserType().launchPersistentContext(profile, { ...options, headless: true });
+	context.on('close', () => rmSync(profile, { recursive: true, force: true }));
+	const file = `e2e-${crypto.randomUUID()}.sqlite`;
+	await context.addInitScript(([key, name]) => localStorage.setItem(key!, name!), [DATABASE_FILE_KEY, file]);
+	return watchLaunched ? watchLaunched(context) : context;
+}
+
+/**
+ * Writes as another device of the session would: one sync request under a client id of its own, with a cursor past
+ * any head so it pulls nothing back. Answers what the server refused.
+ */
+export async function syncWrites(request: APIRequestContext, writes: unknown[]): Promise<unknown[]> {
+	const response = await request.post('/api/sync', {
+		data: {
+			protocol: 2,
+			client: crypto.randomUUID(),
+			cursor: 2 ** 40,
+			writes: writes.map((write, index) => ({ ...(write as object), seq: index + 1 })),
+		},
+	});
+	expect(response.status(), await response.text()).toBe(200);
+	return ((await response.json()) as { rejected: unknown[] }).rejected;
+}
+
+const SYNC_ROUTES = /\/api\/(sync|live)(\/|\?|$)/;
 
 export async function goOffline(context: BrowserContext) {
 	await context.route(SYNC_ROUTES, route => route.abort('internetdisconnected'));
 	await context.setOffline(true);
+}
+
+/**
+ * Brings the browser back online with the sync routes still refused, so a reload can load the page without syncing.
+ * The engine syncs on `online`, and Chromium sends a request the route still holds when a reload ends its worker, so
+ * this returns once that sync is refused.
+ */
+export async function onlineRefusingSync(context: BrowserContext) {
+	const refused = context.waitForEvent('requestfailed', { predicate: request => SYNC_ROUTES.test(request.url()) });
+	await context.setOffline(false);
+	await refused;
 }
 
 export async function goOnline(context: BrowserContext) {
@@ -97,8 +155,8 @@ export async function signInAccount(context: BrowserContext) {
  * resource`, carry no arguments.
  */
 /**
- * WebKit's words for a request it cancelled because the page navigated, such as PowerSync's token fetch during a
- * reload. PowerSync logs it and tries again after the reload, so it is not a crash. The single-origin spec still fails
+ * WebKit's words for a request it cancelled because the page navigated, such as the token fetch during a reload. The
+ * app tries again after the reload, so it is not a crash. The single-origin spec still fails
  * on any request that really leaves the origin.
  */
 const NAVIGATION_ABORT = /due to access control checks\.$/;
@@ -148,7 +206,9 @@ export const quietTest = base.extend<{ sentryOff: (context: BrowserContext) => B
 			};
 			const newContext = browser.newContext;
 			browser.newContext = async options => watch(await newContext.call(browser, options));
+			watchLaunched = watch;
 			await use(watch);
+			watchLaunched = null;
 			browser.newContext = newContext;
 			expect(reported, 'Sentry is off in tests').toEqual([]);
 		},
@@ -224,12 +284,14 @@ export async function ownerWithProject(devices: Devices) {
 }
 
 export const test = quietTest.extend<{ app: App; devices: Devices }>({
-	context: async ({ context, sentryOff }, use) => {
+	context: async ({ context: ephemeral, browser, sentryOff }, use) => {
+		const context = browser.browserType().name() === 'webkit' ? await deviceContext(browser) : ephemeral;
 		sentryOff(context);
 		await signInAccount(context);
 		const errors = watchPageErrors(context);
 		await use(context);
 		expect(await errors(), 'uncaught page errors').toEqual([]);
+		if (context !== ephemeral) await context.close();
 	},
 	app: async ({ page }, use) => {
 		await page.clock.setFixedTime(NOW);
@@ -284,13 +346,43 @@ export class App {
 		await expect(this.taskInput()).toBeFocused();
 	}
 
+	/** Adds each title in one quick add, which stays open between them, then leaves it for the last task's list. */
 	async add(...titles: string[]) {
+		await this.openQuickAdd();
 		for (const title of titles) {
-			await this.openQuickAdd();
 			await this.taskInput().fill(title);
-			await this.taskInput().press('Enter');
-			await expect(this.quickAdd()).toBeHidden();
+			await this.save();
 		}
+		await this.showAdded();
+	}
+
+	/** Saves the draft with Enter. Toasts from earlier saves are marked, so `showAdded` reads only this save's. */
+	async save() {
+		await this.page
+			.locator('[role="status"]')
+			.evaluateAll(toasts => toasts.forEach(t => t.setAttribute('data-earlier', '')));
+		await this.taskInput().press('Enter');
+		await expect(this.taskInput()).toHaveValue('');
+	}
+
+	/**
+	 * Leaves quick add for the list the last save went to, named by its `Added to` toast when another list holds it.
+	 * The sidebar gets there rather than the toast's `Show`, which can time out before a loaded phone WebKit taps it.
+	 */
+	async showAdded() {
+		const toast = this.page.locator('[role="status"]:not([data-earlier])').filter({ hasText: /^Added to / });
+		const added = (await toast.count()) ? await toast.textContent() : null;
+		await this.closeQuickAdd();
+		const list = added?.match(/^Added to (.+?)\s*Show$/)?.[1];
+		if (!list) return;
+		const nav = this.page.getByRole('navigation', { name: 'Main' });
+		if (!(await nav.isVisible())) await this.page.getByRole('button', { name: 'Open navigation' }).click();
+		await this.go(list);
+	}
+
+	async closeQuickAdd() {
+		await this.taskInput().press('Escape');
+		await expect(this.quickAdd()).toBeHidden();
 	}
 
 	async openNavigation() {
@@ -310,8 +402,8 @@ export class App {
 			await create.click();
 			await expect(parsed).toBeVisible();
 		}
-		await this.taskInput().press('Enter');
-		await expect(this.quickAdd()).toBeHidden();
+		await this.save();
+		await this.showAdded();
 	}
 
 	async closeDetails() {
@@ -391,11 +483,12 @@ export class App {
 	 */
 	async pushFromOtherDevice(...patches: { kind: Kind; id: string; fields: Record<string, unknown> }[]) {
 		await expect.poll(() => this.pending(), { timeout: 15_000 }).toBe(0);
+		const me = (await (await this.page.request.get('/api/me')).json()) as { id: string };
 		await this.#upload(
 			patches.map(({ kind, id, fields }) => ({
 				op: 'patch',
 				table: TABLE_OF[kind],
-				id,
+				id: rowIdOf(kind, id, me.id),
 				values: rowValues(kind, fields),
 			})),
 		);
@@ -430,9 +523,7 @@ export class App {
 	}
 
 	async #upload(writes: unknown[]) {
-		const response = await this.page.request.post('/api/upload', { data: { writes } });
-		expect(response.status()).toBe(200);
-		expect((await response.json()).rejected).toEqual([]);
+		expect(await syncWrites(this.page.request, writes)).toEqual([]);
 	}
 
 	async setNow(date: Date) {
@@ -450,6 +541,7 @@ export class App {
 
 	accentOption = (name: string) =>
 		this.settings().getByRole('radiogroup', { name: 'Theme color' }).getByRole('radio', { name, exact: true });
+	customAccent = () => this.settings().getByLabel('Custom theme color');
 	accent = () =>
 		this.page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim());
 	themeOption = (name: 'System' | 'Light' | 'Dark') =>

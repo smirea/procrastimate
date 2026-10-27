@@ -30,6 +30,19 @@
 		},
 		{
 			"fn": "voiceCapture",
+			"test": "voiceCapture › gemini stays native while offline, and uses speech when the platform has it",
+			"input": [
+				"gemini",
+				false,
+				true
+			],
+			"output": {
+				"capture": "speech",
+				"engine": "native"
+			}
+		},
+		{
+			"fn": "voiceCapture",
 			"test": "voiceCapture › native stays native while offline, and types when the platform has no recognizer",
 			"input": [
 				"native",
@@ -46,6 +59,19 @@
 			"test": "voiceCapture › elevenlabs stays native while offline, and types when the platform has no recognizer",
 			"input": [
 				"elevenlabs",
+				false,
+				false
+			],
+			"output": {
+				"capture": "typed",
+				"engine": "native"
+			}
+		},
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › gemini stays native while offline, and types when the platform has no recognizer",
+			"input": [
+				"gemini",
 				false,
 				false
 			],
@@ -104,6 +130,32 @@
 			"output": {
 				"capture": "socket",
 				"engine": "elevenlabs"
+			}
+		},
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › gemini streams to the server socket for Gemini Live only while online",
+			"input": [
+				"gemini",
+				true,
+				true
+			],
+			"output": {
+				"capture": "socket",
+				"engine": "gemini"
+			}
+		},
+		{
+			"fn": "voiceCapture",
+			"test": "voiceCapture › gemini streams to the server socket for Gemini Live only while online",
+			"input": [
+				"gemini",
+				true,
+				false
+			],
+			"output": {
+				"capture": "socket",
+				"engine": "gemini"
 			}
 		}
 	]

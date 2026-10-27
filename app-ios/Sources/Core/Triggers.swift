@@ -38,7 +38,7 @@ public enum Triggers {
         return Due(date: date, time: event.allDay ? nil : wallTime(at, in: zone))
     }
 
-    static func wallTime(_ epochMilliseconds: Int, in zone: TimeZone) -> TimeOfDay {
+    public static func wallTime(_ epochMilliseconds: Int, in zone: TimeZone) -> TimeOfDay {
         let at = Date(epochMilliseconds: epochMilliseconds)
         let local = Int((at.timeIntervalSince1970 + Double(zone.secondsFromGMT(for: at))).rounded(.down))
         let minutes = ((local % 86400 + 86400) % 86400) / 60

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { dictationChoiceSchema } from '../dictation.ts';
+import { dictationChoiceSchema, rambleModeSchema } from '../dictation.ts';
 import { labelColorSchema } from '../label-colors.ts';
 import { projectIconSchema } from '../project-icons.ts';
 import { quickAddButtonSchema } from '../quick-add-buttons.ts';
@@ -38,7 +38,11 @@ export const COLUMN_VALUES = {
 	},
 	projects: { icon: projectIconSchema },
 	labels: { color: labelColorSchema, place: savedPlaceSchema },
-	settings: { dictation: dictationChoiceSchema, quickAddButtons: z.array(quickAddButtonSchema) },
+	settings: {
+		dictation: dictationChoiceSchema,
+		rambleMode: rambleModeSchema,
+		quickAddButtons: z.array(quickAddButtonSchema),
+	},
 	access: { role: roleSchema },
 	log: { fields: z.record(z.string(), z.unknown()), client: clientSchema },
 	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledNotificationSchema) },

@@ -78,19 +78,20 @@ final class Navigator {
         if case let .ramble(defaults) = sheet { defaults } else { nil }
     }
 
-    /// Where the last quick add saved to, reused while the list it saved from, and showed the task on, stays open.
-    @ObservationIgnored private var reused: (tab: AppTab, route: Route?, defaults: QuickAddDefaults)?
+    /// The task the last quick add saved, which the next one on the same screen starts from.
+    @ObservationIgnored private var reused: (tab: AppTab, route: Route?, task: TaskItem)?
 
     /// Quick add from the tab bar starts with the context of the screen on top, as `Screens.defaults` maps it, or
-    /// with what the last quick add saved while that screen is still open.
+    /// where the last quick add on that screen saved its task.
     func listDefaults(_ store: Store) -> QuickAddDefaults {
-        if let reused, reused.tab == tab, reused.route == currentRoute { return reused.defaults }
-        return store.quickAddDefaults(currentRoute?.screen)
+        let own = store.quickAddDefaults(currentRoute?.screen)
+        guard let reused, reused.tab == tab, reused.route == currentRoute else { return own }
+        return Screens.reusedDefaults(reused.task, store.labels, date: own.date)
     }
 
-    /// Quick add just saved `task` and showed it on the screen it opened on.
-    func reuseAdded(_ task: TaskItem, labels: [Label]) {
-        reused = (tab, currentRoute, Screens.reusedDefaults(task, labels))
+    /// Quick add just saved `task` on the screen on top.
+    func reuseAdded(_ task: TaskItem) {
+        reused = (tab, currentRoute, task)
     }
 
     private func forgetAddedElsewhere() {
@@ -101,25 +102,31 @@ final class Navigator {
     /// The task just added from quick add. Its list scrolls to it and the row flashes, then this clears.
     private(set) var revealed: String?
 
-    /// Shows the list a new task lands in: the open list when it already shows the task, else its project, else Inbox
-    /// when it has a day or No date when it has none.
+    /// Shows the list a new task lands in and flashes its row.
     func reveal(_ task: TaskItem, labels: [Label], today: DateKey, in zone: TimeZone) {
+        if let route = destination(of: task, labels: labels, today: today, in: zone) { open(route) }
+        flash(task.id)
+    }
+
+    /// The list a new task lands in when the open one doesn't show it: its project, else Inbox when it has a day or No
+    /// date when it has none. Nil when the open list shows it.
+    func destination(of task: TaskItem, labels: [Label], today: DateKey, in zone: TimeZone) -> Route? {
         // A saved place's screen is its label's, but it holds the tasks at the place.
         var screen = currentRoute?.screen
         if case let .label(id)? = screen, let place = labels.first(where: { $0.id == id })?.place {
             screen = .place(key: Triggers.placeKey(place))
         }
-        if !Screens.holds(screen, task, today, in: zone) {
-            if let projectId = task.projectId {
-                open(.project(id: projectId))
-            } else {
-                open(Triggers.scheduledDue(task, today, in: zone) == nil ? .noDate : .inbox)
-            }
-        }
-        revealed = task.id
+        if Screens.holds(screen, task, today, in: zone) { return nil }
+        if let projectId = task.projectId { return .project(id: projectId) }
+        return Triggers.scheduledDue(task, today, in: zone) == nil ? .noDate : .inbox
+    }
+
+    /// Scrolls the open list to the task and flashes its row.
+    func flash(_ taskID: String) {
+        revealed = taskID
         Task {
             try? await Task.sleep(for: .seconds(1.5))
-            if revealed == task.id { revealed = nil }
+            if revealed == taskID { revealed = nil }
         }
     }
 

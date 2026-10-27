@@ -1,16 +1,18 @@
-import { and, eq, exists, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
+import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { images, tasks } from '../../shared/db/schema';
 import { IMAGE_LIMITS, IMAGES_PATH, imageSizeSchema, imageTypeSchema, sniffImageType } from '../../shared/images';
 import { readActor, spaceOf } from './actor';
 import type { App } from './app';
-import type { Db } from './db/postgres';
+import type { Db } from './db/sqlite';
+import { chunks } from './db/chunks';
 import { errorResponse } from './errors';
 import { identify } from './sentry';
 import { accessIn, seenBy, sightOf, type Sight } from './space';
 
 /**
  * Image bytes, apart from sync. A task lists its images' ids in its synced `images` field; the bytes sit in the
- * `images` table, outside the PowerSync publication, written and read one row at a time. See
+ * `images` table, never synced, written and read one row at a time. See
  * `docs/decisions/images.md`.
  */
 
@@ -27,14 +29,13 @@ export const IMAGE_GRACE_MS = 2 * 24 * 60 * 60 * 1000;
  * marks the unlisted, clears the mark of the listed again, and drops what stayed unlisted past the grace period.
  * Nothing on the write path reads the `images` table.
  */
-export async function sweepImages(db: Db, now: number): Promise<void> {
-	const [states, listed] = await Promise.all([
-		db.select({ userId: images.userId, id: images.id, orphanedAt: images.orphanedAt }).from(images),
-		db
-			.select({ userId: tasks.userId, images: tasks.images })
-			.from(tasks)
-			.where(sql`jsonb_array_length(${tasks.images}) > 0`),
-	]);
+export function sweepImages(db: Db, now: number): void {
+	const states = db.select({ userId: images.userId, id: images.id, orphanedAt: images.orphanedAt }).from(images).all();
+	const listed = db
+		.select({ userId: tasks.userId, images: tasks.images })
+		.from(tasks)
+		.where(sql`json_array_length(${tasks.images}) > 0`)
+		.all();
 	const referenced = new Set(listed.flatMap(row => row.images.map(image => `${row.userId}:${image.id}`)));
 	for (const [owner, rows] of Map.groupBy(states, row => row.userId)) {
 		const mark: string[] = [];
@@ -47,29 +48,29 @@ export async function sweepImages(db: Db, now: number): Promise<void> {
 			else if (orphanedAt <= now - IMAGE_GRACE_MS) drop.push(id);
 		}
 		const own = eq(images.userId, owner);
-		if (mark.length)
-			await db
-				.update(images)
+		for (const part of chunks(mark)) {
+			db.update(images)
 				.set({ orphanedAt: now })
-				.where(and(own, inArray(images.id, mark)));
-		if (unmark.length)
-			await db
-				.update(images)
+				.where(and(own, inArray(images.id, part)))
+				.run();
+		}
+		for (const part of chunks(unmark)) {
+			db.update(images)
 				.set({ orphanedAt: null })
-				.where(and(own, inArray(images.id, unmark)));
-		// An undo can relist an image between the read and the delete, so the delete checks the tasks again.
-		if (drop.length)
-			await db
-				.delete(images)
-				.where(
-					and(
-						own,
-						inArray(images.id, drop),
-						sql`NOT EXISTS (SELECT 1 FROM ${tasks} WHERE ${tasks.userId} = ${owner} AND ${tasks.images} @> jsonb_build_array(jsonb_build_object('id', ${images.id})))`,
-					),
-				);
+				.where(and(own, inArray(images.id, part)))
+				.run();
+		}
+		for (const part of chunks(drop)) {
+			db.delete(images)
+				.where(and(own, inArray(images.id, part), sql`NOT ${listsImage(sql`${tasks.userId} = ${owner}`, images.id)}`))
+				.run();
+		}
 	}
 }
+
+/** Whether a task matching `where` lists image `id` in its JSON `images` array. */
+const listsImage = (where: SQL, id: SQL | SQLiteColumn | string) =>
+	sql`EXISTS (SELECT 1 FROM ${tasks}, json_each(${tasks.images}) AS listed WHERE ${where} AND json_extract(listed.value, '$.id') = ${id})`;
 
 const IMAGE_ID = /^[A-Za-z0-9_-]{8,80}$/;
 
@@ -91,7 +92,7 @@ export async function imagesRoute(request: Request, app: App): Promise<Response>
 	let sight: Sight | null = null;
 	let write = true;
 	if (actor.kind !== 'human' || actor.id !== owner) {
-		const access = await accessIn(db, owner, actor);
+		const access = accessIn(db, owner, actor);
 		if (access?.role !== 'guest') return errorResponse('FORBIDDEN', 'Not shared with you');
 		sight = sightOf(actor, access);
 		write = access.shares.some(share => share.role === 'edit');
@@ -100,24 +101,13 @@ export async function imagesRoute(request: Request, app: App): Promise<Response>
 	const size = imageSizeSchema.safeParse(query.get('size'));
 	if (!IMAGE_ID.test(id) || !size.success) return errorResponse('BAD_REQUEST', 'Needs an image id and size');
 	if (request.method === 'GET') {
-		const listed = sight
-			? exists(
-					db
-						.select({ one: sql`1` })
-						.from(tasks)
-						.where(
-							and(
-								eq(tasks.userId, owner),
-								sql`${tasks.images} @> ${JSON.stringify([{ id }])}::jsonb`,
-								seenBy(db, sight, owner, tasks.id),
-							),
-						),
-				)
-			: undefined;
-		const [image] = await db
+		const seen = sight ? seenBy(db, sight, owner, tasks.id) : undefined;
+		const listed = sight ? listsImage(and(eq(tasks.userId, owner), seen)!, id) : undefined;
+		const image = db
 			.select({ type: images.type, bytes: images.bytes })
 			.from(images)
-			.where(and(eq(images.userId, owner), eq(images.id, id), eq(images.size, size.data), listed));
+			.where(and(eq(images.userId, owner), eq(images.id, id), eq(images.size, size.data), listed))
+			.get();
 		if (!image) return errorResponse('NOT_FOUND', 'No such image');
 		return new Response(image.bytes, {
 			headers: {
@@ -139,9 +129,9 @@ export async function imagesRoute(request: Request, app: App): Promise<Response>
 		return errorResponse('UNSUPPORTED_MEDIA_TYPE', 'Images are WebP or JPEG');
 	}
 	// Ids are client-made UUIDs and an id's bytes never change, so a put for an existing id is a retry and keeps them.
-	await db
-		.insert(images)
+	db.insert(images)
 		.values({ userId: owner, id, size: size.data, type: type.data, bytes, createdAt: Date.now(), orphanedAt: null })
-		.onConflictDoNothing();
+		.onConflictDoNothing()
+		.run();
 	return Response.json({ ok: true });
 }

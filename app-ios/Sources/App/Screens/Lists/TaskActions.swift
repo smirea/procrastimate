@@ -22,49 +22,28 @@ final class TaskActions {
         guard let completion = withAnimation(.snappy, { store.completeTask(task.id) }) else { return nil }
         completions += 1
         let message = Format.completedToast(task.title, completion.next, clock.today)
-        toasts.show(
-            message,
-            action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.restoreCompletion(completion.previous) } }
-        )
+        toasts.show(message, undo: .completion(.init(previous: completion.previous)), in: store)
         return message
     }
 
-    /// Reopening a subtask reopens its completed ancestors too, so undo puts back each one's `completedAt`. Undo reads the
-    /// other fields when it runs, so an edit made in between survives it.
+    /// Reopening a subtask reopens its completed ancestors too, so undo puts back each one's `completedAt`. Undo writes
+    /// back only that, so an edit made in between survives it.
     func reopen(_ task: TaskItem) {
         let reopened = withAnimation(.snappy) { store.reopenTask(task.id) }
-        toasts.show(
-            Format.reopenedToast(task.title),
-            action: .init(label: "Undo") { [store] in
-                let previous = reopened.compactMap { old in
-                    store.task(old.id).map {
-                        CompletionState(
-                            id: $0.id, completedAt: old.completedAt, lastCompletedAt: $0.lastCompletedAt, due: $0.due,
-                            reminders: $0.reminders, event: $0.event
-                        )
-                    }
-                }
-                withAnimation(.snappy) { store.restoreCompletion(previous) }
-            }
-        )
+        guard !reopened.isEmpty else { return }
+        toasts.show(Format.reopenedToast(task.title), undo: .reopen(.init(reopened: reopened)), in: store)
     }
 
     func delete(_ task: TaskItem) {
         let removed = withAnimation(.snappy) { store.deleteTask(task.id) }
         guard !removed.isEmpty else { return }
-        toasts.show(
-            "Deleted “\(task.title)”",
-            action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.undeleteTasks(removed) } }
-        )
+        toasts.show("Deleted “\(task.title)”", undo: .delete(.init(deleted: Deleted(tasks: removed))), in: store)
     }
 
     /// Deleting a project, section, or label offers undo, which brings back its tasks and label assignments as they were.
     func toastDeleted(_ name: String, _ deleted: Deleted?) {
         guard let deleted else { return }
-        toasts.show(
-            "Deleted “\(name)”",
-            action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.undelete(deleted) } }
-        )
+        toasts.show("Deleted “\(name)”", undo: .delete(.init(deleted: deleted)), in: store)
     }
 
     func explode(_ task: TaskItem, _ method: ExplodeMethod) {
@@ -72,7 +51,8 @@ final class TaskActions {
         guard !previous.isEmpty else { return }
         toasts.show(
             previous.count == 1 ? "Turned 1 subtask into a task" : "Turned \(previous.count) subtasks into tasks",
-            action: .init(label: "Undo") { [store] in withAnimation(.snappy) { store.restoreExploded(previous) } }
+            undo: .explode(.init(previous: previous)),
+            in: store
         )
     }
 
@@ -93,13 +73,11 @@ final class TaskActions {
 
     /// Keeps the time of day, and leaves the repeat to count from the new date.
     func postpone(_ task: TaskItem, to date: DateKey) {
-        let previous = task.due
         withAnimation(.snappy) { store.updateTask(task.id, TaskPatch(due: .some(Due(date: date, time: task.due?.time)))) }
         toasts.show(
             "Moved “\(task.title)” to \(Format.formatDate(date, clock.today))",
-            action: .init(label: "Undo") { [store] in
-                withAnimation(.snappy) { store.updateTask(task.id, TaskPatch(due: .some(previous))) }
-            }
+            undo: .postpone(.init(id: task.id, due: task.due)),
+            in: store
         )
     }
 }

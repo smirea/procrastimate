@@ -24,7 +24,7 @@ public struct Owned<Value: Hashable & Sendable>: Hashable, Sendable {
     }
 }
 
-/// Everything the local database holds, as PowerSync streamed it: the user's own rows, the rows other users share with
+/// Everything the local database holds, as the server sent it: the user's own rows, the rows other users share with
 /// them, and the `access` rows that say which shared entities they may edit.
 public struct StoredRows: Hashable, Sendable {
     public var tasks: [Owned<TaskItem>] = []

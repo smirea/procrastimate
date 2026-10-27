@@ -1,0 +1,3983 @@
+{
+	"module": "accents",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › a preset keeps the accent it shipped with",
+			"input": [
+				"#3d9bff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						90,
+						168,
+						255
+					],
+					"glow": [
+						61,
+						155,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						4,
+						22,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						103,
+						189
+					],
+					"glow": [
+						216,
+						234,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › a preset keeps the accent it shipped with",
+			"input": [
+				"#9b5cff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						178,
+						141,
+						255
+					],
+					"glow": [
+						155,
+						92,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						25,
+						16,
+						42
+					]
+				},
+				"light": {
+					"accent": [
+						130,
+						62,
+						225
+					],
+					"glow": [
+						234,
+						227,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › a pale custom color darkens in light and dims its dark glow and accent",
+			"input": [
+				"#ffffff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						164,
+						164,
+						164
+					],
+					"glow": [
+						164,
+						164,
+						164
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						22,
+						22,
+						22
+					]
+				},
+				"light": {
+					"accent": [
+						103,
+						103,
+						103
+					],
+					"glow": [
+						232,
+						232,
+						232
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › a pale custom color darkens in light and dims its dark glow and accent",
+			"input": [
+				"#ffff00"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						174,
+						174,
+						0
+					],
+					"glow": [
+						174,
+						174,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						23,
+						23,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						107,
+						107,
+						0
+					],
+					"glow": [
+						233,
+						235,
+						197
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › a dark custom color brightens in dark and keeps its glow",
+			"input": [
+				"#000000"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						164,
+						164,
+						164
+					],
+					"glow": [
+						0,
+						0,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						22,
+						22,
+						22
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						0,
+						0
+					],
+					"glow": [
+						232,
+						232,
+						232
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › a dark custom color brightens in dark and keeps its glow",
+			"input": [
+				"#1a2b6d"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						133,
+						161,
+						238
+					],
+					"glow": [
+						26,
+						43,
+						109
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						12,
+						20,
+						45
+					]
+				},
+				"light": {
+					"accent": [
+						26,
+						43,
+						109
+					],
+					"glow": [
+						222,
+						232,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#3d9bff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						90,
+						168,
+						255
+					],
+					"glow": [
+						61,
+						155,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						4,
+						22,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						103,
+						189
+					],
+					"glow": [
+						216,
+						234,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#5b5ef7"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						140,
+						155,
+						255
+					],
+					"glow": [
+						91,
+						94,
+						247
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						16,
+						19,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						81,
+						80,
+						233
+					],
+					"glow": [
+						225,
+						231,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#9b5cff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						178,
+						141,
+						255
+					],
+					"glow": [
+						155,
+						92,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						25,
+						16,
+						42
+					]
+				},
+				"light": {
+					"accent": [
+						130,
+						62,
+						225
+					],
+					"glow": [
+						234,
+						227,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#f0479b"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						111,
+						177
+					],
+					"glow": [
+						240,
+						71,
+						155
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						39,
+						11,
+						23
+					]
+				},
+				"light": {
+					"accent": [
+						197,
+						15,
+						119
+					],
+					"glow": [
+						255,
+						221,
+						233
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ef4444"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						120,
+						112
+					],
+					"glow": [
+						239,
+						68,
+						68
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						41,
+						11,
+						10
+					]
+				},
+				"light": {
+					"accent": [
+						203,
+						22,
+						37
+					],
+					"glow": [
+						255,
+						223,
+						220
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ff6a3d"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						123,
+						84
+					],
+					"glow": [
+						255,
+						106,
+						61
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						40,
+						12,
+						5
+					]
+				},
+				"light": {
+					"accent": [
+						190,
+						55,
+						0
+					],
+					"glow": [
+						255,
+						224,
+						215
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#f5a524"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						233,
+						154,
+						7
+					],
+					"glow": [
+						233,
+						154,
+						7
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						34,
+						18,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						143,
+						93,
+						0
+					],
+					"glow": [
+						253,
+						227,
+						196
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#22c55e"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						34,
+						197,
+						94
+					],
+					"glow": [
+						34,
+						197,
+						94
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						3,
+						28,
+						9
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						120,
+						51
+					],
+					"glow": [
+						209,
+						242,
+						214
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#14b8a6"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						33,
+						189,
+						171
+					],
+					"glow": [
+						20,
+						184,
+						166
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						27,
+						23
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						115,
+						103
+					],
+					"glow": [
+						196,
+						243,
+						235
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#71717a"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						163,
+						163,
+						173
+					],
+					"glow": [
+						113,
+						113,
+						122
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						21,
+						21,
+						28
+					]
+				},
+				"light": {
+					"accent": [
+						102,
+						102,
+						110
+					],
+					"glow": [
+						231,
+						231,
+						241
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#000000"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						164,
+						164,
+						164
+					],
+					"glow": [
+						0,
+						0,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						22,
+						22,
+						22
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						0,
+						0
+					],
+					"glow": [
+						232,
+						232,
+						232
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#000055"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						119,
+						162,
+						253
+					],
+					"glow": [
+						0,
+						0,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						10,
+						21,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						0,
+						85
+					],
+					"glow": [
+						221,
+						232,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#0000aa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						118,
+						162,
+						255
+					],
+					"glow": [
+						0,
+						0,
+						170
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						10,
+						21,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						0,
+						170
+					],
+					"glow": [
+						221,
+						232,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#0000ff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						118,
+						162,
+						255
+					],
+					"glow": [
+						0,
+						0,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						10,
+						21,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						0,
+						255
+					],
+					"glow": [
+						221,
+						232,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#005500"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						113,
+						185,
+						107
+					],
+					"glow": [
+						0,
+						85,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						7,
+						27,
+						6
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						85,
+						0
+					],
+					"glow": [
+						213,
+						241,
+						210
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#005555"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						110,
+						179,
+						178
+					],
+					"glow": [
+						0,
+						85,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						27,
+						27
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						85,
+						85
+					],
+					"glow": [
+						194,
+						243,
+						242
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#0055aa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						97,
+						166,
+						255
+					],
+					"glow": [
+						0,
+						85,
+						170
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						5,
+						22,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						85,
+						170
+					],
+					"glow": [
+						217,
+						233,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#0055ff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						115,
+						162,
+						255
+					],
+					"glow": [
+						0,
+						85,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						9,
+						21,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						84,
+						252
+					],
+					"glow": [
+						220,
+						232,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#00aa00"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						55,
+						196,
+						50
+					],
+					"glow": [
+						0,
+						170,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						7,
+						27,
+						6
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						121,
+						0
+					],
+					"glow": [
+						213,
+						241,
+						210
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#00aa55"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						53,
+						194,
+						107
+					],
+					"glow": [
+						0,
+						170,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						1,
+						28,
+						10
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						118,
+						57
+					],
+					"glow": [
+						208,
+						242,
+						216
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#00aaaa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						44,
+						187,
+						186
+					],
+					"glow": [
+						0,
+						170,
+						170
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						27,
+						27
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						115,
+						115
+					],
+					"glow": [
+						194,
+						243,
+						242
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#00aaff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						40,
+						174,
+						255
+					],
+					"glow": [
+						0,
+						170,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						24,
+						41
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						108,
+						165
+					],
+					"glow": [
+						211,
+						236,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#00ff00"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						0,
+						209,
+						0
+					],
+					"glow": [
+						0,
+						209,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						7,
+						27,
+						6
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						121,
+						0
+					],
+					"glow": [
+						213,
+						241,
+						210
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#00ff55"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						0,
+						206,
+						67
+					],
+					"glow": [
+						0,
+						206,
+						67
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						5,
+						28,
+						7
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						119,
+						35
+					],
+					"glow": [
+						211,
+						241,
+						212
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#00ffaa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						0,
+						201,
+						133
+					],
+					"glow": [
+						0,
+						201,
+						133
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						28,
+						15
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						118,
+						76
+					],
+					"glow": [
+						204,
+						243,
+						221
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#00ffff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						0,
+						195,
+						195
+					],
+					"glow": [
+						0,
+						195,
+						195
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						27,
+						27
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						114,
+						114
+					],
+					"glow": [
+						194,
+						243,
+						242
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#550000"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						230,
+						137,
+						123
+					],
+					"glow": [
+						85,
+						0,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						41,
+						11,
+						8
+					]
+				},
+				"light": {
+					"accent": [
+						85,
+						0,
+						0
+					],
+					"glow": [
+						255,
+						224,
+						218
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#550055"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						216,
+						133,
+						213
+					],
+					"glow": [
+						85,
+						0,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						34,
+						13,
+						33
+					]
+				},
+				"light": {
+					"accent": [
+						85,
+						0,
+						85
+					],
+					"glow": [
+						251,
+						221,
+						249
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#5500aa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						174,
+						143,
+						255
+					],
+					"glow": [
+						85,
+						0,
+						170
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						24,
+						17,
+						42
+					]
+				},
+				"light": {
+					"accent": [
+						85,
+						0,
+						170
+					],
+					"glow": [
+						233,
+						228,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#5500ff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						147,
+						152,
+						255
+					],
+					"glow": [
+						85,
+						0,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						18,
+						19,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						85,
+						0,
+						255
+					],
+					"glow": [
+						227,
+						230,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#555500"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						168,
+						170,
+						98
+					],
+					"glow": [
+						85,
+						85,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						23,
+						23,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						85,
+						85,
+						0
+					],
+					"glow": [
+						233,
+						235,
+						197
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#555555"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						164,
+						164,
+						164
+					],
+					"glow": [
+						85,
+						85,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						22,
+						22,
+						22
+					]
+				},
+				"light": {
+					"accent": [
+						85,
+						85,
+						85
+					],
+					"glow": [
+						232,
+						232,
+						232
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#5555aa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						149,
+						154,
+						246
+					],
+					"glow": [
+						85,
+						85,
+						170
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						18,
+						18,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						85,
+						85,
+						170
+					],
+					"glow": [
+						227,
+						230,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#5555ff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						139,
+						155,
+						255
+					],
+					"glow": [
+						85,
+						85,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						16,
+						19,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						79,
+						76,
+						246
+					],
+					"glow": [
+						225,
+						231,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#55aa00"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						104,
+						190,
+						43
+					],
+					"glow": [
+						85,
+						170,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						11,
+						27,
+						3
+					]
+				},
+				"light": {
+					"accent": [
+						56,
+						116,
+						0
+					],
+					"glow": [
+						218,
+						240,
+						207
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#55aa55"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						103,
+						188,
+						102
+					],
+					"glow": [
+						85,
+						170,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						6,
+						28,
+						6
+					]
+				},
+				"light": {
+					"accent": [
+						29,
+						119,
+						34
+					],
+					"glow": [
+						213,
+						241,
+						211
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#55aaaa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						96,
+						181,
+						181
+					],
+					"glow": [
+						85,
+						170,
+						170
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						27,
+						27
+					]
+				},
+				"light": {
+					"accent": [
+						17,
+						115,
+						116
+					],
+					"glow": [
+						194,
+						243,
+						242
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#55aaff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						85,
+						170,
+						255
+					],
+					"glow": [
+						85,
+						170,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						3,
+						23,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						105,
+						184
+					],
+					"glow": [
+						215,
+						234,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#55ff00"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						64,
+						199,
+						0
+					],
+					"glow": [
+						64,
+						199,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						8,
+						27,
+						5
+					]
+				},
+				"light": {
+					"accent": [
+						35,
+						119,
+						0
+					],
+					"glow": [
+						215,
+						241,
+						209
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#55ff55"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						0,
+						207,
+						25
+					],
+					"glow": [
+						0,
+						207,
+						25
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						6,
+						28,
+						6
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						119,
+						9
+					],
+					"glow": [
+						213,
+						241,
+						211
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#55ffaa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						0,
+						202,
+						124
+					],
+					"glow": [
+						0,
+						202,
+						124
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						28,
+						13
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						119,
+						71
+					],
+					"glow": [
+						206,
+						243,
+						219
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#55ffff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						0,
+						195,
+						195
+					],
+					"glow": [
+						0,
+						195,
+						195
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						27,
+						27
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						114,
+						114
+					],
+					"glow": [
+						194,
+						243,
+						242
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aa0000"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						121,
+						104
+					],
+					"glow": [
+						170,
+						0,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						41,
+						11,
+						8
+					]
+				},
+				"light": {
+					"accent": [
+						170,
+						0,
+						0
+					],
+					"glow": [
+						255,
+						224,
+						218
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aa0055"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						115,
+						161
+					],
+					"glow": [
+						170,
+						0,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						40,
+						11,
+						20
+					]
+				},
+				"light": {
+					"accent": [
+						170,
+						0,
+						85
+					],
+					"glow": [
+						255,
+						222,
+						230
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aa00aa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						247,
+						102,
+						244
+					],
+					"glow": [
+						170,
+						0,
+						170
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						34,
+						13,
+						33
+					]
+				},
+				"light": {
+					"accent": [
+						170,
+						0,
+						170
+					],
+					"glow": [
+						251,
+						221,
+						249
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aa00ff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						198,
+						133,
+						255
+					],
+					"glow": [
+						170,
+						0,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						28,
+						15,
+						39
+					]
+				},
+				"light": {
+					"accent": [
+						158,
+						0,
+						238
+					],
+					"glow": [
+						239,
+						225,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aa5500"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						229,
+						139,
+						74
+					],
+					"glow": [
+						170,
+						85,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						39,
+						14,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						162,
+						80,
+						0
+					],
+					"glow": [
+						255,
+						225,
+						207
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aa5555"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						228,
+						137,
+						135
+					],
+					"glow": [
+						170,
+						85,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						41,
+						11,
+						12
+					]
+				},
+				"light": {
+					"accent": [
+						162,
+						78,
+						78
+					],
+					"glow": [
+						255,
+						223,
+						222
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aa55aa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						218,
+						130,
+						218
+					],
+					"glow": [
+						170,
+						85,
+						170
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						34,
+						13,
+						34
+					]
+				},
+				"light": {
+					"accent": [
+						154,
+						70,
+						154
+					],
+					"glow": [
+						251,
+						221,
+						249
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aa55ff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						190,
+						137,
+						255
+					],
+					"glow": [
+						170,
+						85,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						27,
+						15,
+						40
+					]
+				},
+				"light": {
+					"accent": [
+						143,
+						52,
+						223
+					],
+					"glow": [
+						237,
+						226,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aaaa00"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						172,
+						172,
+						7
+					],
+					"glow": [
+						170,
+						170,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						23,
+						23,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						107,
+						107,
+						0
+					],
+					"glow": [
+						233,
+						235,
+						197
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aaaa55"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						170,
+						170,
+						85
+					],
+					"glow": [
+						170,
+						170,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						24,
+						23,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						108,
+						106,
+						6
+					],
+					"glow": [
+						234,
+						235,
+						197
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aaaaaa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						164,
+						164,
+						164
+					],
+					"glow": [
+						164,
+						164,
+						164
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						22,
+						22,
+						22
+					]
+				},
+				"light": {
+					"accent": [
+						103,
+						103,
+						103
+					],
+					"glow": [
+						232,
+						232,
+						232
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aaaaff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						158,
+						157,
+						241
+					],
+					"glow": [
+						158,
+						157,
+						241
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						19,
+						18,
+						44
+					]
+				},
+				"light": {
+					"accent": [
+						97,
+						93,
+						171
+					],
+					"glow": [
+						228,
+						229,
+						255
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aaff00"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						123,
+						187,
+						0
+					],
+					"glow": [
+						123,
+						187,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						14,
+						26,
+						1
+					]
+				},
+				"light": {
+					"accent": [
+						73,
+						113,
+						0
+					],
+					"glow": [
+						221,
+						239,
+						204
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aaff55"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						114,
+						190,
+						0
+					],
+					"glow": [
+						114,
+						190,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						13,
+						26,
+						2
+					]
+				},
+				"light": {
+					"accent": [
+						67,
+						115,
+						0
+					],
+					"glow": [
+						220,
+						240,
+						205
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aaffaa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						104,
+						187,
+						106
+					],
+					"glow": [
+						103,
+						186,
+						104
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						5,
+						28,
+						6
+					]
+				},
+				"light": {
+					"accent": [
+						32,
+						119,
+						40
+					],
+					"glow": [
+						212,
+						241,
+						211
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#aaffff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						97,
+						181,
+						181
+					],
+					"glow": [
+						95,
+						180,
+						180
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						27,
+						27
+					]
+				},
+				"light": {
+					"accent": [
+						17,
+						115,
+						116
+					],
+					"glow": [
+						194,
+						243,
+						243
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ff0000"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						121,
+						104
+					],
+					"glow": [
+						255,
+						0,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						41,
+						11,
+						8
+					]
+				},
+				"light": {
+					"accent": [
+						208,
+						0,
+						0
+					],
+					"glow": [
+						255,
+						224,
+						218
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ff0055"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						117,
+						132
+					],
+					"glow": [
+						255,
+						0,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						41,
+						11,
+						14
+					]
+				},
+				"light": {
+					"accent": [
+						206,
+						0,
+						67
+					],
+					"glow": [
+						255,
+						223,
+						224
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ff00aa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						109,
+						187
+					],
+					"glow": [
+						255,
+						0,
+						170
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						38,
+						11,
+						25
+					]
+				},
+				"light": {
+					"accent": [
+						198,
+						0,
+						131
+					],
+					"glow": [
+						255,
+						221,
+						236
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ff00ff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						92,
+						253
+					],
+					"glow": [
+						255,
+						0,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						34,
+						13,
+						33
+					]
+				},
+				"light": {
+					"accent": [
+						184,
+						0,
+						184
+					],
+					"glow": [
+						251,
+						221,
+						249
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ff5500"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						124,
+						80
+					],
+					"glow": [
+						255,
+						85,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						40,
+						12,
+						4
+					]
+				},
+				"light": {
+					"accent": [
+						185,
+						59,
+						0
+					],
+					"glow": [
+						255,
+						224,
+						214
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ff5555"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						120,
+						114
+					],
+					"glow": [
+						255,
+						85,
+						85
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						41,
+						11,
+						10
+					]
+				},
+				"light": {
+					"accent": [
+						202,
+						24,
+						41
+					],
+					"glow": [
+						255,
+						223,
+						220
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ff55aa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						111,
+						179
+					],
+					"glow": [
+						255,
+						85,
+						170
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						39,
+						11,
+						24
+					]
+				},
+				"light": {
+					"accent": [
+						196,
+						10,
+						120
+					],
+					"glow": [
+						255,
+						221,
+						234
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ff55ff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						91,
+						255
+					],
+					"glow": [
+						255,
+						85,
+						255
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						34,
+						13,
+						33
+					]
+				},
+				"light": {
+					"accent": [
+						182,
+						0,
+						183
+					],
+					"glow": [
+						251,
+						221,
+						249
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ffaa00"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						232,
+						154,
+						0
+					],
+					"glow": [
+						232,
+						154,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						33,
+						18,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						143,
+						93,
+						0
+					],
+					"glow": [
+						253,
+						228,
+						196
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ffaa55"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						233,
+						149,
+						62
+					],
+					"glow": [
+						233,
+						149,
+						62
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						36,
+						17,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						151,
+						87,
+						0
+					],
+					"glow": [
+						255,
+						226,
+						201
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ffaaaa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						228,
+						145,
+						145
+					],
+					"glow": [
+						228,
+						145,
+						145
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						41,
+						11,
+						13
+					]
+				},
+				"light": {
+					"accent": [
+						156,
+						80,
+						82
+					],
+					"glow": [
+						255,
+						223,
+						222
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ffaaff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						221,
+						138,
+						221
+					],
+					"glow": [
+						221,
+						138,
+						221
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						33,
+						13,
+						34
+					]
+				},
+				"light": {
+					"accent": [
+						150,
+						72,
+						151
+					],
+					"glow": [
+						251,
+						221,
+						250
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ffff00"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						174,
+						174,
+						0
+					],
+					"glow": [
+						174,
+						174,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						23,
+						23,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						107,
+						107,
+						0
+					],
+					"glow": [
+						233,
+						235,
+						197
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ffff55"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						174,
+						173,
+						0
+					],
+					"glow": [
+						174,
+						173,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						24,
+						23,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						107,
+						107,
+						0
+					],
+					"glow": [
+						234,
+						235,
+						197
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ffffaa"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						171,
+						170,
+						87
+					],
+					"glow": [
+						171,
+						170,
+						87
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						24,
+						23,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						108,
+						106,
+						12
+					],
+					"glow": [
+						234,
+						235,
+						197
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ffffff"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						164,
+						164,
+						164
+					],
+					"glow": [
+						164,
+						164,
+						164
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						22,
+						22,
+						22
+					]
+				},
+				"light": {
+					"accent": [
+						103,
+						103,
+						103
+					],
+					"glow": [
+						232,
+						232,
+						232
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ff8000"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						255,
+						128,
+						0
+					],
+					"glow": [
+						255,
+						128,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						39,
+						14,
+						0
+					]
+				},
+				"light": {
+					"accent": [
+						164,
+						80,
+						0
+					],
+					"glow": [
+						255,
+						225,
+						207
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#80ff00"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						96,
+						194,
+						0
+					],
+					"glow": [
+						96,
+						194,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						11,
+						27,
+						3
+					]
+				},
+				"light": {
+					"accent": [
+						55,
+						117,
+						0
+					],
+					"glow": [
+						217,
+						240,
+						207
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#c0ffee"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						118,
+						179,
+						163
+					],
+					"glow": [
+						116,
+						177,
+						161
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						0,
+						27,
+						21
+					]
+				},
+				"light": {
+					"accent": [
+						53,
+						113,
+						99
+					],
+					"glow": [
+						198,
+						243,
+						231
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#ffe4e1"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						185,
+						159,
+						157
+					],
+					"glow": [
+						185,
+						159,
+						157
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						34,
+						16,
+						15
+					]
+				},
+				"light": {
+					"accent": [
+						120,
+						97,
+						95
+					],
+					"glow": [
+						252,
+						225,
+						222
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "deriveAccent",
+			"test": "deriveAccent › every preset and a grid of custom colors derive in-range colors",
+			"input": [
+				"#003300"
+			],
+			"output": {
+				"dark": {
+					"accent": [
+						130,
+						180,
+						125
+					],
+					"glow": [
+						0,
+						51,
+						0
+					],
+					"glowAlpha": 0.11,
+					"onAccent": [
+						7,
+						27,
+						6
+					]
+				},
+				"light": {
+					"accent": [
+						0,
+						51,
+						0
+					],
+					"glow": [
+						213,
+						241,
+						210
+					],
+					"glowAlpha": 0.6,
+					"onAccent": [
+						255,
+						255,
+						255
+					]
+				}
+			}
+		},
+		{
+			"fn": "parseAccent",
+			"test": "parseAccent › a preset key or a #rrggbb color is kept, in lowercase; anything else is the default",
+			"input": [
+				"violet",
+				0,
+				[
+					"violet",
+					"#AABBCC",
+					"#c0ffee",
+					null,
+					"bogus",
+					"#abc",
+					"c0ffee",
+					"#c0ffeeff"
+				]
+			],
+			"output": "violet"
+		},
+		{
+			"fn": "parseAccent",
+			"test": "parseAccent › a preset key or a #rrggbb color is kept, in lowercase; anything else is the default",
+			"input": [
+				"#AABBCC",
+				1,
+				[
+					"violet",
+					"#AABBCC",
+					"#c0ffee",
+					null,
+					"bogus",
+					"#abc",
+					"c0ffee",
+					"#c0ffeeff"
+				]
+			],
+			"output": "#aabbcc"
+		},
+		{
+			"fn": "parseAccent",
+			"test": "parseAccent › a preset key or a #rrggbb color is kept, in lowercase; anything else is the default",
+			"input": [
+				"#c0ffee",
+				2,
+				[
+					"violet",
+					"#AABBCC",
+					"#c0ffee",
+					null,
+					"bogus",
+					"#abc",
+					"c0ffee",
+					"#c0ffeeff"
+				]
+			],
+			"output": "#c0ffee"
+		},
+		{
+			"fn": "parseAccent",
+			"test": "parseAccent › a preset key or a #rrggbb color is kept, in lowercase; anything else is the default",
+			"input": [
+				null,
+				3,
+				[
+					"violet",
+					"#AABBCC",
+					"#c0ffee",
+					null,
+					"bogus",
+					"#abc",
+					"c0ffee",
+					"#c0ffeeff"
+				]
+			],
+			"output": "frost"
+		},
+		{
+			"fn": "parseAccent",
+			"test": "parseAccent › a preset key or a #rrggbb color is kept, in lowercase; anything else is the default",
+			"input": [
+				"bogus",
+				4,
+				[
+					"violet",
+					"#AABBCC",
+					"#c0ffee",
+					null,
+					"bogus",
+					"#abc",
+					"c0ffee",
+					"#c0ffeeff"
+				]
+			],
+			"output": "frost"
+		},
+		{
+			"fn": "parseAccent",
+			"test": "parseAccent › a preset key or a #rrggbb color is kept, in lowercase; anything else is the default",
+			"input": [
+				"#abc",
+				5,
+				[
+					"violet",
+					"#AABBCC",
+					"#c0ffee",
+					null,
+					"bogus",
+					"#abc",
+					"c0ffee",
+					"#c0ffeeff"
+				]
+			],
+			"output": "frost"
+		},
+		{
+			"fn": "parseAccent",
+			"test": "parseAccent › a preset key or a #rrggbb color is kept, in lowercase; anything else is the default",
+			"input": [
+				"c0ffee",
+				6,
+				[
+					"violet",
+					"#AABBCC",
+					"#c0ffee",
+					null,
+					"bogus",
+					"#abc",
+					"c0ffee",
+					"#c0ffeeff"
+				]
+			],
+			"output": "frost"
+		},
+		{
+			"fn": "parseAccent",
+			"test": "parseAccent › a preset key or a #rrggbb color is kept, in lowercase; anything else is the default",
+			"input": [
+				"#c0ffeeff",
+				7,
+				[
+					"violet",
+					"#AABBCC",
+					"#c0ffee",
+					null,
+					"bogus",
+					"#abc",
+					"c0ffee",
+					"#c0ffeeff"
+				]
+			],
+			"output": "frost"
+		}
+	]
+}

@@ -5,16 +5,25 @@
  *
  *   bun app-web/scripts/verify-push.ts [BASE_URL]   (default http://localhost:8787)
  *
- * Needs Google Chrome (CHROME, default /usr/local/bin/google-chrome). Playwright's Chromium has no FCM keys, and
+ * Needs Google Chrome (CHROME, default its macOS app or /usr/local/bin/google-chrome). Playwright's Chromium has no FCM keys, and
  * incognito contexts cannot subscribe, so this uses a persistent profile.
  */
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, expect, type Page } from '@playwright/test';
+import { DEVICE_HEADER } from '../../shared/auth';
+import { DELIVERY_CRON } from '../../server/src/crons';
+import { SEND_HOLD_MS } from '../../server/src/push-schedule';
 
 const BASE_URL = process.argv[2] ?? 'http://localhost:8787';
-const CHROME = process.env.CHROME ?? '/usr/local/bin/google-chrome';
+const CHROME =
+	process.env.CHROME ??
+	(process.platform === 'darwin'
+		? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+		: '/usr/local/bin/google-chrome');
+/** `wrangler dev` runs no Cron Triggers on its own; `scripts/wrangler-dev.ts` passes `--test-scheduled` to fire them. */
+const LOCAL = ['localhost', '127.0.0.1'].includes(new URL(BASE_URL).hostname);
 /** The account outlives a run, so this run's titles carry a suffix. */
 const RUN = crypto.randomUUID().slice(0, 4);
 
@@ -27,10 +36,6 @@ function check(ok: boolean, step: string, detail?: unknown): asserts ok {
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
-/** The first whole minute at least 40 s away, so the tasks below are saved and synced before it. */
-const target = new Date(Math.ceil((Date.now() + 40_000) / 60_000) * 60_000);
-const clock = `${pad(target.getHours())}:${pad(target.getMinutes())}`;
-const later = `${pad((target.getHours() + 1) % 24)}:${pad(target.getMinutes())}`;
 
 const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), 'verify-push-')), {
 	executablePath: CHROME,
@@ -39,6 +44,18 @@ const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir()
 	viewport: { width: 1280, height: 800 },
 });
 await context.grantPermissions(['notifications'], { origin: new URL(BASE_URL).origin });
+/** The app reports a failed subscribe only to Sentry, so the page records it here for a failed run to print. */
+await context.addInitScript(() => {
+	const errors: string[] = [];
+	Object.assign(window, { pushErrors: errors });
+	const subscribe = PushManager.prototype.subscribe;
+	PushManager.prototype.subscribe = function (...args) {
+		return subscribe.apply(this, args).catch((error: unknown) => {
+			errors.push(error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+			throw error;
+		});
+	};
+});
 
 const shown = (page: Page) =>
 	page.evaluate(async () => {
@@ -47,17 +64,35 @@ const shown = (page: Page) =>
 	});
 
 const schedule = async (page: Page) => {
-	const deviceId = await page.evaluate(() => {
-		const raw = localStorage.getItem('procrastimate');
-		const sync = raw ? (JSON.parse(raw) as { sync?: { deviceId?: string } }).sync : undefined;
-		return sync?.deviceId ?? '';
-	});
-	const response = await page.request.get('/api/push/schedule', { headers: { 'x-procrastimate-device': deviceId } });
-	const { notifications } = (await response.json()) as { notifications: { title: string; at: number }[] };
-	return notifications
-		.filter(n => n.title.endsWith(` ${RUN}`))
-		.map(n => `${n.title.replace(` ${RUN}`, '')}@${new Date(n.at).toISOString()}`);
+	const deviceId = await page.evaluate(() => localStorage.getItem('procrastimate-install') ?? '');
+	const response = await page.request.get('/api/push/schedule', { headers: { [DEVICE_HEADER]: deviceId } });
+	const { notifications } = (await response.json()) as {
+		notifications: { title: string; body: string; at: number }[];
+	};
+	return notifications.flatMap(n => named(n).map(name => `${name}@${new Date(n.at).toISOString()}`));
 };
+
+/** The run's tasks a notification names: its title alone, or the titles a group lists in its body. */
+const named = (n: { title: string; body: string }) =>
+	(/^\d+ tasks/.test(n.title) ? n.body.split(', ') : [n.title])
+		.filter(name => name.endsWith(` ${RUN}`))
+		.map(name => name.replace(` ${RUN}`, ''));
+
+const failedPushRoutes: string[] = [];
+/** Why subscribing failed: the browser's subscribe errors, failed push routes, and what the page holds. */
+const pushFailure = async (page: Page) => ({
+	line: await page.getByText(/^Notifications/).allTextContents(),
+	failedPushRoutes,
+	...(await page.evaluate(async () => {
+		const registration = await navigator.serviceWorker.getRegistration();
+		return {
+			subscribeErrors: (window as unknown as { pushErrors: string[] }).pushErrors,
+			permission: Notification.permission,
+			subscription: (await registration?.pushManager.getSubscription())?.endpoint ?? null,
+			refusedAt: localStorage.getItem('procrastimate-push-refused-at'),
+		};
+	})),
+});
 
 const signed = await context.request.post('/api/auth/sign-up/email', {
 	data: { email: `push-${RUN}@example.com`, password: 'e2e-password-1', name: 'Push' },
@@ -65,6 +100,10 @@ const signed = await context.request.post('/api/auth/sign-up/email', {
 if (!signed.ok()) throw new Error(await signed.text());
 
 const page = await context.newPage();
+page.on('response', response => {
+	if (new URL(response.url()).pathname.startsWith('/api/push/') && !response.ok())
+		failedPushRoutes.push(`${response.request().method()} ${new URL(response.url()).pathname} ${response.status()}`);
+});
 await page.goto('/inbox');
 const nav = page.getByRole('navigation', { name: 'Main' });
 const settings = page.getByRole('dialog', { name: 'Settings' });
@@ -73,7 +112,11 @@ await expect
 	.toBeTruthy();
 log('PASS sync is on');
 await nav.getByRole('button', { name: 'Settings' }).click();
-await expect(settings.getByText('Notifications: On', { exact: true })).toBeVisible();
+const on = await expect(settings.getByText('Notifications: On', { exact: true }))
+	.toBeVisible({ timeout: 20_000 })
+	.then(() => true)
+	.catch(() => false);
+check(on, 'Notifications: On', on ? undefined : await pushFailure(page));
 await page.keyboard.press('Escape');
 const endpoint = await page.evaluate(async () => {
 	const registration = await navigator.serviceWorker.ready;
@@ -89,33 +132,32 @@ const subscription = await page.evaluate(async () => {
 	const registration = await navigator.serviceWorker.ready;
 	return (await registration.pushManager.getSubscription())?.toJSON();
 });
-check((await page.request.post('/api/push/test', { data: { subscription } })).ok(), 'test push accepted');
-const testShown = Date.now();
-while (!(await shown(page)).some(n => n.tag === 'test') && Date.now() - testShown < 20_000)
-	await page.waitForTimeout(250);
-check(
-	(await shown(page)).some(n => n.tag === 'test'),
-	'test push arrived through FCM and the service worker showed it',
-	{
-		ms: Date.now() - testShown,
-	},
-);
-await page.keyboard.press('Escape');
+const subscribedAt = Date.now();
+/**
+ * The first whole minute the cron sends to this subscription, after its hold on a new subscription's sends. That
+ * leaves the tasks below time to save and sync before it.
+ */
+const target = new Date(Math.ceil((subscribedAt + SEND_HOLD_MS) / 60_000) * 60_000);
+const clock = `${pad(target.getHours())}:${pad(target.getMinutes())}`;
+const later = `${pad((target.getHours() + 1) % 24)}:${pad(target.getMinutes())}`;
 
 async function add(title: string) {
 	await page.locator('body').click({ position: { x: 1200, y: 700 } });
 	await page.keyboard.press('q');
-	const input = page.getByRole('dialog', { name: 'Quick add' }).getByRole('textbox', { name: 'Task name' });
+	const quickAdd = page.getByRole('dialog', { name: 'Quick add' });
+	const input = quickAdd.getByRole('textbox', { name: 'Task name' });
+	await expect(input).toBeFocused();
 	await input.fill(title);
 	await input.press('Enter');
 	await expect(input).toHaveValue('');
 	await page.keyboard.press('Escape');
+	await expect(quickAdd).toBeHidden();
 }
 
 async function openTask(title: string) {
 	await page
 		.locator(`[data-task="${title} ${RUN}"]`)
-		.getByRole('button', { name: new RegExp(title) })
+		.getByRole('button', { name: `${title} ${RUN}`, exact: true })
 		.click();
 	return page.getByRole('dialog', { name: 'Task details' });
 }
@@ -127,7 +169,7 @@ await add(`Deleted ${RUN} ${clock}`);
 await add(`Completed ${RUN} ${clock}`);
 await add(`Edited ${RUN} ${clock}`);
 await add(`Date only ${RUN} today`);
-await nav.getByRole('link', { name: 'Today' }).click();
+await nav.getByRole('link', { name: 'Inbox' }).click();
 
 await (await openTask('Deleted')).getByRole('button', { name: 'Delete task' }).click();
 await page
@@ -148,22 +190,46 @@ for (const start = Date.now(); Date.now() - start < 10_000; await page.waitForTi
 }
 check(
 	JSON.stringify(pending) === JSON.stringify(expected),
-	'server holds one push per moment, without deleted, completed, edited, or date-only tasks',
+	'server holds one push naming both live tasks, without deleted, completed, edited, or date-only tasks',
 	await schedule(page),
 );
 
 await page.close();
 log('app closed; waiting for the due time');
+/**
+ * The test push goes out only now, over a minute after subscribing. FCM is slow to accept a token Chrome just
+ * registered: for up to about 10 s it answers 410 Gone, or it accepts pushes and never delivers them, for up to about
+ * 25 s. Chrome's registration has already succeeded and the subscription never changes, so nothing on the client marks
+ * the end.
+ */
 const wait = target.getTime() + 15_000 - Date.now();
 await new Promise(resolve => setTimeout(resolve, wait));
+const test = await context.request.post('/api/push/test', { data: { subscription } });
+check(test.ok(), 'test push accepted', test.status());
+if (LOCAL) {
+	const fired = await context.request.get(
+		`/cdn-cgi/handler/scheduled?cron=${encodeURIComponent(DELIVERY_CRON)}&time=${target.getTime()}`,
+	);
+	check(fired.ok(), 'fired the delivery cron on wrangler dev', fired.status());
+}
 
 const reopened = await context.newPage();
-await reopened.goto('/today');
-const delivered = (await shown(reopened)).filter(n => n.tag !== 'test');
+await reopened.goto('/inbox');
+let testArrived = false;
+for (const start = Date.now(); Date.now() - start < 20_000; await reopened.waitForTimeout(250))
+	if ((testArrived = (await shown(reopened)).some(n => n.tag === 'test'))) break;
+check(testArrived, 'test push arrived through FCM and the service worker showed it');
+/** The push left the server, but FCM hands it to Chrome on its own schedule. */
+let delivered: Awaited<ReturnType<typeof shown>> = [];
+for (const start = Date.now(); Date.now() - start < 20_000; await reopened.waitForTimeout(250)) {
+	delivered = (await shown(reopened)).filter(n => n.tag !== 'test');
+	if (delivered.length > 0) break;
+}
 check(
-	JSON.stringify(delivered.map(n => n.title).sort()) ===
-		JSON.stringify([`Daily repeat ${RUN}`, `Due and reminded ${RUN}`]),
-	'only the two live tasks notified while the app was closed',
+	delivered.length === 1 &&
+		delivered[0]?.title === '2 tasks' &&
+		JSON.stringify(named(delivered[0]).sort()) === JSON.stringify(['Daily repeat', 'Due and reminded']),
+	'the two live tasks due at one moment notified once, together, while the app was closed',
 	delivered,
 );
 check(

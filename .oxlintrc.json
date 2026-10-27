@@ -13,6 +13,8 @@
 		"unicorn/prefer-top-level-await": "off",
 		"unicorn/filename-case": "off",
 		"import/namespace": "off",
+		"import/default": "off",
+		"unicorn/require-module-specifiers": "off",
 		"node/no-process-env": "error"
 	},
 	"overrides": [
@@ -26,7 +28,8 @@
 				"**/playwright.config.ts",
 				"**/*.test.ts",
 				"app-web/e2e/**",
-				"shared/vectors/record.ts"
+				"shared/vectors/record.ts",
+				"server/src/index.ts"
 			],
 			"rules": {
 				"node/no-process-env": "off"

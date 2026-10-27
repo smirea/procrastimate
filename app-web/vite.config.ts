@@ -28,9 +28,9 @@ export default defineConfig({
 	define: { __SENTRY_TARGET__: JSON.stringify(sentry.target), __APP_VERSION__: JSON.stringify(appVersion()) },
 	// The deploy uploads the maps to Sentry and deletes them, so they are never served.
 	build: { sourcemap: sentry.target ? 'hidden' : false },
-	// PowerSync runs SQLite in a worker built from its own ES module, and the prebundler would break its wasm imports.
+	// sync-engine runs SQLite in a module worker, and the prebundler would break sqlite-wasm's own wasm loading.
 	worker: { format: 'es' },
-	optimizeDeps: { exclude: ['@journeyapps/wa-sqlite', '@powersync/web'] },
+	optimizeDeps: { exclude: ['@sqlite.org/sqlite-wasm'] },
 	server: {
 		host: '127.0.0.1',
 		allowedHosts,
@@ -72,10 +72,8 @@ export default defineConfig({
 					// The deploy deletes the source maps after uploading them, and a precache of a missing file fails.
 					.filter(entry => entry.isFile() && /\.(js|wasm)$/.test(entry.name))
 					.map(entry => `/${relative(out, join(entry.parentPath, entry.name))}`);
-				// The service worker precaches only this variant, so a PowerSync upgrade that renames it fails here.
-				if (!files.some(file => /\/wa-sqlite-async-[\w-]+\.wasm$/.test(file))) {
-					throw new Error(`No wa-sqlite-async wasm in ${dir}`);
-				}
+				// An sqlite-wasm upgrade that renames the wasm fails here rather than leave the database closed offline.
+				if (!files.some(file => /\/sqlite3-[\w-]+\.wasm$/.test(file))) throw new Error(`No sqlite3 wasm in ${dir}`);
 				return `export default ${JSON.stringify(files)};`;
 			},
 		},

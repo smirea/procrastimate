@@ -1,6 +1,7 @@
-import { replaceState } from '$app/navigation';
+import { goto, replaceState } from '$app/navigation';
 import { page } from '$app/state';
-import { pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
+import type { NotificationTarget } from 'shared/notifications.ts';
+import { notificationHref, pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
 import { api, isUnauthorized } from './api.ts';
 import { DEVICE_KEYS, installId } from './device.ts';
 import { forgetInstallId, rememberInstallId } from './install-cache.ts';
@@ -47,7 +48,7 @@ class Push {
 			[document, 'visibilitychange', () => document.visibilityState === 'visible' && this.#retry()],
 		];
 		if ('serviceWorker' in navigator) {
-			listeners.push([navigator.serviceWorker, 'message', event => openTask((event as MessageEvent).data)]);
+			listeners.push([navigator.serviceWorker, 'message', event => openMessage((event as MessageEvent).data)]);
 		}
 		for (const [target, type, listener] of listeners) target.addEventListener(type, listener);
 		return () => {
@@ -169,20 +170,29 @@ class Push {
 
 export const push = new Push();
 
-/** Opens the task a notification was for: from `?task=` when the click launched the app, or from the service worker when it was already open. */
+/** Opens the task a notification was for when its tap launched the app on `?task=`. */
 export function openTaskFromUrl() {
 	const id = page.url.searchParams.get('task');
 	if (id === null) return;
-	openTask({ type: 'open-task', taskId: id });
+	openNotification({ kind: 'task', id });
 	const url = new URL(page.url.href);
 	url.searchParams.delete('task');
 	replaceState(url, page.state);
 }
 
-function openTask(message: unknown) {
+/** A tapped notification opens its task's details, or the list its tasks share. */
+export function openNotification(opens: NotificationTarget | null) {
+	if (opens?.kind !== 'task') {
+		sheets.close();
+		void goto(notificationHref(opens));
+	} else if (store.task(opens.id)) sheets.openTask(opens.id);
+}
+
+/** The service worker's word that a notification was tapped while the app was open. */
+function openMessage(message: unknown) {
 	if (typeof message !== 'object' || message === null) return;
-	const { type, taskId } = message as { type?: unknown; taskId?: unknown };
-	if (type === 'open-task' && typeof taskId === 'string' && store.task(taskId)) sheets.openTask(taskId);
+	const { type, opens } = message as { type?: unknown; opens?: NotificationTarget | null };
+	if (type === 'open-notification') openNotification(opens ?? null);
 }
 
 async function fetchKey(): Promise<Uint8Array<ArrayBuffer> | null> {

@@ -7,7 +7,7 @@
 import { readFileSync } from 'node:fs';
 
 /** Every port of a block stays inside the app's 10-port slot, since the next app's slot starts at +10. */
-export const OFFSET = { web: 0, api: 1, powersync: 2, e2eWeb: 5, e2eApi: 6 } as const;
+export const OFFSET = { web: 0, api: 1, e2eWeb: 5, e2eApi: 6 } as const;
 
 /** The root `.env` default, so the main checkout's ports live in one place. */
 export const MAIN_PORT = Number(

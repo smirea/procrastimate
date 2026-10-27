@@ -56,7 +56,6 @@ final class Session {
         } catch {
             return
         }
-        sync.prefetch(response)
         await adopt(response.user.id, email: response.user.email, name: response.user.name)
     }
 

@@ -10,6 +10,10 @@ struct SRGB {
         self.opacity = opacity
     }
 
+    init(rgb: [Int], _ opacity: Double = 1) {
+        self.init(UInt32(rgb[0] << 16 | rgb[1] << 8 | rgb[2]), opacity)
+    }
+
     var uiColor: UIColor {
         UIColor(
             red: CGFloat((hex >> 16) & 0xFF) / 255,

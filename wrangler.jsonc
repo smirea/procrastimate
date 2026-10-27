@@ -7,9 +7,6 @@
 	"routes": [{ "pattern": "procrastimate.stf.lol", "custom_domain": true }],
 	"workers_dev": true,
 	"preview_urls": false,
-	// Pinned next to Supabase in us-east-1: an upload is a run of sequential queries, and each one crosses the distance
-	// between the Worker and the database. Smart placement only moves a Worker after analysing its traffic.
-	"placement": { "region": "aws:us-east-1" },
 	"assets": {
 		"directory": "app-web/build",
 		"not_found_handling": "single-page-application",
@@ -17,23 +14,18 @@
 	},
 	// `server/src/crons.ts` names both: push delivery every minute, the JSON dump to R2 daily.
 	"triggers": { "crons": ["* * * * *", "0 9 * * *"] },
-	"vars": { "POWERSYNC_URL": "https://6ad3efdb3b1803753bd28fbf.powersync.journeyapps.com" },
-	// `scripts/wrangler-dev.ts` points a local run at the worktree's database through
-	// CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE and its PowerSync through `--var POWERSYNC_URL`.
-	"hyperdrive": [
-		{
-			"binding": "HYPERDRIVE",
-			"id": "612c9ca80e5a4c90ace80c20648903c6",
-		},
-	],
 	"r2_buckets": [{ "binding": "BACKUPS", "bucket_name": "procrastimate-backups" }],
 	"durable_objects": {
-		"bindings": [{ "name": "RAMBLE", "class_name": "Ramble" }],
+		"bindings": [
+			{ "name": "APP", "class_name": "App" },
+			{ "name": "RAMBLE", "class_name": "Ramble" },
+		],
 	},
 	"migrations": [
 		{ "tag": "v1", "new_sqlite_classes": ["PushSchedule"] },
 		{ "tag": "v2", "new_sqlite_classes": ["Account"] },
 		{ "tag": "v3", "deleted_classes": ["PushSchedule"] },
 		{ "tag": "v4", "deleted_classes": ["Account"], "new_sqlite_classes": ["Ramble"] },
+		{ "tag": "v5", "new_sqlite_classes": ["App"] },
 	],
 }

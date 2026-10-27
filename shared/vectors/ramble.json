@@ -52223,6 +52223,864 @@
 				],
 				"tokens": []
 			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "commands mode › only `new task` splits, so sentences, commas, and verbs stay in one title",
+			"input": [
+				"Buy milk and eggs tomorrow. Call mom, then email the landlord",
+				{
+					"commands": true,
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-work",
+							"name": "Work",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-indonesia",
+							"name": "Indonesia",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-finance",
+							"name": "Finance",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 61,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "Buy milk and eggs. Call mom, then email the landlord"
+					}
+				],
+				"tokens": [
+					{
+						"end": 26,
+						"kind": "due",
+						"start": 18,
+						"text": "tomorrow"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "commands mode › cues build subtasks, notes, priorities, and drop a scratched task",
+			"input": [
+				"Plan the party priority one subtask buy balloons subtask order cake by friday note she likes chocolate new task call the venue scratch that new task pay rent on the first",
+				{
+					"commands": true,
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-work",
+							"name": "Work",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-indonesia",
+							"name": "Indonesia",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-finance",
+							"name": "Finance",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": null,
+						"labelIds": [],
+						"notes": "",
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 103,
+							"start": 0
+						},
+						"subtasks": [
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 49,
+									"start": 36
+								},
+								"subtasks": [],
+								"title": "Buy balloons"
+							},
+							{
+								"due": {
+									"date": "2026-10-16",
+									"time": null
+								},
+								"labelIds": [],
+								"notes": "she likes chocolate",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 103,
+									"start": 57
+								},
+								"subtasks": [],
+								"title": "Order cake"
+							}
+						],
+						"title": "Plan the party"
+					},
+					{
+						"due": {
+							"date": "2026-11-01",
+							"time": null
+						},
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 170,
+							"start": 149
+						},
+						"subtasks": [],
+						"title": "Pay rent"
+					}
+				],
+				"tokens": [
+					{
+						"end": 27,
+						"kind": "priority",
+						"start": 15,
+						"text": "priority one"
+					},
+					{
+						"end": 35,
+						"kind": "subtask",
+						"start": 28,
+						"text": "subtask"
+					},
+					{
+						"end": 56,
+						"kind": "subtask",
+						"start": 49,
+						"text": "subtask"
+					},
+					{
+						"end": 77,
+						"kind": "due",
+						"start": 71,
+						"text": "friday"
+					},
+					{
+						"end": 82,
+						"kind": "note",
+						"start": 78,
+						"text": "note"
+					},
+					{
+						"end": 111,
+						"kind": "separator",
+						"start": 103,
+						"text": "new task"
+					},
+					{
+						"end": 139,
+						"kind": "correction",
+						"start": 127,
+						"text": "scratch that"
+					},
+					{
+						"end": 148,
+						"kind": "separator",
+						"start": 140,
+						"text": "new task"
+					},
+					{
+						"end": 170,
+						"kind": "due",
+						"start": 158,
+						"text": "on the first"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "commands mode › list intros and sentence notes are plain words",
+			"input": [
+				"Plan the trip, the steps are book flights and find a hotel. Details tbd",
+				{
+					"commands": true,
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-work",
+							"name": "Work",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-indonesia",
+							"name": "Indonesia",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-finance",
+							"name": "Finance",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": null,
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 71,
+							"start": 0
+						},
+						"subtasks": [],
+						"title": "Plan the trip, the steps are book flights and find a hotel. Details tbd"
+					}
+				],
+				"tokens": []
+			}
+		},
+		{
+			"fn": "parseRamble",
+			"test": "commands mode › a note before any task starts one, and the next cue ends the note",
+			"input": [
+				"note pick a color subtask ask Sam",
+				{
+					"commands": true,
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-work",
+							"name": "Work",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-indonesia",
+							"name": "Indonesia",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-finance",
+							"name": "Finance",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"ended": false,
+				"tasks": [
+					{
+						"due": null,
+						"labelIds": [],
+						"notes": "",
+						"priority": null,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"segment": {
+							"end": 33,
+							"start": 0
+						},
+						"subtasks": [
+							{
+								"due": null,
+								"labelIds": [],
+								"notes": "",
+								"priority": null,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"segment": {
+									"end": 33,
+									"start": 26
+								},
+								"subtasks": [],
+								"title": "Ask Sam"
+							}
+						],
+						"title": "Note pick a color"
+					}
+				],
+				"tokens": [
+					{
+						"end": 25,
+						"kind": "subtask",
+						"start": 18,
+						"text": "subtask"
+					}
+				]
+			}
+		},
+		{
+			"fn": "resolveOutline",
+			"test": "outline resolution › phrases become dates, repeats, and reminders, and names become ids",
+			"input": [
+				{
+					"tasks": [
+						{
+							"labels": [],
+							"notes": "",
+							"priority": 1,
+							"project": "home",
+							"reminder": "30 minutes before",
+							"subtasks": [],
+							"title": "call the dentist",
+							"when": "friday at 4pm"
+						},
+						{
+							"labels": [
+								"calls",
+								"nonexistent"
+							],
+							"notes": "",
+							"priority": 0,
+							"project": "",
+							"reminder": "",
+							"subtasks": [],
+							"title": "Water plants",
+							"when": "every monday"
+						}
+					]
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-work",
+							"name": "Work",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-indonesia",
+							"name": "Indonesia",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-finance",
+							"name": "Finance",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": [
+				{
+					"due": {
+						"date": "2026-10-16",
+						"time": "16:00"
+					},
+					"labelIds": [],
+					"notes": "",
+					"priority": 1,
+					"projectId": "p-home",
+					"recurrence": null,
+					"reminders": [
+						{
+							"kind": "before",
+							"minutes": 30
+						}
+					],
+					"segment": {
+						"end": 0,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Call the dentist"
+				},
+				{
+					"due": {
+						"date": "2026-10-19",
+						"time": null
+					},
+					"labelIds": [
+						"l-calls"
+					],
+					"notes": "",
+					"priority": null,
+					"projectId": null,
+					"recurrence": {
+						"interval": 1,
+						"unit": "week"
+					},
+					"reminders": [],
+					"segment": {
+						"end": 0,
+						"start": 0
+					},
+					"subtasks": [],
+					"title": "Water plants"
+				}
+			]
+		},
+		{
+			"fn": "resolveOutline",
+			"test": "outline resolution › unknown names and out-of-range priorities set nothing, and subtasks take no project",
+			"input": [
+				{
+					"tasks": [
+						{
+							"labels": [],
+							"notes": "  window seats  ",
+							"priority": 7,
+							"project": "Atlantis",
+							"reminder": "",
+							"subtasks": [
+								{
+									"labels": [],
+									"notes": "",
+									"priority": 0,
+									"project": "Home",
+									"reminder": "",
+									"subtasks": [
+										{
+											"labels": [],
+											"notes": "",
+											"priority": 0,
+											"project": "",
+											"reminder": "",
+											"subtasks": [],
+											"title": "compare prices",
+											"when": ""
+										}
+									],
+									"title": "book flights",
+									"when": ""
+								},
+								{
+									"labels": [],
+									"notes": "",
+									"priority": 0,
+									"project": "",
+									"reminder": "",
+									"subtasks": [],
+									"title": "  ",
+									"when": ""
+								}
+							],
+							"title": "Plan the trip",
+							"when": ""
+						}
+					]
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-errands",
+							"name": "errands",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-work",
+							"name": "Work",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-indonesia",
+							"name": "Indonesia",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-finance",
+							"name": "Finance",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": [
+				{
+					"due": null,
+					"labelIds": [],
+					"notes": "window seats",
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"segment": {
+						"end": 0,
+						"start": 0
+					},
+					"subtasks": [
+						{
+							"due": null,
+							"labelIds": [],
+							"notes": "",
+							"priority": null,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"segment": {
+								"end": 0,
+								"start": 0
+							},
+							"subtasks": [
+								{
+									"due": null,
+									"labelIds": [],
+									"notes": "",
+									"priority": null,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"segment": {
+										"end": 0,
+										"start": 0
+									},
+									"subtasks": [],
+									"title": "Compare prices"
+								}
+							],
+							"title": "Book flights"
+						}
+					],
+					"title": "Plan the trip"
+				}
+			]
 		}
 	]
 }

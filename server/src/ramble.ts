@@ -1,5 +1,5 @@
 import { and, eq, exists, or, sql } from 'drizzle-orm';
-import type { PgColumn } from 'drizzle-orm/pg-core';
+import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { base64Encode } from './jwt';
 import type { Actor } from '../../shared/auth';
 import { access, labels, projects, rambleUsage, tasks, type AccessRow } from '../../shared/db/schema';
@@ -16,9 +16,11 @@ import {
 	type RambleServerMessage,
 } from '../../shared/ramble/protocol';
 import { addDays, type DateKey } from '../../shared/task';
-import { zonedDateKey, zonedTime } from '../../shared/zoned-time';
-import type { Db } from './db/postgres';
+import { zonedDateKey, zonedTime, zonedTimeOfDay } from '../../shared/zoned-time';
+import type { RambleOutline, RambleOutlineInput } from '../../shared/ramble/outline';
+import type { Db } from './db/sqlite';
 import { cassetteUpstream } from './ramble-cassette';
+import { geminiUpstream, type OpenSocket } from './ramble-gemini';
 import type { Config } from './config';
 import { reportError } from './sentry';
 import { listenWorkerSocket, type Socket, type StreamEvents, type StreamHost, type WorkerSocket } from './sockets';
@@ -68,8 +70,8 @@ export type KeytermSource = {
  * View-only shares are left out. Recency reads the user's own tasks and every shared task they can see. A whole-space
  * share makes a manager with no rows, but only AI accounts hold one, and Ramble refuses them.
  */
-export async function loadKeytermSource(db: Db, userId: string): Promise<KeytermSource> {
-	const sharedTo = (kind: AccessRow['kind'], id: PgColumn, owner: PgColumn, role?: AccessRow['role']) =>
+export function loadKeytermSource(db: Db, userId: string): KeytermSource {
+	const sharedTo = (kind: AccessRow['kind'], id: SQLiteColumn, owner: SQLiteColumn, role?: AccessRow['role']) =>
 		exists(
 			db
 				.select({ one: sql`1` })
@@ -84,20 +86,23 @@ export async function loadKeytermSource(db: Db, userId: string): Promise<Keyterm
 					),
 				),
 		);
-	const [taskRows, projectRows, labelRows] = await Promise.all([
+	const [taskRows, projectRows, labelRows] = [
 		db
 			.select({ projectId: tasks.projectId, labelIds: tasks.labelIds, createdAt: tasks.createdAt })
 			.from(tasks)
-			.where(or(eq(tasks.userId, userId), sharedTo('task', tasks.id, tasks.userId))),
+			.where(or(eq(tasks.userId, userId), sharedTo('task', tasks.id, tasks.userId)))
+			.all(),
 		db
 			.select({ id: projects.id, name: projects.name })
 			.from(projects)
-			.where(or(eq(projects.userId, userId), sharedTo('project', projects.id, projects.userId, 'edit'))),
+			.where(or(eq(projects.userId, userId), sharedTo('project', projects.id, projects.userId, 'edit')))
+			.all(),
 		db
 			.select({ id: labels.id, name: labels.name })
 			.from(labels)
-			.where(or(eq(labels.userId, userId), sharedTo('label', labels.id, labels.userId, 'edit'))),
-	]);
+			.where(or(eq(labels.userId, userId), sharedTo('label', labels.id, labels.userId, 'edit')))
+			.all(),
+	];
 	return { tasks: taskRows, projects: projectRows, labels: labelRows };
 }
 
@@ -127,12 +132,22 @@ export function rambleKeyterms(snapshot: KeytermSource): string[] {
 
 export type UpstreamEvents = { message(text: string): void; close(): void };
 export type Upstream = { send(text: string): void; close(): void };
+
+/** Which service hears the audio: ElevenLabs transcribes it, and Gemini Live transcribes it and reads the tasks. */
+export const RAMBLE_ENGINES = ['elevenlabs', 'gemini'] as const;
+export type RambleEngine = (typeof RAMBLE_ENGINES)[number];
+
 /**
- * Opens one transcription session. `cassette` names the recording a fake upstream replays and is ignored by the
- * real one. Rejects when the connection fails.
+ * Opens one session. `cassette` names the recording a fake upstream replays and is ignored by the real one, and
+ * `context` is what Gemini Live needs to read tasks. Rejects when the connection fails.
  */
 export type ConnectUpstream = (
-	session: { keyterms: string[]; cassette: string | null },
+	session: {
+		engine: RambleEngine;
+		keyterms: string[];
+		cassette: string | null;
+		context: Omit<RambleOutlineInput, 'transcript'>;
+	},
 	events: UpstreamEvents,
 ) => Promise<Upstream>;
 
@@ -160,19 +175,39 @@ export function workerUpstream(apiKey: string): ConnectUpstream {
 	};
 }
 
-/** How the server reaches ElevenLabs: null without a key, which turns Ramble off. */
+/** A WebSocket from the Worker, which opens one through a `fetch` upgrade. */
+export const workerSocket: OpenSocket = async (url, events) => {
+	const response = await fetch(url.replace(/^ws/, 'http'), { headers: { Upgrade: 'websocket' } });
+	const socket = (response as Response & { webSocket?: WorkerSocket | null }).webSocket;
+	if (!socket) throw new Error(`The upstream answered ${response.status}`);
+	socket.accept();
+	listenWorkerSocket(socket, {
+		message: data => events.message(typeof data === 'string' ? data : new TextDecoder().decode(data)),
+		close: () => events.close(),
+	});
+	return { send: text => socket.send(text), close: () => attempt(() => socket.close(1000, 'Done')) };
+};
+
+/**
+ * How the server reaches each engine: ElevenLabs with its key, Gemini Live with Gemini's. Cassettes stand in for
+ * both. Null when neither is configured, which turns the socket off; an engine without a key refuses its sessions.
+ */
 export function upstreamOf(
-	settings: Config['ramble'],
-	upstream: (apiKey: string) => ConnectUpstream,
+	settings: Pick<Config, 'ramble' | 'gemini'>,
+	elevenlabs: (apiKey: string) => ConnectUpstream,
+	open: OpenSocket,
 ): ConnectUpstream | null {
-	switch (settings?.kind) {
-		case 'elevenlabs':
-			return upstream(settings.apiKey);
-		case 'cassette':
-			return cassetteUpstream();
-		default:
-			return null;
-	}
+	if (settings.ramble?.kind === 'cassette') return cassetteUpstream();
+	const engines: Record<RambleEngine, ConnectUpstream | null> = {
+		elevenlabs: settings.ramble?.kind === 'elevenlabs' ? elevenlabs(settings.ramble.apiKey) : null,
+		gemini: settings.gemini ? geminiUpstream(settings.gemini.apiKey, open) : null,
+	};
+	if (!engines.elevenlabs && !engines.gemini) return null;
+	return async (session, events) => {
+		const connect = engines[session.engine];
+		if (!connect) throw new Error(`Ramble has no ${session.engine} key`);
+		return connect(session, events);
+	};
 }
 
 type Tally = { seconds: number };
@@ -220,28 +255,46 @@ function charge(usage: RambleUsage, day: Day, seconds: number): Promise<void> {
 
 export type RambleUsage = { stored(day: string): Promise<number>; add(day: string, seconds: number): Promise<void> };
 
-export function pgRambleUsage(db: Db, owner: string): RambleUsage {
+/**
+ * What a session reads from the database: the user's time zone, the names its keyterms come from, and the day's
+ * usage. The Bun dev server reads its own database; the Worker's `Ramble` object asks the `App` object.
+ */
+export type RambleData = {
+	zone(userId: string): Promise<string>;
+	keyterms(userId: string): Promise<KeytermSource>;
+	usage(userId: string): RambleUsage;
+};
+
+export function dbRambleUsage(db: Db, owner: string): RambleUsage {
 	return {
 		async stored(day) {
-			const [row] = await db
+			const row = db
 				.select({ seconds: rambleUsage.seconds })
 				.from(rambleUsage)
-				.where(and(eq(rambleUsage.userId, owner), eq(rambleUsage.day, day)));
+				.where(and(eq(rambleUsage.userId, owner), eq(rambleUsage.day, day)))
+				.get();
 			return row?.seconds ?? 0;
 		},
 		async add(day, seconds) {
-			await db
-				.insert(rambleUsage)
+			db.insert(rambleUsage)
 				.values({ userId: owner, day, seconds })
 				.onConflictDoUpdate({
 					target: [rambleUsage.userId, rambleUsage.day],
 					set: { seconds: sql`${rambleUsage.seconds} + excluded.seconds` },
-				});
+				})
+				.run();
 		},
 	};
 }
 
-const FINAL_COMMIT_MS = 3000;
+export const dbRambleData = (db: Db): RambleData => ({
+	zone: async userId => storedZone(db, userId),
+	keyterms: async userId => loadKeytermSource(db, userId),
+	usage: userId => dbRambleUsage(db, userId),
+});
+
+/** Gemini Live may still be calling tools for the last words when the audio ends. */
+const FINAL_COMMIT_MS: Record<RambleEngine, number> = { elevenlabs: 3000, gemini: 6000 };
 const CONNECT_MS = 10_000;
 /** A socket that stops sending anything ends after this, so a dropped client does not hold the object open. */
 const IDLE_MS = 60_000;
@@ -263,7 +316,7 @@ const UPSTREAM_ERRORS = new Set([
 	'transcriber_error',
 ]);
 
-type UpstreamMessage = { message_type?: string; text?: string; error?: string };
+type UpstreamMessage = { message_type?: string; text?: string; error?: string; outline?: RambleOutline };
 
 const audioChunk = (bytes: Uint8Array, commit: boolean) =>
 	JSON.stringify({
@@ -281,8 +334,10 @@ type SessionOptions = {
 	userId: string;
 	day: Day;
 	zone: string;
+	engine: RambleEngine;
 	keyterms: string[];
 	cassette: string | null;
+	context: Omit<RambleOutlineInput, 'transcript'>;
 };
 
 /**
@@ -301,8 +356,10 @@ function session({
 	userId,
 	day: first,
 	zone,
+	engine,
 	keyterms,
 	cassette,
+	context,
 }: SessionOptions): StreamEvents {
 	let day = first;
 	const tally: Tally = { seconds: 0 };
@@ -361,7 +418,7 @@ function session({
 	function finish(reason: RambleEndReason) {
 		if (ending || ended) return;
 		ending = reason;
-		later(FINAL_COMMIT_MS + (started ? 0 : CONNECT_MS), () => end(reason));
+		later(FINAL_COMMIT_MS[engine] + (started ? 0 : CONNECT_MS), () => end(reason));
 		flush();
 	}
 
@@ -380,6 +437,9 @@ function session({
 				return flush();
 			case 'partial_transcript':
 				if (message.text) send({ type: 'partial', text: message.text });
+				return;
+			case 'outline':
+				if (message.outline) send({ type: 'outline', outline: message.outline });
 				return;
 			case 'committed_transcript':
 				uncommitted = false;
@@ -441,7 +501,10 @@ function session({
 
 	armIdle();
 	later(CONNECT_MS, () => !started && fail('Transcription did not start'));
-	connect({ keyterms, cassette }, { message: onUpstream, close: () => fail('Transcription closed unexpectedly') }).then(
+	connect(
+		{ engine, keyterms, cassette, context },
+		{ message: onUpstream, close: () => fail('Transcription closed unexpectedly') },
+	).then(
 		socket => {
 			if (ended) return attempt(() => socket.close());
 			upstream = socket;
@@ -491,22 +554,31 @@ export type RambleRoute = (request: Request, actor: Actor) => Promise<Response>;
  * The upgrade for one signed-in human's session, after the caller authenticated the request, over one database. The
  * route holds the users' days, so one route serves every session of a host.
  */
-export function rambleRoute(db: Db, stream: StreamHost, connect: ConnectUpstream | null): RambleRoute {
+export function rambleRoute(data: RambleData, stream: StreamHost, connect: ConnectUpstream | null): RambleRoute {
 	const ramble: Ramble = { stream, days: new Map() };
 	return async (request, actor) => {
 		if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return refuse(426, 'Expected a WebSocket');
 		if (!connect) return refuse(503, 'Ramble is not configured');
 		const now = Date.now();
-		const usage = pgRambleUsage(db, actor.id);
-		const zone = await storedZone(db, actor.id);
+		const usage = data.usage(actor.id);
+		const zone = await data.zone(actor.id);
 		const day = dayOf(ramble, usage, actor.id, zonedDateKey(now, zone));
 		await day.loaded;
 		const remaining = RAMBLE_DAILY_SECONDS - day.stored - liveSeconds(day);
 		if (remaining <= 0) return refuseDaily(ramble, request, zonedTime(addDays(day.key, 1), '00:00', zone));
-		const keyterms = rambleKeyterms(await loadKeytermSource(db, actor.id));
-		const cassette = new URL(request.url).searchParams.get('cassette');
+		const source = await data.keyterms(actor.id);
+		const keyterms = rambleKeyterms(source);
+		const params = new URL(request.url).searchParams;
+		const cassette = params.get('cassette');
+		const engine: RambleEngine = params.get('engine') === 'gemini' ? 'gemini' : 'elevenlabs';
+		const context = {
+			today: day.key,
+			time: zonedTimeOfDay(now, zone),
+			projects: source.projects.map(project => project.name),
+			labels: source.labels.map(label => label.name),
+		};
 		return ramble.stream(request, RAMBLE_SOCKET_PROTOCOL, client =>
-			session({ client, connect, ramble, usage, userId: actor.id, day, zone, keyterms, cassette }),
+			session({ client, connect, ramble, usage, userId: actor.id, day, zone, engine, keyterms, cassette, context }),
 		);
 	};
 }

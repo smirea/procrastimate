@@ -1,19 +1,14 @@
-import type { DurableObjectNamespace, Hyperdrive, R2Bucket } from '@cloudflare/workers-types';
+import type { DurableObjectNamespace, R2Bucket } from '@cloudflare/workers-types';
 
 /**
  * Raw Worker bindings. Every field is optional here because Bun serves the same handler without the Cloudflare ones.
  * Read them through `config(env)` in `config.ts`, which decides what is required.
  */
 export type Env = {
-	/** Postgres on the Worker. The Bun dev server, scripts, and tests set `DATABASE_URL` instead. */
-	HYPERDRIVE?: Hyperdrive;
-	DATABASE_URL?: string;
+	/** The `App` Durable Object, which holds the database and serves `/api/*` on the Worker. */
+	APP?: DurableObjectNamespace;
 	RAMBLE?: DurableObjectNamespace;
 	BACKUPS?: R2Bucket;
-	/** Where `/api/powersync/*` is forwarded. A plain var, not a secret. */
-	POWERSYNC_URL?: string;
-	/** The Ed25519 private JWK, with its `kid`, that signs PowerSync tokens. A Worker secret. */
-	POWERSYNC_JWT_PRIVATE_KEY?: string;
 	VAPID_PUBLIC_KEY?: string;
 	VAPID_PRIVATE_KEY?: string;
 	BETTER_AUTH_SECRET?: string;
@@ -29,6 +24,8 @@ export type Env = {
 	/** A PKCS8 .p8, with newlines as `\n` when the secret is a single line. */
 	APPLE_PRIVATE_KEY?: string;
 	ELEVENLABS_API_KEY?: string;
+	/** Ramble's smart parse, a Worker secret. */
+	GEMINI_API_KEY?: string;
 	/** `cassette` replays recorded transcripts instead of calling ElevenLabs, for `wrangler dev` in tests. */
 	RAMBLE_UPSTREAM?: string;
 	/** Plain vars `wrangler deploy --var` sets, never secrets. See `Config.sentry`. */

@@ -39,7 +39,7 @@ The Mac runs many jobs at once, and each booted simulator slows all of them. Cli
   - `2`: rebase onto `origin/master`, rerun only the checks that cover the conflicted files (`./sim build` for Swift), push, rerun. During a rebase, `--theirs` is your branch and `--ours` is master.
   - `3`: rerun.
 - Wait on CI only with `pr-ship`, never `gh run watch`. Treat review-bot comments skeptically: fix real bugs, and dismiss noise with a concrete reason in your reply.
-- Migrations: never run an unmerged migration against a shared database. A database whose history isn't a prefix of the code's refuses to migrate, which locks it for master. Two migration PRs conflict in `server/drizzle/meta/_journal.json`. The PR that merges second deletes its migration, rebases, and reruns `bun run db:generate`. Never hand-merge the journal.
+- Schema changes are additive: the server adds missing tables, columns, and indexes on start, and never drops or retypes one. A retyped column gets a new name, and a `NOT NULL` column added later needs a default.
 - A job the brief marks as research, or "don't merge": open a draft PR, skip `pr-ship`, and end with `needs_input`, the findings in `summary`, and the decisions you need in `questions`.
 
 ## Scope and report

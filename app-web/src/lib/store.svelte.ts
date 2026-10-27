@@ -1,4 +1,4 @@
-import type { DictationChoice } from 'shared/dictation.ts';
+import type { DictationChoice, RambleMode } from 'shared/dictation.ts';
 import type { LabelColor } from 'shared/label-colors.ts';
 import type { ProjectIcon } from 'shared/project-icons.ts';
 import type { QuickAddButton } from 'shared/quick-add-buttons.ts';
@@ -12,9 +12,16 @@ import type { Person } from 'shared/sharing.ts';
 import * as comments from 'shared/comments.ts';
 import * as rules from 'shared/store.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
-import { CHANGE_LOG, powerSync, readSince, storedOwner, storeOwner, trimChanges, writeRows } from './database.ts';
 import {
-	forgetDatabaseId,
+	clearDatabase,
+	localDatabase,
+	readSince,
+	storedOwner,
+	storeOwner,
+	trimChanges,
+	writeRows,
+} from './database.ts';
+import {
 	forgetLegacyDocument,
 	onOwnerChange,
 	loadPeople,
@@ -50,7 +57,7 @@ const storeData = ({ tasks, projects, sections, labels, comments, reads }: rules
 async function clearUntilDone() {
 	for (let wait = 1000; ; wait = Math.min(wait * 2, 30_000)) {
 		try {
-			await Promise.all([powerSync.disconnectAndClear(), clearLocalImages()]);
+			await Promise.all([clearDatabase(), clearLocalImages()]);
 			return;
 		} catch (error) {
 			reportError(error);
@@ -123,6 +130,9 @@ class Store {
 	#commentById = $derived(new Map(this.#comments.map(c => [c.id, c])));
 	/** Where deleted tasks lived, so undo puts them back into the same space. */
 	#deletedFrom = new Map<string, Home>();
+	/** Undos still on offer, each with the space it runs in. */
+	#undos: { id: number; home: Home; undo: rules.Undo }[] = [];
+	#lastUndo = 0;
 
 	get tasks(): Task[] {
 		return this.#tasks;
@@ -153,7 +163,8 @@ class Store {
 		forgetLegacyDocument();
 		this.people = loadPeople();
 		this.remindersCheckedAt = loadRemindersCheckedAt(Date.now());
-		powerSync.onChange({ onChange: () => this.#reload() }, { tables: [CHANGE_LOG], throttleMs: 10 });
+		// A pull names the synced tables it changed and a local write the change log too; either way the log has the ids.
+		localDatabase.onChange(() => this.#reload());
 		onOwnerChange(() => location.reload());
 	}
 
@@ -172,6 +183,8 @@ class Store {
 			this.people = [];
 			savePeople([]);
 			this.loaded = false;
+			this.#undos = [];
+			this.#deletedFrom.clear();
 		}
 		this.#owner = userId;
 		this.#rows = new LocalRows(userId);
@@ -187,7 +200,6 @@ class Store {
 				const previous = await storedOwner();
 				if (previous !== null && previous !== userId) {
 					await clearUntilDone();
-					forgetDatabaseId();
 				}
 				if (this.#owner !== userId) return;
 				await storeOwner(userId);
@@ -203,7 +215,7 @@ class Store {
 		return this.#switching;
 	}
 
-	/** Resolves once every command so far is in the local database, and so in PowerSync's upload queue. */
+	/** Resolves once every command so far is in the local database, and so in the engine's outbox. */
 	written(): Promise<void> {
 		return this.#queue;
 	}
@@ -271,7 +283,7 @@ class Store {
 		const started = performance.now();
 		let read;
 		try {
-			read = await readSince(this.#cursor);
+			read = await readSince(this.#cursor, owner);
 		} catch (error) {
 			reportError(error);
 			if (owner === this.#owner && !this.loaded) this.unreadable = true;
@@ -334,8 +346,10 @@ class Store {
 		return this.#writing > 0;
 	}
 
+	/** Keeps the comments others wrote: the server refuses their deletion, and its purge removes them once the space is empty. */
 	deleteAll() {
-		this.#apply(emptyData());
+		const theirs = this.own.comments.filter(comment => comment.authorId !== null && comment.authorId !== this.#owner);
+		this.#apply({ ...emptyData(), comments: theirs });
 	}
 
 	get dictation(): DictationChoice {
@@ -345,6 +359,14 @@ class Store {
 	/** Offline voice still uses native. */
 	setDictation(dictation: DictationChoice) {
 		this.#setSettings({ dictation });
+	}
+
+	get rambleMode(): RambleMode {
+		return this.settings.rambleMode;
+	}
+
+	setRambleMode(rambleMode: RambleMode) {
+		this.#setSettings({ rambleMode });
 	}
 
 	get quickAddButtons(): QuickAddButton[] {
@@ -475,11 +497,6 @@ class Store {
 		return reopened;
 	}
 
-	restoreCompletion(previous: readonly rules.CompletionState[]) {
-		const first = previous[0];
-		if (first) this.#onTask(first.id, data => rules.restoreCompletion(data, previous));
-	}
-
 	moveSubtask(id: string, index: number) {
 		this.#onTask(id, data => rules.moveSubtask(data, id, index));
 	}
@@ -499,11 +516,6 @@ class Store {
 		return previous;
 	}
 
-	restoreExploded(previous: readonly rules.ExplodedState[]) {
-		const first = previous[0];
-		if (first) this.#onTask(first.id, data => rules.restoreExploded(data, previous));
-	}
-
 	deleteTask(id: string): Task[] {
 		const home = this.homeOf(id);
 		let removed: Task[] = [];
@@ -514,11 +526,6 @@ class Store {
 		});
 		for (const task of removed) this.#deletedFrom.set(task.id, home);
 		return removed;
-	}
-
-	undeleteTasks(removed: readonly Task[]) {
-		const first = removed[0];
-		if (first) this.#run(this.#deletedFrom.get(first.id) ?? null, data => rules.undeleteTasks(data, removed));
 	}
 
 	/** Projects and labels are always made in the user's own space. Shared ones are never renamed or deleted here. */
@@ -594,8 +601,34 @@ class Store {
 		return deleted;
 	}
 
-	undelete(deleted: rules.Deleted) {
-		this.#apply(rules.undelete(this.own, deleted));
+	/** Holds an undo until `dropUndo`, so that `undo` applies it, and every other one held, in any order. */
+	offerUndo(undo: rules.Undo): number {
+		const target = rules.undoTargets(undo)[0] ?? '';
+		const home = undo.kind === 'delete' ? (this.#deletedFrom.get(target) ?? null) : this.homeOf(target);
+		const id = ++this.#lastUndo;
+		this.#undos.push({ id, home, undo });
+		return id;
+	}
+
+	undo(id: number) {
+		const taken = this.#undos.find(e => e.id === id);
+		if (!taken) return;
+		const held = this.#undos.filter(e => e.home === taken.home);
+		const result = rules.undo(
+			this.dataOf(taken.home),
+			held.map(e => e.undo),
+			held.indexOf(taken),
+		);
+		let left = 0;
+		this.#undos = this.#undos.flatMap(e => {
+			if (e === taken) return [];
+			return e.home === taken.home ? [{ ...e, undo: result.pending[left++]! }] : [e];
+		});
+		this.#run(taken.home, () => result.data);
+	}
+
+	dropUndo(id: number) {
+		this.#undos = this.#undos.filter(e => e.id !== id);
 	}
 
 	/** One command and one write for the whole backup, however many tasks it holds. */

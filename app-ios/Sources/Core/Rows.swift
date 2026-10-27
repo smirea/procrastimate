@@ -11,16 +11,12 @@ public struct RowWrite: Hashable, Sendable {
     public var kind: EntityKind
     public var id: String
     public var values: [String: JSONValue]?
-    /// Names an upload's write so a retried batch logs nothing twice: `<database id>:<PowerSync queue id>`. The store's
-    /// own writes have none.
-    public var opId: String?
 
-    public init(op: Op, kind: EntityKind, id: String, values: [String: JSONValue]? = nil, opId: String? = nil) {
+    public init(op: Op, kind: EntityKind, id: String, values: [String: JSONValue]? = nil) {
         self.op = op
         self.kind = kind
         self.id = id
         self.values = values
-        self.opId = opId
     }
 }
 
@@ -32,7 +28,26 @@ public enum Rows {
 
     public static let settingsID = "settings"
 
-    /// Each kind's table, the name PowerSync and both databases use.
+    /// Every user's rows share one database, where a row id must be unique, so the two kinds that are per user store
+    /// the owner in theirs: a user's settings row is the user's id, and a read is `<reader>:<task>`. The domain keeps
+    /// `settingsID` and the task's id. The port of `rowIdOf` and `entityIdOf` in `shared/rows.ts`.
+    public static func rowID(_ kind: EntityKind, _ id: String, owner: String) -> String {
+        switch kind {
+        case .settings: owner
+        case .read: "\(owner):\(id)"
+        default: id
+        }
+    }
+
+    public static func entityID(_ kind: EntityKind, _ rowID: String, owner: String) -> String {
+        switch kind {
+        case .settings: settingsID
+        case .read: rowID.hasPrefix("\(owner):") ? String(rowID.dropFirst(owner.count + 1)) : rowID
+        default: rowID
+        }
+    }
+
+    /// Each kind's table, the name the server and every local database use.
     public static func table(of kind: EntityKind) -> String {
         switch kind {
         case .task: "tasks"

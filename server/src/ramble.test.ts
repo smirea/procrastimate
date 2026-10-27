@@ -2,14 +2,16 @@ import { afterAll, afterEach, beforeAll, describe, expect, jest, setSystemTime, 
 import { eq } from 'drizzle-orm';
 import { rambleUsage } from '../../shared/db/schema';
 import { RAMBLE_BYTES_PER_SECOND, RAMBLE_DAILY_SECONDS, RAMBLE_SESSION_SECONDS } from '../../shared/ramble/protocol';
-import { rambleRoute, type ConnectUpstream, type RambleRoute } from './ramble';
+import { dbRambleData, rambleRoute, type ConnectUpstream, type RambleRoute } from './ramble';
 import type { Socket, StreamEvents } from './sockets';
 import { shareWith, signUp, testApp, upload, type Session, type TestApp } from './test-app';
 
 /** An upstream that starts at once and commits with no text, so a session ends as soon as it is asked to. */
 let keyterms: string[] = [];
+let lastSession: Parameters<ConnectUpstream>[0] | null = null;
 const upstream: ConnectUpstream = async (session, events) => {
 	keyterms = session.keyterms;
+	lastSession = session;
 	setTimeout(() => events.message(JSON.stringify({ message_type: 'session_started' })), 0);
 	return {
 		send(text) {
@@ -32,7 +34,7 @@ beforeAll(async () => {
 	app = await testApp();
 	me = await signUp(app, 'Rambler');
 	route = rambleRoute(
-		app.db,
+		dbRambleData(app.db),
 		(_request, _protocol, start) => {
 			pending = start;
 			return new Response(null);
@@ -43,9 +45,11 @@ beforeAll(async () => {
 afterAll(() => app.close());
 
 /** Resolves once the session has sent its first message: `started`, or the refusal of a used-up day. */
-async function open(person = me.person): Promise<Opened> {
+async function open(person = me.person, query = ''): Promise<Opened> {
 	pending = null;
-	const request = new Request('https://procrastimate.test/api/ramble/socket', { headers: { Upgrade: 'websocket' } });
+	const request = new Request(`https://procrastimate.test/api/ramble/socket${query}`, {
+		headers: { Upgrade: 'websocket' },
+	});
 	await route(request, person);
 	if (!pending) throw new Error('the route did not open a session');
 	const sent: Sent[] = [];
@@ -127,7 +131,7 @@ describe('a Ramble session', () => {
 		const night = await signUp(app, 'Nightowl');
 		expect(
 			await upload(app, night, [
-				{ op: 'patch', table: 'settings', id: 'settings', values: { time_zone: 'America/New_York' } },
+				{ op: 'patch', table: 'settings', id: night.person.id, values: { time_zone: 'America/New_York' } },
 			]),
 		).toEqual([]);
 		setSystemTime(new Date(Date.UTC(2026, 9, 20, 3, 59, 59)));
@@ -170,5 +174,19 @@ describe('the Ramble keyterms', () => {
 
 		await open(guest.person);
 		expect(keyterms).toEqual(['subtask', 'priority', 'remind', 'project', 'label', 'Chores', 'Errands', 'Garden']);
+	});
+});
+
+describe('the Ramble engines', () => {
+	test('a session runs on ElevenLabs unless it asks for Gemini Live, which gets the day and the names', async () => {
+		const plain = await open();
+		expect(lastSession?.engine).toBe('elevenlabs');
+		plain.events.close();
+		const live = await open(me.person, '?engine=gemini');
+		expect(lastSession?.engine).toBe('gemini');
+		expect(lastSession?.context).toMatchObject({ projects: [], labels: [] });
+		expect(lastSession?.context.today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+		expect(lastSession?.context.time).toMatch(/^\d{2}:\d{2}$/);
+		live.events.close();
 	});
 });

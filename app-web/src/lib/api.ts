@@ -32,7 +32,7 @@ const browser = {
 const deviceName = browser.os ? `${browser.name} on ${browser.os}` : browser.name;
 
 /** This app, which the server records on every op a request writes. The deploy's commit is the version. */
-function client(): Client {
+export function client(): Client {
 	return {
 		kind: 'web',
 		version: __SENTRY_TARGET__?.release ?? null,

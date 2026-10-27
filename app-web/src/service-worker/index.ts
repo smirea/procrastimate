@@ -2,7 +2,8 @@ import { version } from '$app/env';
 import { assets, immutable } from '$app/manifest';
 import { self } from '$app/service-worker';
 import { DEVICE_HEADER } from 'shared/auth.ts';
-import type { PushMessage } from 'shared/push.ts';
+import { notificationTargetSchema } from 'shared/notifications.ts';
+import { notificationHref, type PushMessage } from 'shared/push.ts';
 import { cachedInstallId } from '../lib/install-cache.ts';
 import databaseWorker from 'virtual:database-worker';
 
@@ -13,12 +14,10 @@ import databaseWorker from 'virtual:database-worker';
  */
 const SHELL = `shell-${version}`;
 /**
- * PowerSync's default IndexedDB VFS without encryption loads only `wa-sqlite-async`, and only in its worker; the build
- * also emits the sync and encrypted variants and a copy for the page, about 12 MB never used. A worker file cached on
- * first use instead was lost with the old shell at every deploy, so the first launch offline after one could not open
- * the database.
+ * The database worker loads only sqlite-wasm's `sqlite3.wasm`. A worker file cached on first use instead was lost with
+ * the old shell at every deploy, so the first launch offline after one could not open the database.
  */
-const DATABASE_WASM = /\/wa-sqlite-async-[\w-]+\.wasm$/;
+const DATABASE_WASM = /\/sqlite3-[\w-]+\.wasm$/;
 /** Past this a navigation answers from the shell, so a connection that is up but barely moving still opens at once. */
 const NAVIGATION_DEADLINE_MS = 1500;
 // The manifest's paths have no leading slash. `_headers` and `.well-known` are the host's, not served as files.
@@ -84,8 +83,9 @@ self.addEventListener('fetch', event => {
 	}
 	const immutable = url.pathname.startsWith('/_app/immutable/');
 	if (!immutable && !PRECACHED.has(url.pathname)) return;
+	// The database worker's script carries the page's client header in its query; an immutable file's name is its hash.
 	event.respondWith(
-		caches.match(request, { ignoreVary: true }).then(
+		caches.match(request, { ignoreVary: true, ignoreSearch: immutable }).then(
 			cached =>
 				cached ??
 				fetch(request).then(async response => {
@@ -142,25 +142,25 @@ self.addEventListener('push', event => {
 			tag: message.tag,
 			icon: '/icons/icon-192.png',
 			badge: '/icons/badge-96.png',
-			data: { taskId: message.taskId },
+			data: { opens: message.opens },
 		}),
 	);
 });
 
 self.addEventListener('notificationclick', event => {
 	event.notification.close();
-	const taskId: string | null = event.notification.data?.taskId ?? null;
-	event.waitUntil(open(taskId));
+	const opens: PushMessage['opens'] = event.notification.data?.opens ?? null;
+	event.waitUntil(open(opens));
 });
 
-async function open(taskId: string | null) {
+async function open(opens: PushMessage['opens']) {
 	const [client] = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
 	if (client) {
 		await client.focus();
-		client.postMessage({ type: 'open-task', taskId });
+		client.postMessage({ type: 'open-notification', opens });
 		return;
 	}
-	await self.clients.openWindow(taskId ? `/inbox?task=${encodeURIComponent(taskId)}` : '/inbox');
+	await self.clients.openWindow(notificationHref(opens));
 }
 
 function parse(text: string | undefined): PushMessage {
@@ -171,9 +171,9 @@ function parse(text: string | undefined): PushMessage {
 				title: message.title,
 				body: typeof message.body === 'string' ? message.body : '',
 				tag: typeof message.tag === 'string' ? message.tag : '',
-				taskId: typeof message.taskId === 'string' ? message.taskId : null,
+				opens: notificationTargetSchema.safeParse(message.opens).data ?? null,
 			};
 		}
 	} catch {}
-	return { title: 'ProcrastiMate', body: 'A task is due', tag: '', taskId: null };
+	return { title: 'ProcrastiMate', body: 'A task is due', tag: '', opens: null };
 }

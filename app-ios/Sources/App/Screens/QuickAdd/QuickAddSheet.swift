@@ -5,12 +5,13 @@ import UIKit
 
 /// Quick add: a glass card attached to the top of the keyboard with the smart input, the chips that spell out what
 /// the text set, and the project picker. It is an overlay rather than a sheet, because a sheet floats above the
-/// keyboard with a gap. Saving closes it and shows the new task in its list; dismissing discards the draft.
+/// keyboard with a gap. Saving keeps it open for the next task; dismissing discards the draft.
 struct QuickAddSheet: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.clock) private var clock
     @Environment(TaskImages.self) private var images
+    @Environment(Toasts.self) private var toasts
 
     /// Quick add names every space's projects and labels a task may land on, and a picked one moves the task there.
     private var spaceProjects: [Project] { store.everySpace.projects }
@@ -32,8 +33,14 @@ struct QuickAddSheet: View {
     @State private var imageSource: ImageSource?
     /// Images still loading or making their thumbnail. Saving waits for them, so none is lost.
     @State private var loadingImages = 0
+    /// Built off the main actor when the card opens or the tasks change, so typing never rebuilds it.
+    @State private var suggestionIndex: TaskSuggestions.Index?
+    /// Scoring scans the whole index, so it reruns only when its inputs change, not on every frame of a drag.
+    @State private var pills: [TaskSuggestions.Pill] = []
     /// How far the grabber's drag has pulled the card up, rubber-banded.
     @State private var lift: CGFloat = 0
+    @State private var saves = 0
+    @State private var confirmation: Int?
     @FocusState private var focused: Bool
     @FocusState private var subtaskFocused: Bool
 
@@ -77,6 +84,10 @@ struct QuickAddSheet: View {
                 QuickAddSubtasks(spaceLabels: spaceLabels, subtasks: $subtasks, text: $subtaskText, focused: $subtaskFocused) { submit() }
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
+            if !pills.isEmpty {
+                SuggestionPills(pills: pills) { use($0, parsed, resolved) }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
             HStack(spacing: 6) {
                 chipRow(parsed, resolved)
                 QuickAddMenu(
@@ -106,6 +117,7 @@ struct QuickAddSheet: View {
             }
         }
         .animation(.snappy(duration: 0.2), value: subtasksOpen)
+        .animation(.snappy(duration: 0.2), value: pills)
         .animation(.snappy(duration: 0.2), value: drafted)
         .imageSource($imageSource) { addImages($0) }
         .padding(.horizontal, 16)
@@ -127,11 +139,19 @@ struct QuickAddSheet: View {
         .environment(\.space, store.creationSpace(projectId: resolved.projectId, labelIds: resolved.labelIds))
         .environment(\.namesFromEverySpace, true)
         .sensoryFeedback(.selection, trigger: draft.picked)
+        .sensoryFeedback(.success, trigger: saves)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
         .onAppear {
             focused = true
             draft.startAtPlace(spaceLabels)
+        }
+        .onChange(of: pillInputs(parsed, resolved), initial: true) { _, inputs in
+            pills = suggestionPills(inputs)
+        }
+        .task(id: store.allTasks.count) {
+            let tasks = store.allTasks.filter { $0.parentId == nil }
+            suggestionIndex = await Task.detached(priority: .userInitiated) { TaskSuggestions.index(tasks) }.value
         }
         .onChange(of: subtaskFocused) {
             if !subtaskFocused, subtaskText.isEmpty, subtasks.isEmpty { subtasksOpen = false }
@@ -403,6 +423,42 @@ struct QuickAddSheet: View {
         }
     }
 
+    /// Everything the pills depend on besides the index. Holding a project or label that appears or goes
+    /// while the card is open reruns them too.
+    private func pillInputs(_ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> PillInputs {
+        PillInputs(
+            title: parsed.title,
+            draft: .init(
+                projectId: resolved.projectId,
+                labelIds: resolved.labelIds,
+                location: parsed.location ?? draft.picked.location
+            ),
+            available: .init(
+                projectIds: spaceProjects.map(\.id),
+                labelIds: store.labels(in: store.creationSpace(projectId: resolved.projectId, labelIds: resolved.labelIds)).map(\.id)
+            ),
+            ready: suggestionIndex != nil
+        )
+    }
+
+    private func suggestionPills(_ inputs: PillInputs) -> [TaskSuggestions.Pill] {
+        guard !inputs.title.isEmpty, let suggestionIndex else { return [] }
+        return TaskSuggestions.pills(
+            TaskSuggestions.suggest(suggestionIndex, inputs.title, now: clock.now.epochMilliseconds),
+            draft: inputs.draft,
+            available: inputs.available
+        )
+    }
+
+    private func use(_ pill: TaskSuggestions.Pill, _ parsed: QuickAdd.Parsed, _ resolved: Resolved) {
+        switch pill {
+        case let .project(projectId): draft.pick(projectId: projectId, sectionId: nil, context)
+        case let .label(labelId): draft.pick(labelIds: resolved.labelIds + [labelId], parsed, context)
+        case let .place(location): draft.pick(location: location, context)
+        }
+        focused = true
+    }
+
     /// Creates a typed name only when its chip is tapped, so the parser then reads it like any other.
     private func create(_ name: NameSearch.UnknownName) {
         switch name.sigil {
@@ -413,9 +469,8 @@ struct QuickAddSheet: View {
         focused = true
     }
 
-    /// Saves the task, its subtasks, and its images, closes quick add, and shows the task in its list.
-    @discardableResult
-    private func submit() -> String? {
+    /// Saves the task with its subtasks and images.
+    private func save() -> TaskItem? {
         guard loadingImages == 0 else { return nil }
         guard let task = draft.resolve(draft.parse(context)) else { return nil }
         let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
@@ -428,25 +483,55 @@ struct QuickAddSheet: View {
         guard let added else { return nil }
         let sources = drafted.map(\.data)
         if !sources.isEmpty { Task { [images] in await images.attach(added.id, sources) } }
-        close(revealing: added.id)
-        return added.id
+        navigator.reuseAdded(added)
+        return added
     }
 
-    /// The full editor is task details, so expanding saves the draft and opens it there.
+    /// Quick add stays open for the next task, which starts where this one went, with the keyboard still up.
+    private func submit() {
+        guard let added = save() else { return }
+        confirm(added)
+        saves += 1
+        focused = true
+        withAnimation(.snappy(duration: 0.2)) {
+            draft = QuickAddDraft(defaults: Screens.reusedDefaults(added, store.labels, date: draft.defaults.date))
+            draft.startAtPlace(spaceLabels)
+            subtasks = []
+            subtaskText = ""
+            subtasksOpen = false
+            opened = []
+            drafted = []
+        }
+    }
+
+    /// Nothing navigates while quick add stays open: the open list flashes the row when it shows the task, and
+    /// otherwise a toast names the list it went to, with a `Show` that closes quick add and goes there. Each save
+    /// replaces the last one's toast, so a batch leaves one.
+    private func confirm(_ task: TaskItem) {
+        if let confirmation { toasts.dismiss(confirmation) }
+        confirmation = nil
+        guard let route = navigator.destination(of: task, labels: store.labels, today: clock.today, in: clock.timeZone) else {
+            return navigator.flash(task.id)
+        }
+        let name = switch route {
+        case let .project(id): store.project(id)?.name ?? "its project"
+        case .noDate: "No date"
+        default: "Inbox"
+        }
+        confirmation = toasts.show("Added to \(name)", action: .init(label: "Show") { [navigator, store, clock] in
+            if navigator.quickAdd != nil { navigator.sheet = nil }
+            navigator.reveal(task, labels: store.labels, today: clock.today, in: clock.timeZone)
+        })
+    }
+
+    /// The full editor is task details, so expanding saves the draft, closes quick add, and opens it there.
     private func expand() {
-        guard let id = submit() else { return }
-        navigator.sheet = .details(taskID: id)
-    }
-
-    private func close(revealing taskID: String) {
+        guard let added = save() else { return }
         navigator.sheet = nil
-        guard let task = store.task(taskID) else { return }
-        let from = (navigator.tab, navigator.currentRoute)
-        navigator.reveal(task, labels: store.labels, today: clock.today, in: clock.timeZone)
-        if from == (navigator.tab, navigator.currentRoute) { navigator.reuseAdded(task, labels: store.labels) }
+        navigator.reveal(added, labels: store.labels, today: clock.today, in: clock.timeZone)
+        navigator.sheet = .details(taskID: added.id)
     }
 }
-
 
 private struct DraftImage: Identifiable, Equatable {
     let id = UUID()
@@ -475,6 +560,13 @@ enum QuickAddMetrics {
 private struct RowFade: Equatable {
     var start = false
     var end = false
+}
+
+private struct PillInputs: Equatable {
+    let title: String
+    let draft: TaskSuggestions.Fields
+    let available: TaskSuggestions.Available
+    let ready: Bool
 }
 
 private struct ParsedReminder: Hashable {

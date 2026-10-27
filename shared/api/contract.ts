@@ -29,7 +29,7 @@ import {
 import { taskEditSchema } from '../store.ts';
 import { imageSizeSchema } from '../images.ts';
 import { labelSchema, projectSchema, sectionSchema } from '../model.ts';
-import { ROW_OPS, TABLE_OF } from '../rows.ts';
+import { rambleOutlineInputSchema, rambleOutlineSchema } from '../ramble/outline.ts';
 
 /**
  * Every HTTP endpoint the clients call, as one oRPC contract. The server implements it, the web client calls it
@@ -83,33 +83,13 @@ export const aiAccountsSchema = z.object({ accounts: z.array(personSchema) }).me
 export const sessionUserSchema = z
 	.object({ id: z.string(), name: z.string(), email: z.string() })
 	.meta({ id: 'SessionUser', description: 'The signed-in human.' });
-export const syncTokenSchema = z.object({ token: z.string(), endpoint: z.string(), user: sessionUserSchema }).meta({
+export const syncTokenSchema = z.object({ token: z.string(), user: sessionUserSchema }).meta({
 	id: 'SyncToken',
 	description:
-		'A PowerSync token, the URL the client connects to with it, and whom the session belongs to. Clients read it as their session check.',
+		"The session's bearer token, which the sync engine sends on `POST /api/sync` and `GET /api/live`, and whom the session belongs to. Clients read it as their session check.",
 });
 export type SyncToken = z.infer<typeof syncTokenSchema>;
 
-/** One row write from a client's PowerSync queue, as PowerSync reports it: snake_case columns, JSON as text. */
-export const uploadWriteSchema = z
-	.object({
-		op: z.enum(ROW_OPS),
-		table: z.enum(Object.values(TABLE_OF) as [string, ...string[]]),
-		id: z.string(),
-		values: z.record(z.string(), z.unknown().meta({ 'x-swift-type': 'JSONValue' })).optional(),
-		/** The client's id for this queued write, kept on the server's log row. */
-		opId: z.string().optional(),
-	})
-	.meta({ id: 'UploadWrite' });
-export type UploadWrite = z.infer<typeof uploadWriteSchema>;
-
-/** Writes are a list of unknown values here and parsed one by one, so one malformed write is refused alone. */
-export const uploadRequestSchema = z
-	.object({ writes: z.array(z.unknown().meta({ 'x-swift-type': 'JSONValue' })) })
-	.meta({ id: 'UploadRequest' });
-export const uploadResponseSchema = z
-	.object({ rejected: z.array(z.object({ table: z.string(), id: z.string(), reason: z.string() })) })
-	.meta({ id: 'UploadResponse' });
 export const sharesSchema = z.object({ shares: z.array(shareViewSchema) }).meta({ id: 'Shares' });
 export const newShareSchema = z
 	.object({ target: shareTargetSchema, audience: shareAudienceSchema })
@@ -514,6 +494,18 @@ export const contract = {
 			.input(z.object({ query: byId }))
 			.output(okSchema),
 	},
+	ramble: {
+		/**
+		 * Ramble's smart parse: Gemini reads the transcript, applies the speaker's corrections, and returns the tasks as
+		 * an outline the client resolves. Human users only. `SERVICE_UNAVAILABLE` without a key, `BAD_GATEWAY` when Gemini
+		 * fails; the client keeps the grammar's tasks either way.
+		 */
+		outline: allowed
+			.errors({ BAD_GATEWAY: {} })
+			.meta(openapi({ method: 'POST', path: '/api/ramble/outline' }))
+			.input(rambleOutlineInputSchema)
+			.output(rambleOutlineSchema),
+	},
 	/** Smoke tests for Sentry: each throws, so a 500 and an event in `procrastimate-worker` prove the path. */
 	debug: {
 		error: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/error' })).output(okSchema),
@@ -531,16 +523,8 @@ export const contract = {
 			.output(z.file().mime(JSON_UTF8)),
 	},
 	sync: {
-		/** An hour long. Human users only. */
+		/** Human users only. */
 		token: signedIn.meta(openapi({ method: 'GET', path: '/api/sync/token' })).output(syncTokenSchema),
-		/**
-		 * The client's queued PowerSync writes. Each is checked and applied on its own: one the server refuses is listed in
-		 * `rejected` and the rest still apply, so a bad write never stalls the queue.
-		 */
-		upload: allowed
-			.meta(openapi({ method: 'POST', path: '/api/upload' }))
-			.input(uploadRequestSchema)
-			.output(uploadResponseSchema),
 	},
 	/** API tokens for the owner's AI accounts. Human owners only. */
 	tokens: {

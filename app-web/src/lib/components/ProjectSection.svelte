@@ -3,10 +3,9 @@
 	import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
 	import { sectionTasks } from 'shared/store.ts';
 	import type { Section, Task } from 'shared/task.ts';
-	import AddTaskButton from './AddTaskButton.svelte';
 	import CompletedList from './CompletedList.svelte';
 	import InlineEdit from './InlineEdit.svelte';
-	import EntityActions from './EntityActions.svelte';
+	import SectionMenu from './SectionMenu.svelte';
 	import SectionHeading from './SectionHeading.svelte';
 	import TaskList from './TaskList.svelte';
 	import { toastDeleted } from '../completion.ts';
@@ -30,28 +29,19 @@
 </script>
 
 <section class="mt-6" aria-label={section.name}>
-	<SectionHeading heading={section.name} {tasks}>
+	<SectionHeading heading={section.name} {tasks} add={canAdd ? { kind: 'project', id: section.projectId, sectionId: section.id } : undefined}>
 		{#snippet title()}
 			{#if renaming}
 				<InlineEdit
-					class="-my-1 min-w-0 flex-1 rounded-lg bg-ink/[0.05] px-1 py-0.5 text-[13px] font-semibold outline-none"
+					class="-my-1 min-w-0 flex-1 rounded-lg bg-ink/[0.05] px-1 py-0.5 text-[15px] font-semibold outline-none"
 					label="Section name"
 					value={section.name}
 					oncommit={(name) => store.renameSection(section.id, name)}
 					onclose={() => (renaming = false)}
 				/>
-			{:else}
-				<h2 class="min-w-0 truncate text-[13px] font-semibold">{section.name}</h2>
-			{/if}
-		{/snippet}
-		{#snippet actions()}
-			{#if editable}
-				<EntityActions
-					label="Section actions"
-					triggerLabel={`${section.name} actions`}
-					triggerClass="icon-btn hit-area size-6!"
-					iconSize={16}
-					deleteLabel="Delete section"
+			{:else if editable}
+				<SectionMenu
+					name={section.name}
 					ondelete={() => toastDeleted(section.name, store.deleteSection(section.id))}
 					onrename={() => (renaming = true)}
 				>
@@ -69,15 +59,14 @@
 							close();
 						}}><ArrowDown size={15} />Move down</button>
 					{/snippet}
-				</EntityActions>
+				</SectionMenu>
+			{:else}
+				<h2 class="min-w-0 truncate text-[15px] font-semibold">{section.name}</h2>
 			{/if}
 		{/snippet}
 	</SectionHeading>
 	<TaskList {tasks} label={`${section.name} tasks`} />
 	{#if done.length}
 		<CompletedList tasks={done} label={`Completed ${section.name} tasks`} />
-	{/if}
-	{#if canAdd}
-		<AddTaskButton to={{ kind: 'project', id: section.projectId, sectionId: section.id }} group={section.name} />
 	{/if}
 </section>

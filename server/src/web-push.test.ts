@@ -40,7 +40,7 @@ test('a push service that never answers is given up after the timeout', async ()
 	const vapid = { ...(await generateVapidKeys()), subject: VAPID_SUBJECT };
 	const hanging = Bun.serve({ port: 0, fetch: () => new Promise<Response>(() => {}) });
 	try {
-		const message = { title: 'Stretch', body: 'Due now', tag: 'task-1:1', taskId: 'task-1' };
+		const message = { title: 'Stretch', body: 'Due now', tag: 'at:1', opens: { kind: 'task' as const, id: 'task-1' } };
 		const started = performance.now();
 		await expect(
 			sendPush({ endpoint: `http://127.0.0.1:${hanging.port}/send`, keys }, message, vapid, 60, 100),
@@ -60,7 +60,12 @@ test('sendPush posts an aes128gcm body the subscriber decrypts, signed with a VA
 		return new Response(null, { status: 201 });
 	}) as typeof fetch);
 
-	const message = { title: 'Pay rent ☕', body: 'Due now', tag: 'task-1:42', taskId: 'task-1' };
+	const message = {
+		title: 'Pay rent ☕',
+		body: 'Due now',
+		tag: 'at:42',
+		opens: { kind: 'task' as const, id: 'task-1' },
+	};
 	const response = await sendPush({ endpoint: 'https://push.example.com/send/abc', keys }, message, vapid);
 
 	expect(response.status).toBe(201);
@@ -76,8 +81,8 @@ test('sendPush posts an aes128gcm body the subscriber decrypts, signed with a VA
 	expect(JSON.parse(await decryptPush(body, receiver))).toEqual({
 		title: 'Pay rent ☕',
 		body: 'Due now',
-		tag: 'task-1:42',
-		taskId: 'task-1',
+		tag: 'at:42',
+		opens: { kind: 'task', id: 'task-1' },
 	});
 
 	const authorization = request.headers.get('authorization');
