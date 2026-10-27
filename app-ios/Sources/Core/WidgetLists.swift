@@ -212,8 +212,8 @@ public enum WidgetLists {
     /// seconds to run the intent and the system to redraw, so a window counted from the tap could close unseen.
     public static let checkedFor: TimeInterval = 1.5
 
-    /// How long after the tap a checked row may still first show. A later redraw, for another edit, drops it.
-    static let checkedFresh: TimeInterval = 15
+    /// How long after the tap a checked row may still first show. Each reload shows it again, so this stays short.
+    static let checkedFresh: TimeInterval = 8
 
     static func isFresh(_ checked: WidgetData.Checked, now: Date) -> Bool {
         checked.at > now.addingTimeInterval(-checkedFresh)

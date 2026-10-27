@@ -106,7 +106,7 @@ import Testing
             projects: [house],
             labels: [calls],
             accent: "teal",
-            checked: [WidgetData.Checked(task: task("Gone"), at: pinned.addingTimeInterval(-15))],
+            checked: [WidgetData.Checked(task: task("Gone"), at: pinned.addingTimeInterval(-8))],
             now: pinned,
             today: today,
             in: zone
@@ -142,7 +142,7 @@ import Testing
         #expect(gone.rows.map(\.title) == ["Pay rent", "Call mom"])
         #expect(gone.checked.isEmpty)
 
-        let stale = WidgetLists.listing(choice, checked, now: pinned.addingTimeInterval(15), showsChecked: true, today: today, in: zone)
+        let stale = WidgetLists.listing(choice, checked, now: pinned.addingTimeInterval(8), showsChecked: true, today: today, in: zone)
         #expect(stale.checked.isEmpty)
     }
 

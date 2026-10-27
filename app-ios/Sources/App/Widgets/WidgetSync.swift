@@ -9,10 +9,12 @@ enum WidgetSync {
     private static var pending: Task<Void, Never>?
     private static var checked: [WidgetData.Checked] = []
 
-    /// Keeps a row a widget just checked off on the widget, struck through, for a moment before it leaves. The widget
-    /// compares against the real clock, so this reads it too.
+    /// Keeps a row a widget just checked off on the widget, struck through, for a moment before it leaves. Every reload
+    /// shows the file's checks again, so a new check drops the ones that have had their moment, keeping only those
+    /// checked within the struck window. The widget compares against the real clock, so this reads it too.
     static func check(_ task: TaskItem) {
-        checked.append(WidgetData.Checked(task: task, at: Date()))
+        let now = Date()
+        checked = checked.filter { now.timeIntervalSince($0.at) < WidgetLists.checkedFor } + [WidgetData.Checked(task: task, at: now)]
     }
 
     static func schedule(_ store: Store, clock: AppClock) {
