@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/smirea/sync-engine",
       "state" : {
-        "branch" : "feat/app-hooks",
-        "revision" : "1729bd1171fd19156530f86a94296482f727dc3c"
+        "branch" : "master",
+        "revision" : "5b493f1053abb95b23333dba1473370dffc41a0b"
       }
     }
   ],
