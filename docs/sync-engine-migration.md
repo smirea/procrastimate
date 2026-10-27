@@ -1,6 +1,6 @@
 # sync-engine migration
 
-ProcrastiMate drops Postgres, Supabase, Hyperdrive, Docker, and PowerSync for [sync-engine](https://github.com/smirea/sync-engine), the SQLite sync engine a-better-me already runs on. This file holds the requirements, the target design, and the order of the work. Once the move lands, the area files in `docs/decisions/` carry the decisions and this file goes.
+ProcrastiMate drops Postgres, Supabase, Hyperdrive, Docker, and PowerSync for [sync-engine](https://github.com/smirea/sync-engine), the SQLite sync engine a-better-me already runs on. This file holds the requirements, the target design, and the order of the work; the area files in `docs/decisions/` carry the decisions as they stand. The decision trail of the move is `.audit/sync-engine-migration.tsv`.
 
 ## Why
 
@@ -30,7 +30,7 @@ web (sqlite-wasm worker) ┘                         │                      �
 - **Drizzle `sqlite-core` is the one schema.** `shared/db/schema.ts` becomes `sqlite-core`, and sync-engine's `defineSchema` takes the synced tables from it with the Zod shapes of `shared/db/json.ts` as column validators. The web's Drizzle runs on the same tables, and `generate()` writes `SyncSchema.swift`. Ids stay text primary keys, so the two per-user composite keys change: `settings.id` is the user id and `reads.id` is `<user>:<task>`.
 - **Writes are row writes through the engine.** Clients write their local SQLite, the engine's triggers capture the change, and `POST /api/sync` carries it. The server's rules become engine hooks that run inside the sync transaction with the request's actor: `admit` (ownership, guest admission with `guestRefusal`, comment authorship, authorship stamps, settings never overwritten) and `landed` (the `log` row with actor and client, the `access` recompute, the push plan, the purge). The agent API writes through the same hooks with `space.write`, so there is one write path again.
 - **Pulls are filtered per reader.** The space holds every user's rows, so the server filters each pull to what the reader sees: their own rows, their `access` rows, and the rows those name, comments through their task. When a reader's `access` rows change, the delta adds the rows they now see and tombstones the ones they lost. This is a server-side engine option; the clients and the protocol stay as they are.
-- **Images move to R2.** Bytes go to an R2 bucket under `images/<user>/<id>/<size>`, metadata stays a table. A Durable Object row caps at 2 MB.
+- **Images stay in the database.** A Durable Object row caps at 2 MB, and `IMAGE_LIMITS` already keeps a full image at 1.5 MB, so the bytes stay a blob in the `images` table and need no bucket.
 - **Backups are the dump.** The daily cron writes the object's tables to R2 as `sqlite/<date>.json`, and the same format restores an empty object. The production import is one such file built from Postgres.
 
 ## What goes away

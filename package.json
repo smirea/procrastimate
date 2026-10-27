@@ -10,7 +10,6 @@
 		"test": "bun test",
 		"generate": "bun scripts/generate/index.ts",
 		"generate:watch": "bun --watch --no-clear-screen scripts/generate/index.ts",
-		"db:generate": "drizzle-kit generate && bun run generate",
 		"vectors": "VECTORS=record TZ=America/New_York bun test shared",
 		"test:e2e": "bun run --cwd app-web test:e2e",
 		"check": "bun run generate && bunx --bun tsc --noEmit && bun run --cwd app-web check",
@@ -55,7 +54,6 @@
 	"devDependencies": {
 		"@cloudflare/workers-types": "^5.20261010.1",
 		"@sentry/cli": "3.8.0",
-		"drizzle-kit": "0.31.11",
 		"wrangler": "^4.149.0"
 	}
 }

@@ -122,10 +122,7 @@ while (true) {
 	if (pr.headRefOid !== head)
 		exit(1, `The PR head is ${pr.headRefOid.slice(0, 7)} but HEAD is ${head.slice(0, 7)}. Push, then rerun.`);
 	if (pr.mergeable === 'CONFLICTING') {
-		exit(
-			2,
-			`${pr.url} conflicts with master, so CI will not run. Rebase onto origin/master (a migration conflict means deleting your migration and rerunning \`bun run db:generate\`), push, rerun.`,
-		);
+		exit(2, `${pr.url} conflicts with master, so CI will not run. Rebase onto origin/master, push, rerun.`);
 	}
 
 	const { all, failed, pending } = checks(pr);

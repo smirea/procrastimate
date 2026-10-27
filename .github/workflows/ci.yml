@@ -26,25 +26,6 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup
 
-      # drizzle-kit writes a new migration when the schema has changed without one.
-      - name: Migrations match the schema
-        run: |
-          bunx drizzle-kit generate
-          stale=$(git status --porcelain server/drizzle)
-          if [ -n "$stale" ]; then
-            echo "$stale"
-            echo "::error::server/drizzle is missing a migration. Run 'bun run db:generate' and commit the result."
-            exit 1
-          fi
-
-      # A push compares with the master it replaced, since origin/master is then the commit under test.
-      - name: Migrations extend master's history
-        env:
-          BASE: ${{ github.event_name == 'push' && github.event.before || 'master' }}
-        run: |
-          git fetch --no-tags origin "+$BASE:refs/remotes/ci/base"
-          bun server/scripts/migration-history.ts ci/base
-
       - name: Typecheck
         run: bun run check
 
