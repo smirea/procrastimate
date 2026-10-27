@@ -47,6 +47,18 @@ const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir()
 	viewport: { width: 1280, height: 800 },
 });
 await context.grantPermissions(['notifications'], { origin: new URL(BASE_URL).origin });
+/** The app reports a failed subscribe only to Sentry, so the page records it here for a failed run to print. */
+await context.addInitScript(() => {
+	const errors: string[] = [];
+	Object.assign(window, { pushErrors: errors });
+	const subscribe = PushManager.prototype.subscribe;
+	PushManager.prototype.subscribe = function (...args) {
+		return subscribe.apply(this, args).catch((error: unknown) => {
+			errors.push(error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+			throw error;
+		});
+	};
+});
 
 const shown = (page: Page) =>
 	page.evaluate(async () => {
@@ -69,12 +81,32 @@ const named = (n: { title: string; body: string }) =>
 		.filter(name => name.endsWith(` ${RUN}`))
 		.map(name => name.replace(` ${RUN}`, ''));
 
+const failedPushRoutes: string[] = [];
+/** Why subscribing failed: the browser's subscribe errors, failed push routes, and what the page holds. */
+const pushFailure = async (page: Page) => ({
+	line: await page.getByText(/^Notifications/).allTextContents(),
+	failedPushRoutes,
+	...(await page.evaluate(async () => {
+		const registration = await navigator.serviceWorker.getRegistration();
+		return {
+			subscribeErrors: (window as unknown as { pushErrors: string[] }).pushErrors,
+			permission: Notification.permission,
+			subscription: (await registration?.pushManager.getSubscription())?.endpoint ?? null,
+			refusedAt: localStorage.getItem('procrastimate-push-refused-at'),
+		};
+	})),
+});
+
 const signed = await context.request.post('/api/auth/sign-up/email', {
 	data: { email: `push-${RUN}@example.com`, password: 'e2e-password-1', name: 'Push' },
 });
 if (!signed.ok()) throw new Error(await signed.text());
 
 const page = await context.newPage();
+page.on('response', response => {
+	if (new URL(response.url()).pathname.startsWith('/api/push/') && !response.ok())
+		failedPushRoutes.push(`${response.request().method()} ${new URL(response.url()).pathname} ${response.status()}`);
+});
 await page.goto('/inbox');
 const nav = page.getByRole('navigation', { name: 'Main' });
 const settings = page.getByRole('dialog', { name: 'Settings' });
@@ -83,7 +115,11 @@ await expect
 	.toBeTruthy();
 log('PASS sync is on');
 await nav.getByRole('button', { name: 'Settings' }).click();
-await expect(settings.getByText('Notifications: On', { exact: true })).toBeVisible({ timeout: 20_000 });
+const on = await expect(settings.getByText('Notifications: On', { exact: true }))
+	.toBeVisible({ timeout: 20_000 })
+	.then(() => true)
+	.catch(() => false);
+check(on, 'Notifications: On', on ? undefined : await pushFailure(page));
 await page.keyboard.press('Escape');
 const endpoint = await page.evaluate(async () => {
 	const registration = await navigator.serviceWorker.ready;

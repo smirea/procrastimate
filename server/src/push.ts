@@ -9,7 +9,14 @@ import { pushTag, type PushMessage, type PushSubscriptionInfo } from '../../shar
 import type { Env } from './bindings';
 import { config } from './config';
 import type { Db } from './db/postgres';
-import { classifyDelivery, isRetryable, nextAlarm, planSchedule, STALE_AFTER_MS } from './push-schedule';
+import {
+	classifyDelivery,
+	FRESH_SUBSCRIPTION_MS,
+	isRetryable,
+	nextAlarm,
+	planSchedule,
+	STALE_AFTER_MS,
+} from './push-schedule';
 import { reportError } from './sentry';
 import { storedZone, withSpaceLocked } from './space';
 import { sendPush, type Vapid } from './web-push';
@@ -148,6 +155,7 @@ export async function subscribePush(
 		subscription,
 		notifications: kept?.notifications ?? [],
 		deliveredThrough: kept?.deliveredThrough ?? now,
+		subscribedAt: kept?.subscribedAt ?? now,
 		nextAt: null,
 	};
 	const row = { ...stored, ...planOf(computed, stored, now) };
@@ -181,7 +189,7 @@ function outcomeOf(outcomes: ReadonlyMap<string, Outcome>, row: PushRow): Outcom
 /**
  * The cron, every minute: for each user with a due notification, sends each install what is due, then settles and
  * replans. A sent push, or a failed one more than ten minutes stale, is settled. A 404 or 410 drops the install's
- * subscription. The settle runs under the space's lock against the rows stored now, so an upload's replan that landed
+ * subscription, unless it subscribed within `FRESH_SUBSCRIPTION_MS`, when its due pushes retry a minute later. The settle runs under the space's lock against the rows stored now, so an upload's replan that landed
  * while sends were in flight is kept; a replan that read before the settle and lands after it can bring a sent
  * notification back for one more send, which the OS replaces by its tag.
  */
@@ -214,7 +222,7 @@ async function deliverTo(db: Db, owner: string, now: number, send: SendPush): Pr
 				const message = { title: pending.title, body: pending.body, tag: pushTag(pending), opens: pending.opens };
 				const delivery = classifyDelivery(await send(row.subscription, message));
 				if (delivery === 'gone') {
-					outcome.gone = true;
+					outcome.gone = now - row.subscribedAt >= FRESH_SUBSCRIPTION_MS;
 					break;
 				}
 				if (delivery === 'sent') {
