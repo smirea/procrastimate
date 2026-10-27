@@ -70,6 +70,15 @@ import Testing
         #expect(draft.resolve(parse(draft)) == nil)
     }
 
+    @Test func expandingAnEmptyTitleKeepsTheMetadata() throws {
+        var draft = QuickAddDraft(defaults: .init())
+        draft.setText("tomorrow p2")
+        let task = try #require(draft.resolve(parse(draft), untitled: true))
+        #expect(task.title == "")
+        #expect(task.priority == .p2)
+        #expect(task.due != nil)
+    }
+
     @Test func insertingANameReplacesTheFragmentWithUTF16Offsets() {
         let inserted = QuickAddDraft.insertingName("Calls", sigil: "@", into: "😀 call @ca   later", from: 8, to: 11)
         #expect(inserted.text == "😀 call @Calls later")

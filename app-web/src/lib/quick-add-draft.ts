@@ -94,9 +94,17 @@ export function labelPick(
 	return { cut, labelIds };
 }
 
-/** The task to save, or null while the title is empty. An event stands in for the date and the repeat. */
-export function draftTask(parsed: ParsedQuickAdd, picked: Picked, labels: readonly Label[]): NewTask | null {
-	if (!parsed.title) return null;
+/**
+ * The task to save, or null while the title is empty. Expanding into details saves even an untitled one, which details
+ * deletes if it closes still untitled. An event stands in for the date and the repeat.
+ */
+export function draftTask(
+	parsed: ParsedQuickAdd,
+	picked: Picked,
+	labels: readonly Label[],
+	{ untitled = false } = {},
+): NewTask | null {
+	if (!parsed.title && !untitled) return null;
 	const applied = applyPickedLabels(labels, shownLabelIds(parsed, picked, labels), picked.location);
 	return {
 		title: parsed.title,

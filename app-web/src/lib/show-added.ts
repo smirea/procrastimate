@@ -13,7 +13,8 @@ import { clock, reveal, sheets, toasts } from './ui.svelte.ts';
  */
 export function showAdded(task: Task) {
 	const path = listOf(task);
-	if (path !== page.url.pathname) void goto(path);
+	// Details may open on top with its title focused, which a resetting navigation would blur; the reveal scrolls instead.
+	if (path !== page.url.pathname) void goto(path, { reset: false });
 	reveal.show(task.id);
 	return path;
 }

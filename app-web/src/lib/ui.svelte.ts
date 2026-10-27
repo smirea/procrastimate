@@ -129,7 +129,20 @@ export type Sheet =
 	| { kind: 'share'; target: ShareTarget; name: string; from: string | null };
 
 class Sheets {
-	current = $state<Sheet>({ kind: 'none' });
+	#current = $state<Sheet>({ kind: 'none' });
+
+	get current() {
+		return this.#current;
+	}
+
+	/**
+	 * A field being edited commits on blur, and iOS Safari never blurs it for a tap on the scrim or a button, so a
+	 * sheet change blurs it first: the edit lands before the sheet goes, and an untitled task's new title saves it.
+	 */
+	set current(next: Sheet) {
+		(globalThis.document?.activeElement as HTMLElement | null)?.blur();
+		this.#current = next;
+	}
 
 	openQuickAdd(defaults: ListDefaults) {
 		this.current = { kind: 'quick-add', defaults };

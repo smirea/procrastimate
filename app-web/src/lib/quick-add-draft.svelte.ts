@@ -102,8 +102,8 @@ export class QuickAddDraft {
 		this.picked.location = null;
 	}
 
-	task() {
-		return draftTask(this.parsed, this.picked, store.labels);
+	task(options?: { untitled: boolean }) {
+		return draftTask(this.parsed, this.picked, store.labels, options);
 	}
 
 	private tokenOf(kind: TokenKind) {

@@ -40,6 +40,17 @@
 		if (sheets.current.kind === 'task' && store.loaded && !openTask) untrack(() => sheets.close());
 	});
 
+	/** The task whose details are up, or were before a share sheet opened from them. */
+	let shownTask: string | null = null;
+	$effect(() => {
+		const current = sheets.current;
+		const id = current.kind === 'task' ? current.id : current.kind === 'share' ? current.from : null;
+		const left = shownTask;
+		shownTask = id;
+		// Quick add expands an untitled draft into details. Left untitled, it was never a task, so it goes without an undo.
+		if (left && left !== id && untrack(() => store.task(left)?.title === '')) store.deleteTask(left);
+	});
+
 	afterNavigate(({ to }) => forgetAdded(to?.url.pathname ?? ''));
 
 	function openQuickAdd() {

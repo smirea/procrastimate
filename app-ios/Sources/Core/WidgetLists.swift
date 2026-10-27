@@ -33,7 +33,8 @@ public struct WidgetData: Codable, Sendable, Equatable {
         let doneToday = Set(Views.completedTasks(tasks, Views.CompletedRange(from: today, to: today), in: zone).map(\.id))
         return WidgetData(
             signedIn: signedIn,
-            tasks: tasks.filter { $0.completedAt == nil || doneToday.contains($0.id) },
+            // An untitled task is quick add's draft open in details, which deletes it if it closes still untitled.
+            tasks: tasks.filter { !$0.title.isEmpty && ($0.completedAt == nil || doneToday.contains($0.id)) },
             projects: StoreRules.projectsInOrder(projects),
             labels: labels,
             accent: accent
