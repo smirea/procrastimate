@@ -192,6 +192,38 @@ test('an expanded task closed untitled is gone, with no undo', async ({ app, pag
 	await expect(page.locator('[data-task=""]')).toHaveCount(0);
 });
 
+test('an untitled expanded task keeps its subtasks while they open, and goes with them if closed untitled', async ({
+	app,
+	page,
+}) => {
+	const expandUntitled = async () => {
+		await app.openQuickAdd();
+		await app.taskInput().pressSequentially('p1');
+		await app.quickAdd().getByRole('button', { name: 'Open in task details' }).click();
+		const add = app.details().getByRole('textbox', { name: 'Add subtask' });
+		await add.fill('Passport');
+		await add.press('Enter');
+		await app.details().getByRole('button', { name: 'Passport', exact: true }).click();
+		await expect(app.details().getByRole('button', { name: /^Back to/ })).toBeVisible();
+	};
+
+	await expandUntitled();
+	await app
+		.details()
+		.getByRole('button', { name: /^Back to/ })
+		.click();
+	await app.details().getByRole('textbox', { name: 'Title' }).fill('Pack for trip');
+	await app.details().getByRole('button', { name: 'Close' }).click();
+	await app.go('No date');
+	await expect(app.row('Pack for trip')).toContainText('0/1');
+
+	await expandUntitled();
+	await app.details().getByRole('button', { name: 'Close' }).click();
+	await expect(app.details()).toBeHidden();
+	await expect(page.locator('[data-task=""]')).toHaveCount(0);
+	await expect(page.locator('[data-task="Pack for trip"]')).toHaveCount(1);
+});
+
 test('expanding a titled draft saves it and opens it in task details', async ({ app }) => {
 	await app.openQuickAdd();
 	await app.taskInput().pressSequentially('Plan trip tomorrow p2');
