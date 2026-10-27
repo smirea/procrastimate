@@ -62,11 +62,11 @@ Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
 
 # Sentry
 
-- Org `self-uo7`, one project per runtime: `procrastimate-web` (4512271645409280), `procrastimate-worker` (4512271645474816, the Worker, the `Ramble` object, and the Bun dev server), `procrastimate-ios` (4512271645605888). Environments are `production` (deploys, TestFlight) and `development` (Stefan's local dev); tests never report.
+- Org `self-uo7`, one project per runtime: `procrastimate-web` (4512271645409280), `procrastimate-worker` (4512271645474816, the Worker, the `Ramble` object, and the Bun dev server), `procrastimate-ios` (4512271645605888). Only `production` reports (deploys and Release iOS). Local development, Debug iOS, and tests never initialize Sentry.
 - Code: `server/src/sentry.ts`, `app-web/src/lib/sentry.ts`, `app-ios/Sources/App/Support/Telemetry.swift`. Rules live in `docs/decisions/observability.md`.
 - Read data through the Sentry MCP (`plugin:sentry`) when it is authorized; it needs `/mcp` auth in an interactive session. Otherwise use the REST API with `SENTRY_AUTH_TOKEN` from the `scripts` target in the root `.env.local`, loaded like `APP_BOT_TOKEN`. With `S=https://sentry.io/api/0/organizations/self-uo7` and `-H "Authorization: Bearer $SENTRY_AUTH_TOKEN"`:
   - Issues: `curl -s "$S/issues/?query=Sentry%20smoke%20test&environment=development&statsPeriod=24h"`, then the newest event with `curl -s "$S/issues/<id>/events/latest/"` (user, `contexts.trace.trace_id`, frames, request).
   - Errors in a trace, every project: `curl -s "$S/events/?dataset=errors&query=trace:<trace_id>&field=project&field=title&statsPeriod=24h"`.
   - Spans and transactions in a trace: `curl -s "$S/events/?dataset=spans&project=<numeric id>&query=trace:<trace_id>%20is_transaction:true&field=transaction&field=span.op&statsPeriod=24h"`. Pass the numeric `project=`; full transaction events usually answer 404, so read spans instead.
 - A client event's trace id finds the server's spans and errors for the same action, so start from the client event and query its trace.
-- Prove a path end to end with the smoke triggers: `/inbox?sentry-smoke` on the web, `bun scripts/sentry-ios-smoke.ts --udid <sim>` on iOS (or `PROCRASTIMATE_SENTRY_SMOKE=1`), then `bun scripts/sentry-check.ts --environment development --since 30m --expect web,worker[,ios]`, which exits non-zero when a check fails.
+- Production smoke verification uses `/inbox?sentry-smoke` on the deployed web app or `PROCRASTIMATE_SENTRY_SMOKE=1` in a Release iOS build, then `bun scripts/sentry-check.ts --environment production --since 30m --expect web,worker[,ios]`. Development smoke launches are disabled.

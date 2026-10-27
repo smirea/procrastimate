@@ -30,7 +30,7 @@ export function parseDsn(dsn: string): Dsn | null {
 export const envelopeUrl = ({ protocol, host, projectId }: Dsn) => `${protocol}://${host}/api/${projectId}/envelope/`;
 
 /**
- * Reporting is on only with both `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`. Half a pair, an unknown environment,
+ * Reporting is production-only, with both `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`. Half a pair, an unknown environment,
  * or an environment for a project whose DSN is not provisioned is a problem, so the build or the Worker fails.
  */
 export function parseSentryTarget(
@@ -39,6 +39,7 @@ export function parseSentryTarget(
 ): { target: SentryTarget | null; problem: null } | { target: null; problem: string } {
 	const environment = raw.environment?.trim() || null;
 	const release = raw.release?.trim() || null;
+	if (environment === 'development') return { target: null, problem: null };
 	if (!environment && !release) return { target: null, problem: null };
 	if (!environment || !release) {
 		return { target: null, problem: 'Set both SENTRY_ENVIRONMENT and SENTRY_RELEASE or neither' };
