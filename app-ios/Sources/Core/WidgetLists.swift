@@ -145,9 +145,14 @@ public enum WidgetLists {
             tasks = Views.eventTasks(open, id, today, in: zone)
         }
         let completed = Views.completedTasks(data.tasks, Views.CompletedRange(from: today, to: today), in: zone)
+        // A saved place's label lives on its tasks as a location, never in `labelIds`, so its done tasks are the place's.
+        var screen = choice.list.screen(today: today)
+        if case let .pin(.label(id)) = choice.list, let place = data.labels.first(where: { $0.id == id })?.place {
+            screen = .place(key: Triggers.placeKey(place))
+        }
         let done = choice.list == .today
             ? completed.count
-            : completed.filter { Screens.holds(choice.list.screen(today: today), $0, today, in: zone) }.count
+            : completed.filter { Screens.holds(screen, $0, today, in: zone) }.count
         return Listing(name: choice.name, tasks: tasks, overdue: overdue, done: done)
     }
 

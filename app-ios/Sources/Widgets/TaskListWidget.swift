@@ -28,7 +28,7 @@ struct TaskListView: View {
         case .missing: MissingListView(accent: entry.accent)
         case let .ready(listing, list, symbol):
             switch family {
-            case .accessoryInline: InlineView(listing: listing, symbol: symbol)
+            case .accessoryInline: InlineView(listing: listing, symbol: symbol).widgetURL(AppLink.list(key: list.key).url)
             case .accessoryRectangular: RectangularView(entry: entry, listing: listing, list: list, symbol: symbol)
             default: HomeView(entry: entry, listing: listing, list: list, symbol: symbol)
             }

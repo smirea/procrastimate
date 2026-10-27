@@ -82,6 +82,17 @@ import Testing
         #expect(try listing("inbox").done == 1)
     }
 
+    @Test func aSavedPlaceCountsTasksDoneAtItsLocation() throws {
+        let gym = Label(id: "l-gym", name: "Gym", place: SavedPlace(latitude: 52.5, longitude: 13.4, radius: 200), createdAt: 1)
+        var lift = task("Lift", due: today, completedAt: thisMorning)
+        lift.location = TaskLocation(name: "Gym", latitude: 52.5, longitude: 13.4, radius: 200, trigger: .arrive)
+        var atGym = data
+        atGym.labels.append(gym)
+        atGym.tasks.append(lift)
+        let choice = try #require(WidgetLists.choice(key: "label:l-gym", in: atGym, today: today, in: zone))
+        #expect(WidgetLists.listing(choice, atGym, today: today, in: zone).done == 1)
+    }
+
     @Test func aDeletedProjectIsNoLongerAChoice() {
         var gone = data
         gone.projects = []
