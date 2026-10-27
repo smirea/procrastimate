@@ -480,17 +480,40 @@ public enum StoreRules {
         return list
     }
 
-    /// A label goes back at its old place in `labelIds`, or last when the list has since shrunk.
-    static func relabel(_ tasks: [TaskItem], _ labelings: [API.Labeling]) -> [TaskItem] {
-        tasks.map { t in
-            let back = labelings
-                .filter { $0.taskId == t.id && !t.labelIds.contains($0.labelId) }
-                .stableSorted { a, b in a.index == b.index ? nil : a.index < b.index }
+    /// Puts the labels `pending[index]` released back where they sat, and recounts the other deletes' labelings around
+    /// them. Each delete counted its indexes on the task as it stood then, with older deletes' labels gone and newer
+    /// ones' still on, so replaying every pending delete newest first rebuilds the task's order from before the oldest.
+    /// Taking the released labels' places from that order, rather than their own indexes, keeps them right in any undo
+    /// order.
+    static func relabel(_ tasks: [TaskItem], _ pending: [Undo], _ index: Int) -> (tasks: [TaskItem], labelings: [[API.Labeling]]) {
+        let labelings = pending.map { undo -> [API.Labeling] in if case let .delete(undo) = undo { undo.deleted.labelings } else { [] } }
+        let released = labelings[index]
+        var orders: [String: (full: [String], now: [String])] = [:]
+        let relabeled = tasks.map { t in
+            let back = released.filter { $0.taskId == t.id && !t.labelIds.contains($0.labelId) }.map(\.labelId)
             guard !back.isEmpty else { return t }
+            var full = t.labelIds
+            for own in labelings.reversed() {
+                let mine = own.filter { $0.taskId == t.id }.stableSorted { a, b in a.index == b.index ? nil : a.index < b.index }
+                for labeling in mine where !full.contains(labeling.labelId) {
+                    full.insert(labeling.labelId, at: min(labeling.index, full.count))
+                }
+            }
+            let now = full.filter { t.labelIds.contains($0) || back.contains($0) }
+            orders[t.id] = (full, now)
             var t = t
-            for labeling in back { t.labelIds.insert(labeling.labelId, at: min(labeling.index, t.labelIds.count)) }
+            t.labelIds = now
             return t
         }
+        let recounted = labelings.enumerated().map { i, own in
+            own.map { l -> API.Labeling in
+                guard let order = orders[l.taskId], let at = order.full.firstIndex(of: l.labelId) else { return l }
+                let newer = labelings[(i + 1)...].flatMap { $0.filter { $0.taskId == l.taskId }.map(\.labelId) }
+                let count = order.full[..<at].filter { order.now.contains($0) || newer.contains($0) }.count
+                return API.Labeling(taskId: l.taskId, labelId: l.labelId, index: count)
+            }
+        }
+        return (relabeled, recounted.enumerated().filter { $0.offset != index }.map(\.element))
     }
 
     static func apply(_ undo: Undo, to data: StoreData) -> StoreData {
@@ -526,10 +549,8 @@ public enum StoreRules {
                 guard !t.images.contains(where: { $0.id == undo.image.id }) else { return }
                 t.images.insert(undo.image, at: min(undo.index, t.images.count))
             }
-        case let .delete(undo):
-            var next = data
-            next.tasks = relabel(data.tasks, undo.deleted.labelings)
-            return next
+        case .delete:
+            return data
         }
     }
 
@@ -581,7 +602,8 @@ public enum StoreRules {
         merged.projects = insertByCreation(data.projects, all.flatMap(\.projects))
         merged.sections = insertByCreation(data.sections, all.flatMap(\.sections))
         merged.labels = insertByCreation(data.labels, all.flatMap(\.labels))
-        merged.tasks = sortTasks(insertByCreation(data.tasks, all.flatMap(\.tasks)))
+        let relabeled = relabel(sortTasks(insertByCreation(data.tasks, all.flatMap(\.tasks))), pending, index)
+        merged.tasks = relabeled.tasks
         let after = apply(action, to: merged)
 
         let targets = Set(undoTargets(action))
@@ -660,7 +682,7 @@ public enum StoreRules {
             undo.deleted.sections = held.sections
             undo.deleted.labels = held.labels
             undo.deleted.tasks = held.tasks
-            undo.deleted.labelings += moved[i]
+            undo.deleted.labelings = relabeled.labelings[i] + moved[i]
             return .delete(undo)
         }
         return (next, left)
