@@ -200,6 +200,45 @@ describe('push', () => {
 		expect(await rowsOf()).toEqual([]);
 	});
 
+	test('a subscription under a minute old holds what is due until the next run, and an older one sends at once', async () => {
+		const subscribeWithTask = async (name: string, device: string, at: number) => {
+			setSystemTime(at);
+			const session = await signUp(app, name, device);
+			await app.fetch('/api/push/subscription', {
+				method: 'PUT',
+				headers: session.headers,
+				body: JSON.stringify({ subscription: subscription(`https://push.example/${device}`) }),
+			});
+			const id = crypto.randomUUID();
+			await upload(app, session, [
+				{
+					op: 'put',
+					table: 'tasks',
+					id,
+					values: taskRow(id, session.person.id, name, { due: JSON.stringify({ date: '2026-10-14', time: '18:00' }) }),
+				},
+			]);
+			return session;
+		};
+		const young = await subscribeWithTask('Young', 'install-young-000', Date.UTC(2026, 9, 14, 17, 59, 40));
+		await subscribeWithTask('Old', 'install-old-00000', Date.UTC(2026, 9, 14, 17, 58));
+		setSystemTime(NOW);
+		const sent: string[] = [];
+		const send = async (_subscription: unknown, message: PushMessage) => {
+			sent.push(message.title);
+			return 201;
+		};
+
+		expect(await deliverDue(app.db, NOW, send)).toBe(1);
+		expect(sent).toEqual(['Old']);
+		const [held] = await app.db.select().from(push).where(eq(push.userId, young.person.id));
+		expect(held?.notifications.map(n => n.title)).toEqual(['Young']);
+		expect(held?.nextAt).toBe(Date.UTC(2026, 9, 14, 18, 1));
+
+		expect(await deliverDue(app.db, Date.UTC(2026, 9, 14, 18, 1), send)).toBe(1);
+		expect(sent).toEqual(['Old', 'Young']);
+	});
+
 	test('tasks due at the same minute send one push that names them and opens their list', async () => {
 		const grouper = await signUp(app, 'Grouper', 'install-group-000');
 		await app.fetch('/api/push/subscription', {

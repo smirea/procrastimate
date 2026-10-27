@@ -15,6 +15,7 @@ import {
 	isRetryable,
 	nextAlarm,
 	planSchedule,
+	SEND_HOLD_MS,
 	STALE_AFTER_MS,
 } from './push-schedule';
 import { reportError } from './sentry';
@@ -189,7 +190,9 @@ function outcomeOf(outcomes: ReadonlyMap<string, Outcome>, row: PushRow): Outcom
 /**
  * The cron, every minute: for each user with a due notification, sends each install what is due, then settles and
  * replans. A sent push, or a failed one more than ten minutes stale, is settled. A 404 or 410 drops the install's
- * subscription, unless it subscribed within `FRESH_SUBSCRIPTION_MS`, when its due pushes retry a minute later. The settle runs under the space's lock against the rows stored now, so an upload's replan that landed
+ * subscription, unless it subscribed within `FRESH_SUBSCRIPTION_MS`, when its due pushes retry a minute later. An
+ * install that subscribed within `SEND_HOLD_MS` sends nothing yet and keeps what is due for the next run. The settle
+ * runs under the space's lock against the rows stored now, so an upload's replan that landed
  * while sends were in flight is kept; a replan that read before the settle and lands after it can bring a sent
  * notification back for one more send, which the OS replaces by its tag.
  */
@@ -214,11 +217,13 @@ async function deliverTo(db: Db, owner: string, now: number, send: SendPush): Pr
 		for (const row of rows) {
 			const outcome: Outcome = { endpoint: row.subscription.endpoint, gone: false, settled: new Set() };
 			outcomes.set(row.deviceId, outcome);
+			const held = now - row.subscribedAt < SEND_HOLD_MS;
 			for (const pending of row.notifications.filter(pending => pending.at <= now)) {
 				if (!isRetryable(pending, now)) {
 					outcome.settled.add(pushTag(pending));
 					continue;
 				}
+				if (held) continue;
 				const message = { title: pending.title, body: pending.body, tag: pushTag(pending), opens: pending.opens };
 				const delivery = classifyDelivery(await send(row.subscription, message));
 				if (delivery === 'gone') {

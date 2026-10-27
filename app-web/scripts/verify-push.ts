@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { chromium, expect, type Page } from '@playwright/test';
 import { DEVICE_HEADER } from '../../shared/auth';
 import { DELIVERY_CRON } from '../../server/src/crons';
+import { SEND_HOLD_MS } from '../../server/src/push-schedule';
 
 const BASE_URL = process.argv[2] ?? 'http://localhost:8787';
 const CHROME =
@@ -35,10 +36,6 @@ function check(ok: boolean, step: string, detail?: unknown): asserts ok {
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
-/** The first whole minute at least 40 s away, so the tasks below are saved and synced before it. */
-const target = new Date(Math.ceil((Date.now() + 40_000) / 60_000) * 60_000);
-const clock = `${pad(target.getHours())}:${pad(target.getMinutes())}`;
-const later = `${pad((target.getHours() + 1) % 24)}:${pad(target.getMinutes())}`;
 
 const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), 'verify-push-')), {
 	executablePath: CHROME,
@@ -136,6 +133,13 @@ const subscription = await page.evaluate(async () => {
 	return (await registration.pushManager.getSubscription())?.toJSON();
 });
 const subscribedAt = Date.now();
+/**
+ * The first whole minute the cron sends to this subscription, after its hold on a new subscription's sends. That
+ * leaves the tasks below time to save and sync before it.
+ */
+const target = new Date(Math.ceil((subscribedAt + SEND_HOLD_MS) / 60_000) * 60_000);
+const clock = `${pad(target.getHours())}:${pad(target.getMinutes())}`;
+const later = `${pad((target.getHours() + 1) % 24)}:${pad(target.getMinutes())}`;
 
 async function add(title: string) {
 	await page.locator('body').click({ position: { x: 1200, y: 700 } });
@@ -193,11 +197,12 @@ check(
 await page.close();
 log('app closed; waiting for the due time');
 /**
- * The test push goes out only now. FCM is slow to accept a token Chrome just registered: for up to about 10 s it
- * answers 410 Gone, or it accepts pushes and never delivers them, for up to about 25 s. Chrome's registration has
- * already succeeded and the subscription never changes, so nothing on the client marks the end.
+ * The test push goes out only now, over a minute after subscribing. FCM is slow to accept a token Chrome just
+ * registered: for up to about 10 s it answers 410 Gone, or it accepts pushes and never delivers them, for up to about
+ * 25 s. Chrome's registration has already succeeded and the subscription never changes, so nothing on the client marks
+ * the end.
  */
-const wait = Math.max(target.getTime() + 15_000, subscribedAt + 45_000) - Date.now();
+const wait = target.getTime() + 15_000 - Date.now();
 await new Promise(resolve => setTimeout(resolve, wait));
 const test = await context.request.post('/api/push/test', { data: { subscription } });
 check(test.ok(), 'test push accepted', test.status());
