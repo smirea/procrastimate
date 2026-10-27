@@ -2,7 +2,7 @@ name: Swift Build crash watch
 
 # core-linux runs `swift test --build-system native` to dodge swiftlang/swift-build#1786 (docs/decisions/testing.md).
 # This weekly check fails when the workaround may be droppable: the issue closed, or a Swift release newer than the pinned
-# one went 500 clean builds on the default backend without the crash. A red run is the signal to bump the tag in ios.yml
+# one finished 500 clean builds on the default backend without the crash. A red run is the signal to bump the tag in ios.yml
 # and drop the flag; green means nothing to do. GitHub emails a failed scheduled run to whoever last changed the cron.
 on:
   schedule:
@@ -13,8 +13,6 @@ on:
         description: Stress the latest release even when it is the pinned one
         type: boolean
         default: false
-  pull_request:
-    paths: [.github/workflows/swift-build-1786.yml]
 
 jobs:
   check:
@@ -39,7 +37,7 @@ jobs:
 
       - id: release
         env:
-          FORCE: ${{ inputs.force || github.event_name == 'pull_request' }}
+          FORCE: ${{ inputs.force }}
         run: |
           pinned=$(sed -n 's/^ *container: swift:\([0-9.]*\)$/\1/p' .github/workflows/ios.yml)
           latest=$(curl -fsS 'https://hub.docker.com/v2/repositories/library/swift/tags?page_size=100&ordering=last_updated' \

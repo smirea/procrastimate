@@ -111,7 +111,7 @@ jobs:
           path: app-ios/Sources/Core/Generated
 
       # The default Swift Build backend segfaults on Linux while planning, about once in 60 runs, before any of our code
-      # compiles: swiftlang/swift-build#1786, a libdispatch use-after-free. Drop the flag once a release fixes it.
+      # compiles: swiftlang/swift-build#1786, a libdispatch use-after-free. swift-build-1786.yml fails once a release fixes it.
       - name: Core tests
         run: swift test --build-system native
 
