@@ -247,6 +247,7 @@ export const log = pgTable(
 /**
  * An install's Web Push subscription and what the cron still owes it. `deliveredThrough` is when the cron last
  * delivered to it, or when it subscribed. `nextAt` is the earliest pending notification, which the cron selects on.
+ * `subscribedAt` is when its endpoint was first registered, which tells a fresh FCM token's early 410 from expiry.
  */
 export const push = pgTable(
 	'push',
@@ -256,6 +257,7 @@ export const push = pgTable(
 		subscription: jsonb('subscription').$type<ColumnValue<'push', 'subscription'>>().notNull(),
 		notifications: jsonb('notifications').$type<ColumnValue<'push', 'notifications'>>().notNull(),
 		deliveredThrough: millis('delivered_through').notNull(),
+		subscribedAt: millis('subscribed_at').notNull(),
 		nextAt: millis('next_at'),
 	},
 	table => [primaryKey({ columns: [table.userId, table.deviceId] }), index('push_next_at').on(table.nextAt)],

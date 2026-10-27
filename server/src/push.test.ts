@@ -153,6 +153,53 @@ describe('push', () => {
 		expect(await rows()).toHaveLength(0);
 	});
 
+	test('a 410 for a subscription made within two minutes retries, and one for an older subscription drops it', async () => {
+		const fresh = await signUp(app, 'Fresh', 'install-fresh-000');
+		const rowsOf = () => app.db.select().from(push).where(eq(push.userId, fresh.person.id));
+		await app.fetch('/api/push/subscription', {
+			method: 'PUT',
+			headers: fresh.headers,
+			body: JSON.stringify({ subscription: subscription('https://push.example/fresh') }),
+		});
+		const soon = crypto.randomUUID();
+		const later = crypto.randomUUID();
+		await upload(app, fresh, [
+			{
+				op: 'put',
+				table: 'tasks',
+				id: soon,
+				values: taskRow(soon, fresh.person.id, 'Soon', { due: JSON.stringify({ date: '2026-10-14', time: '18:01' }) }),
+			},
+			{
+				op: 'put',
+				table: 'tasks',
+				id: later,
+				values: taskRow(later, fresh.person.id, 'Later', {
+					due: JSON.stringify({ date: '2026-10-14', time: '18:30' }),
+				}),
+			},
+		]);
+		let status = 410;
+		const sent: string[] = [];
+		const send = async (_subscription: unknown, message: PushMessage) => {
+			sent.push(message.title);
+			return status;
+		};
+
+		expect(await deliverDue(app.db, Date.UTC(2026, 9, 14, 18, 1), send)).toBe(0);
+		expect((await rowsOf())[0]?.notifications.map(n => n.opens.id)).toEqual([soon, later]);
+		expect((await rowsOf())[0]?.nextAt).toBe(Date.UTC(2026, 9, 14, 18, 2));
+
+		status = 201;
+		expect(await deliverDue(app.db, Date.UTC(2026, 9, 14, 18, 2), send)).toBe(1);
+		expect(sent).toEqual(['Soon', 'Soon']);
+
+		status = 410;
+		expect(await deliverDue(app.db, Date.UTC(2026, 9, 14, 18, 30), send)).toBe(0);
+		expect(sent).toEqual(['Soon', 'Soon', 'Later']);
+		expect(await rowsOf()).toEqual([]);
+	});
+
 	test('tasks due at the same minute send one push that names them and opens their list', async () => {
 		const grouper = await signUp(app, 'Grouper', 'install-group-000');
 		await app.fetch('/api/push/subscription', {
