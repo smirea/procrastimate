@@ -68,6 +68,8 @@ test('a custom theme color derives a readable accent in each theme, survives a r
 	page,
 }) => {
 	await app.openSettings();
+	await app.customAccent().press('ArrowRight');
+	await expect(app.accentOption('Frost')).toHaveAttribute('aria-checked', 'true');
 	await app.customAccent().fill('#ffff00');
 	await expect.poll(() => app.accent()).toBe('#6b6b00');
 	await expect(app.accentOption('Frost')).toHaveAttribute('aria-checked', 'false');

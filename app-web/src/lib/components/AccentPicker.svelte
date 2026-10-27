@@ -13,7 +13,7 @@
 
 	function onkeydown(event: KeyboardEvent) {
 		const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -COLUMNS, ArrowDown: COLUMNS }[event.key];
-		if (!step) return;
+		if (!step || !(event.target instanceof HTMLButtonElement)) return;
 		event.preventDefault();
 		const next = (checkedIndex + step + accentChoices.length) % accentChoices.length;
 		choose(accentChoices[next]!);
