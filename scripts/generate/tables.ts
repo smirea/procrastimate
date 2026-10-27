@@ -3,6 +3,7 @@ import { COLUMN_TYPES, type LocalKind } from './columns';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { COLUMN_VALUES } from '../../shared/db/json';
 import { SYNCED_TABLES } from '../../shared/db/schema';
+import { CHANGE_LOG, changeLogStatements } from '../../shared/local-database';
 
 /**
  * sync-engine stores only text, integer, and real, so JSON columns are JSON text and every client keeps the server's
@@ -68,6 +69,14 @@ export function swiftRowsModule(models: Record<string, SwiftModel>): string {
 		'',
 		'/// The Core type of each synced table, by table name.',
 		`let syncedValues: [String: any SyncedValue.Type] = [\n${values.join('\n')}\n]`,
+		'',
+		'/// Every synced row change any writer made, in order. Local only: the engine syncs only `syncSchema`.',
+		`let changeLogTable = "${CHANGE_LOG}"`,
+		'',
+		'/// Creates the change log and the triggers that fill it. Every statement may run again.',
+		`let changeLogStatements: [String] = [\n${changeLogStatements(syncedTables().map(table => table.name))
+			.map(statement => `\t${JSON.stringify(statement)},`)
+			.join('\n')}\n]`,
 		'',
 	]
 		.join('\n')

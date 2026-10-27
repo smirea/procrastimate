@@ -1,9 +1,9 @@
-import { and, eq, getTableName, gt, inArray, lte, max, min } from 'drizzle-orm';
+import { and, eq, gt, inArray, lte, max, min } from 'drizzle-orm';
 import { integer, sqliteTable, text, type SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { drizzleSyncDatabase, openSyncDatabase, type WebDatabase } from 'sync-engine/client-web';
 import workerUrl from './sync/worker.ts?worker&url';
 import { access, comments, labels, projects, reads, sections, settings, tasks } from 'shared/db/schema.ts';
-import { DATABASE_FILE_KEY } from 'shared/local-database.ts';
+import { CHANGE_LOG, changeLogStatements, DATABASE_FILE_KEY } from 'shared/local-database.ts';
 import type { RowsRead, StoredRow, TableRead } from 'shared/local-rows.ts';
 import type { Kind } from 'shared/model.ts';
 import { entityIdOf, KIND_OF, rowIdOf, TABLE_OF, type RowWrite, type SyncedTable } from 'shared/rows.ts';
@@ -58,31 +58,18 @@ export type AccessRow = typeof access.$inferSelect;
  * Every row change any writer made, in order: this tab, another tab, a sync, or a reset. Local only: the engine syncs
  * only its schema's tables. Triggers fill it, so a reader reads only what changed.
  */
-const changeLog = sqliteTable('procrastimate_changes', {
+const changeLog = sqliteTable(CHANGE_LOG, {
 	seq: integer('seq').primaryKey({ autoIncrement: true }),
 	tbl: text('tbl').notNull(),
 	id: text('id').notNull(),
 });
-export const CHANGE_LOG = getTableName(changeLog);
 
 /** Whose rows the database holds. Local only, like the change log. */
 const databaseOwner = sqliteTable('procrastimate_owner', { owner: text('owner').primaryKey() });
 
 const SETUP_STATEMENTS = [
-	`CREATE TABLE IF NOT EXISTS ${CHANGE_LOG} (seq INTEGER PRIMARY KEY AUTOINCREMENT, tbl TEXT NOT NULL, id TEXT NOT NULL)`,
+	...changeLogStatements(Object.keys(localTables)),
 	'CREATE TABLE IF NOT EXISTS procrastimate_owner (owner TEXT PRIMARY KEY)',
-	...Object.keys(localTables).flatMap(table =>
-		(
-			[
-				['insert', 'NEW'],
-				['update', 'NEW'],
-				['delete', 'OLD'],
-			] as const
-		).map(
-			([event, row]) =>
-				`CREATE TRIGGER IF NOT EXISTS ${CHANGE_LOG}_${table}_${event} AFTER ${event.toUpperCase()} ON ${table} BEGIN INSERT INTO ${CHANGE_LOG} (tbl, id) VALUES ('${table}', ${row}.id); END`,
-		),
-	),
 ];
 
 /** `cursor` is the newest change the read covers, and `logged` how many changes the log holds. */
