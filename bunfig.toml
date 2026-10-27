@@ -1,2 +1,4 @@
 [test]
 preload = ["./scripts/test-timezone.ts", "./scripts/generate/preload.ts"]
+# Xcode checks the sync-engine package out under DerivedData, tests and all.
+pathIgnorePatterns = ["**/DerivedData/**"]

@@ -18,14 +18,12 @@ function bunLive(stream: (request: Request, protocol: string | null, start: Sock
 		accept: request =>
 			stream(request, liveProtocol(request), socket => {
 				sockets.add(socket);
-				console.log('LIVE open', sockets.size);
 				return {
 					message: data => data === 'ping' && socket.send('pong'),
-					close: () => console.log('LIVE close', sockets.delete(socket)),
+					close: () => sockets.delete(socket),
 				};
 			}),
 		publish(head) {
-			console.log('LIVE publish', head, sockets.size);
 			for (const socket of sockets) socket.send(headMessage(head));
 		},
 	};
