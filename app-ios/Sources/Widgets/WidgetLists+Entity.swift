@@ -68,8 +68,27 @@ struct TaskListConfiguration: WidgetConfigurationIntent {
     @Parameter(title: "List")
     var list: WidgetListEntity?
 
+    @Parameter(title: "Show Header", default: true)
+    var showsHeader: Bool
+
     @Parameter(title: "Show Add Button", default: true)
     var showsAdd: Bool
+
+    /// The add button sits in the header, so it is a choice only while the header shows.
+    static var parameterSummary: some ParameterSummary {
+        When(\.$showsHeader, .equalTo, true) {
+            Summary {
+                \.$list
+                \.$showsHeader
+                \.$showsAdd
+            }
+        } otherwise: {
+            Summary {
+                \.$list
+                \.$showsHeader
+            }
+        }
+    }
 
     init() {}
 }

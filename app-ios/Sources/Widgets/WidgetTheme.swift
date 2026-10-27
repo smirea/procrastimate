@@ -17,16 +17,23 @@ struct WidgetCanvas: View {
     }
 }
 
-/// The row checkbox of the app, a ring in the priority's tone. A widget redraws only after the app completes the task,
-/// so it never shows the filled state; the system dims the row while the intent runs.
+/// The row checkbox of the app, a ring in the priority's tone, filled with a check while a row just checked off shows
+/// struck through. It is a `Button`: a widget `Toggle` would flip the moment it is tapped, but the system then never
+/// redrew the widget after the intent ran, so the row would stay. The system dims the row while the intent runs.
 struct WidgetCheckbox: View {
     let tone: Color
+    var checked = false
     var size: CGFloat = 20
 
     var body: some View {
         ZStack {
-            Circle().fill(tone.opacity(0.08))
+            Circle().fill(checked ? tone : tone.opacity(0.08))
             Circle().strokeBorder(tone, lineWidth: 1.5)
+            if checked {
+                Image(systemName: "checkmark")
+                    .font(.system(size: size * 0.5, weight: .bold))
+                    .foregroundStyle(.white)
+            }
         }
         .frame(width: size, height: size)
         .widgetAccentable()

@@ -25,16 +25,22 @@ struct ListEntry: TimelineEntry {
     let accent: AccentColors
     /// Each project's name by id, for the rows' detail line.
     var projects: [String: String] = [:]
-    var showsAdd = true
+    var style = Style()
 
-    static func make(_ list: WidgetListEntity?, at now: WidgetNow, data: WidgetData?) -> ListEntry {
+    /// What a Tasks widget's configuration turns off.
+    struct Style {
+        var showsHeader = true
+        var showsAdd = true
+    }
+
+    static func make(_ list: WidgetListEntity?, at now: WidgetNow, data: WidgetData?, showsChecked: Bool = false) -> ListEntry {
         let accent = AccentColors(Accents.parseAccent(data?.accent))
         guard let data, data.signedIn else { return ListEntry(date: now.date, today: now.today, state: .signedOut, accent: accent) }
         let key = list?.id ?? WidgetList.today.key
         guard let choice = WidgetLists.choice(key: key, in: data, today: now.today, in: now.zone) else {
             return ListEntry(date: now.date, today: now.today, state: .missing, accent: accent)
         }
-        let listing = WidgetLists.listing(choice, data, today: now.today, in: now.zone)
+        let listing = WidgetLists.listing(choice, data, now: now.date, showsChecked: showsChecked, today: now.today, in: now.zone)
         return ListEntry(
             date: now.date,
             today: now.today,
@@ -63,10 +69,11 @@ struct ListEntry: TimelineEntry {
     }
 }
 
-/// One entry now and one at each of the next two midnights, then a fresh read. The app reloads the timelines after every
-/// change, so these entries only carry the days forward.
+/// One entry now, with any rows just checked off struck through, one as they leave, and one at each of the next two
+/// midnights, then a fresh read. The app reloads the timelines after every change, so these entries only carry the
+/// days forward.
 struct ListProvider<Configuration: ListConfiguration>: AppIntentTimelineProvider {
-    var showsAdd: (Configuration) -> Bool = { _ in true }
+    var style: (Configuration) -> ListEntry.Style = { _ in ListEntry.Style() }
 
     func placeholder(in _: Context) -> ListEntry { .sample }
 
@@ -79,13 +86,15 @@ struct ListProvider<Configuration: ListConfiguration>: AppIntentTimelineProvider
     func timeline(for configuration: Configuration, in _: Context) async -> Timeline<ListEntry> {
         let data = WidgetStore.read()
         let now = WidgetNow()
-        let moments = [now.date] + WidgetLists.rollovers(after: now.date, days: 2, in: now.zone)
-        return Timeline(entries: moments.map { entry(configuration, at: WidgetNow($0, zone: now.zone), data: data) }, policy: .atEnd)
+        let later = WidgetLists.redraws(after: now.date, data ?? WidgetData(signedIn: false), days: 2, in: now.zone)
+        let entries = [entry(configuration, at: now, data: data, showsChecked: true)]
+            + later.map { entry(configuration, at: WidgetNow($0, zone: now.zone), data: data) }
+        return Timeline(entries: entries, policy: .atEnd)
     }
 
-    private func entry(_ configuration: Configuration, at now: WidgetNow, data: WidgetData?) -> ListEntry {
-        var entry = ListEntry.make(configuration.list, at: now, data: data)
-        entry.showsAdd = showsAdd(configuration)
+    private func entry(_ configuration: Configuration, at now: WidgetNow, data: WidgetData?, showsChecked: Bool = false) -> ListEntry {
+        var entry = ListEntry.make(configuration.list, at: now, data: data, showsChecked: showsChecked)
+        entry.style = style(configuration)
         return entry
     }
 }

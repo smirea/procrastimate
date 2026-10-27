@@ -7,6 +7,13 @@ import WidgetKit
 @MainActor
 enum WidgetSync {
     private static var pending: Task<Void, Never>?
+    private static var checked: [WidgetData.Checked] = []
+
+    /// Keeps a row a widget just checked off on the widget, struck through, for a moment before it leaves. The widget
+    /// compares against the real clock, so this reads it too.
+    static func check(_ task: TaskItem) {
+        checked.append(WidgetData.Checked(task: task, at: Date()))
+    }
 
     static func schedule(_ store: Store, clock: AppClock) {
         pending?.cancel()
@@ -27,9 +34,12 @@ enum WidgetSync {
             projects: own.projects,
             labels: own.labels,
             accent: ThemeSettings.shared.accent.rawValue,
+            checked: checked,
+            now: Date(),
             today: clock.today,
             in: clock.timeZone
         )
+        checked = data.checked ?? []
         do {
             if try WidgetStore.write(data) { WidgetCenter.shared.reloadAllTimelines() }
         } catch {
