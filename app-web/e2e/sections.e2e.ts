@@ -1,6 +1,6 @@
 import type { DateKey } from '../../shared/task.ts';
 import { project, section, task } from '../../shared/testing.ts';
-import { NOW, expect, test } from './fixtures';
+import { NOW, deviceContext, expect, test } from './fixtures';
 
 test('sections group a project, take tasks from quick add and details, and rename, reorder, and delete', async ({
 	app,
@@ -97,6 +97,7 @@ test('sections group a project, take tasks from quick add and details, and renam
 test('a section can show a pending count badge: due tasks like the Inbox badge, else every open task in the accent', async ({
 	app,
 	page,
+	browser,
 }) => {
 	const home = crypto.randomUUID();
 	const errands = crypto.randomUUID();
@@ -140,6 +141,18 @@ test('a section can show a pending count badge: due tasks like the Inbox badge, 
 
 	await app.reload();
 	await expect(page.getByRole('region', { name: 'Errands' }).locator('[data-badge]')).toHaveText('2 open');
+
+	await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
+	const sheet = page.getByRole('dialog', { name: 'Share' });
+	await sheet.getByRole('button', { name: 'Copy link' }).click();
+	await expect(sheet.getByLabel('Link')).toHaveText(/\/s\/.+/);
+	const link = new URL((await sheet.getByLabel('Link').textContent())!);
+	const visitor = await (await deviceContext(browser)).newPage();
+	await visitor.clock.setFixedTime(NOW);
+	await visitor.goto(link.pathname);
+	await expect(visitor.locator('[data-badge]')).toHaveText('2 open', { timeout: 15_000 });
+	await page.keyboard.press('Escape');
+	await expect(sheet).toHaveCount(0);
 
 	await page.getByRole('button', { name: 'Errands', exact: true }).click();
 	await expect(toggle).toHaveAttribute('aria-checked', 'true');

@@ -191,7 +191,7 @@ private struct SectionHeading: View {
 }
 
 /// A section's opt-in pill, drawn like the Inbox tab's badge: red while it counts due tasks, in the accent otherwise.
-private struct SectionBadgeView: View {
+struct SectionBadgeView: View {
     let badge: Views.SectionBadge?
 
     var body: some View {

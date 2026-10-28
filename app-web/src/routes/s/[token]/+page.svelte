@@ -10,6 +10,7 @@
 	import TaskList from '#lib/components/TaskList.svelte';
 	import PersonName from '#lib/components/PersonName.svelte';
 	import PendingCount from '#lib/components/PendingCount.svelte';
+	import SectionBadge from '#lib/components/SectionBadge.svelte';
 	import { api, isNotFound } from '#lib/api.ts';
 	import { provideReadOnlyLookup } from '#lib/lookup.ts';
 	import { motion } from '#lib/ui.svelte.ts';
@@ -74,7 +75,11 @@
 				{#if group.section}
 					<div class="mt-6 mb-1 flex items-baseline justify-between gap-2 border-b border-ink/[0.07] pr-2 pb-1.5 pl-2">
 						<h2 class="min-w-0 truncate text-[13px] font-semibold">{group.section.name}</h2>
-						<PendingCount open={group.tasks.length} class="text-[12px]" />
+						{#if group.section.counter === 'badge'}
+							<SectionBadge rows={group.tasks} />
+						{:else}
+							<PendingCount open={group.tasks.length} class="text-[12px]" />
+						{/if}
 					</div>
 				{/if}
 				<TaskList tasks={group.tasks} showProject={view.target.kind !== 'project'} label={`${group.section?.name ?? title} tasks`} />
