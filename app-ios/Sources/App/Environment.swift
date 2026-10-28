@@ -20,15 +20,17 @@ enum AppEnvironment {
     /// build refuses: `scripts/archive` will not archive it and the app stops at launch.
     static let sentryDSN = "https://b975a641b1c9cd8b96701a6c6b9de1c6@o4512270794817536.ingest.us.sentry.io/4512271645605888"
 
-    /// Where this build reports crashes, errors, and traces, or nil when it reports nothing. Release is pinned to
-    /// `production` in `Config/Base.xcconfig`; Debug takes env-manager `dev`'s `SENTRY_ENVIRONMENT` through
-    /// `bun run env:ios`, empty in CI. UI test and demo launches stay silent anyway (`Telemetry.start`).
+    /// Only Release production builds report. Debug ignores bundled telemetry settings.
     static var telemetry: (dsn: String, environment: String)? {
+        #if DEBUG
+        return nil
+        #else
         let environment = Bundle.main.object(forInfoDictionaryKey: "SENTRY_ENVIRONMENT") as? String ?? ""
-        guard !environment.isEmpty else { return nil }
+        guard environment == "production" else { return nil }
         guard !sentryDSN.isEmpty else {
             fatalError("SENTRY_ENVIRONMENT is \(environment) but AppEnvironment.sentryDSN is empty.")
         }
         return (sentryDSN, environment)
+        #endif
     }
 }

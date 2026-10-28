@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { envelopeUrl, parseDsn } from './sentry.ts';
+import { envelopeUrl, parseDsn, parseSentryTarget } from './sentry.ts';
 
 test('a DSN parses into its key, host with port, and project', () => {
 	expect(parseDsn('https://0123abcd@o42.ingest.us.sentry.io/7')).toEqual({
@@ -31,4 +31,25 @@ test('anything but a DSN is refused', () => {
 test('envelopes go to the project ingest endpoint', () => {
 	const dsn = parseDsn('https://0123abcd@o42.ingest.us.sentry.io/7');
 	expect(dsn && envelopeUrl(dsn)).toBe('https://o42.ingest.us.sentry.io/api/7/envelope/');
+});
+
+test('development never reports, even with leftover DSN and release settings', () => {
+	for (const release of [undefined, '', 'local-commit']) {
+		expect(parseSentryTarget('not-a-dsn', { environment: 'development', release })).toEqual({
+			target: null,
+			problem: null,
+		});
+	}
+});
+
+test('production keeps reporting and requires a valid DSN and release', () => {
+	const dsn = 'https://0123abcd@o42.ingest.us.sentry.io/7';
+	expect(parseSentryTarget(dsn, { environment: 'production', release: 'deployed-commit' })).toEqual({
+		target: { dsn, environment: 'production', release: 'deployed-commit' },
+		problem: null,
+	});
+	expect(parseSentryTarget(dsn, { environment: 'production', release: '' }).problem).not.toBeNull();
+	expect(
+		parseSentryTarget('invalid', { environment: 'production', release: 'deployed-commit' }).problem,
+	).not.toBeNull();
 });

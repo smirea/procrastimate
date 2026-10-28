@@ -64,7 +64,8 @@ enum Telemetry {
     /// debug route, then the app reports its own error, all in one trace. `scripts/sentry-check.ts
     /// --expect ios` reads them back.
     static func smokeIfAsked() async {
-        guard ProcessInfo.processInfo.environment["PROCRASTIMATE_SENTRY_SMOKE"] == "1", SessionToken.read() != nil else {
+        guard AppEnvironment.telemetry != nil,
+              ProcessInfo.processInfo.environment["PROCRASTIMATE_SENTRY_SMOKE"] == "1", SessionToken.read() != nil else {
             return
         }
         let transaction = SentrySDK.startTransaction(name: "Sentry smoke", operation: "smoke", bindToScope: true)
@@ -87,6 +88,9 @@ enum Telemetry {
         bindToScope: Bool = false,
         _ body: () throws -> T
     ) rethrows -> T {
+        #if DEBUG
+        return try body()
+        #else
         let transaction = SentrySDK.startTransaction(name: name, operation: operation, bindToScope: bindToScope)
         do {
             let value = try body()
@@ -96,6 +100,7 @@ enum Telemetry {
             transaction.finish(status: .internalError)
             throw error
         }
+        #endif
     }
 
     static func trace<T>(
@@ -105,6 +110,9 @@ enum Telemetry {
         isolation: isolated (any Actor)? = #isolation,
         _ body: () async throws -> T
     ) async rethrows -> T {
+        #if DEBUG
+        return try await body()
+        #else
         let transaction = SentrySDK.startTransaction(name: name, operation: operation, bindToScope: bindToScope)
         do {
             let value = try await body()
@@ -114,6 +122,7 @@ enum Telemetry {
             transaction.finish(status: .internalError)
             throw error
         }
+        #endif
     }
 
     private static func isOffline(_ error: any Error) -> Bool {
@@ -127,6 +136,10 @@ enum Telemetry {
 extension View {
     /// Times the screen's first appearance as a `ui.load` transaction. The first one also carries the app start.
     func tracedScreen(_ name: String) -> some View {
+        #if DEBUG
+        self
+        #else
         sentryTrace(name)
+        #endif
     }
 }

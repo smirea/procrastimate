@@ -21,6 +21,8 @@ if (git('rev-parse', '--git-dir') === git('rev-parse', '--git-common-dir')) {
 const args = process.argv.slice(2);
 const resetDb = args.includes('--reset-db');
 const wanted = args.find(arg => !arg.startsWith('--'));
+if (wanted && process.env.T3CODE_WORKTREE_PATH)
+	throw new Error('T3 owns the branch name; rerun setup without a branch argument.');
 if (wanted && wanted !== git('branch', '--show-current')) {
 	if (git('branch', '--show-current')) git('branch', '-m', wanted);
 	else git('switch', '-c', wanted);
@@ -55,7 +57,7 @@ async function pickWorktreeNumber(): Promise<number> {
 	);
 }
 
-// A detached HEAD (mid-rebase) has no branch; the worktree directory is unique too, and teardown reads the name back from ./sim.
+// T3 names the branch concurrently with setup; resource ownership follows the stable worktree directory.
 const branch = git('branch', '--show-current') || basename(root);
 
 // Parallel setups would otherwise pick the same unclaimed number; mkdir is atomic, so it serves as the lock.
@@ -96,7 +98,7 @@ const sim = join(root, 'sim');
 // Restricted to shell-safe characters because ./sim embeds it in single quotes.
 const simulator =
 	(existsSync(sim) && readFileSync(sim, 'utf8').match(/worktree-sim\.ts '([^']+)'/)?.[1]) ||
-	branch.replaceAll(/[^\w.-]/g, '-');
+	basename(root).replaceAll(/[^\w.-]/g, '-');
 writeFileSync(sim, `#!/bin/sh\ncd "$(dirname "$0")" && exec bun scripts/worktree-sim.ts '${simulator}' "$@"\n`);
 chmodSync(sim, 0o755);
 

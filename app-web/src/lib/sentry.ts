@@ -2,12 +2,12 @@ import * as Sentry from '@sentry/sveltekit';
 import { SENTRY_TUNNEL_PATH } from 'shared/sentry.ts';
 
 /**
- * `vite.config.ts` bakes the target into the build, null wherever no `SENTRY_ENVIRONMENT` is set, and then nothing is
+ * `vite.config.ts` bakes the target into the build, null in development or wherever no `SENTRY_ENVIRONMENT` is set, and then nothing is
  * initialized and every call here does nothing.
  */
 
 export function initSentry() {
-	if (!__SENTRY_TARGET__) return;
+	if (import.meta.env.DEV || !__SENTRY_TARGET__) return;
 	const { dsn, environment, release } = __SENTRY_TARGET__;
 	Sentry.init({
 		dsn,
@@ -20,9 +20,6 @@ export function initSentry() {
 		// Whole transactions named by route, like the Worker's.
 		traceLifecycle: 'static',
 		tracesSampleRate: 1,
-		beforeSend: import.meta.env.DEV
-			? event => import('./sentry-dev-frames.ts').then(({ mapDevFrames }) => mapDevFrames(event))
-			: undefined,
 	});
 }
 
@@ -45,7 +42,7 @@ export const handleError = Sentry.handleErrorWithSentry();
  * throws, so each project gets an event in one trace. `scripts/sentry-check.ts` reads them back.
  */
 export async function runSentrySmoke() {
-	if (!new URL(location.href).searchParams.has('sentry-smoke')) return;
+	if (import.meta.env.DEV || !__SENTRY_TARGET__ || !new URL(location.href).searchParams.has('sentry-smoke')) return;
 	// Loaded here, so this module, which `hooks.client.ts` imports first, does not pull in the store.
 	const { api } = await import('./api.ts');
 	await api.debug.error().catch(() => undefined);
