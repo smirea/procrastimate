@@ -124,10 +124,8 @@ test('a quick add draft with images and no title saves named for them', async ({
 	await expect(add).toBeDisabled();
 
 	await pick(2);
-	await app.taskInput().press('Enter');
-	await expect(app.taskInput()).toHaveValue('');
-	await app.closeQuickAdd();
-	await app.go('No date');
+	await app.save();
+	await app.showAdded();
 	await expect(app.row('Photo').getByRole('img', { name: '1 image' })).toBeVisible();
 	await expect(app.row('2 photos').getByRole('img', { name: '2 images' })).toBeVisible();
 });

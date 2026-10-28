@@ -292,3 +292,28 @@ test.describe('on a phone', () => {
 		await page.screenshot({ path: 'test-results/quick-add/phone.png' });
 	});
 });
+
+test('showAdded follows the last of two back-to-back saves while the first one’s toast leaves', async ({
+	app,
+	page,
+}) => {
+	await app.openQuickAdd();
+	await app.taskInput().fill('Buy milk');
+	await app.quickAdd().getByRole('button', { name: 'Add task' }).click();
+	await expect(app.taskInput()).toHaveValue('');
+	await app.taskInput().fill('Water plants');
+	await app.save();
+	await app.showAdded();
+	await expect(page.getByRole('heading', { level: 1, name: 'No date' })).toBeVisible();
+	await expect(app.row('Water plants')).toBeVisible();
+
+	await app.openQuickAdd();
+	await app.taskInput().fill('Pay rent tomorrow');
+	await app.quickAdd().getByRole('button', { name: 'Add task' }).click();
+	await expect(app.taskInput()).toHaveValue('');
+	await app.taskInput().fill('Feed cat');
+	await app.save();
+	await app.showAdded();
+	await expect(page.getByRole('heading', { level: 1, name: 'No date' })).toBeVisible();
+	await expect(app.row('Feed cat')).toBeVisible();
+});
