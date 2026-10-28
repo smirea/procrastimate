@@ -138,6 +138,7 @@ export function drawerDrag(options: {
 		handle.addEventListener('pointerup', up);
 		handle.addEventListener('pointercancel', cancel);
 		return () => {
+			springing?.();
 			handle.removeEventListener('pointerdown', down);
 			handle.removeEventListener('pointermove', move);
 			handle.removeEventListener('pointerup', up);

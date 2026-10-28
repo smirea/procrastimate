@@ -345,7 +345,7 @@
 	</div>
 	{#if mobile.current}
 		<div
-			class="absolute inset-x-0 top-0 z-10 grid h-6 cursor-grab touch-none place-items-center active:cursor-grabbing"
+			class="absolute inset-x-0 -top-3 z-10 grid h-11 cursor-grab touch-none place-items-center active:cursor-grabbing"
 			data-quick-add-grabber
 			aria-hidden="true"
 			{@attach drawerDrag({ onexpand: expand, onclose: () => sheets.close(), ontap: expand })}
@@ -353,7 +353,7 @@
 			<span class="h-[5px] w-9 rounded-full bg-ink/25"></span>
 		</div>
 	{/if}
-	<div class="px-4 pt-5 pb-2 md:pt-4">
+	<div class="px-4 pt-8 pb-2 md:pt-4">
 		<div class="relative">
 			<SmartInput
 				bind:this={input}
