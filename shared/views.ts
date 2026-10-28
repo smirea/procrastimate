@@ -13,7 +13,7 @@ import {
 	type Task,
 } from './task.ts';
 import { compareIds } from './order.ts';
-import { occurrenceDue, openTasks, placeKey, scheduledDue } from './triggers.ts';
+import { ancestorsIn, occurrenceDue, openTasks, placeKey, scheduledDue } from './triggers.ts';
 import { dateKeySchema } from './values.ts';
 
 export const dayGroupSchema = z.object({ date: dateKeySchema, tasks: z.array(taskSchema) }).meta({ id: 'DayGroup' });
@@ -120,12 +120,41 @@ export function labelTasks(tasks: readonly Task[], labelId: string) {
 		.toSorted((a, b) => compareTasks(a, b));
 }
 
-/** Dated tasks with the day each sits on, which for an event or a repeat at a place is not its stored due date. */
-const dated = (tasks: readonly Task[], today: DateKey) =>
-	open(tasks).flatMap(task => {
-		const due = scheduledDue(task, today);
-		return due ? [{ task, date: due.date }] : [];
+/** The days a dated list covers, both ends included. A null end is open. */
+type Span = { from: DateKey | null; to: DateKey | null };
+
+/**
+ * The rows of a dated list over `span`, each with the day it sits on, which for an event or a repeat at a place is not
+ * its stored due date. A subtask has a row of its own only while no task above it has one in the same list: under a
+ * listed task it shows as that task's progress, as in a project, and once none above it is listed it shows alone.
+ */
+const dated = (tasks: readonly Task[], today: DateKey, span: Span) => {
+	const open = openTasks(tasks);
+	const days = new Map<string, DateKey>();
+	for (const task of open) {
+		const date = scheduledDue(task, today)?.date;
+		if (date && (span.from === null || date >= span.from) && (span.to === null || date <= span.to)) {
+			days.set(task.id, date);
+		}
+	}
+	const byId = new Map(open.map(t => [t.id, t]));
+	return open.flatMap(task => {
+		const date = days.get(task.id);
+		return date && !ancestorsIn(byId, task).some(p => days.has(p.id)) ? [{ task, date }] : [];
 	});
+};
+
+/** A dated list's rows: overdue, today's, then each later day. */
+function byDay(tasks: readonly Task[], today: DateKey, span: Span): DueDays {
+	const rows = dated(tasks, today, span).toSorted((a, b) => compareTasks(a.task, b.task, today));
+	const groups = new Map<DateKey, Task[]>();
+	for (const { task, date } of rows.filter(t => t.date > today)) groups.set(date, [...(groups.get(date) ?? []), task]);
+	return {
+		overdue: rows.filter(t => t.date < today).map(t => t.task),
+		today: rows.filter(t => t.date === today).map(t => t.task),
+		days: [...groups].map(([date, list]) => ({ date, tasks: list })),
+	};
+}
 
 /**
  * The pill a section with `counter: 'badge'` shows over its open rows: the overdue and today's ones when it has any, the
@@ -138,26 +167,14 @@ export function sectionBadge(rows: readonly Task[], today: DateKey): SectionBadg
 	return rows.length ? { count: rows.length, due: false } : null;
 }
 
+/** The overdue and today's tasks, as a list of only those days shows them. */
 export function todayTasks(tasks: readonly Task[], today: DateKey): Today {
-	const due = dated(tasks, today)
-		.filter(t => t.date <= today)
-		.toSorted((a, b) => compareTasks(a.task, b.task, today));
-	return {
-		overdue: due.filter(t => t.date < today).map(t => t.task),
-		today: due.filter(t => t.date === today).map(t => t.task),
-	};
+	const { overdue, today: due } = byDay(tasks, today, { from: null, to: today });
+	return { overdue, today: due };
 }
 
 export function upcomingGroups(tasks: readonly Task[], today: DateKey): DayGroup[] {
-	const groups = new Map<DateKey, Task[]>();
-	for (const { task, date } of dated(tasks, today)
-		.filter(t => t.date > today)
-		.toSorted((a, b) => compareTasks(a.task, b.task, today))) {
-		const list = groups.get(date) ?? [];
-		list.push(task);
-		groups.set(date, list);
-	}
-	return [...groups].map(([date, list]) => ({ date, tasks: list }));
+	return byDay(tasks, today, { from: addDays(today, 1), to: null }).days;
 }
 
 /** The last day This week lists: the coming Sunday, or today on a Sunday, since weeks start on Monday. */
@@ -168,15 +185,13 @@ export const weekEnd = (today: DateKey): DateKey => addDays(today, 6 - mondayInd
  * and Tomorrow only tomorrow's, since overdue tasks are already today's business.
  */
 export function dueDays(tasks: readonly Task[], today: DateKey, list: DueList): DueDays {
-	const due = todayTasks(tasks, today);
-	const days = upcomingGroups(tasks, today);
 	switch (list) {
 		case 'inbox':
-			return { ...due, days };
+			return byDay(tasks, today, { from: null, to: null });
 		case 'this-week':
-			return { ...due, days: days.filter(g => g.date <= weekEnd(today)) };
+			return byDay(tasks, today, { from: null, to: weekEnd(today) });
 		case 'tomorrow':
-			return { overdue: [], today: [], days: days.filter(g => g.date === addDays(today, 1)) };
+			return byDay(tasks, today, { from: addDays(today, 1), to: addDays(today, 1) });
 		default: {
 			const never: never = list;
 			return never;

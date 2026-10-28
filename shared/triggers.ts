@@ -220,7 +220,30 @@ export const eventGroupSchema = z
 	.meta({ id: 'EventGroup' });
 export type EventGroup = z.infer<typeof eventGroupSchema>;
 
-export const openTasks = (tasks: readonly Task[]) => tasks.filter(t => t.completedAt === null);
+/** The tasks above `task` in `byId`, nearest first, up to a missing parent or a loop. */
+export function ancestorsIn<T extends Pick<Task, 'id' | 'parentId'>>(byId: ReadonlyMap<string, T>, task: T): T[] {
+	const out: T[] = [];
+	const seen = new Set([task.id]);
+	for (
+		let parent = byId.get(task.parentId ?? '');
+		parent && !seen.has(parent.id);
+		parent = byId.get(parent.parentId ?? '')
+	) {
+		seen.add(parent.id);
+		out.push(parent);
+	}
+	return out;
+}
+
+/**
+ * Tasks that are open with every task above them open too. Completing a parent sets every task under it aside, as if
+ * done, without writing their `completedAt`, so reopening the parent brings them back. A parent missing from `tasks`
+ * does not count.
+ */
+export function openTasks<T extends Pick<Task, 'id' | 'parentId' | 'completedAt'>>(tasks: readonly T[]): T[] {
+	const byId = new Map(tasks.map(t => [t.id, t]));
+	return tasks.filter(t => t.completedAt === null && ancestorsIn(byId, t).every(p => p.completedAt === null));
+}
 const open = openTasks;
 
 export type SavedPlaceLabel = Label & { place: SavedPlace };

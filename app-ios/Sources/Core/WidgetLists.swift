@@ -57,10 +57,11 @@ public struct WidgetData: Codable, Sendable, Equatable {
     ) -> WidgetData {
         let doneToday = Set(Views.completedTasks(tasks, Views.CompletedRange(from: today, to: today), in: zone).map(\.id))
         let checked = checked.filter { WidgetLists.isStruck($0, now: now) }
+        let open = Set(Triggers.openTasks(tasks).map(\.id))
         return WidgetData(
             signedIn: signedIn,
             // An untitled task is quick add's draft open in details, which deletes it if it closes still untitled.
-            tasks: tasks.filter { !$0.title.isEmpty && ($0.completedAt == nil || doneToday.contains($0.id)) },
+            tasks: tasks.filter { !$0.title.isEmpty && (open.contains($0.id) || doneToday.contains($0.id)) },
             projects: StoreRules.projectsInOrder(projects),
             labels: labels,
             accent: accent,
@@ -154,7 +155,7 @@ public enum WidgetLists {
     /// Today first, then every list of the user's own from the catalog. Shared lists are left out: the widget data
     /// holds only the user's own space.
     public static func choices(_ data: WidgetData, today: DateKey, in zone: TimeZone) -> [Choice] {
-        let open = data.tasks.filter { $0.completedAt == nil }
+        let open = Triggers.openTasks(data.tasks)
         let groups = Lists.catalog(own: (open, data.projects, data.labels), shared: [], today: today, in: zone)
         return [Choice(list: .today, name: "Today", group: "Lists")]
             + groups.flatMap { group in group.entries.map { Choice(list: .pin(Pin($0)), name: $0.name, group: group.title) } }
@@ -176,7 +177,7 @@ public enum WidgetLists {
     ) -> Listing {
         let checked = (data.checked ?? []).filter { isStruck($0, now: now) }.map(\.task)
         let checkedIds = Set(checked.map(\.id))
-        let open = data.tasks.filter { $0.completedAt == nil && !checkedIds.contains($0.id) } + checked
+        let open = Triggers.openTasks(data.tasks.filter { !checkedIds.contains($0.id) } + checked)
         let rows: [TaskItem]
         var overdue = 0
         func countOverdue(_ tasks: [TaskItem]) -> Int { tasks.count { !checkedIds.contains($0.id) } }

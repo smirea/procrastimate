@@ -117,6 +117,29 @@ import Testing
         #expect(made.checked == nil)
     }
 
+    @Test func aSubtaskUnderACompletedParentLeavesEveryWidget() throws {
+        var hang = task("Hang shelf", due: today)
+        hang.parentId = "Move"
+        var drill = task("Drill holes", due: today)
+        drill.parentId = "Hang shelf"
+        var parent = task("Move", completedAt: 1_000)
+        let made = WidgetData.make(
+            signedIn: true, tasks: data.tasks + [parent, hang], projects: [house], labels: [calls], accent: nil,
+            now: pinned, today: today, in: zone
+        )
+        #expect(!made.tasks.map(\.title).contains("Hang shelf"))
+        parent.completedAt = nil
+        parent.due = Due(date: "2026-10-15")
+        var moved = data
+        moved.tasks += [parent, hang, drill]
+        let choice = try #require(WidgetLists.choice(key: "today", in: moved, today: today, in: zone))
+        #expect(WidgetLists.listing(choice, moved, now: pinned, today: today, in: zone).tasks.map(\.title)
+            == ["Pay rent", "Fix sink", "Call mom", "Hang shelf"])
+        let inbox = try #require(WidgetLists.choice(key: "inbox", in: moved, today: today, in: zone))
+        #expect(WidgetLists.listing(inbox, moved, now: pinned, today: today, in: zone).tasks.map(\.title)
+            == ["Pay rent", "Fix sink", "Call mom", "Plan trip", "Move"])
+    }
+
     /// Fix sink checked off in a widget at `pinned`.
     func checkedOff() throws -> WidgetData {
         try #require(data.checking("Fix sink", now: pinned, today: today, in: zone))

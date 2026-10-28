@@ -7842,6 +7842,1254 @@
 			}
 		},
 		{
+			"fn": "dueDays",
+			"test": "due days › a subtask under a completed parent is set aside, and reopening the parent brings it back",
+			"input": [
+				[
+					{
+						"completedAt": 5,
+						"completedBy": null,
+						"createdAt": 63,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 64,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book flights",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book flights"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 65,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"event": null,
+						"id": "pack",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "book flights",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "pack"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 66,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "call mom",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call mom"
+					}
+				],
+				"2026-10-14",
+				"inbox"
+			],
+			"output": {
+				"days": [],
+				"overdue": [],
+				"today": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 66,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "call mom",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call mom"
+					}
+				]
+			}
+		},
+		{
+			"fn": "todayTasks",
+			"test": "due days › a subtask under a completed parent is set aside, and reopening the parent brings it back",
+			"input": [
+				[
+					{
+						"completedAt": 5,
+						"completedBy": null,
+						"createdAt": 63,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 64,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book flights",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book flights"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 65,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"event": null,
+						"id": "pack",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "book flights",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "pack"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 66,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "call mom",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call mom"
+					}
+				],
+				"2026-10-14"
+			],
+			"output": {
+				"overdue": [],
+				"today": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 66,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "call mom",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call mom"
+					}
+				]
+			}
+		},
+		{
+			"fn": "dueDays",
+			"test": "due days › a subtask under a completed parent is set aside, and reopening the parent brings it back",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 63,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 64,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book flights",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book flights"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 65,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"event": null,
+						"id": "pack",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "book flights",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "pack"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 66,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "call mom",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call mom"
+					}
+				],
+				"2026-10-14",
+				"inbox"
+			],
+			"output": {
+				"days": [],
+				"overdue": [],
+				"today": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 64,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book flights",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book flights"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 66,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "call mom",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call mom"
+					}
+				]
+			}
+		},
+		{
+			"fn": "dueDays",
+			"test": "due days › a dated subtask shows alone only while no task above it is listed",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 67,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 68,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book flights",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book flights"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 69,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "pack",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "book flights",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "pack"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 70,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "errands",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "errands"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 71,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "buy milk",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "errands",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "buy milk"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 72,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "rewe",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "buy milk",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "rewe"
+					}
+				],
+				"2026-10-14",
+				"inbox"
+			],
+			"output": {
+				"days": [
+					{
+						"date": "2026-10-16",
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 67,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-16",
+									"time": null
+								},
+								"event": null,
+								"id": "trip",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "trip"
+							}
+						]
+					}
+				],
+				"overdue": [],
+				"today": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 71,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "buy milk",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "errands",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "buy milk"
+					}
+				]
+			}
+		},
+		{
+			"fn": "dueDays",
+			"test": "due days › a dated subtask shows alone only while no task above it is listed",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 67,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 68,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book flights",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book flights"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 69,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "pack",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "book flights",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "pack"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 70,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "errands",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "errands"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 71,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "buy milk",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "errands",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "buy milk"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 72,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "rewe",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "buy milk",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "rewe"
+					}
+				],
+				"2026-10-14",
+				"tomorrow"
+			],
+			"output": {
+				"days": [
+					{
+						"date": "2026-10-15",
+						"tasks": [
+							{
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 69,
+								"createdBy": null,
+								"due": {
+									"date": "2026-10-15",
+									"time": null
+								},
+								"event": null,
+								"id": "pack",
+								"images": [],
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": "book flights",
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "pack"
+							}
+						]
+					}
+				],
+				"overdue": [],
+				"today": []
+			}
+		},
+		{
+			"fn": "todayTasks",
+			"test": "due days › a dated subtask shows alone only while no task above it is listed",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 67,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 68,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book flights",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book flights"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 69,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "pack",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "book flights",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "pack"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 70,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "errands",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "errands"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 71,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "buy milk",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "errands",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "buy milk"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 72,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "rewe",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "buy milk",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "rewe"
+					}
+				],
+				"2026-10-14"
+			],
+			"output": {
+				"overdue": [],
+				"today": [
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 68,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book flights",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book flights"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 71,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "buy milk",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "errands",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "buy milk"
+					}
+				]
+			}
+		},
+		{
+			"fn": "upcomingGroups",
+			"test": "due days › a dated subtask shows alone only while no task above it is listed",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 67,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-16",
+							"time": null
+						},
+						"event": null,
+						"id": "trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 68,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book flights",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book flights"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 69,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-15",
+							"time": null
+						},
+						"event": null,
+						"id": "pack",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "book flights",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "pack"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 70,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "errands",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "errands"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 71,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "buy milk",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "errands",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "buy milk"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 72,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "rewe",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "buy milk",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "rewe"
+					}
+				],
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"date": "2026-10-16",
+					"tasks": [
+						{
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 67,
+							"createdBy": null,
+							"due": {
+								"date": "2026-10-16",
+								"time": null
+							},
+							"event": null,
+							"id": "trip",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "trip"
+						}
+					]
+				}
+			]
+		},
+		{
 			"fn": "completedRange",
 			"test": "completed › presets count today in their days",
 			"input": [
@@ -9978,7 +11226,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 63,
+						"createdAt": 73,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -10007,7 +11255,7 @@
 					{
 						"completedAt": 5,
 						"completedBy": null,
-						"createdAt": 64,
+						"createdAt": 74,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -10470,7 +11718,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 63,
+						"createdAt": 73,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -10499,7 +11747,7 @@
 					{
 						"completedAt": 5,
 						"completedBy": null,
-						"createdAt": 64,
+						"createdAt": 74,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -11009,7 +12257,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 63,
+						"createdAt": 73,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -11038,7 +12286,7 @@
 					{
 						"completedAt": 5,
 						"completedBy": null,
-						"createdAt": 64,
+						"createdAt": 74,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -11082,7 +12330,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 63,
+					"createdAt": 73,
 					"createdBy": null,
 					"due": null,
 					"event": null,
@@ -11514,7 +12762,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 63,
+						"createdAt": 73,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -11543,7 +12791,7 @@
 					{
 						"completedAt": 5,
 						"completedBy": null,
-						"createdAt": 64,
+						"createdAt": 74,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -11690,6 +12938,99 @@
 			]
 		},
 		{
+			"fn": "openCounts",
+			"test": "open counts › a task under a completed parent counts nowhere",
+			"input": [
+				[
+					{
+						"completedAt": 5,
+						"completedBy": null,
+						"createdAt": 75,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "move",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "move"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 76,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call movers",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "move",
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call movers"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 77,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "call mom",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call mom"
+					}
+				],
+				[
+					{
+						"color": "green",
+						"createdAt": 0,
+						"id": "calls",
+						"name": "Calls",
+						"place": null
+					}
+				]
+			],
+			"output": {
+				"labels": {
+					"calls": 1
+				},
+				"projects": {}
+			}
+		},
+		{
 			"fn": "pendingCount",
 			"test": "pending count › shows only above 4 open rows",
 			"input": [
@@ -11737,7 +13078,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 65,
+						"createdAt": 78,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-12",
@@ -11762,7 +13103,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 66,
+						"createdAt": 79,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-14",
@@ -11787,7 +13128,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 67,
+						"createdAt": 80,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-20",
@@ -11812,7 +13153,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 68,
+						"createdAt": 81,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -11847,7 +13188,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 69,
+						"createdAt": 82,
 						"createdBy": null,
 						"due": {
 							"date": "2026-10-20",
@@ -11872,7 +13213,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 70,
+						"createdAt": 83,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -11907,7 +13248,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 71,
+						"createdAt": 84,
 						"createdBy": null,
 						"due": null,
 						"event": null,

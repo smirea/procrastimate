@@ -16,6 +16,7 @@ const placeLocation = recorded('triggers', triggers.placeLocation);
 const pickedLabels = recorded('triggers', triggers.pickedLabels);
 const applyPickedLabels = recorded('triggers', triggers.applyPickedLabels);
 const savedPlaceAt = recorded('triggers', triggers.savedPlaceAt);
+const openTasks = recorded('triggers', triggers.openTasks);
 const scheduledDue = recorded('triggers', triggers.scheduledDue);
 const taskNotificationTimes = recorded('triggers', triggers.taskNotificationTimes);
 
@@ -45,6 +46,20 @@ const park = (patch: Partial<TaskLocation> = {}): TaskLocation => ({
 
 let created = 0;
 const task = (id: string, fields: Partial<Task> = {}): Task => base(id, { createdAt: ++created, ...fields });
+
+describe('openTasks', () => {
+	test('a task is open while it and every task above it are, so reopening the parent brings its subtasks back', () => {
+		const tasks = [
+			base('trip', { completedAt: 5 }),
+			base('flights', { parentId: 'trip' }),
+			base('seats', { parentId: 'flights' }),
+			base('orphan', { parentId: 'gone' }),
+			base('done', { completedAt: 6 }),
+		];
+		expect(openTasks(tasks).map(t => t.id)).toEqual(['orphan']);
+		expect(openTasks(tasks.with(0, base('trip'))).map(t => t.id)).toEqual(['trip', 'flights', 'seats', 'orphan']);
+	});
+});
 
 describe('scheduledDue', () => {
 	test('an event task sits on its edge', () => {

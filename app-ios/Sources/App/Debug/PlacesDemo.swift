@@ -6,7 +6,7 @@ import UIKit
 /// DEBUG-only. The simulator has no way to tap, so `PROCRASTIMATE_DEMO` seeds place and event tasks through the store,
 /// adds calendar events through EventKit, and opens the screen to screenshot. Release builds omit it.
 ///
-/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row, a parent with open subtasks, and a saved place `gym`), `move` (shifts the next Standup an hour later, then logs what the task holds),
+/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row, a parent with open subtasks, and a saved place `gym`), `subtasks` (a parent due today with a subtask due today, and an undated parent with one), `move` (shifts the next Standup an hour later, then logs what the task holds),
 /// `browse`, `sections` (see `SectionsDemo`), `details:<task title>`, `link:<share token>`, `sharing` (see `SharingDemo`), `sheet:location`, `sheet:event`, and
 /// `query:<words with + for spaces>` for the first location search.
 enum PlacesDemo {
@@ -39,6 +39,7 @@ enum PlacesDemo {
         guard !words.isEmpty else { return }
         if has("seed") { await seed(store: store, calendar: calendar, clock: clock) }
         if has("rows") { seedRows(store: store, clock: clock) }
+        if has("subtasks") { seedSubtasks(store: store, clock: clock) }
         if has("move") { await move(store: store, calendar: calendar) }
         if has("browse") { navigator.tab = .browse }
         if has("nodate") { navigator.open(.noDate) }
@@ -160,6 +161,18 @@ enum PlacesDemo {
         if let trip = store.addTask(NewTask(title: "Pack for trip", due: today)) {
             let items = ["Passport", "Charger", "Socks", "Toothbrush", "Sunglasses", "Beach towel"].compactMap { store.addTask(NewTask(title: $0), parentId: trip.id) }
             _ = store.completeTask(items[1].id)
+        }
+    }
+
+    @MainActor
+    private static func seedSubtasks(store: Store, clock: AppClock) {
+        guard !store.tasks.contains(where: { $0.title == "Move" }) else { return }
+        let today = Due(date: clock.today)
+        if let move = store.addTask(NewTask(title: "Move", due: today)) {
+            _ = store.addTask(NewTask(title: "Book van", due: today), parentId: move.id)
+        }
+        if let errands = store.addTask(NewTask(title: "Errands")) {
+            _ = store.addTask(NewTask(title: "Buy milk", due: today), parentId: errands.id)
         }
     }
 

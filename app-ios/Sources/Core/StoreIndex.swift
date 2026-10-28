@@ -25,7 +25,7 @@ struct StoreIndex {
 
     init(own: Snapshot, shared: [String: Snapshot]) {
         add(own, in: .own)
-        openTasks = own.tasks.filter { $0.completedAt == nil }
+        openTasks = Triggers.openTasks(own.tasks)
         for owner in shared.keys.sorted() {
             add(shared[owner]!, in: .shared(owner))
         }

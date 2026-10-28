@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { calendarDay, clockTime, relativeDay } from './format.ts';
 import type { DateKey, Due, Task } from './task.ts';
-import { formatEvent, placeKey, scheduledDue, taskNotificationTimes } from './triggers.ts';
+import { formatEvent, openTasks, placeKey, scheduledDue, taskNotificationTimes } from './triggers.ts';
 import { zonedDateKey } from './zoned-time.ts';
 
 export const notificationTargetKindSchema = z
@@ -37,8 +37,7 @@ export function upcomingNotifications(
 ): ScheduledNotification[] {
 	const today = zonedDateKey(now, zone);
 	const firing = new Map<number, Task[]>();
-	for (const task of tasks) {
-		if (task.completedAt !== null) continue;
+	for (const task of openTasks(tasks)) {
 		for (const time of taskNotificationTimes(task, today, zone)) {
 			const at = time.getTime();
 			if (at > now) firing.set(at, [...(firing.get(at) ?? []), task]);
@@ -62,8 +61,7 @@ export function caughtUpNotification(
 ): ScheduledNotification | null {
 	const today = zonedDateKey(now, zone);
 	let latest = 0;
-	const fired = tasks.filter(task => {
-		if (task.completedAt !== null) return false;
+	const fired = openTasks(tasks).filter(task => {
 		const times = taskNotificationTimes(task, today, zone)
 			.map(t => t.getTime())
 			.filter(at => at > since && at <= now);

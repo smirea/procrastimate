@@ -6,6 +6,7 @@
 	import LinkSimple from 'phosphor-svelte/lib/LinkSimple';
 	import type { SharedView } from 'shared/sharing.ts';
 	import { sortTasks } from 'shared/store.ts';
+	import { openTasks } from 'shared/triggers.ts';
 	import { projectGroups } from 'shared/views.ts';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import PersonName from '#lib/components/PersonName.svelte';
@@ -26,7 +27,7 @@
 	const tasks = $derived.by(() => {
 		if (!view) return [];
 		const ids = new Set(view.tasks.map((t) => t.id));
-		return sortTasks(view.tasks.filter((t) => t.completedAt === null && (t.parentId === null || !ids.has(t.parentId))));
+		return sortTasks(openTasks(view.tasks).filter((t) => t.parentId === null || !ids.has(t.parentId)));
 	});
 
 	/** A shared project shows under its sections, like the project view. */
