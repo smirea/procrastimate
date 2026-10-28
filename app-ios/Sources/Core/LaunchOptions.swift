@@ -8,6 +8,7 @@ public struct LaunchOptions: Equatable, Sendable {
     public static let notificationsDeniedKey = "PROCRASTIMATE_NOTIFICATIONS_DENIED"
     public static let signedInKey = "PROCRASTIMATE_SIGNED_IN"
     public static let offlineKey = "PROCRASTIMATE_OFFLINE"
+    public static let cameraStubKey = "PROCRASTIMATE_CAMERA_STUB"
 
     /// Freezes the clock at this moment.
     public var now: Date?
@@ -21,6 +22,8 @@ public struct LaunchOptions: Equatable, Sendable {
     public var signedIn: Bool
     /// DEBUG only. Keeps sync disconnected, so a UI test can edit offline and prove the edit uploads on the next launch.
     public var offline: Bool
+    /// DEBUG only. The simulator has no camera, so this offers one whose shot is a generated image.
+    public var cameraStub: Bool
 
     public init(
         now: Date? = nil,
@@ -28,7 +31,8 @@ public struct LaunchOptions: Equatable, Sendable {
         reset: Bool = false,
         notificationsDenied: Bool = false,
         signedIn: Bool = false,
-        offline: Bool = false
+        offline: Bool = false,
+        cameraStub: Bool = false
     ) {
         self.now = now
         self.timeZone = timeZone
@@ -36,6 +40,7 @@ public struct LaunchOptions: Equatable, Sendable {
         self.notificationsDenied = notificationsDenied
         self.signedIn = signedIn
         self.offline = offline
+        self.cameraStub = cameraStub
     }
 
     public enum Failure: Error, Equatable, CustomStringConvertible {
@@ -63,6 +68,7 @@ public struct LaunchOptions: Equatable, Sendable {
         options.notificationsDenied = try flag(environment, notificationsDeniedKey)
         options.signedIn = try flag(environment, signedInKey)
         options.offline = try flag(environment, offlineKey)
+        options.cameraStub = try flag(environment, cameraStubKey)
         return options
     }
 

@@ -14,13 +14,25 @@ enum ImageSource: Equatable {
 /// placeholder, and quick add can hold the save, while slow bytes such as an iCloud photo load.
 typealias ImageLoad = @MainActor () async -> [Data]
 
+enum Camera {
+    static var isAvailable: Bool { Launch.cameraStub || UIImagePickerController.isSourceTypeAvailable(.camera) }
+
+    /// What the stubbed camera shoots: a plain JPEG, so a UI test proves everything after the shutter.
+    static func stubShot() -> Data? {
+        UIGraphicsImageRenderer(size: CGSize(width: 600, height: 400)).image { context in
+            UIColor.systemTeal.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 600, height: 400))
+        }.jpegData(compressionQuality: 0.9)
+    }
+}
+
 /// The image sources as menu items. The camera shows only on a device that has one.
 struct ImageSourceButtons: View {
     let pick: (ImageSource) -> Void
 
     var body: some View {
         Button("Photo Library", systemImage: "photo.on.rectangle") { pick(.library) }
-        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+        if Camera.isAvailable {
             Button("Take Photo", systemImage: "camera") { pick(.camera) }
         }
         // The system paste control: the user's tap grants access, so it shows no "Allow Paste" prompt. A plain button
@@ -73,6 +85,10 @@ private struct ImageSourcePresenter: ViewModifier {
                     .ignoresSafeArea()
             }
             .onChange(of: source) {
+                if source == .camera, Launch.cameraStub {
+                    source = nil
+                    return onImages { Camera.stubShot().map { [$0] } ?? [] }
+                }
                 guard case let .paste(providers) = source else { return }
                 source = nil
                 onImages { await PastedImages.load(providers) }

@@ -79,6 +79,18 @@ import Testing
         #expect(task.due != nil)
     }
 
+    @Test func aDraftWithOnlyPhotosSavesNamedForThem() throws {
+        var draft = QuickAddDraft(defaults: .init())
+        #expect(draft.resolve(parse(draft)) == nil)
+        #expect(try #require(draft.resolve(parse(draft), images: 1)).title == "Photo")
+        #expect(try #require(draft.resolve(parse(draft), images: 3)).title == "3 photos")
+        #expect(try #require(draft.resolve(parse(draft), untitled: true, images: 1)).title == "")
+        draft.setText("Receipt p1")
+        let typed = try #require(draft.resolve(parse(draft), images: 1))
+        #expect(typed.title == "Receipt")
+        #expect(typed.priority == .p1)
+    }
+
     @Test func insertingANameReplacesTheFragmentWithUTF16Offsets() {
         let inserted = QuickAddDraft.insertingName("Calls", sigil: "@", into: "😀 call @ca   later", from: 8, to: 11)
         #expect(inserted.text == "😀 call @Calls later")

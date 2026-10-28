@@ -199,12 +199,13 @@ public struct QuickAddDraft: Hashable, Sendable {
 
     /// The task to save, or nil while the title is empty. An event stands in for the date and the repeat, as in
     /// task details.
-    /// Nil while the title is empty, unless `untitled`: expanding into details saves even an untitled draft.
-    public func resolve(_ parsed: QuickAdd.Parsed, untitled: Bool = false) -> NewTask? {
-        guard untitled || !parsed.title.isEmpty else { return nil }
+    /// Nil while the title is empty, unless `untitled`: expanding into details saves even an untitled draft. A draft
+    /// holding only `images` saves too, named for them, so a snapped photo is one tap from a task.
+    public func resolve(_ parsed: QuickAdd.Parsed, untitled: Bool = false, images: Int = 0) -> NewTask? {
+        guard untitled || images > 0 || !parsed.title.isEmpty else { return nil }
         let resolved = resolved(parsed)
         var task = NewTask(
-            title: parsed.title,
+            title: parsed.title.isEmpty && !untitled ? Self.imagesTitle(images) : parsed.title,
             projectId: resolved.projectId,
             sectionId: resolved.sectionId,
             labelIds: resolved.labelIds,
@@ -216,6 +217,10 @@ public struct QuickAddDraft: Hashable, Sendable {
         task.location = parsed.location ?? picked.location
         task.event = picked.event
         return task
+    }
+
+    public static func imagesTitle(_ count: Int) -> String {
+        count == 1 ? "Photo" : "\(count) photos"
     }
 
     /// The values the chips show: the text's when it has one, else the pick's. A typed project other than the picked
