@@ -1502,6 +1502,7 @@
 				],
 				[
 					{
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "later",
 						"name": "later",
@@ -1509,6 +1510,7 @@
 						"projectId": "p"
 					},
 					{
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "next",
 						"name": "next",
@@ -1516,6 +1518,7 @@
 						"projectId": "p"
 					},
 					{
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "empty",
 						"name": "empty",
@@ -1523,6 +1526,7 @@
 						"projectId": "p"
 					},
 					{
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "elsewhere",
 						"name": "elsewhere",
@@ -1584,6 +1588,7 @@
 				},
 				{
 					"section": {
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "next",
 						"name": "next",
@@ -1639,6 +1644,7 @@
 				},
 				{
 					"section": {
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "later",
 						"name": "later",
@@ -1672,6 +1678,7 @@
 				},
 				{
 					"section": {
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "empty",
 						"name": "empty",
@@ -1844,6 +1851,7 @@
 				],
 				[
 					{
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "later",
 						"name": "later",
@@ -1851,6 +1859,7 @@
 						"projectId": "p"
 					},
 					{
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "next",
 						"name": "next",
@@ -1915,6 +1924,7 @@
 					},
 					{
 						"section": {
+							"counter": "quiet",
 							"createdAt": 1,
 							"id": "next",
 							"name": "next",
@@ -1992,6 +2002,7 @@
 					},
 					{
 						"section": {
+							"counter": "quiet",
 							"createdAt": 1,
 							"id": "later",
 							"name": "later",
@@ -11717,6 +11728,220 @@
 				12
 			],
 			"output": 12
+		},
+		{
+			"fn": "sectionBadge",
+			"test": "section badge › counts a section's overdue and today's rows when it has any, like the Inbox badge",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 65,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-12",
+							"time": null
+						},
+						"event": null,
+						"id": "late",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "late"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 66,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "09:00"
+						},
+						"event": null,
+						"id": "now",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "now"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 67,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-20",
+							"time": null
+						},
+						"event": null,
+						"id": "later",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "later"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 68,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "undated",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "undated"
+					}
+				],
+				"2026-10-14"
+			],
+			"output": {
+				"count": 2,
+				"due": true
+			}
+		},
+		{
+			"fn": "sectionBadge",
+			"test": "section badge › counts every open row in the accent when none is due",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 69,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-20",
+							"time": null
+						},
+						"event": null,
+						"id": "later",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "later"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 70,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "undated",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "undated"
+					}
+				],
+				"2026-10-14"
+			],
+			"output": {
+				"count": 2,
+				"due": false
+			}
+		},
+		{
+			"fn": "sectionBadge",
+			"test": "section badge › counts every open row in the accent when none is due",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 71,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "only",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "only"
+					}
+				],
+				"2026-10-14"
+			],
+			"output": {
+				"count": 1,
+				"due": false
+			}
+		},
+		{
+			"fn": "sectionBadge",
+			"test": "section badge › shows nothing for an empty section",
+			"input": [
+				[],
+				"2026-10-14"
+			],
+			"output": null
 		}
 	]
 }

@@ -11,6 +11,7 @@ export const syncSchema = defineSchema({
 	values: {
 		tasks: COLUMN_VALUES.tasks,
 		projects: COLUMN_VALUES.projects,
+		sections: COLUMN_VALUES.sections,
 		labels: COLUMN_VALUES.labels,
 		settings: COLUMN_VALUES.settings,
 		access: COLUMN_VALUES.access,

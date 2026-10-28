@@ -223,6 +223,7 @@ private struct Occurrence: Decodable {
     case "completedDays": return try json(Views.completedDays(a(0), a(1), in: a.zone))
     case "projectCompleted": return try json(Views.projectCompleted(a(0), a(1), a(2), in: a.zone))
     case "pendingCount": return try json(Views.pendingCount(a(0)))
+    case "sectionBadge": return try json(Views.sectionBadge(a(0), a(1), in: a.zone))
     case "openCounts":
         let counts = Views.openCounts(try a(0), try a(1))
         return object(["projects": try json(counts.projects), "labels": try json(counts.labels)])
@@ -386,6 +387,7 @@ private func completion(_ completion: Completion) throws -> JSONValue {
         let result = StoreRules.addSection(try data(), try a(1), try a(2), try a(3, as: CreationInput.self).creation)
         return object(["data": try json(result.data), "section": try json(result.section)])
     case "renameSection": return try json(StoreRules.renameSection(data(), a(1), a(2)))
+    case "setSectionCounter": return try json(StoreRules.setSectionCounter(data(), a(1), a(2)))
     case "moveSection": return try json(StoreRules.moveSection(data(), a(1), a(2)))
     case "moveProject": return try json(StoreRules.moveProject(data(), a(1), a(2)))
     case "projectsInOrder": return try json(StoreRules.projectsInOrder(a(0)))

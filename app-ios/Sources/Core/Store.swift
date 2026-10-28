@@ -442,6 +442,11 @@ public final class Store {
         commit(StoreRules.renameSection(snapshot.data, id, name))
     }
 
+    public func setSectionCounter(_ id: String, _ counter: SectionCounter) {
+        guard snapshot.sections.contains(where: { $0.id == id }) else { return }
+        commit(StoreRules.setSectionCounter(snapshot.data, id, counter))
+    }
+
     public func moveSection(_ id: String, to index: Int) {
         guard snapshot.sections.contains(where: { $0.id == id }) else { return }
         commit(StoreRules.moveSection(snapshot.data, id, index))

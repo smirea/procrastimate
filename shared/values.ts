@@ -240,3 +240,11 @@ export type Role = z.infer<typeof roleSchema>;
 export const SHARE_TARGET_KINDS = ['space', 'project', 'label', 'task'] as const;
 export const shareTargetKindSchema = z.enum(SHARE_TARGET_KINDS).meta({ id: 'ShareTargetKind' });
 export type ShareTargetKind = z.infer<typeof shareTargetKindSchema>;
+
+/**
+ * How a section heading counts its tasks: `quiet` is the faint pending count every list header has, and `badge` is the
+ * opt-in pill (`sectionBadge` in `views.ts`).
+ */
+export const SECTION_COUNTERS = ['quiet', 'badge'] as const;
+export const sectionCounterSchema = z.enum(SECTION_COUNTERS).meta({ id: 'SectionCounter' });
+export type SectionCounter = z.infer<typeof sectionCounterSchema>;

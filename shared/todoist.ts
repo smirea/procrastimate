@@ -347,6 +347,7 @@ export function mergeBackup(
 			projectId,
 			name: source.name,
 			order: last ? last.order + 1 : 0,
+			counter: 'quiet',
 			createdAt: now,
 			sourceKey: source.sourceKey,
 		};

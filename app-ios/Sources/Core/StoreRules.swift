@@ -321,6 +321,12 @@ public enum StoreRules {
         return (next, section)
     }
 
+    public static func setSectionCounter(_ data: StoreData, _ id: String, _ counter: SectionCounter) -> StoreData {
+        var next = data
+        next.sections = data.sections.updating(id) { $0.counter = counter }
+        return next
+    }
+
     public static func renameSection(_ data: StoreData, _ id: String, _ name: String) -> StoreData {
         guard let section = data.sections.first(where: { $0.id == id }),
               !data.sections.contains(where: { $0.id != id && $0.projectId == section.projectId && sameName($0.name, name) })

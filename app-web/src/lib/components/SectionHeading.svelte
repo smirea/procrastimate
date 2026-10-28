@@ -7,12 +7,17 @@
 	import { sheets } from '../ui.svelte.ts';
 	import CopyButton from './CopyButton.svelte';
 	import PendingCount from './PendingCount.svelte';
+	import SectionBadge from './SectionBadge.svelte';
 
-	/** `counted` is off for done tasks, which are not pending. `add` is the screen the heading's `+` opens quick add on. */
+	/**
+	 * `counted` is off for done tasks, which are not pending, and `badge` swaps the faint count for a section's opt-in
+	 * pill. `add` is the screen the heading's `+` opens quick add on.
+	 */
 	let {
 		heading,
 		tasks,
 		counted = true,
+		badge = false,
 		add,
 		title,
 		class: className = '',
@@ -20,6 +25,7 @@
 		heading: string;
 		tasks: Task[];
 		counted?: boolean;
+		badge?: boolean;
 		add?: Screen;
 		title?: Snippet;
 		class?: string;
@@ -33,7 +39,7 @@
 		<h2 class="min-w-0 truncate text-[15px] font-semibold {className}">{heading}</h2>
 	{/if}
 	<span class="-my-1 flex items-center gap-0.5">
-		{#if counted}<PendingCount open={tasks.length} class="mr-1 text-[12px]" />{/if}
+		{#if badge}<SectionBadge rows={tasks} />{:else if counted}<PendingCount open={tasks.length} class="mr-1 text-[12px]" />{/if}
 		<span class="flex opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<CopyButton
 				label={`Copy ${heading} as Markdown`}

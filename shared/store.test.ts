@@ -24,6 +24,7 @@ const savePlace = recorded('store', store.savePlace);
 const setPlaceRadius = recorded('store', store.setPlaceRadius);
 const renameProject = recorded('store', store.renameProject);
 const renameSection = recorded('store', store.renameSection);
+const setSectionCounter = recorded('store', store.setSectionCounter);
 const projectsInOrder = recorded('store', store.projectsInOrder);
 const reopenTask = recorded('store', store.reopenTask);
 const setLabelColor = recorded('store', store.setLabelColor);
@@ -58,9 +59,9 @@ const data = (): StoreData => ({
 		{ id: 'work', name: 'Work', order: 0, icon: null, createdAt: 2 },
 	],
 	sections: [
-		{ id: 'later', projectId: 'home', name: 'Later', order: 1, createdAt: 1 },
-		{ id: 'next', projectId: 'home', name: 'Next', order: 0, createdAt: 2 },
-		{ id: 'someday', projectId: 'work', name: 'Someday', order: 0, createdAt: 3 },
+		{ id: 'later', projectId: 'home', name: 'Later', order: 1, counter: 'quiet', createdAt: 1 },
+		{ id: 'next', projectId: 'home', name: 'Next', order: 0, counter: 'quiet', createdAt: 2 },
+		{ id: 'someday', projectId: 'work', name: 'Someday', order: 0, counter: 'quiet', createdAt: 3 },
 	],
 	labels: [
 		{ id: 'calls', name: 'calls', color: 'gray', place: null, createdAt: 1 },
@@ -267,7 +268,7 @@ describe('exploding subtasks', () => {
 	test("a sectioned parent's subtasks land in its section, and undo takes them back out", () => {
 		const before = {
 			...outline(),
-			sections: [{ id: 'later', projectId: 'home', name: 'Later', order: 0, createdAt: 1 }],
+			sections: [{ id: 'later', projectId: 'home', name: 'Later', order: 0, counter: 'quiet' as const, createdAt: 1 }],
 		};
 		before.tasks = before.tasks.map(t => (t.id === 'trip' ? { ...t, sectionId: 'later' } : t));
 		const { data: next, previous } = explodeSubtasks(before, 'trip', 'direct');
@@ -416,7 +417,14 @@ describe('sections', () => {
 
 	test('a new section comes last in its project, and a taken name returns the section that has it', () => {
 		const { data: added, section } = addSection(data(), 'home', 'Errands', { id: 'errands', now: NOW });
-		expect(section).toEqual({ id: 'errands', projectId: 'home', name: 'Errands', order: 2, createdAt: NOW });
+		expect(section).toEqual({
+			id: 'errands',
+			projectId: 'home',
+			name: 'Errands',
+			order: 2,
+			counter: 'quiet',
+			createdAt: NOW,
+		});
 		expect(sectionsOf(added.sections, 'home').map(s => s.id)).toEqual(['next', 'later', 'errands']);
 		const taken = addSection(data(), 'home', 'later', { id: 'dup', now: NOW });
 		expect([taken.section.id, taken.data]).toEqual(['later', data()]);
@@ -427,6 +435,16 @@ describe('sections', () => {
 		expect(renameSection(data(), 'later', 'Soon').sections[0]!.name).toBe('Soon');
 		expect(renameSection(data(), 'later', 'NEXT')).toEqual(data());
 		expect(renameSection(data(), 'someday', 'Next').sections[2]!.name).toBe('Next');
+	});
+
+	test("a section's counter changes only that section, and quiet turns the badge back off", () => {
+		const badged = setSectionCounter(data(), 'next', 'badge');
+		expect(badged.sections.map(s => [s.id, s.counter])).toEqual([
+			['later', 'quiet'],
+			['next', 'badge'],
+			['someday', 'quiet'],
+		]);
+		expect(setSectionCounter(badged, 'next', 'quiet')).toEqual(data());
 	});
 
 	test('moving a section writes only its own order', () => {

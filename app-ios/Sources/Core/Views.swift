@@ -10,6 +10,7 @@ public enum Views {
     public typealias CompletedRange = API.CompletedRange
     public typealias ProjectGroup = API.ProjectGroup
     public typealias ProjectCompleted = API.ProjectCompleted
+    public typealias SectionBadge = API.SectionBadge
 
     /// An event task sorts by the occurrence it is on, or by its first one where a list has no today.
     static func sortKey(_ task: TaskItem, today: DateKey?, in zone: TimeZone) -> String {
@@ -126,6 +127,15 @@ public enum Views {
     /// Dated tasks with the day each sits on, which for an event or a repeat at a place is not its stored due date.
     static func dated(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> [(task: TaskItem, date: DateKey)] {
         open(tasks).compactMap { task in Triggers.scheduledDue(task, today, in: zone).map { (task, $0.date) } }
+    }
+
+    /// The pill a section with `counter: .badge` shows over its open rows: the overdue and today's ones when it has any,
+    /// the same rule as the Inbox badge, else every open row. An empty section shows none.
+    public static func sectionBadge(_ rows: [TaskItem], _ today: DateKey, in zone: TimeZone) -> SectionBadge? {
+        let due = todayTasks(rows, today, in: zone)
+        let count = due.overdue.count + due.today.count
+        if count > 0 { return SectionBadge(count: count, due: true) }
+        return rows.isEmpty ? nil : SectionBadge(count: rows.count, due: false)
     }
 
     public static func todayTasks(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> Today {

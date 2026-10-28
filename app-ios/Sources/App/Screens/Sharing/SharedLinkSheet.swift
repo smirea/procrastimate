@@ -57,6 +57,7 @@ struct SharedLinkSheet: View {
 
 private struct SharedList: View {
     @Environment(Store.self) private var store
+    @Environment(\.today) private var today
     let view: API.SharedView
 
     var body: some View {
@@ -94,11 +95,17 @@ private struct SharedList: View {
                             .listRowSeparator(.hidden)
                     }
                 } header: {
-                    Text(group.section.name)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.ink)
-                        .textCase(nil)
-                        .accessibilityAddTraits(.isHeader)
+                    HStack {
+                        Text(group.section.name)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.ink)
+                            .accessibilityAddTraits(.isHeader)
+                        Spacer(minLength: 0)
+                        if group.section.counter == .badge {
+                            SectionBadgeView(badge: Views.sectionBadge(group.tasks, today, in: store.timeZone))
+                        }
+                    }
+                    .textCase(nil)
                 }
             }
         }

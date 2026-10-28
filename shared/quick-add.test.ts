@@ -221,7 +221,14 @@ describe('projects', () => {
 });
 
 describe('sections', () => {
-	const section = (id: string, name: string, projectId: string) => ({ id, projectId, name, order: 0, createdAt: 0 });
+	const section = (id: string, name: string, projectId: string) => ({
+		id,
+		projectId,
+		name,
+		order: 0,
+		counter: 'quiet' as const,
+		createdAt: 0,
+	});
 	const sections = [
 		section('s-home-later', 'Later', 'p-home'),
 		section('s-home-next', 'Next up', 'p-home'),

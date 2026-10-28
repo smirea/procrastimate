@@ -27,6 +27,7 @@
 					],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1,
 							"id": "s",
 							"name": "s",
@@ -105,6 +106,7 @@
 				],
 				"sections": [
 					{
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "s",
 						"name": "s",
@@ -577,6 +579,7 @@
 					],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1,
 							"id": "live",
 							"name": "live",
@@ -584,6 +587,7 @@
 							"projectId": "p"
 						},
 						{
+							"counter": "quiet",
 							"createdAt": 1,
 							"id": "dead",
 							"name": "dead",
@@ -652,6 +656,7 @@
 				],
 				"sections": [
 					{
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "live",
 						"name": "live",
@@ -731,6 +736,7 @@
 					],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1,
 							"id": "s",
 							"name": "s",
@@ -850,6 +856,7 @@
 				],
 				"sections": [
 					{
+						"counter": "quiet",
 						"createdAt": 1,
 						"id": "s",
 						"name": "s",

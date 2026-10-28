@@ -21,6 +21,7 @@ const completedTasks = recorded('views', views.completedTasks);
 const completedDays = recorded('views', views.completedDays);
 const projectCompleted = recorded('views', views.projectCompleted);
 const pendingCount = recorded('views', views.pendingCount);
+const sectionBadge = recorded('views', views.sectionBadge);
 const openCounts = recorded('views', views.openCounts);
 
 let created = 0;
@@ -61,7 +62,14 @@ describe('task views', () => {
 	});
 
 	test('a project groups its tasks under its sections, the tasks in no section first and empty sections kept', () => {
-		const section = (id: string, order: number, projectId = 'p') => ({ id, projectId, name: id, order, createdAt: 1 });
+		const section = (id: string, order: number, projectId = 'p') => ({
+			id,
+			projectId,
+			name: id,
+			order,
+			counter: 'quiet' as const,
+			createdAt: 1,
+		});
 		const sections = [section('later', 2), section('next', 1), section('empty', 3), section('elsewhere', 0, 'q')];
 		const list = [
 			task('loose', { projectId: 'p' }),
@@ -81,7 +89,14 @@ describe('task views', () => {
 	});
 
 	test("a project's done tasks keep their section, newest first, and those whose section is gone come last", () => {
-		const section = (id: string, order: number) => ({ id, projectId: 'p', name: id, order, createdAt: 1 });
+		const section = (id: string, order: number) => ({
+			id,
+			projectId: 'p',
+			name: id,
+			order,
+			counter: 'quiet' as const,
+			createdAt: 1,
+		});
 		const sections = [section('later', 2), section('next', 1)];
 		const list = [
 			task('open', { projectId: 'p', sectionId: 'next' }),
@@ -339,5 +354,27 @@ describe('open counts', () => {
 describe('pending count', () => {
 	test('shows only above 4 open rows', () => {
 		expect([0, 1, 4, 5, 12].map(n => pendingCount(n))).toEqual([null, null, null, 5, 12]);
+	});
+});
+
+describe('section badge', () => {
+	test("counts a section's overdue and today's rows when it has any, like the Inbox badge", () => {
+		const rows = [
+			task('late', { due: { date: '2026-10-12', time: null } }),
+			task('now', { due: { date: today, time: '09:00' } }),
+			task('later', { due: { date: '2026-10-20', time: null } }),
+			task('undated'),
+		];
+		expect(sectionBadge(rows, today)).toEqual({ count: 2, due: true });
+	});
+
+	test('counts every open row in the accent when none is due', () => {
+		const rows = [task('later', { due: { date: '2026-10-20', time: null } }), task('undated')];
+		expect(sectionBadge(rows, today)).toEqual({ count: 2, due: false });
+		expect(sectionBadge([task('only')], today)).toEqual({ count: 1, due: false });
+	});
+
+	test('shows nothing for an empty section', () => {
+		expect(sectionBadge([], today)).toBeNull();
 	});
 });

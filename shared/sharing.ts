@@ -205,6 +205,10 @@ export type NewSection = z.infer<typeof newSectionSchema>;
 export const sectionEditSchema = z
 	.object({
 		name: sectionSchema.shape.name.optional(),
+		counter: sectionSchema.shape.counter.optional().meta({
+			description:
+				'`badge` shows a pill on its heading: its overdue and today’s tasks, else every open task. `quiet` turns it off.',
+		}),
 		index: z
 			.number()
 			.int()
@@ -212,7 +216,10 @@ export const sectionEditSchema = z
 			.optional()
 			.meta({ description: 'Its new place among the project’s sections, from 0.' }),
 	})
-	.meta({ id: 'SectionEdit', description: 'Renames a section, moves it among its project’s sections, or both.' });
+	.meta({
+		id: 'SectionEdit',
+		description: 'Renames a section, sets its counter, moves it among its project’s sections, or any of these.',
+	});
 export type SectionEdit = z.infer<typeof sectionEditSchema>;
 
 export const newLabelSchema = z
