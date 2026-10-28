@@ -356,11 +356,7 @@ export class App {
 		await this.showAdded();
 	}
 
-	/** Saves the draft with Enter. Toasts from earlier saves are marked, so `showAdded` reads only this save's. */
 	async save() {
-		await this.page
-			.locator('[role="status"]')
-			.evaluateAll(toasts => toasts.forEach(t => t.setAttribute('data-earlier', '')));
 		await this.taskInput().press('Enter');
 		await expect(this.taskInput()).toHaveValue('');
 	}
@@ -368,9 +364,10 @@ export class App {
 	/**
 	 * Leaves quick add for the list the last save went to, named by its `Added to` toast when another list holds it.
 	 * The sidebar gets there rather than the toast's `Show`, which can time out before a loaded phone WebKit taps it.
+	 * Each save dismisses the last one's toast, which hides itself from role queries as it leaves, so one is left.
 	 */
 	async showAdded() {
-		const toast = this.page.locator('[role="status"]:not([data-earlier])').filter({ hasText: /^Added to / });
+		const toast = this.page.getByRole('status').filter({ hasText: /^Added to / });
 		const added = (await toast.count()) ? await toast.textContent() : null;
 		await this.closeQuickAdd();
 		const list = added?.match(/^Added to (.+?)\s*Show$/)?.[1];
