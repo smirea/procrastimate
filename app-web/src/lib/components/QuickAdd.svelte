@@ -230,10 +230,11 @@
 	/** The full editor is task details, so expanding saves the draft, even untitled, closes quick add, and opens it there. */
 	function expand() {
 		const task = save({ untitled: true });
-		if (!task) return;
+		if (!task) return false;
 		sheets.close();
 		showAdded(task);
 		sheets.openTask(task.id);
+		return true;
 	}
 
 	function addImages(files: File[]) {

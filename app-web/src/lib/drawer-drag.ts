@@ -24,7 +24,8 @@ const SPRING = '340ms cubic-bezier(0.32, 0.72, 0, 1)';
  * has reached that end, so the next surface takes over from where the finger left it.
  */
 export function drawerDrag(options: {
-	onexpand: () => void;
+	/** False when nothing was saved, and the drawer springs back. */
+	onexpand: () => boolean;
 	onclose: () => void;
 	ontap: () => void;
 }): Attachment<HTMLElement> {
@@ -34,6 +35,9 @@ export function drawerDrag(options: {
 		let start: { y: number; height: number; room: number } | null = null;
 		let samples: { y: number; t: number }[] = [];
 		let pull = 0;
+		/** The resting height, kept while a spring runs, so a grab mid-spring continues from where the drawer is. */
+		let rest = 0;
+		let springing: (() => void) | null = null;
 
 		const apply = () => {
 			if (!start) return;
@@ -51,28 +55,44 @@ export function drawerDrag(options: {
 			drawer.style.transition = `height ${SPRING}, transform ${SPRING}`;
 			drawer.style.height = height;
 			drawer.style.transform = transform;
-			const finish = () => {
-				drawer.removeEventListener('transitionend', finish);
+			const stop = () => {
+				drawer.removeEventListener('transitionend', ended);
 				clearTimeout(timer);
 				drawer.style.transition = '';
+				springing = null;
+			};
+			const finish = () => {
+				stop();
 				done?.();
 			};
+			const ended = (event: TransitionEvent) => {
+				if (event.target === drawer && event.propertyName === 'height') finish();
+			};
 			const timer = setTimeout(finish, 400);
-			drawer.addEventListener('transitionend', finish);
+			drawer.addEventListener('transitionend', ended);
+			springing = stop;
 		};
+
+		const springBack = () =>
+			animate(`${rest}px`, '', () => {
+				drawer.style.height = '';
+				drawer.style.maxHeight = '';
+			});
 
 		const down = (event: PointerEvent) => {
 			if (event.button !== 0) return;
 			handle.setPointerCapture(event.pointerId);
 			const height = drawer.getBoundingClientRect().height;
+			if (springing) springing();
+			else rest = height;
 			const max = parseFloat(getComputedStyle(drawer).maxHeight);
+			pull = rest - height;
 			start = {
-				y: event.clientY,
-				height,
-				room: Math.max(0, (Number.isFinite(max) ? max : window.innerHeight) - height),
+				y: event.clientY - pull,
+				height: rest,
+				room: Math.max(0, (Number.isFinite(max) ? max : window.innerHeight) - rest),
 			};
 			samples = [{ y: event.clientY, t: event.timeStamp }];
-			pull = 0;
 			drawer.style.transition = '';
 			drawer.style.maxHeight = 'none';
 			drawer.style.height = `${height}px`;
@@ -97,23 +117,31 @@ export function drawerDrag(options: {
 				return options.ontap();
 			}
 			const where = settle(pull, velocity, room, height);
-			if (where === 'expand') return animate(`${height + room}px`, '', options.onexpand);
+			if (where === 'expand') {
+				return animate(`${height + room}px`, '', () => {
+					if (!options.onexpand()) springBack();
+				});
+			}
 			if (where === 'close') return options.onclose();
-			animate(`${height}px`, '', () => {
-				drawer.style.height = '';
-				drawer.style.maxHeight = '';
-			});
+			springBack();
+		};
+
+		/** The system took the pointer, such as for an edge swipe, so nothing commits. */
+		const cancel = () => {
+			if (!start) return;
+			start = null;
+			springBack();
 		};
 
 		handle.addEventListener('pointerdown', down);
 		handle.addEventListener('pointermove', move);
 		handle.addEventListener('pointerup', up);
-		handle.addEventListener('pointercancel', up);
+		handle.addEventListener('pointercancel', cancel);
 		return () => {
 			handle.removeEventListener('pointerdown', down);
 			handle.removeEventListener('pointermove', move);
 			handle.removeEventListener('pointerup', up);
-			handle.removeEventListener('pointercancel', up);
+			handle.removeEventListener('pointercancel', cancel);
 		};
 	};
 }

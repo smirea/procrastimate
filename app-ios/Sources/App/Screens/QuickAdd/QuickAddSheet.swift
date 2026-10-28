@@ -299,8 +299,7 @@ struct QuickAddSheet: View {
                         let velocity = value.velocity.height
                         if pull < -8, -pull > room * 0.3 || velocity < -500 {
                             withAnimation(.snappy(duration: 0.26)) { pull = -room } completion: {
-                                expand()
-                                pull = 0
+                                if !expand() { withAnimation(.spring(duration: 0.35, bounce: 0.15)) { pull = 0 } }
                             }
                         } else if pull > 8, pull > 120 || velocity > 500 {
                             navigator.sheet = nil
@@ -572,11 +571,13 @@ struct QuickAddSheet: View {
     }
 
     /// The full editor is task details, so expanding saves the draft, even untitled, closes quick add, and opens it there.
-    private func expand() {
-        guard let added = save(untitled: true) else { return }
+    @discardableResult
+    private func expand() -> Bool {
+        guard let added = save(untitled: true) else { return false }
         navigator.sheet = nil
         navigator.reveal(added, labels: store.labels, today: clock.today, in: clock.timeZone)
         navigator.sheet = .details(taskID: added.id)
+        return true
     }
 }
 
