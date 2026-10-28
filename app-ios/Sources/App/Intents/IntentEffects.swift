@@ -10,8 +10,9 @@ enum IntentEffects {
 
     static func tasks(ids: [String]) -> [TaskEntity] {
         let (snapshot, clock) = snapshot()
+        let make = entity(snapshot, clock)
         return ids.compactMap { id in
-            snapshot.tasks.first { $0.id == id }.map { entity($0, snapshot, clock) }
+            snapshot.tasks.first { $0.id == id }.map(make)
         }
     }
 
@@ -19,12 +20,12 @@ enum IntentEffects {
         let (snapshot, clock) = snapshot()
         return IntentRules.candidates(
             snapshot.tasks, query: query, projects: snapshot.projects, labels: snapshot.labels
-        ).map { entity($0, snapshot, clock) }
+        ).map(entity(snapshot, clock))
     }
 
     static func suggestedTasks() -> [TaskEntity] {
         let (snapshot, clock) = snapshot()
-        return IntentRules.suggestedTasks(snapshot.tasks).map { entity($0, snapshot, clock) }
+        return IntentRules.suggestedTasks(snapshot.tasks).map(entity(snapshot, clock))
     }
 
     static func projects(ids: [String]) -> [ProjectEntity] {
@@ -206,7 +207,7 @@ enum IntentEffects {
         let dialog = tasks.isEmpty
             ? "No results for “\(query)”"
             : "\(tasks.count) \(tasks.count == 1 ? "result" : "results"): \(titles)"
-        return (dialog, tasks.map { entity($0, snapshot, clock) })
+        return (dialog, tasks.map(entity(snapshot, clock)))
     }
 
     static func listToday() -> (dialog: String, entities: [TaskEntity]) {
@@ -233,11 +234,17 @@ enum IntentEffects {
         } else {
             dialog = "\(overdue ? "Overdue" : "Today"): \(titles)"
         }
-        return (dialog, tasks.map { entity($0, snapshot, clock) })
+        return (dialog, tasks.map(entity(snapshot, clock)))
     }
 
-    private static func entity(_ task: TaskItem, _ snapshot: Snapshot, _ clock: AppClock) -> TaskEntity {
-        TaskEntity.make(task, projects: snapshot.projects, labels: snapshot.labels, today: clock.today)
+    private static func entity(_ snapshot: Snapshot, _ clock: AppClock) -> (TaskItem) -> TaskEntity {
+        let byID = Dictionary(snapshot.tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return { task in
+            TaskEntity.make(
+                task, completedAt: Triggers.completedAt(of: task, in: byID),
+                projects: snapshot.projects, labels: snapshot.labels, today: clock.today
+            )
+        }
     }
 
     private static func orderedProjects(_ snapshot: Snapshot) -> [Project] {
@@ -246,17 +253,18 @@ enum IntentEffects {
 
     static func spotlightEntities() -> [TaskEntity] {
         let (snapshot, clock) = snapshot()
-        return IntentRules.indexedTasks(snapshot.tasks).map { entity($0, snapshot, clock) }
+        return IntentRules.indexedTasks(snapshot.tasks).map(entity(snapshot, clock))
     }
 
     static func spotlightEntities(ids: [String]) -> (keep: [TaskEntity], drop: [String]) {
         let (snapshot, clock) = snapshot()
         let open = Dictionary(uniqueKeysWithValues: IntentRules.indexedTasks(snapshot.tasks).map { ($0.id, $0) })
+        let make = entity(snapshot, clock)
         var keep: [TaskEntity] = []
         var drop: [String] = []
         for id in ids {
             if let task = open[id] {
-                keep.append(entity(task, snapshot, clock))
+                keep.append(make(task))
             } else {
                 drop.append(id)
             }

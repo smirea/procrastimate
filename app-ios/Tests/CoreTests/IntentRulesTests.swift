@@ -146,6 +146,19 @@ import Testing
         #expect(IntentRules.indexedTasks(tasks).map(\.id) == ["older"])
     }
 
+    @Test func aSubtaskUnderACompletedParentSortsWithTheCompletedOnes() {
+        let move = task("Move", id: "move", createdAt: 1, completedAt: 5)
+        var movers = task("Call movers", id: "movers", createdAt: 9)
+        movers.parentId = "move"
+        let older = task("Call movers", id: "older", createdAt: 2)
+        let called = task("Call movers", id: "called", createdAt: 3, completedAt: 4)
+        let tasks = [move, movers, older, called]
+
+        #expect(IntentRules.titleMatches(tasks, "call movers").map(\.id) == ["older", "movers", "called"])
+        #expect(IntentRules.prefixMatches(tasks, "call").map(\.id) == ["older", "movers", "called"])
+        #expect(IntentRules.suggestedTasks(tasks).map(\.id) == ["older", "movers", "move", "called"])
+    }
+
     @Test func spotlightIndexesOpenTasksOnly() {
         let tasks = [
             task("Buy milk", id: "open"),

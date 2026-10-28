@@ -223,7 +223,7 @@ private struct TaskDetailsForm: View {
     /// Hidden while typing so they never cover the field above the keyboard.
     private var floatingActions: some View {
         HStack {
-            if task.completedAt == nil {
+            if Triggers.completedAt(of: task, lookup: store.task) == nil {
                 floatingButton("Complete", systemImage: "checkmark", tint: .toneSoon) { complete() }
             } else {
                 floatingButton("Reopen", systemImage: "arrow.counterclockwise", tint: .accent) { store.reopenTask(task.id) }

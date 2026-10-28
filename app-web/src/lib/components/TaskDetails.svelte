@@ -306,7 +306,7 @@
 	</div>
 	{#if editable}
 		<div class="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between px-4 pb-4">
-			{#if task.completedAt === null}
+			{#if store.completedAt(task) === null}
 				<button type="button" class="floating pointer-events-auto bg-[var(--tone-soon)]" onclick={complete}><Check size={16} weight="bold" />Complete</button>
 			{:else}
 				<button type="button" class="floating pointer-events-auto bg-accent" onclick={() => store.reopenTask(id)}><ArrowCounterClockwise size={16} weight="bold" />Reopen</button>
