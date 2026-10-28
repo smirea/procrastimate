@@ -147,7 +147,7 @@ private struct SharedList: View {
         switch view.target.kind {
         case .project: return projectGroups.first?.tasks ?? []
         case .label: return Views.labelTasks(view.tasks, view.target.id, in: zone)
-        case .task, .space: return view.tasks.filter { $0.completedAt == nil }
+        case .task, .space: return Triggers.openTasks(view.tasks)
         }
     }
 }

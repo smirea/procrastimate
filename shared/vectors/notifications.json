@@ -4,6 +4,99 @@
 	"cases": [
 		{
 			"fn": "upcomingNotifications",
+			"test": "upcomingNotifications › a subtask under a completed parent stays silent",
+			"input": [
+				[
+					{
+						"completedAt": 1,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "Trip",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "11:00"
+						},
+						"event": null,
+						"id": "Book flights",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "Trip",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Book flights"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": "12:00"
+						},
+						"event": null,
+						"id": "Call mom",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call mom"
+					}
+				],
+				1791986400000,
+				500
+			],
+			"output": [
+				{
+					"at": 1791993600000,
+					"body": "Today 12:00 PM",
+					"opens": {
+						"id": "Call mom",
+						"kind": "task"
+					},
+					"title": "Call mom"
+				}
+			]
+		},
+		{
+			"fn": "upcomingNotifications",
 			"test": "upcomingNotifications › due times and reminders, soonest first, with bodies relative to the moment they show",
 			"input": [
 				[

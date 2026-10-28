@@ -49,6 +49,32 @@ describe('push', () => {
 		expect((await rows())[0]?.nextAt).toBeNull();
 	});
 
+	test('a subtask under a completed parent is not planned until the parent reopens', async () => {
+		const mover = await signUp(app, 'Mover', 'install-mover-000');
+		await app.fetch('/api/push/subscription', {
+			method: 'PUT',
+			headers: mover.headers,
+			body: JSON.stringify({ subscription: subscription('https://push.example/mover') }),
+		});
+		const parent = crypto.randomUUID();
+		const child = crypto.randomUUID();
+		const due = JSON.stringify({ date: '2026-10-14', time: '19:45' });
+		await upload(app, mover, [
+			{ op: 'put', table: 'tasks', id: parent, values: taskRow(parent, mover.person.id, 'Move', { completedAt: NOW }) },
+			{
+				op: 'put',
+				table: 'tasks',
+				id: child,
+				values: taskRow(child, mover.person.id, 'Book van', { parentId: parent, due }),
+			},
+		]);
+		const planned = async () =>
+			(await app.db.select().from(push).where(eq(push.userId, mover.person.id)))[0]?.notifications.map(n => n.opens.id);
+		expect(await planned()).toEqual([]);
+		await upload(app, mover, [{ op: 'patch', table: 'tasks', id: parent, values: { completed_at: null } }]);
+		expect(await planned()).toEqual([child]);
+	});
+
 	test('a browser that subscribes after the reminders exist gets them planned at once', async () => {
 		const late = await signUp(app, 'Late', 'install-late-0000');
 		const id = crypto.randomUUID();

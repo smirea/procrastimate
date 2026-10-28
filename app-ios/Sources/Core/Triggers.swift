@@ -242,8 +242,30 @@ public enum Triggers {
 
     static func fixed4(_ value: Double) -> String { String(format: "%.4f", locale: Locale(identifier: "en_US_POSIX"), value) }
 
+    /// The tasks above `task` in `byID`, nearest first, up to a missing parent or a loop.
+    public static func ancestors(of task: TaskItem, in byID: [String: TaskItem]) -> [TaskItem] {
+        var out: [TaskItem] = []
+        var seen: Set<String> = [task.id]
+        var next = task.parentId.flatMap { byID[$0] }
+        while let parent = next, seen.insert(parent.id).inserted {
+            out.append(parent)
+            next = parent.parentId.flatMap { byID[$0] }
+        }
+        return out
+    }
+
+    /// Tasks that are open with every task above them open too. Completing a parent sets every task under it aside,
+    /// as if done, without writing their `completedAt`, so reopening the parent brings them back. A parent missing
+    /// from `tasks` does not count.
+    public static func openTasks(_ tasks: [TaskItem]) -> [TaskItem] {
+        let byID = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return tasks.filter { task in
+            task.completedAt == nil && ancestors(of: task, in: byID).allSatisfy { $0.completedAt == nil }
+        }
+    }
+
     static func open(_ tasks: [TaskItem]) -> [TaskItem] {
-        tasks.filter { $0.completedAt == nil }.stableSorted { a, b in a.createdAt == b.createdAt ? nil : a.createdAt < b.createdAt }
+        openTasks(tasks).stableSorted { a, b in a.createdAt == b.createdAt ? nil : a.createdAt < b.createdAt }
     }
 
     /// What a label picker shows checked: the task's labels, then the saved place it sits at.

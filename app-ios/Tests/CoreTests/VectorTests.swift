@@ -447,6 +447,7 @@ private struct ParseInput: Decodable {
     case "formatEvent": return try json(Triggers.formatEvent(a(0)))
     case "formatLocation": return try json(Triggers.formatLocation(a(0)))
     case "formatRadius": return try json(Triggers.formatRadius(a(0)))
+    case "openTasks": return try json(Triggers.openTasks(a(0)))
     case "placeGroups": return try json(Triggers.placeGroups(a(0), a(1)))
     case "placeLocation": return try json(Triggers.placeLocation(a(0), a(1)))
     case "pickedLabels":

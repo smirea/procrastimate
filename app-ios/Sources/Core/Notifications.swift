@@ -44,7 +44,7 @@ public enum Notifications {
         let today = Dates.toDateKey(now, in: zone)
         var moments: [Int] = []
         var firing: [Int: [TaskItem]] = [:]
-        for task in tasks where task.completedAt == nil {
+        for task in Triggers.openTasks(tasks) {
             for at in Triggers.taskNotificationTimes(task, today, in: zone) where at > now {
                 let moment = at.epochMilliseconds
                 if firing[moment] == nil { moments.append(moment) }

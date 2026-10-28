@@ -36,6 +36,15 @@ const task = (id: string, patch: Partial<Task>): Task => ({
 });
 
 describe('upcomingNotifications', () => {
+	test('a subtask under a completed parent stays silent', () => {
+		const tasks = [
+			task('Trip', { completedAt: 1 }),
+			task('Book flights', { parentId: 'Trip', due: { date: '2026-10-14', time: '11:00' } }),
+			task('Call mom', { due: { date: '2026-10-14', time: '12:00' } }),
+		];
+		expect(pushSchedule(tasks, NOW).map(n => n.title)).toEqual(['Call mom']);
+	});
+
 	test('due times and reminders, soonest first, with bodies relative to the moment they show', () => {
 		const tasks = [
 			task('Gym', {

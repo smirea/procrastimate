@@ -146,17 +146,19 @@ public enum Search {
             labels: Dictionary(labels.map { ($0.id, $0) }, uniquingKeysWith: { $1 })
         )
         let hits = tasks.compactMap { scoreTask($0, terms, context) }
+        let open = Set(Triggers.openTasks(tasks).map(\.id))
         return Results(
             projects: searchNames(projects, terms),
             labels: searchNames(labels, terms),
-            open: hits.filter { $0.task.completedAt == nil }.stableSorted { a, b in
+            open: hits.filter { open.contains($0.task.id) }.stableSorted { a, b in
                 if a.score != b.score { return a.score > b.score }
                 if a.task.priority != b.task.priority { return a.task.priority < b.task.priority }
                 return a.task.createdAt == b.task.createdAt ? nil : a.task.createdAt > b.task.createdAt
             },
-            completed: hits.filter { $0.task.completedAt != nil }.stableSorted { a, b in
+            completed: hits.filter { !open.contains($0.task.id) }.stableSorted { a, b in
                 if a.score != b.score { return a.score > b.score }
-                return a.task.completedAt == b.task.completedAt ? nil : a.task.completedAt! > b.task.completedAt!
+                let (x, y) = (a.task.completedAt ?? 0, b.task.completedAt ?? 0)
+                return x == y ? nil : x > y
             }
         )
     }

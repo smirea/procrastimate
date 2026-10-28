@@ -192,7 +192,7 @@ private struct TabBarItems: View {
     @State private var width: CGFloat = 0
 
     private var inboxBadge: Int {
-        let due = Views.todayTasks(store.openTasks, today, in: store.timeZone)
+        let due = Views.dueDays(store.openTasks, today, .inbox, in: store.timeZone)
         return due.overdue.count + due.today.count
     }
 

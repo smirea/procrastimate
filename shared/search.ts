@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { labelSchema, projectSchema, taskSchema } from './model.ts';
 import type { Label, Project, Task } from './task.ts';
+import { openTasks } from './triggers.ts';
 
 /** A half-open `[start, end)` span of the original text. */
 export type Range = readonly [start: number, end: number];
@@ -193,17 +194,18 @@ export function search(
 		folded: new Map([...projects, ...labels].map(item => [item.name, fold(item.name)])),
 	};
 	const hits = tasks.map(task => scoreTask(task, terms, context)).filter(hit => hit !== null);
+	const open = new Set(openTasks(tasks));
 	return {
 		projects: searchNames(projects, terms),
 		labels: searchNames(labels, terms),
 		open: hits
-			.filter(hit => hit.task.completedAt === null)
+			.filter(hit => open.has(hit.task))
 			.toSorted(
 				(a, b) => b.score - a.score || a.task.priority - b.task.priority || b.task.createdAt - a.task.createdAt,
 			),
 		completed: hits
-			.filter(hit => hit.task.completedAt !== null)
-			.toSorted((a, b) => b.score - a.score || b.task.completedAt! - a.task.completedAt!),
+			.filter(hit => !open.has(hit.task))
+			.toSorted((a, b) => b.score - a.score || (b.task.completedAt ?? 0) - (a.task.completedAt ?? 0)),
 	};
 }
 

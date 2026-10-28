@@ -4,6 +4,7 @@ import type { PushScheduleResponse } from '../../shared/api/contract';
 import { push, tasks } from '../../shared/db/schema';
 import type { Task } from '../../shared/model';
 import { upcomingNotifications } from '../../shared/notifications';
+import { openTasks } from '../../shared/triggers';
 import type { RowWrite } from '../../shared/rows';
 import { pushTag, type PushMessage, type PushSubscriptionInfo } from '../../shared/push';
 import type { Env } from './bindings';
@@ -51,14 +52,24 @@ export function touchesPush(write: RowWrite): boolean {
 
 type PushRow = typeof push.$inferSelect;
 
-/** Every notification the owner's open tasks make, in their time zone: the two reads a plan needs. */
+/**
+ * Every notification the owner's open tasks make, in their time zone. A task under a completed one is set aside, so
+ * the parent links are read for every task, and whole rows only for the open ones.
+ */
 function openNotifications(db: Db, owner: string, now: number) {
-	const open = db
+	const links = db
+		.select({ id: tasks.id, parentId: tasks.parentId, completedAt: tasks.completedAt })
+		.from(tasks)
+		.where(eq(tasks.userId, owner))
+		.all();
+	const open = new Set(openTasks(links).map(t => t.id));
+	const rows = db
 		.select()
 		.from(tasks)
 		.where(and(eq(tasks.userId, owner), isNull(tasks.completedAt)))
-		.all();
-	return computeNotifications(open as Task[], storedZone(db, owner), now);
+		.all()
+		.filter(row => open.has(row.id));
+	return computeNotifications(rows as Task[], storedZone(db, owner), now);
 }
 
 const planOf = (computed: ReturnType<typeof computeNotifications>, row: PushRow, now: number) => {

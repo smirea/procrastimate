@@ -3432,6 +3432,206 @@
 		},
 		{
 			"fn": "search",
+			"test": "search ranking › a subtask under a completed parent comes back with the completed tasks",
+			"input": [
+				"passport",
+				[
+					{
+						"completedAt": 100,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t19",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t20",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "t19",
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Passport for the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 0,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t21",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Passport photos"
+					}
+				],
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "waiting",
+							"name": "Waiting on",
+							"place": null
+						}
+					],
+					"projects": [
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "garden",
+							"name": "Garden",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "cafe",
+							"name": "Café Ideas",
+							"order": 0
+						}
+					]
+				}
+			],
+			"output": {
+				"completed": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											8
+										]
+									],
+									"text": "Passport for the trip"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 0,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t20",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": "t19",
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "Passport for the trip"
+						}
+					}
+				],
+				"labels": [],
+				"open": [
+					{
+						"matches": {
+							"title": [
+								{
+									"ranges": [
+										[
+											0,
+											8
+										]
+									],
+									"text": "Passport photos"
+								}
+							]
+						},
+						"score": 12,
+						"task": {
+							"completedAt": null,
+							"completedBy": null,
+							"createdAt": 0,
+							"createdBy": null,
+							"due": null,
+							"event": null,
+							"id": "t21",
+							"images": [],
+							"labelIds": [],
+							"lastCompletedAt": null,
+							"location": null,
+							"notes": "",
+							"order": 0,
+							"parentId": null,
+							"priority": 4,
+							"projectId": null,
+							"recurrence": null,
+							"reminders": [],
+							"sectionId": null,
+							"title": "Passport photos"
+						}
+					}
+				],
+				"projects": []
+			}
+		},
+		{
+			"fn": "search",
 			"test": "search ranking › projects rank by match quality, then name",
 			"input": [
 				"garden",
@@ -3541,7 +3741,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t19",
+						"id": "t22",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -3637,7 +3837,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "t19",
+							"id": "t22",
 							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
@@ -3670,7 +3870,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t20",
+						"id": "t23",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -3754,7 +3954,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "t20",
+							"id": "t23",
 							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
@@ -3787,7 +3987,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t21",
+						"id": "t24",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -3882,7 +4082,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "t21",
+							"id": "t24",
 							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
@@ -3935,7 +4135,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t22",
+						"id": "t25",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -4019,7 +4219,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "t22",
+							"id": "t25",
 							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
@@ -4052,7 +4252,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t23",
+						"id": "t26",
 						"images": [],
 						"labelIds": [
 							"calls"
@@ -4076,7 +4276,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t24",
+						"id": "t27",
 						"images": [],
 						"labelIds": [
 							"waiting",
@@ -4101,7 +4301,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t25",
+						"id": "t28",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -4205,7 +4405,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "t23",
+							"id": "t26",
 							"images": [],
 							"labelIds": [
 								"calls"
@@ -4245,7 +4445,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "t24",
+							"id": "t27",
 							"images": [],
 							"labelIds": [
 								"waiting",
@@ -4281,7 +4481,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t26",
+						"id": "t29",
 						"images": [],
 						"labelIds": [
 							"waiting"
@@ -4305,7 +4505,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t27",
+						"id": "t30",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -4400,7 +4600,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "t26",
+							"id": "t29",
 							"images": [],
 							"labelIds": [
 								"waiting"
@@ -4435,7 +4635,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t28",
+						"id": "t31",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -4457,7 +4657,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t29",
+						"id": "t32",
 						"images": [],
 						"labelIds": [
 							"calls"
@@ -4481,7 +4681,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t30",
+						"id": "t33",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -4585,7 +4785,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "t30",
+							"id": "t33",
 							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
@@ -4623,7 +4823,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "t29",
+							"id": "t32",
 							"images": [],
 							"labelIds": [
 								"calls"
@@ -4663,7 +4863,7 @@
 							"createdBy": null,
 							"due": null,
 							"event": null,
-							"id": "t28",
+							"id": "t31",
 							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
@@ -4696,7 +4896,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t31",
+						"id": "t34",
 						"images": [],
 						"labelIds": [
 							"gone"

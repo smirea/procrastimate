@@ -260,6 +260,38 @@ describe('due days', () => {
 		expect(days(dueDays(tasks, today, 'tomorrow'))).toEqual([[], [], [['2026-10-15', ['tomorrow 8am', 'tomorrow']]]]);
 		expect(days(dueDays([], today, 'tomorrow'))).toEqual([[], [], []]);
 	});
+
+	test('a subtask under a completed parent is set aside, and reopening the parent brings it back', () => {
+		const parent = task('trip', { completedAt: 5 });
+		const list = [
+			parent,
+			task('book flights', { parentId: 'trip', due: { date: today, time: null } }),
+			task('pack', { parentId: 'book flights', due: { date: '2026-10-12', time: null } }),
+			task('call mom', { due: { date: today, time: null } }),
+		];
+		expect(days(dueDays(list, today, 'inbox'))).toEqual([[], ['call mom'], []]);
+		expect(ids(todayTasks(list, today).today)).toEqual(['call mom']);
+		expect(days(dueDays(list.with(0, { ...parent, completedAt: null }), today, 'inbox'))).toEqual([
+			[],
+			['book flights', 'call mom'],
+			[],
+		]);
+	});
+
+	test('a dated subtask shows alone only while no task above it is listed', () => {
+		const list = [
+			task('trip', { due: { date: '2026-10-16', time: null } }),
+			task('book flights', { parentId: 'trip', due: { date: today, time: null } }),
+			task('pack', { parentId: 'book flights', due: { date: '2026-10-15', time: null } }),
+			task('errands'),
+			task('buy milk', { parentId: 'errands', due: { date: today, time: null } }),
+			task('rewe', { parentId: 'buy milk', due: { date: today, time: null } }),
+		];
+		expect(days(dueDays(list, today, 'inbox'))).toEqual([[], ['buy milk'], [['2026-10-16', ['trip']]]]);
+		expect(days(dueDays(list, today, 'tomorrow'))).toEqual([[], [], [['2026-10-15', ['pack']]]]);
+		expect(ids(todayTasks(list, today).today)).toEqual(['book flights', 'buy milk']);
+		expect(upcomingGroups(list, today).map(g => [g.date, ids(g.tasks)])).toEqual([['2026-10-16', ['trip']]]);
+	});
 });
 
 describe('completed', () => {
@@ -348,6 +380,17 @@ describe('open counts', () => {
 				['calls', 4],
 			],
 		]);
+	});
+
+	test('a task under a completed parent counts nowhere', () => {
+		const calls = { id: 'calls', name: 'Calls', color: 'green' as const, createdAt: 0, place: null };
+		const list = [
+			task('move', { projectId: 'home', completedAt: 5 }),
+			task('call movers', { projectId: 'home', parentId: 'move', labelIds: ['calls'] }),
+			task('call mom', { labelIds: ['calls'] }),
+		];
+		const counts = openCounts(list, [calls]);
+		expect([[...counts.projects], [...counts.labels]]).toEqual([[], [['calls', 1]]]);
 	});
 });
 
