@@ -143,6 +143,7 @@ import Testing
         #expect(IntentRules.completionTarget(.complete, id: "movers", title: "Call movers", in: [move, movers]) == nil)
         #expect(IntentRules.completionTarget(.reopen, id: "movers", title: "Call movers", in: tasks)?.id == "movers")
         #expect(IntentRules.completionTarget(.reopen, id: "older", title: "Call movers", in: tasks)?.id == "movers")
+        #expect(IntentRules.indexedTasks(tasks).map(\.id) == ["older"])
     }
 
     @Test func spotlightIndexesOpenTasksOnly() {

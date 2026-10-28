@@ -125,6 +125,12 @@ public enum Views {
         byDue(open(tasks).filter { $0.event?.id == eventId }, today: today, in: zone)
     }
 
+    static func day(of task: TaskItem, _ today: DateKey, from: DateKey?, to: DateKey?, in zone: TimeZone) -> DateKey? {
+        guard let date = Triggers.scheduledDue(task, today, in: zone)?.date,
+              from.map({ date >= $0 }) ?? true, to.map({ date <= $0 }) ?? true else { return nil }
+        return date
+    }
+
     /// The rows of a dated list from `from` through `to`, each with the day it sits on, which for an event or a repeat
     /// at a place is not its stored due date. A nil end is open. A subtask has a row of its own only while no task
     /// above it has one in the same list: under a listed task it shows as that task's progress, as in a project, and
@@ -136,8 +142,7 @@ public enum Views {
         let open = open(tasks)
         var days: [String: DateKey] = [:]
         for task in filtered.map({ ListFilters.filterTasks(open, $0.filter, me: $0.me) }) ?? open {
-            guard let date = Triggers.scheduledDue(task, today, in: zone)?.date else { continue }
-            if from.map({ date >= $0 }) ?? true, to.map({ date <= $0 }) ?? true { days[task.id] = date }
+            if let date = day(of: task, today, from: from, to: to, in: zone) { days[task.id] = date }
         }
         let byID = Dictionary(open.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return open.compactMap { task in
@@ -197,12 +202,23 @@ public enum Views {
     public static func dueDays(
         _ tasks: [TaskItem], _ today: DateKey, _ list: DueList, filtered: DueFilter? = nil, in zone: TimeZone
     ) -> DueDays {
+        let span = span(of: list, today)
+        return byDay(tasks, today, from: span.from, to: span.to, filtered: filtered, in: zone)
+    }
+
+    static func span(of list: DueList, _ today: DateKey) -> (from: DateKey?, to: DateKey?) {
         switch list {
-        case .inbox: byDay(tasks, today, from: nil, to: nil, filtered: filtered, in: zone)
-        case .thisWeek: byDay(tasks, today, from: nil, to: weekEnd(today), filtered: filtered, in: zone)
-        case .tomorrow:
-            byDay(tasks, today, from: Dates.addDays(today, 1), to: Dates.addDays(today, 1), filtered: filtered, in: zone)
+        case .inbox: (nil, nil)
+        case .thisWeek: (nil, weekEnd(today))
+        case .tomorrow: (Dates.addDays(today, 1), Dates.addDays(today, 1))
         }
+    }
+
+    /// What a dated list's filter menu counts: every open task due in the days it covers, subtasks under a listed task
+    /// included, so a choice that would surface a subtask by hiding its parent is offered.
+    public static func dueCandidates(_ tasks: [TaskItem], _ today: DateKey, _ list: DueList, in zone: TimeZone) -> [TaskItem] {
+        let span = span(of: list, today)
+        return Triggers.openTasks(tasks).filter { day(of: $0, today, from: span.from, to: span.to, in: zone) != nil }
     }
 
     /// Today, the last 7 days, or the last 30 days, each counting today, or all time.

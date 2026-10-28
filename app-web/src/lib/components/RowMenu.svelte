@@ -21,7 +21,10 @@
 
 	const opened = $derived(rowMenu.current);
 	const task = $derived(opened ? store.task(opened.id) : undefined);
-	const offered = $derived(task && opened ? rowActions(task, !store.canEdit(task.id), opened.rolled) : null);
+	/** A task left open under a completed parent is done with it, so it offers Reopen. */
+	const offered = $derived(
+		task && opened ? rowActions({ ...task, completedAt: store.completedAt(task) }, !store.canEdit(task.id), opened.rolled) : null,
+	);
 	const options = $derived(task && offered?.postpone ? postponeOptions(scheduledDue(task, clock.today), clock.today) : []);
 
 	$effect(() => {
@@ -77,7 +80,7 @@
 
 	function toggle(target: Task, rowToggle?: () => void) {
 		if (rowToggle) rowToggle();
-		else if (target.completedAt === null) completeTask(target);
+		else if (store.completedAt(target) === null) completeTask(target);
 		else reopenTask(target);
 	}
 

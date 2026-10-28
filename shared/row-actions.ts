@@ -8,7 +8,8 @@ export type RowActions = { toggle: RowToggle | null; postpone: boolean; delete: 
 /**
  * What a task row offers on every list and client: Complete or Reopen, Postpone while it is open and not on an event,
  * Delete, and Copy as Markdown. A task the user may only view offers only Copy, and so does a repeating task's past
- * completion in Completed (`rolled`), since the task itself is still open.
+ * completion in Completed (`rolled`), since the task itself is still open. Pass `completedAt` as `completedAtIn` reads
+ * it, so a task left open under a completed parent offers Reopen.
  */
 export function rowActions(task: Pick<Task, 'completedAt' | 'event'>, readOnly: boolean, rolled = false): RowActions {
 	const editable = !readOnly && !rolled;

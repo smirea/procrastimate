@@ -150,6 +150,17 @@ describe('search ranking', () => {
 		expect(titles('passport', tasks)).toEqual({ open: ['Passport photos'], completed: ['Passport for the trip'] });
 	});
 
+	test('a subtask under a completed parent ranks by the parent’s completion among completed results', () => {
+		const trip = task('Trip', { completedAt: 300 });
+		const tasks = [
+			task('Pack bags early', { completedAt: 100 }),
+			{ ...task('Pack bags'), parentId: trip.id },
+			trip,
+			task('Pack bags late', { completedAt: 200 }),
+		];
+		expect(titles('pack bags', tasks).completed).toEqual(['Pack bags', 'Pack bags late', 'Pack bags early']);
+	});
+
 	test('projects rank by match quality, then name', () => {
 		const list: Project[] = [
 			{ id: 'a', name: 'Side gardening', order: 0, icon: null, createdAt: 0 },

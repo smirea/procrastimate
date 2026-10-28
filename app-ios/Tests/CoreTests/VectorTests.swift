@@ -217,6 +217,7 @@ private struct Occurrence: Decodable {
     case "todayTasks": return try json(Views.todayTasks(a(0), a(1), in: a.zone))
     case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1), in: a.zone))
     case "dueDays": return try json(Views.dueDays(a(0), a(1), a(2), filtered: a(3, as: Views.DueFilter?.self), in: a.zone))
+    case "dueCandidates": return try json(Views.dueCandidates(a(0), a(1), a(2), in: a.zone))
     case "weekEnd": return try json(Views.weekEnd(a(0)))
     case "completedRange": return try json(Views.completedRange(a(0), a(1)))
     case "completedTasks": return try json(Views.completedTasks(a(0), a(1), in: a.zone))

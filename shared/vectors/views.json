@@ -9581,6 +9581,329 @@
 			}
 		},
 		{
+			"fn": "dueCandidates",
+			"test": "due days › a filter runs first, so a subtask whose parent it hides gets its own row",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 73,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "move",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "move"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 74,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "call movers",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "move",
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call movers"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 75,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book van",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "call movers",
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book van"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 76,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "pay rent",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "pay rent"
+					}
+				],
+				"2026-10-14",
+				"inbox"
+			],
+			"output": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 73,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"event": null,
+					"id": "move",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "move"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 74,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"event": null,
+					"id": "call movers",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": "move",
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "call movers"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 75,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"event": null,
+					"id": "book van",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": "call movers",
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "book van"
+				},
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 76,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"event": null,
+					"id": "pay rent",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "pay rent"
+				}
+			]
+		},
+		{
+			"fn": "dueCandidates",
+			"test": "due days › a filter runs first, so a subtask whose parent it hides gets its own row",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 73,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "move",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "move"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 74,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "call movers",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "move",
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "call movers"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 75,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "book van",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": "call movers",
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "book van"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 76,
+						"createdBy": null,
+						"due": {
+							"date": "2026-10-14",
+							"time": null
+						},
+						"event": null,
+						"id": "pay rent",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 1,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "pay rent"
+					}
+				],
+				"2026-10-14",
+				"tomorrow"
+			],
+			"output": []
+		},
+		{
 			"fn": "completedRange",
 			"test": "completed › presets count today in their days",
 			"input": [

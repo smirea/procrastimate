@@ -84,4 +84,11 @@ test('a filter that hides a parent lets its dated subtask show alone, and search
 	await expect(result).toContainText('Completed');
 	await app.settle();
 	await page.screenshot({ path: 'test-results/subtask-visibility/search.png' });
+
+	await result.click({ button: 'right' });
+	const rowMenu = page.getByRole('menu', { name: 'Pack bags' });
+	await expect(rowMenu.getByRole('menuitem', { name: 'Complete' })).toHaveCount(0);
+	await rowMenu.getByRole('menuitem', { name: 'Reopen' }).click();
+	await expect(search.getByRole('group')).toHaveText([/^Tasks/]);
+	await expect(search.getByRole('option').filter({ hasText: 'Pack bags' }).locator('.status.done')).toHaveCount(0);
 });

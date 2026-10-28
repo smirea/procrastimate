@@ -16,12 +16,9 @@ struct DueScreen: View {
     }
 
     var body: some View {
-        let all = Views.dueDays(store.openTasks, today, list, in: store.timeZone)
         let filtered = Views.dueDays(store.openTasks, today, list, filtered: .init(filter: filter, me: store.me), in: store.timeZone)
         let due = (overdue: filtered.overdue, today: filtered.today, days: filtered.days.map { (date: $0.date, tasks: $0.tasks) })
-        let rows = { (days: Views.DueDays) in days.overdue + days.today + days.days.flatMap(\.tasks) }
-        // A subtask the filter surfaces, because it hides the parent, joins the menu's rows so the menu counts it.
-        let unfiltered = rows(all) + rows(filtered).filter { row in !rows(all).contains { $0.id == row.id } }
+        let candidates = Views.dueCandidates(store.openTasks, today, list, in: store.timeZone)
         let title = switch list {
         case .inbox: "Inbox"
         case .tomorrow: "Tomorrow"
@@ -32,7 +29,7 @@ struct DueScreen: View {
             + due.days.map { Markdown.Section(heading: headed ? Format.dayHeading($0.date, today) : nil, tasks: $0.tasks) }
         TaskListScreen(
             title: title,
-            isEmpty: all.overdue.isEmpty && all.today.isEmpty && all.days.isEmpty,
+            isEmpty: candidates.isEmpty,
             emptyTitle: empty.title,
             emptyHint: empty.hint,
             root: true,
@@ -42,7 +39,7 @@ struct DueScreen: View {
                 actions.copyAsMarkdown(Markdown.Document(title: title, sections: sections.filter { !$0.tasks.isEmpty }))
             }),
             filter: $filter,
-            unfiltered: unfiltered
+            unfiltered: candidates
         ) {
             if !due.overdue.isEmpty {
                 Section {

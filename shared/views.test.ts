@@ -12,6 +12,7 @@ const projectGroups = recorded('views', views.projectGroups);
 const todayTasks = recorded('views', views.todayTasks);
 const upcomingGroups = recorded('views', views.upcomingGroups);
 const dueDays = recorded('views', views.dueDays);
+const dueCandidates = recorded('views', views.dueCandidates);
 const weekEnd = recorded('views', views.weekEnd);
 const placeTasks = recorded('views', views.placeTasks);
 const labelViewTasks = recorded('views', views.labelViewTasks);
@@ -305,6 +306,8 @@ describe('due days', () => {
 		expect(days(dueDays(list, today, 'inbox', urgent))).toEqual([[], ['call movers', 'pay rent'], []]);
 		const lowest = { filter: { people: null, priorities: [4 as const] }, me: 'me' };
 		expect(days(dueDays(list, today, 'inbox', lowest))).toEqual([[], ['move'], []]);
+		expect(ids(dueCandidates(list, today, 'inbox'))).toEqual(['move', 'call movers', 'book van', 'pay rent']);
+		expect(ids(dueCandidates(list, today, 'tomorrow'))).toEqual([]);
 	});
 });
 

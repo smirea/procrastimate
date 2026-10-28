@@ -15,18 +15,15 @@
 	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
 	import type { Screen } from 'shared/screens.ts';
-	import { dueDays, type DueDays, type DueList } from 'shared/views.ts';
+	import { dueCandidates, dueDays, type DueList } from 'shared/views.ts';
 	import { dayHeading } from 'shared/format.ts';
 
 	let { list, name, emptyTitle, emptyHint }: { list: DueList; name: string; emptyTitle: string; emptyHint: string } = $props();
 
 	const key = $derived(filterKey({ kind: list }));
-	const all = $derived(dueDays(store.own.tasks, clock.today, list));
 	const due = $derived(dueDays(store.own.tasks, clock.today, list, { filter: listFilters.get(key), me: session.userId ?? '' }));
-	const rows = (days: DueDays) => [...days.overdue, ...days.today, ...days.days.flatMap((group) => group.tasks)];
-	/** A subtask the filter surfaces, because it hides the parent, joins the menu's rows so the menu counts it. */
-	const unfiltered = $derived([...new Set([...rows(all), ...rows(due)])]);
-	const empty = $derived(all.overdue.length + all.today.length + all.days.length === 0);
+	const candidates = $derived(dueCandidates(store.own.tasks, clock.today, list));
+	const empty = $derived(candidates.length === 0);
 	const sections = $derived([
 		{ heading: 'Overdue', tasks: due.overdue },
 		{ heading: 'Today', tasks: due.today },
@@ -46,7 +43,7 @@
 	{emptyTitle}
 	{emptyHint}
 	canAdd={empty}
-	filter={{ list: key, tasks: unfiltered }}
+	filter={{ list: key, tasks: candidates }}
 >
 	{#snippet actions()}
 		<ListMenu
