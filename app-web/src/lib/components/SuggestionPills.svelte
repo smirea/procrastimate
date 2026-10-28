@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { scale, slide } from 'svelte/transition';
+	import { fly, scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
@@ -35,10 +35,10 @@
 
 {#if shown.length}
 	<div
-		class="pills flex gap-1.5 overflow-x-auto px-4 pt-0.5 pb-2.5"
+		class="pills pointer-events-auto flex gap-1.5 overflow-x-auto px-3 py-1"
 		role="group"
 		aria-label="Suggestions"
-		transition:slide={motion({ duration: 160, easing: cubicOut })}
+		transition:fly={motion({ y: 8, duration: 180, easing: cubicOut })}
 	>
 		{#each shown as { pill, key, kind, name } (key)}
 			{@const label = pill.kind === 'label' ? store.label(pill.labelId) : undefined}
@@ -72,11 +72,15 @@
 		scrollbar-width: none;
 	}
 
-	/* Dashed and unfilled, so an offer reads apart from the chips of what the task already holds. */
+	/* Dashed, so an offer reads apart from the chips of what the task already holds, and glass, so it reads over the scrim. */
 	.pill {
 		height: 2rem;
-		background: transparent;
-		box-shadow: inset 0 0 0 1px transparent;
-		border: 1px dashed color-mix(in srgb, currentColor 40%, transparent);
+		background: var(--glass-strong-bg);
+		box-shadow: 0 4px 14px -6px var(--glass-shadow-strong);
+		border: 1px dashed color-mix(in srgb, currentColor 45%, transparent);
+	}
+
+	.pill.label-tinted {
+		background: linear-gradient(var(--label-fill), var(--label-fill)), var(--glass-strong-bg);
 	}
 </style>

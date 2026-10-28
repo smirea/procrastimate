@@ -34,7 +34,8 @@
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
 	import { labelIcon } from '../label-icon.ts';
-	import { clock, sheets, motion } from '../ui.svelte.ts';
+	import { clock, sheets, mobile, motion } from '../ui.svelte.ts';
+	import { drawerDrag } from '../drawer-drag.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
 	import { formatEvent, formatLocation, placeKey, savedPlaceAt } from 'shared/triggers.ts';
 	import { reusedDefaults, type ListDefaults } from 'shared/screens.ts';
@@ -337,7 +338,21 @@
 {/snippet}
 
 <Sheet label="Quick add" desktop="scale" {onpaste} {ondragover} {ondrop} class="flex-col md:top-[14vh] md:left-1/2 md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:rounded-panel">
-	<div class="px-4 pt-4 pb-2">
+	<!-- Pills float over the scrim above the sheet, so their coming and going never moves the field being typed in. -->
+	<div class="pointer-events-none absolute inset-x-0 bottom-full mb-2">
+		<SuggestionPills {pills} onpick={usePill} />
+	</div>
+	{#if mobile.current}
+		<div
+			class="absolute inset-x-0 top-0 z-10 grid h-6 cursor-grab touch-none place-items-center active:cursor-grabbing"
+			data-quick-add-grabber
+			aria-hidden="true"
+			{@attach drawerDrag({ onexpand: expand, onclose: () => sheets.close(), ontap: expand })}
+		>
+			<span class="h-[5px] w-9 rounded-full bg-ink/25"></span>
+		</div>
+	{/if}
+	<div class="px-4 pt-5 pb-2 md:pt-4">
 		<div class="relative">
 			<SmartInput
 				bind:this={input}
@@ -464,7 +479,8 @@
 			</div>
 		</div>
 	{/if}
-	<SuggestionPills {pills} onpick={usePill} />
+	<!-- Takes the room a drag up adds, so the chips and footer stay on the bottom edge while the sheet grows. -->
+	<div class="flex-1"></div>
 	<div class="flex items-center gap-1.5 px-4 pb-3">
 		<div
 			bind:this={row}
