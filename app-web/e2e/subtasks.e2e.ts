@@ -92,3 +92,38 @@ test('subtask rows show what a list row shows, nest, open in place, and a dated 
 	await app.go('No date');
 	await expect(page.locator('[data-task]')).toHaveText([/Pack for trip/]);
 });
+
+test('Add subtask has its own plain text toggle, which goes with the line on Enter and then resets', async ({
+	app,
+	page,
+}) => {
+	await app.add('Run errands');
+	await app.row('Run errands').getByRole('button', { name: 'Run errands', exact: true }).click();
+	const details = app.details();
+	const add = details.getByRole('textbox', { name: 'Add subtask' });
+	const toggle = details.getByRole('button', { name: 'Plain text subtask' });
+	const rows = details.getByRole('list', { name: 'Subtasks of Run errands' }).locator('[data-subtask]');
+
+	await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+	await toggle.click();
+	await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+	await expect(add).toBeFocused();
+	await add.pressSequentially('Call shop at 9am p1 @phone');
+	await expect(details.locator('[data-token]')).toHaveCount(0);
+	await expect(page.getByRole('listbox')).toHaveCount(0);
+	await app.settle();
+	await page.screenshot({ path: 'test-results/subtasks/add-subtask-plain-text.png' });
+	await add.press('Enter');
+	await expect(rows).toHaveCount(1);
+	await expect(details.locator('[data-subtask="Call shop at 9am p1 @phone"]')).toBeVisible();
+	await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+	await add.pressSequentially('Buy milk friday');
+	await expect(details.locator('[data-token]')).toHaveText(['friday']);
+	await add.press('Enter');
+	await expect(details.locator('[data-subtask="Buy milk"]')).toContainText('Fri');
+	expect(await rows.evaluateAll(items => items.map(item => item.getAttribute('data-subtask')))).toEqual([
+		'Call shop at 9am p1 @phone',
+		'Buy milk',
+	]);
+});

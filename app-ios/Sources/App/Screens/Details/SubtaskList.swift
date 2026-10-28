@@ -2,7 +2,8 @@ import Core
 import SwiftUI
 
 /// A task's subtasks in its details, as list rows placed as subtasks, each dragging into order by its handle.
-/// `Add subtask` parses like quick add, without `#` projects, and keeps focus for the next one.
+/// `Add subtask` parses like quick add, without `#` projects, unless its own plain text toggle is on, and keeps focus
+/// for the next one with the toggle off again.
 struct SubtaskList: View {
     @Environment(Store.self) private var store
     @Environment(\.clock) private var clock
@@ -13,6 +14,7 @@ struct SubtaskList: View {
     let navigation: DetailsNavigation
 
     @State private var draft = ""
+    @State private var literal = false
     @FocusState private var adding: Bool
     @State private var drag: Drag?
     @State private var frames: [String: CGRect] = [:]
@@ -27,7 +29,7 @@ struct SubtaskList: View {
     var body: some View {
         let children = store.children(of: task.id)
         let progress = Subtasks.progressOf(children)
-        let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels(in: taskSpace), in: clock.timeZone)
+        let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels(in: taskSpace), literal: literal, in: clock.timeZone)
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text("Subtasks")
@@ -78,10 +80,12 @@ struct SubtaskList: View {
                         label: "Add subtask",
                         placeholder: "Add subtask",
                         suggestProjects: false,
+                        suggestNames: !literal,
                         focused: $adding,
                         onSubmit: { add() }
                     )
                     .font(.subheadline)
+                    SubtaskPlainTextToggle(on: literal) { literal.toggle() }
                 }
                 .padding(.horizontal, 4)
             }
@@ -93,12 +97,13 @@ struct SubtaskList: View {
     nonisolated private static let space = "subtasks"
 
     private func add() {
-        let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels(in: taskSpace), in: clock.timeZone)
+        let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels(in: taskSpace), literal: literal, in: clock.timeZone)
         guard let subtask = NewTask(subtask: parsed) else { return }
         withAnimation(reduceMotion ? nil : .snappy) {
             _ = store.addTask(subtask, parentId: task.id)
         }
         draft = ""
+        literal = false
         adding = true
     }
 
