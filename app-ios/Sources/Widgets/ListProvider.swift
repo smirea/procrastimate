@@ -33,14 +33,14 @@ struct ListEntry: TimelineEntry {
         var showsAdd = true
     }
 
-    static func make(_ list: WidgetListEntity?, at now: WidgetNow, data: WidgetData?, showsChecked: Bool = false) -> ListEntry {
+    static func make(_ list: WidgetListEntity?, at now: WidgetNow, data: WidgetData?) -> ListEntry {
         let accent = AccentColors(Accents.parseAccent(data?.accent))
         guard let data, data.signedIn else { return ListEntry(date: now.date, today: now.today, state: .signedOut, accent: accent) }
         let key = list?.id ?? WidgetList.today.key
         guard let choice = WidgetLists.choice(key: key, in: data, today: now.today, in: now.zone) else {
             return ListEntry(date: now.date, today: now.today, state: .missing, accent: accent)
         }
-        let listing = WidgetLists.listing(choice, data, now: now.date, showsChecked: showsChecked, today: now.today, in: now.zone)
+        let listing = WidgetLists.listing(choice, data, now: now.date, today: now.today, in: now.zone)
         return ListEntry(
             date: now.date,
             today: now.today,
@@ -69,7 +69,7 @@ struct ListEntry: TimelineEntry {
     }
 }
 
-/// One entry now, with any rows just checked off struck through, one as they leave, and one at each of the next two
+/// One entry now, with any rows just checked off struck through, one as each leaves, and one at each of the next two
 /// midnights, then a fresh read. The app reloads the timelines after every change, so these entries only carry the
 /// days forward.
 struct ListProvider<Configuration: ListConfiguration>: AppIntentTimelineProvider {
@@ -87,13 +87,13 @@ struct ListProvider<Configuration: ListConfiguration>: AppIntentTimelineProvider
         let data = WidgetStore.read()
         let now = WidgetNow()
         let later = WidgetLists.redraws(after: now.date, data ?? WidgetData(signedIn: false), days: 2, in: now.zone)
-        let entries = [entry(configuration, at: now, data: data, showsChecked: true)]
+        let entries = [entry(configuration, at: now, data: data)]
             + later.map { entry(configuration, at: WidgetNow($0, zone: now.zone), data: data) }
         return Timeline(entries: entries, policy: .atEnd)
     }
 
-    private func entry(_ configuration: Configuration, at now: WidgetNow, data: WidgetData?, showsChecked: Bool = false) -> ListEntry {
-        var entry = ListEntry.make(configuration.list, at: now, data: data, showsChecked: showsChecked)
+    private func entry(_ configuration: Configuration, at now: WidgetNow, data: WidgetData?) -> ListEntry {
+        var entry = ListEntry.make(configuration.list, at: now, data: data)
         entry.style = style(configuration)
         return entry
     }

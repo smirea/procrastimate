@@ -7,14 +7,14 @@ import WidgetKit
 @MainActor
 enum WidgetSync {
     private static var pending: Task<Void, Never>?
-    private static var checked: [WidgetData.Checked] = []
 
-    /// Keeps a row a widget just checked off on the widget, struck through, for a moment before it leaves. Every reload
-    /// shows the file's checks again, so a new check drops the ones that have had their moment, keeping only those
-    /// checked within the struck window. The widget compares against the real clock, so this reads it too.
-    static func check(_ task: TaskItem) {
-        let now = Date()
-        checked = checked.filter { now.timeIntervalSince($0.at) < WidgetLists.checkedFor } + [WidgetData.Checked(task: task, at: now)]
+    /// Waits out a row's moment struck through, then redraws without it. WidgetKit draws a timeline's later entries
+    /// up to seconds late, but redraws within a moment of a reload while a widget's intent still runs.
+    static func leave(_ id: String) async {
+        guard let checked = WidgetStore.read()?.checked?.first(where: { $0.task.id == id }) else { return }
+        let left = checked.at.addingTimeInterval(WidgetLists.checkedFor).timeIntervalSinceNow
+        if left > 0 { try? await Task.sleep(for: .seconds(left)) }
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     static func schedule(_ store: Store, clock: AppClock) {
@@ -36,12 +36,12 @@ enum WidgetSync {
             projects: own.projects,
             labels: own.labels,
             accent: ThemeSettings.shared.accent.rawValue,
-            checked: checked,
+            // The extension's rows still striking through keep their moment; the widget compares against the real clock.
+            checked: WidgetStore.read()?.checked ?? [],
             now: Date(),
             today: clock.today,
             in: clock.timeZone
         )
-        checked = data.checked ?? []
         do {
             if try WidgetStore.write(data) { WidgetCenter.shared.reloadAllTimelines() }
         } catch {
