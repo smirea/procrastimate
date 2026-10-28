@@ -16,6 +16,8 @@ struct SmartInput: View {
     let label: String
     var placeholder = ""
     var suggestProjects = true
+    /// Off, no `#`, `/`, or `@` list opens, as when quick add reads the text as plain text.
+    var suggestNames = true
     /// The project in effect, whose sections `/` suggests.
     var projectId: String?
     var listAt: Binding<Int?> = .constant(nil)
@@ -122,7 +124,7 @@ struct SmartInput: View {
     private var match: NameMatch? { match(at: caret) }
 
     private func match(at caret: Int) -> NameMatch? {
-        guard focused.wrappedValue else { return nil }
+        guard focused.wrappedValue, suggestNames else { return nil }
         let match = NameMatch.at(
             caret,
             in: text,

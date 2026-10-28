@@ -67,6 +67,8 @@ public struct QuickAddDraft: Hashable, Sendable {
     public let defaults: Defaults
     public private(set) var text = ""
     public var picked: Picked
+    /// The plain text toggle: the text saves as typed, with no phrase read. It belongs to one task.
+    public var literal = false
 
     public init(defaults: Defaults) {
         self.defaults = defaults
@@ -165,7 +167,8 @@ public struct QuickAddDraft: Hashable, Sendable {
                 sections: sections,
                 labels: labels,
                 projectId: picked.projectId,
-                due: picked.due
+                due: picked.due,
+                literal: literal
             ),
             in: zone
         )
@@ -239,6 +242,7 @@ public struct QuickAddDraft: Hashable, Sendable {
     /// Starts the next task: an empty field with the sheet's defaults.
     public mutating func reset() {
         text = ""
+        literal = false
         picked = Self.initialPicked(defaults)
     }
 

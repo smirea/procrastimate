@@ -38150,6 +38150,84 @@
 					}
 				]
 			}
+		},
+		{
+			"fn": "parseQuickAdd",
+			"test": "plain text › reads no phrase, so the whole text is the title",
+			"input": [
+				"Standup  at 9am tomorrow #Home /Garden @calls p1 every mon remind me 5m before",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom",
+							"place": null
+						}
+					],
+					"literal": true,
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						},
+						{
+							"createdAt": 0,
+							"icon": null,
+							"id": "p-side",
+							"name": "Side Project",
+							"order": 0
+						}
+					],
+					"sections": [
+						{
+							"createdAt": 0,
+							"id": "s-garden",
+							"name": "Garden",
+							"order": 0,
+							"projectId": "p-home"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Standup at 9am tomorrow #Home /Garden @calls p1 every mon remind me 5m before",
+				"tokens": []
+			}
 		}
 	]
 }

@@ -72,6 +72,9 @@ export const parseOptionsSchema = z
 		spoken: z.boolean().default(false).meta({
 			description: 'Transcribed speech rather than typing, so typing shorthands that speech never means do not apply.',
 		}),
+		literal: z.boolean().default(false).meta({
+			description: "Quick add's plain text toggle: no phrase is read, so the whole text is the title.",
+		}),
 	})
 	.meta({ id: 'ParseOptions' });
 export type ParseOptions = z.input<typeof parseOptionsSchema>;
@@ -692,7 +695,7 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 		),
 		namedRule('place', '@', labels.filter(isSavedPlace), labelId => ({ kind: 'place', labelId })),
 	].filter(rule => rule !== null);
-	const rules = [...RULES.slice(0, 2), ...named, ...RULES.slice(2)];
+	const rules = options.literal ? [] : [...RULES.slice(0, 2), ...named, ...RULES.slice(2)];
 	// Every phrase a rule recognizes is masked out of both views, including kept-as-text and
 	// superseded ones, so a later rule never reads part of it as something else.
 	const claim = (text: string, start: number, end: number) =>

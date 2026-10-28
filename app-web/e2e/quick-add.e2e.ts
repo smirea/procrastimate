@@ -80,6 +80,41 @@ test('quick add stays open after a save, flashes a row the list shows, and names
 	await expect(app.row('Water plants')).toBeVisible();
 });
 
+test('plain text saves the title as typed, keeps picked values, and resets for the next task', async ({
+	app,
+	page,
+}) => {
+	await app.openQuickAdd();
+	const quickAdd = app.quickAdd();
+	const plain = quickAdd.getByRole('button', { name: 'Plain text' });
+	await expect(
+		quickAdd.getByRole('group', { name: 'Task attributes' }).getByRole('button').first(),
+	).toHaveAccessibleName('Plain text');
+	await plain.click();
+	await expect(plain).toHaveAttribute('aria-pressed', 'true');
+	await expect(app.taskInput()).toBeFocused();
+	await app.taskInput().pressSequentially('Standup notes 9am tomorrow p1 #Errands @phone');
+	await expect(quickAdd.locator('[data-token]')).toHaveCount(0);
+	await expect(quickAdd.getByRole('button', { name: /^Create / })).toHaveCount(0);
+	await expect(quickAdd.getByRole('button', { name: /^Due / })).toHaveCount(0);
+	await quickAdd.getByRole('button', { name: 'Priority 4' }).click();
+	await page.getByRole('dialog', { name: 'Priority' }).getByRole('button', { name: 'Priority 2' }).click();
+	await app.settle();
+	await page.screenshot({ path: 'test-results/quick-add/plain-text.png' });
+
+	await app.taskInput().press('Enter');
+	await expect(app.taskInput()).toHaveValue('');
+	await expect(plain).toHaveAttribute('aria-pressed', 'false');
+	await app.taskInput().pressSequentially('Pay rent tomorrow');
+	await expect(quickAdd.locator('[data-token="due"]')).toHaveText('tomorrow');
+	await app.closeQuickAdd();
+	await app.go('No date');
+	const row = app.row('Standup notes 9am tomorrow p1 #Errands @phone');
+	await expect(row).toBeVisible();
+	await row.getByRole('button', { name: 'Standup notes 9am tomorrow p1 #Errands @phone', exact: true }).click();
+	await expect(page.getByRole('button', { name: 'Priority 2' })).toBeVisible();
+});
+
 test('quick add reuses the last task’s project, section, and labels while the list it saved from stays open', async ({
 	app,
 	page,
