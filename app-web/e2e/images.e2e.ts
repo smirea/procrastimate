@@ -193,3 +193,31 @@ test('images pasted or picked in quick add attach to the new task, and pasting o
 	await expect(thumbnails(app)).toHaveCount(4);
 	await expect(app.details().getByRole('textbox', { name: 'Notes' })).toHaveValue('');
 });
+
+test.describe('on a phone', () => {
+	test.use({ viewport: { width: 393, height: 852 } });
+
+	test("quick add's + menu opens the camera, and the shot attaches to the new task", async ({ app, page }) => {
+		const title = unique('Whiteboard');
+		await app.openQuickAdd();
+		await app.taskInput().pressSequentially(title);
+		await app.quickAdd().getByRole('button', { name: 'More quick add actions' }).click();
+		const chooser = page.waitForEvent('filechooser');
+		await page.getByRole('menuitem', { name: 'Camera' }).click();
+		const camera = await chooser;
+		expect(await camera.element().getAttribute('capture')).toBe('environment');
+		await camera.setFiles(await png(page, 800, 600));
+		await expect(app.quickAdd().getByRole('list', { name: 'Images to attach' }).locator('img')).toHaveCount(1);
+
+		await app.save();
+		await app.showAdded();
+		await expect(app.row(title).getByRole('img', { name: '1 image' })).toBeVisible();
+	});
+});
+
+test("quick add's + menu has no Camera on a desktop, whose browser would ignore capture", async ({ app, page }) => {
+	await app.openQuickAdd();
+	await app.quickAdd().getByRole('button', { name: 'More quick add actions' }).click();
+	await expect(page.getByRole('menuitem', { name: 'Images' })).toBeVisible();
+	await expect(page.getByRole('menuitem', { name: 'Camera' })).toBeHidden();
+});

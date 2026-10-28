@@ -67,6 +67,7 @@
 	let drafted = $state<{ key: number; file: File; url: string }[]>([]);
 	let imageKey = 0;
 	let imagePicker = $state<HTMLInputElement>();
+	let cameraPicker = $state<HTMLInputElement>();
 
 	const showMic = $derived(!draft.text);
 	const subtaskParsed = $derived(parseSubtask(subtaskText));
@@ -518,7 +519,7 @@
 				</button>
 			{/each}
 		</div>
-		<QuickAddMenu {values} onrun={run} />
+		<QuickAddMenu {values} onrun={run} oncamera={() => cameraPicker?.click()} />
 	</div>
 	<div class="flex items-center justify-between gap-2 border-t border-ink/5 px-3 py-2.5">
 		<ProjectPicker {projectId} {sectionId} projects={draft.projects} sections={draft.sections} onchange={(place) => pick(() => draft.pickPlace(place.projectId, place.sectionId))} />
@@ -538,6 +539,7 @@
 		</div>
 	</div>
 	<input bind:this={imagePicker} type="file" accept="image/*" multiple class="hidden" aria-hidden="true" tabindex="-1" onchange={pickedImages} />
+	<input bind:this={cameraPicker} type="file" accept="image/*" capture="environment" class="hidden" aria-hidden="true" tabindex="-1" onchange={pickedImages} />
 </Sheet>
 
 <style>

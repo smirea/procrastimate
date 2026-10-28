@@ -70,11 +70,7 @@ final class Navigator {
 
     /// Quick add's defaults while it is open. It shows as an overlay attached to the keyboard, not as a sheet.
     var quickAdd: QuickAddDefaults? {
-        if case let .quickAdd(defaults, _) = sheet { defaults } else { nil }
-    }
-
-    var quickAddCapture: QuickAddCapture? {
-        if case let .quickAdd(_, capture) = sheet { capture } else { nil }
+        if case let .quickAdd(defaults) = sheet { defaults } else { nil }
     }
 
     /// Ramble's defaults while it is open. Like quick add, it is an overlay, so it can rise with its own spring.
