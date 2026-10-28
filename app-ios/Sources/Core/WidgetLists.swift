@@ -12,7 +12,8 @@ public struct WidgetData: Codable, Sendable, Equatable {
     /// The theme color's raw value, since the extension cannot read the app's `UserDefaults`.
     public var accent: String?
     /// Rows just checked off in a widget, as they were drawn, so the widget shows them struck through in place before
-    /// they leave. Optional so a file an older build wrote still reads before the app rewrites it.
+    /// they leave. The widget extension adds them; the app only carries them over. Optional so a file without any
+    /// still reads.
     public var checked: [Checked]?
 
     /// A task checked off in a widget `at` a moment.
@@ -55,7 +56,7 @@ public struct WidgetData: Codable, Sendable, Equatable {
         in zone: TimeZone
     ) -> WidgetData {
         let doneToday = Set(Views.completedTasks(tasks, Views.CompletedRange(from: today, to: today), in: zone).map(\.id))
-        let checked = checked.filter { WidgetLists.isFresh($0, now: now) }
+        let checked = checked.filter { WidgetLists.isStruck($0, now: now) }
         return WidgetData(
             signedIn: signedIn,
             // An untitled task is quick add's draft open in details, which deletes it if it closes still untitled.
@@ -65,6 +66,20 @@ public struct WidgetData: Codable, Sendable, Equatable {
             accent: accent,
             checked: checked.isEmpty ? nil : checked
         )
+    }
+
+    /// A widget row's checkbox, applied to the widgets' own copy: the task completes, or rolls to its next occurrence,
+    /// as the app's store will complete it, and its row as drawn shows struck through until `checkedFor` after `now`.
+    /// Nil when the task is no longer open here.
+    public func checking(_ id: String, now: Date, today: DateKey, in zone: TimeZone) -> WidgetData? {
+        guard let task = tasks.first(where: { $0.id == id && $0.completedAt == nil }),
+              let completion = Subtasks.completeTask(tasks, id, today: today, now: Int(now.timeIntervalSince1970 * 1000), in: zone)
+        else { return nil }
+        var next = self
+        next.tasks = tasks.put(completion.changed)
+        let struck = (checked ?? []).filter { $0.task.id != id && WidgetLists.isStruck($0, now: now) }
+        next.checked = struck + [Checked(task: task, at: now)]
+        return next
     }
 }
 
@@ -150,17 +165,16 @@ public enum WidgetLists {
         choices(data, today: today, in: zone).first { $0.list.key == key }
     }
 
-    /// The list at `now`. With `showsChecked`, a row checked off moments ago sorts in as it was drawn, which also hides
-    /// a repeating task's next occurrence until the checked row leaves.
+    /// The list at `now`. A row checked off moments ago sorts in as it was drawn, which also hides a repeating task's
+    /// next occurrence until the checked row leaves.
     public static func listing(
         _ choice: Choice,
         _ data: WidgetData,
         now: Date,
-        showsChecked: Bool = false,
         today: DateKey,
         in zone: TimeZone
     ) -> Listing {
-        let checked = showsChecked ? (data.checked ?? []).filter { isFresh($0, now: now) }.map(\.task) : []
+        let checked = (data.checked ?? []).filter { isStruck($0, now: now) }.map(\.task)
         let checkedIds = Set(checked.map(\.id))
         let open = data.tasks.filter { $0.completedAt == nil && !checkedIds.contains($0.id) } + checked
         let rows: [TaskItem]
@@ -209,22 +223,19 @@ public enum WidgetLists {
         )
     }
 
-    /// How long a checked row stays struck through, counted from the redraw that first shows it. The app may take
-    /// seconds to run the intent and the system to redraw, so a window counted from the tap could close unseen.
+    /// How long a checked row stays struck through, counted from the tap. The widget extension redraws within a moment
+    /// of it, so the window is the time the row shows struck.
     public static let checkedFor: TimeInterval = 1.5
 
-    /// How long after the tap a checked row may still first show. Each reload shows it again, so this stays short.
-    static let checkedFresh: TimeInterval = 8
-
-    static func isFresh(_ checked: WidgetData.Checked, now: Date) -> Bool {
-        checked.at > now.addingTimeInterval(-checkedFresh)
+    static func isStruck(_ checked: WidgetData.Checked, now: Date) -> Bool {
+        now < checked.at.addingTimeInterval(checkedFor)
     }
 
-    /// The moments after `now` when a widget redraws without an edit: once the struck rows have shown for
-    /// `checkedFor`, then at each of the next `days` midnights. Only the first entry shows checked rows.
+    /// The moments after `now` when a widget redraws without an edit: as each struck row leaves, then at each of the
+    /// next `days` midnights.
     public static func redraws(after now: Date, _ data: WidgetData, days: Int, in zone: TimeZone) -> [Date] {
-        let leaving = (data.checked ?? []).contains { isFresh($0, now: now) } ? [now.addingTimeInterval(checkedFor)] : []
-        return leaving + rollovers(after: now, days: days, in: zone)
+        let leaving = Set((data.checked ?? []).filter { isStruck($0, now: now) }.map { $0.at.addingTimeInterval(checkedFor) })
+        return leaving.sorted() + rollovers(after: now, days: days, in: zone)
     }
 
     /// A row's title as plain text: a Markdown link reads as its label, since a row opens its task rather than a link.

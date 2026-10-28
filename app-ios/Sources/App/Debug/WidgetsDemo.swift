@@ -1,7 +1,7 @@
 import Core
 import Foundation
 
-/// DEBUG-only. `PROCRASTIMATE_DEMO=widgets` seeds overdue, today's, tomorrow's, and project tasks around the real
+/// DEBUG-only. `PROCRASTIMATE_DEMO=widgets` seeds overdue, enough of today's to overflow a large widget, tomorrow's, and project tasks around the real
 /// clock's today, and completes one, so the home and lock screen widgets have something to show in the simulator.
 /// The widget extension reads the real clock, so the seed is relative to it. Release builds omit it.
 enum WidgetsDemo {
@@ -18,6 +18,10 @@ enum WidgetsDemo {
             NewTask(title: "Water the plants", projectId: home.id, due: Due(date: today), priority: .p3),
             NewTask(title: "Book dentist", due: Due(date: today)),
             NewTask(title: "Look into [Google Maps](https://maps.google.com) offline areas", due: Due(date: today)),
+            NewTask(title: "Pick up dry cleaning", due: Due(date: today)),
+            NewTask(title: "Reply to Anna", due: Due(date: today), priority: .p3),
+            NewTask(title: "Pay the electricity bill", due: Due(date: today)),
+            NewTask(title: "Stretch for ten minutes", due: Due(date: today)),
             NewTask(title: "Send invoice", due: Due(date: Dates.addDays(today, 1)), priority: .p2),
             NewTask(title: "Fix the fence", projectId: home.id),
         ]

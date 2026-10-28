@@ -106,7 +106,7 @@ import Testing
             projects: [house],
             labels: [calls],
             accent: "teal",
-            checked: [WidgetData.Checked(task: task("Gone"), at: pinned.addingTimeInterval(-8))],
+            checked: [WidgetData.Checked(task: task("Gone"), at: pinned.addingTimeInterval(-WidgetLists.checkedFor))],
             now: pinned,
             today: today,
             in: zone
@@ -117,67 +117,64 @@ import Testing
         #expect(made.checked == nil)
     }
 
-    /// A row checked off moments ago: Fix sink is done in the store, so the file holds it completed, plus the open copy
-    /// the widget drew.
-    func checkedOff(at: Date = pinned) -> WidgetData {
-        var checked = data
-        let index = checked.tasks.firstIndex { $0.title == "Fix sink" }!
-        let drawn = checked.tasks[index]
-        checked.tasks[index].completedAt = thisMorning
-        checked.checked = [WidgetData.Checked(task: drawn, at: at)]
-        return checked
+    /// Fix sink checked off in a widget at `pinned`.
+    func checkedOff() throws -> WidgetData {
+        try #require(data.checking("Fix sink", now: pinned, today: today, in: zone))
     }
 
-    @Test func aCheckedRowShowsStruckInPlaceOnlyInTheFirstEntry() throws {
-        let checked = checkedOff()
+    @Test func checkingCompletesTheTaskAndKeepsItsRowAsDrawn() throws {
+        let checked = try checkedOff()
+        #expect(checked.tasks.first { $0.id == "Fix sink" }?.completedAt == Int(pinned.timeIntervalSince1970 * 1000))
+        #expect(checked.checked == [WidgetData.Checked(task: data.tasks[2], at: pinned)])
+        #expect(checked.checking("Fix sink", now: pinned, today: today, in: zone) == nil)
+        #expect(data.checking("Water plants", now: pinned, today: today, in: zone) == nil)
+    }
+
+    @Test func aCheckedRowShowsStruckInPlaceForAMomentAfterTheTap() throws {
+        let checked = try checkedOff()
         let choice = try #require(WidgetLists.choice(key: "today", in: checked, today: today, in: zone))
 
-        let struck = WidgetLists.listing(choice, checked, now: pinned.addingTimeInterval(5), showsChecked: true, today: today, in: zone)
+        let struck = WidgetLists.listing(choice, checked, now: pinned.addingTimeInterval(1.4), today: today, in: zone)
         #expect(struck.rows.map(\.title) == ["Pay rent", "Fix sink", "Call mom"])
         #expect(struck.checked == ["Fix sink"])
         #expect(struck.tasks.map(\.title) == ["Pay rent", "Call mom"])
         #expect(struck.done == 2)
 
-        let gone = WidgetLists.listing(choice, checked, now: pinned.addingTimeInterval(6.5), today: today, in: zone)
+        let gone = WidgetLists.listing(choice, checked, now: pinned.addingTimeInterval(1.5), today: today, in: zone)
         #expect(gone.rows.map(\.title) == ["Pay rent", "Call mom"])
         #expect(gone.checked.isEmpty)
-
-        let stale = WidgetLists.listing(choice, checked, now: pinned.addingTimeInterval(8), showsChecked: true, today: today, in: zone)
-        #expect(stale.checked.isEmpty)
     }
 
     @Test func aCheckedRepeatingTaskHidesItsNextOccurrenceUntilItLeaves() throws {
-        var checked = data
-        let index = checked.tasks.firstIndex { $0.title == "Call mom" }!
-        let drawn = checked.tasks[index]
-        checked.tasks[index].due = Due(date: today)
-        checked.checked = [WidgetData.Checked(task: drawn, at: pinned)]
-        let choice = try #require(WidgetLists.choice(key: "today", in: checked, today: today, in: zone))
+        var daily = data
+        daily.tasks[0].recurrence = Recurrence(interval: 1, unit: .day)
+        let checked = try #require(daily.checking("Pay rent", now: pinned, today: today, in: zone))
+        let next = try #require(checked.tasks.first { $0.id == "Pay rent" })
+        #expect(next.completedAt == nil)
+        #expect(next.due?.date == "2026-10-15")
+        let choice = try #require(WidgetLists.choice(key: "inbox", in: checked, today: today, in: zone))
 
-        let struck = WidgetLists.listing(choice, checked, now: pinned, showsChecked: true, today: today, in: zone)
-        #expect(struck.rows.map(\.title) == ["Pay rent", "Fix sink", "Call mom"])
-        #expect(struck.tasks.map(\.title) == ["Pay rent", "Fix sink"])
+        let struck = WidgetLists.listing(choice, checked, now: pinned, today: today, in: zone)
+        #expect(struck.rows.map(\.title) == ["Pay rent", "Fix sink", "Call mom", "Plan trip"])
+        #expect(struck.checked == ["Pay rent"])
+        #expect(struck.tasks.map(\.title) == ["Fix sink", "Call mom", "Plan trip"])
         let after = WidgetLists.listing(choice, checked, now: pinned.addingTimeInterval(1.5), today: today, in: zone)
-        #expect(after.rows.map(\.title) == ["Pay rent", "Fix sink", "Call mom"])
+        #expect(after.rows.map(\.title) == ["Fix sink", "Call mom", "Pay rent", "Plan trip"])
         #expect(after.checked.isEmpty)
     }
 
     @Test func aCheckedOverdueRowNoLongerCountsAsOverdue() throws {
-        var checked = data
-        let index = checked.tasks.firstIndex { $0.title == "Pay rent" }!
-        checked.checked = [WidgetData.Checked(task: checked.tasks[index], at: pinned)]
-        checked.tasks[index].completedAt = thisMorning
+        let checked = try #require(data.checking("Pay rent", now: pinned, today: today, in: zone))
         let choice = try #require(WidgetLists.choice(key: "inbox", in: checked, today: today, in: zone))
-        let listing = WidgetLists.listing(choice, checked, now: pinned, showsChecked: true, today: today, in: zone)
+        let listing = WidgetLists.listing(choice, checked, now: pinned, today: today, in: zone)
         #expect(listing.overdue == 0)
         #expect(listing.rows.first?.title == "Pay rent")
     }
 
-    @Test func checkedRowsLeaveAMomentAfterTheRedrawThatShowsThem() {
-        let redraw = pinned.addingTimeInterval(4)
-        let redraws = WidgetLists.redraws(after: redraw, checkedOff(), days: 2, in: zone)
-        #expect(redraws.map(\.timeIntervalSince1970) == [redraw.timeIntervalSince1970 + 1.5, 1_792_022_400, 1_792_108_800])
-        let later = WidgetLists.redraws(after: pinned.addingTimeInterval(20), checkedOff(), days: 2, in: zone)
+    @Test func checkedRowsLeaveAMomentAfterTheTap() throws {
+        let redraws = WidgetLists.redraws(after: pinned.addingTimeInterval(0.3), try checkedOff(), days: 2, in: zone)
+        #expect(redraws.map(\.timeIntervalSince1970) == [pinned.timeIntervalSince1970 + 1.5, 1_792_022_400, 1_792_108_800])
+        let later = WidgetLists.redraws(after: pinned.addingTimeInterval(1.5), try checkedOff(), days: 2, in: zone)
         #expect(later.map(\.timeIntervalSince1970) == [1_792_022_400, 1_792_108_800])
     }
 

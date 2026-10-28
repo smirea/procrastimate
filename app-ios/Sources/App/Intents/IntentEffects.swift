@@ -126,7 +126,6 @@ enum IntentEffects {
     static func complete(id: String) async {
         await withStore { store, _, _ in
             guard let task = store.task(id), task.completedAt == nil else { return }
-            WidgetSync.check(task)
             _ = store.completeTask(task.id)
             note("widget-completed \(task.title)")
         }
