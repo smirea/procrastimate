@@ -61,6 +61,20 @@ describe('scheduledDue', () => {
 			date: today,
 			time: '19:15',
 		});
+		expect(scheduledDue(task('e', { event: meetup({ edge: 'afterStart', minutes: 45 }) }), today)).toEqual({
+			date: today,
+			time: '18:45',
+		});
+	});
+
+	test('days after an all-day event starts step forward from its first day', () => {
+		const stay = meetup({
+			allDay: true,
+			edge: 'afterStart',
+			minutes: 2880,
+			occurrences: [{ start: local(14, 0), end: local(18, 23, 59) + 59_000, original: local(14, 0) }],
+		});
+		expect(scheduledDue(task('a', { event: stay }), today)).toEqual({ date: '2026-10-16', time: null });
 	});
 
 	test('a day before an all-day stay ends lands on the day before its last day', () => {
@@ -187,6 +201,8 @@ describe('labels', () => {
 	test('events read by edge', () => {
 		expect(formatEvent(meetup({ edge: 'before', minutes: 30 }))).toBe('30m before Walking meetup');
 		expect(formatEvent(meetup({ edge: 'start' }))).toBe('When Walking meetup starts');
+		expect(formatEvent(meetup({ edge: 'afterStart', minutes: 300 }))).toBe('5h after Walking meetup starts');
+		expect(formatEvent(meetup({ edge: 'afterStart', minutes: 0 }))).toBe('When Walking meetup starts');
 		expect(formatEvent(meetup({ edge: 'during' }))).toBe('During Walking meetup');
 		expect(formatEvent(meetup({ edge: 'beforeEnd', minutes: 1440 }))).toBe('1d before Walking meetup ends');
 		expect(formatEvent(meetup({ edge: 'beforeEnd', minutes: 0 }))).toBe('When Walking meetup ends');
@@ -209,6 +225,12 @@ describe('labels', () => {
 			title: 'Walking meetup',
 			trail: 'ends',
 			when: '5pm',
+		});
+		expect(eventLabel(meetup({ edge: 'afterStart', minutes: 90, occurrences: on(14, 15) }), today)).toEqual({
+			lead: '90m after',
+			title: 'Walking meetup',
+			trail: 'starts',
+			when: '4:30pm',
 		});
 		expect(eventLabel(meetup({ edge: 'beforeEnd', occurrences: on(14, 21) }), today)).toEqual({
 			lead: 'End of',

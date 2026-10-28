@@ -24,9 +24,16 @@ type Scheduled = Pick<Task, 'due' | 'recurrence' | 'reminders' | 'location' | 'e
 const MINUTE = 60_000;
 
 /** Which way an edge's offset moves an all-day event, in calendar days. The start and during ignore `minutes`. */
-const DAY_STEP: Record<EventEdge, -1 | 0 | 1> = { before: -1, start: 0, during: 0, beforeEnd: -1, after: 1 };
+const DAY_STEP: Record<EventEdge, -1 | 0 | 1> = {
+	before: -1,
+	start: 0,
+	afterStart: 1,
+	during: 0,
+	beforeEnd: -1,
+	after: 1,
+};
 
-/** The moment the task's edge names on one occurrence: `minutes` before the start, the start, or `minutes` before or after the end. */
+/** The moment the task's edge names on one occurrence: `minutes` before or after the start or the end, or the start. */
 export function eventAnchor(event: TaskEvent, occurrence: EventOccurrence): number {
 	switch (event.edge) {
 		case 'before':
@@ -34,6 +41,8 @@ export function eventAnchor(event: TaskEvent, occurrence: EventOccurrence): numb
 		case 'start':
 		case 'during':
 			return occurrence.start;
+		case 'afterStart':
+			return occurrence.start + event.minutes * MINUTE;
 		case 'beforeEnd':
 			return occurrence.end - event.minutes * MINUTE;
 		case 'after':
@@ -108,7 +117,7 @@ export function taskNotificationTimes(task: Scheduled, today: DateKey, zone?: st
 }
 
 /**
- * `30m before Night out`, `When Walking meetup starts`, `During Walking meetup`, `1d before Trip ends`, `When Trip
+ * `30m before Night out`, `When Walking meetup starts`, `1h after Walking meetup starts`, `During Walking meetup`, `1d before Trip ends`, `When Trip
  * ends`, `After Workshop`, `1h after Workshop`.
  */
 export function formatEvent(event: TaskEvent): string {
@@ -117,6 +126,10 @@ export function formatEvent(event: TaskEvent): string {
 			return event.minutes ? `${formatMinutes(event.minutes)} before ${event.title}` : `When ${event.title} starts`;
 		case 'start':
 			return `When ${event.title} starts`;
+		case 'afterStart':
+			return event.minutes
+				? `${formatMinutes(event.minutes)} after ${event.title} starts`
+				: `When ${event.title} starts`;
 		case 'during':
 			return `During ${event.title}`;
 		case 'beforeEnd':
@@ -130,6 +143,9 @@ export function formatEvent(event: TaskEvent): string {
 	}
 }
 
+/** What follows the title when the lead alone would read as the other end: `1d before Trip ends`, `1h after Talk starts`. */
+const TRAIL: Partial<Record<EventEdge, string>> = { afterStart: 'starts', beforeEnd: 'ends' };
+
 export const eventLabelSchema = z
 	.object({ lead: z.string(), title: z.string(), trail: z.string().nullable(), when: z.string().nullable() })
 	.meta({ id: 'EventLabel' });
@@ -137,7 +153,7 @@ export type EventLabel = z.infer<typeof eventLabelSchema>;
 
 /**
  * A row's event line in parts: `4:15pm` `(15m after` `Standup)`, with icons before the title. `trail` follows the
- * title, as in `(1d before` `Trip` `ends)`, so a truncated title never hides it. `when` is the task's
+ * title, as in `(1d before` `Trip` `ends)` or `(1h after` `Talk` `starts)`, so a truncated title never hides it. `when` is the task's
  * moment on the occurrence it is on, worded like any due date but without the day when it is today. A row shows it
  * even under a day heading, which is easy to lose in a long list.
  */
@@ -148,6 +164,8 @@ export function eventLabel(event: TaskEvent, today: DateKey, zone?: string): Eve
 				return event.minutes ? `${formatMinutes(event.minutes)} before` : 'Start of';
 			case 'start':
 				return 'Start of';
+			case 'afterStart':
+				return event.minutes ? `${formatMinutes(event.minutes)} after` : 'Start of';
 			case 'during':
 				return 'During';
 			case 'beforeEnd':
@@ -162,7 +180,7 @@ export function eventLabel(event: TaskEvent, today: DateKey, zone?: string): Eve
 	})();
 	const due = occurrenceDue(event, currentOccurrence(event, today, zone), zone);
 	const when = due.date !== today ? formatDue(due, today) : due.time ? formatTime(due.time) : null;
-	return { lead, title: event.title, trail: event.edge === 'beforeEnd' && event.minutes ? 'ends' : null, when };
+	return { lead, title: event.title, trail: event.minutes ? (TRAIL[event.edge] ?? null) : null, when };
 }
 
 /** `Arriving at Rewe`, `Leaving Rewe`, `While at Rewe`. */

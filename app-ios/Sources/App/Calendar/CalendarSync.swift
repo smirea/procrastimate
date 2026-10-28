@@ -71,7 +71,7 @@ final class CalendarSync {
 
     /// What picking `event` saves. A repeating event follows its series unless pinned to this one occurrence, which its
     /// original date finds again after a move.
-    func taskEvent(_ event: EKEvent, edge: EventEdge, minutes: Int, onlyThis: Bool, upcoming: [EKEvent]) -> TaskEvent {
+    func taskEvent(_ event: EKEvent, timing: EventTiming, onlyThis: Bool, upcoming: [EKEvent]) -> TaskEvent {
         let id = Self.id(event)
         let repeating = Self.repeats(event)
         let series = repeating && !onlyThis
@@ -81,8 +81,8 @@ final class CalendarSync {
             title: event.title ?? "Event",
             allDay: event.isAllDay,
             series: series,
-            edge: edge,
-            minutes: edge.takesMinutes ? minutes : 0,
+            edge: timing.edge,
+            minutes: timing.minutes,
             occurrences: series && !listed.isEmpty ? Array(listed) : [Self.occurrence(event)]
         )
     }
