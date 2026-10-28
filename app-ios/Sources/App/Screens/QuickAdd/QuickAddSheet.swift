@@ -428,11 +428,13 @@ struct QuickAddSheet: View {
             title: parsed.title,
             draft: .init(
                 projectId: resolved.projectId,
+                sectionId: resolved.sectionId,
                 labelIds: resolved.labelIds,
                 location: parsed.location ?? draft.picked.location
             ),
             available: .init(
                 projectIds: spaceProjects.map(\.id),
+                sectionIds: spaceSections.map(\.id),
                 labelIds: store.labels(in: store.creationSpace(projectId: resolved.projectId, labelIds: resolved.labelIds)).map(\.id)
             ),
             ready: suggestionIndex != nil
@@ -450,7 +452,7 @@ struct QuickAddSheet: View {
 
     private func use(_ pill: TaskSuggestions.Pill, _ parsed: QuickAdd.Parsed, _ resolved: Resolved) {
         switch pill {
-        case let .project(projectId): draft.pick(projectId: projectId, sectionId: nil, context)
+        case let .project(projectId, sectionId): draft.pick(projectId: projectId, sectionId: sectionId, context)
         case let .label(labelId): draft.pick(labelIds: resolved.labelIds + [labelId], parsed, context)
         case let .place(location): draft.pick(location: location, context)
         }
@@ -562,7 +564,7 @@ private struct RowFade: Equatable {
 
 private struct PillInputs: Equatable {
     let title: String
-    let draft: TaskSuggestions.Fields
+    let draft: TaskSuggestions.Draft
     let available: TaskSuggestions.Available
     let ready: Bool
 }

@@ -31,7 +31,7 @@
 		},
 		{
 			"fn": "pills",
-			"test": "suggestionPills › a title like past ones offers their project and label, never their section",
+			"test": "suggestionPills › a title like past ones offers their project and label, and their section when nearly all agree",
 			"input": [
 				[
 					{
@@ -260,7 +260,8 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null
+					"projectId": null,
+					"sectionId": null
 				},
 				{
 					"labelIds": [
@@ -270,13 +271,19 @@
 					"projectIds": [
 						"home",
 						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
 			"output": [
 				{
 					"kind": "project",
-					"projectId": "home"
+					"projectId": "home",
+					"sectionId": "garden"
 				},
 				{
 					"kind": "label",
@@ -515,7 +522,8 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null
+					"projectId": null,
+					"sectionId": null
 				},
 				{
 					"labelIds": [
@@ -525,6 +533,11 @@
 					"projectIds": [
 						"home",
 						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
@@ -766,7 +779,8 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null
+					"projectId": null,
+					"sectionId": null
 				},
 				{
 					"labelIds": [
@@ -776,13 +790,19 @@
 					"projectIds": [
 						"home",
 						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
 			"output": [
 				{
 					"kind": "project",
-					"projectId": "home"
+					"projectId": "home",
+					"sectionId": "garden"
 				}
 			]
 		},
@@ -1017,7 +1037,8 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null
+					"projectId": null,
+					"sectionId": null
 				},
 				{
 					"labelIds": [
@@ -1027,6 +1048,11 @@
 					"projectIds": [
 						"home",
 						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
@@ -1275,7 +1301,8 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null
+					"projectId": null,
+					"sectionId": null
 				},
 				{
 					"labelIds": [
@@ -1285,6 +1312,11 @@
 					"projectIds": [
 						"home",
 						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
@@ -1521,7 +1553,8 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null
+					"projectId": null,
+					"sectionId": null
 				},
 				{
 					"labelIds": [
@@ -1531,6 +1564,11 @@
 					"projectIds": [
 						"home",
 						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
@@ -1546,7 +1584,8 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null
+					"projectId": null,
+					"sectionId": null
 				},
 				{
 					"labelIds": [
@@ -1556,6 +1595,11 @@
 					"projectIds": [
 						"home",
 						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
@@ -1573,7 +1617,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t10",
+						"id": "t14",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1595,7 +1639,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"id": "t11",
+						"id": "t15",
 						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1616,7 +1660,8 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null
+					"projectId": null,
+					"sectionId": null
 				},
 				{
 					"labelIds": [
@@ -1626,13 +1671,19 @@
 					"projectIds": [
 						"home",
 						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
 			"output": [
 				{
 					"kind": "project",
-					"projectId": "work"
+					"projectId": "work",
+					"sectionId": null
 				}
 			]
 		},
@@ -1869,7 +1920,8 @@
 						"weekend"
 					],
 					"location": null,
-					"projectId": "home"
+					"projectId": "home",
+					"sectionId": "garden"
 				},
 				{
 					"labelIds": [
@@ -1879,6 +1931,11 @@
 					"projectIds": [
 						"home",
 						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
@@ -2122,7 +2179,8 @@
 						"radius": 150,
 						"trigger": "leave"
 					},
-					"projectId": null
+					"projectId": null,
+					"sectionId": null
 				},
 				{
 					"labelIds": [
@@ -2132,6 +2190,11 @@
 					"projectIds": [
 						"home",
 						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
@@ -2139,7 +2202,7 @@
 		},
 		{
 			"fn": "pills",
-			"test": "suggestionPills › a project or label the draft cannot use shows no pill",
+			"test": "suggestionPills › a project, section, or label the draft cannot use shows no pill",
 			"input": [
 				[
 					{
@@ -2368,25 +2431,876 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null
+					"projectId": null,
+					"sectionId": null
 				},
 				{
 					"labelIds": [],
 					"projectIds": [
 						"home"
+					],
+					"sectionIds": []
+				}
+			],
+			"output": [
+				{
+					"kind": "project",
+					"projectId": "home",
+					"sectionId": null
+				}
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills › a project, section, or label the draft cannot use shows no pill",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"water the roses",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [],
+					"projectIds": [],
+					"sectionIds": []
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills inside a project or section › the section quick add opened in stays when the vote agrees or is split",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t10",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t11",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t12",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t13",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Plan the trip"
+					}
+				],
+				"plan the trip",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": "home",
+					"sectionId": "kitchen"
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills inside a project or section › the section quick add opened in stays when the vote agrees or is split",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t10",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t11",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t12",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t13",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Plan the trip"
+					}
+				],
+				"plan the trip",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": "home",
+					"sectionId": "garden"
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills inside a project or section › another project only shows when nearly the whole vote is for it",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t10",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t11",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t12",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t13",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Plan the trip"
+					}
+				],
+				"plan the trip",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": null,
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
 					]
 				}
 			],
 			"output": [
 				{
 					"kind": "project",
-					"projectId": "home"
+					"projectId": "home",
+					"sectionId": null
 				}
 			]
 		},
 		{
 			"fn": "pills",
-			"test": "suggestionPills › a project or label the draft cannot use shows no pill",
+			"test": "suggestionPills inside a project or section › another project only shows when nearly the whole vote is for it",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t10",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t11",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t12",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t13",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Plan the trip"
+					}
+				],
+				"plan the trip",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": "work",
+					"sectionId": "meetings"
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills inside a project or section › another project only shows when nearly the whole vote is for it",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t10",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t11",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t12",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Plan the trip"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t13",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Plan the trip"
+					}
+				],
+				"plan the trip",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": "work",
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills inside a project or section › another project only shows when nearly the whole vote is for it",
 			"input": [
 				[
 					{
@@ -2615,14 +3529,560 @@
 				{
 					"labelIds": [],
 					"location": null,
-					"projectId": null
+					"projectId": "work",
+					"sectionId": "meetings"
 				},
 				{
-					"labelIds": [],
-					"projectIds": []
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
 				}
 			],
-			"output": []
+			"output": [
+				{
+					"kind": "project",
+					"projectId": "home",
+					"sectionId": "garden"
+				},
+				{
+					"kind": "label",
+					"labelId": "weekend"
+				}
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills inside a project or section › a sure section of the same project shows, inside a project or another of its sections",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"water the roses",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": "home",
+					"sectionId": null
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": [
+				{
+					"kind": "project",
+					"projectId": "home",
+					"sectionId": "garden"
+				},
+				{
+					"kind": "label",
+					"labelId": "weekend"
+				}
+			]
+		},
+		{
+			"fn": "pills",
+			"test": "suggestionPills inside a project or section › a sure section of the same project shows, inside a project or another of its sections",
+			"input": [
+				[
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t1",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the plants"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t2",
+						"images": [],
+						"labelIds": [
+							"weekend"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Water the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t3",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "garden",
+						"title": "Mow the lawn"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t4",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "home",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "kitchen",
+						"title": "Call the plumber"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t5",
+						"images": [],
+						"labelIds": [
+							"calls"
+						],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Call the bank"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t6",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": "work",
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": "meetings",
+						"title": "Prepare budget review"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t7",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Leg day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t8",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": {
+							"address": "1 Main St",
+							"latitude": 44.43,
+							"longitude": 26.1,
+							"name": "Gym",
+							"radius": 150,
+							"trigger": "arrive"
+						},
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Arm day"
+					},
+					{
+						"completedAt": null,
+						"completedBy": null,
+						"createdAt": 1791072000000,
+						"createdBy": null,
+						"due": null,
+						"event": null,
+						"id": "t9",
+						"images": [],
+						"labelIds": [],
+						"lastCompletedAt": null,
+						"location": null,
+						"notes": "",
+						"order": 0,
+						"parentId": null,
+						"priority": 4,
+						"projectId": null,
+						"recurrence": null,
+						"reminders": [],
+						"sectionId": null,
+						"title": "Buy milk"
+					}
+				],
+				"water the roses",
+				1791936000000,
+				{
+					"labelIds": [],
+					"location": null,
+					"projectId": "home",
+					"sectionId": "kitchen"
+				},
+				{
+					"labelIds": [
+						"calls",
+						"weekend"
+					],
+					"projectIds": [
+						"home",
+						"work"
+					],
+					"sectionIds": [
+						"garden",
+						"kitchen",
+						"meetings"
+					]
+				}
+			],
+			"output": [
+				{
+					"kind": "project",
+					"projectId": "home",
+					"sectionId": "garden"
+				},
+				{
+					"kind": "label",
+					"labelId": "weekend"
+				}
+			]
 		}
 	]
 }

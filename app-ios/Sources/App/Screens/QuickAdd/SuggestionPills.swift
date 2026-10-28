@@ -40,9 +40,9 @@ struct SuggestionPills: View {
 
     private func describe(_ pill: TaskSuggestions.Pill) -> (kind: String, name: String, systemImage: String, tone: Color) {
         switch pill {
-        case let .project(projectId):
+        case let .project(projectId, sectionId):
             let project = store.project(projectId)
-            return ("project", project?.name ?? "", project?.systemImage ?? "number", .muted)
+            return ("project", store.placeName(projectId, sectionId), project?.systemImage ?? "number", .muted)
         case let .label(labelId):
             let label = store.label(labelId)
             return ("label", label?.name ?? "", label?.systemImage(filled: true) ?? "tag", label?.color.tone ?? .toneLabel)
