@@ -30,32 +30,7 @@ struct EventChip: View {
     }
 }
 
-extension EventEdge {
-    var name: String {
-        switch self {
-        case .before: "Before"
-        case .start: "Start"
-        case .during: "During"
-        case .beforeEnd: "End"
-        case .after: "After"
-        }
-    }
-
-    var offsetName: String? {
-        switch self {
-        case .before: "Before start"
-        case .beforeEnd: "Before end"
-        case .after: "After end"
-        case .start, .during: nil
-        }
-    }
-
-    var takesMinutes: Bool { offsetName != nil }
-}
-
 private struct EventSheet: View {
-    static let minuteChoices = [0, 5, 10, 15, 30, 60, 120, 180, 300, 720, 1440, 2880, 10080]
-
     @Environment(CalendarSync.self) private var calendar
     @Environment(\.dismiss) private var dismiss
     @Environment(\.clock) private var clock
@@ -66,21 +41,16 @@ private struct EventSheet: View {
     @State private var events: [EKEvent] = []
     @State private var loaded = false
     @State private var picked: EKEvent?
-    @State private var edge: EventEdge
-    @State private var minutes: Int
+    @State private var timing: EventTiming
     @State private var onlyThis: Bool
     @State private var query = ""
 
     init(event: TaskEvent?, onChange: @escaping (TaskEvent?) -> Void) {
         self.event = event
         self.onChange = onChange
-        _edge = State(initialValue: event?.edge ?? .start)
-        _minutes = State(initialValue: event?.minutes ?? 10)
+        _timing = State(initialValue: event.map { EventTiming(edge: $0.edge, minutes: $0.minutes) } ?? EventTiming())
         _onlyThis = State(initialValue: event.map { !$0.series } ?? false)
     }
-
-    /// Keeps a stored offset the presets lack, as one set through the API, so the picker still shows it.
-    private var minuteChoices: [Int] { Array(Set(Self.minuteChoices + [event?.minutes ?? 0])).sorted() }
 
     private var repeating: Bool { picked.map(CalendarSync.repeats) ?? (event?.series ?? false) }
 
@@ -88,19 +58,17 @@ private struct EventSheet: View {
         NavigationStack {
             List {
                 Section {
-                    Picker("Moment", selection: $edge) {
-                        ForEach(EventEdge.allCases) { Text($0.name).tag($0) }
+                    Picker("Moment", selection: $timing.anchor) {
+                        Text("Start").tag(EventTiming.Anchor.start)
+                        Text("During").tag(EventTiming.Anchor.during)
+                        Text("End").tag(EventTiming.Anchor.end)
                     }
                     .pickerStyle(.segmented)
+                    .accessibilityIdentifier("event-anchor")
+                    .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
-                    if let offsetName = edge.offsetName {
-                        Picker(offsetName, selection: $minutes) {
-                            ForEach(minuteChoices, id: \.self) { minutes in
-                                Text(minutes == 0 ? "None" : Format.formatMinutes(minutes)).tag(minutes)
-                            }
-                        }
-                    }
+                    if timing.anchor != .during { OffsetRow(timing: $timing) }
                     if repeating {
                         Toggle("Only this one", isOn: $onlyThis)
                             .disabled(picked == nil)
@@ -140,6 +108,7 @@ private struct EventSheet: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.immediately)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search events")
             .navigationTitle("Calendar event")
             .navigationBarTitleDisplayMode(.inline)
@@ -154,7 +123,7 @@ private struct EventSheet: View {
             }
         }
         .sensoryFeedback(.selection, trigger: picked)
-        .sensoryFeedback(.selection, trigger: edge)
+        .sensoryFeedback(.selection, trigger: timing)
         .task {
             await calendar.requestAccess()
             events = calendar.upcomingEvents()
@@ -171,11 +140,11 @@ private struct EventSheet: View {
     /// The event as Save would write it.
     private var preview: TaskEvent? {
         if let picked {
-            return calendar.taskEvent(picked, edge: edge, minutes: minutes, onlyThis: onlyThis, upcoming: events)
+            return calendar.taskEvent(picked, timing: timing, onlyThis: onlyThis, upcoming: events)
         }
         guard var event else { return nil }
-        event.edge = edge
-        event.minutes = edge.takesMinutes ? minutes : 0
+        event.edge = timing.edge
+        event.minutes = timing.minutes
         return event
     }
 
@@ -198,6 +167,53 @@ private struct EventSheet: View {
             if days.last?.date == date { days[days.count - 1].events.append(item) } else { days.append((date, [item])) }
         }
         return days
+    }
+}
+
+/// `[5] [m h d w] [Before After]`: the amount is typed, so any offset is a few taps, and with none the task is at the
+/// start or the end itself.
+private struct OffsetRow: View {
+    @Binding var timing: EventTiming
+    @FocusState private var focused: Bool
+    @State private var selection: TextSelection?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            TextField("0", text: amount, selection: $selection)
+                .focused($focused)
+                // Selecting the whole amount on focus makes a typed number replace it instead of joining it.
+                .onChange(of: focused) { _, focused in
+                    guard focused, timing.amount > 0 else { return }
+                    let text = String(timing.amount)
+                    selection = TextSelection(range: text.startIndex..<text.endIndex)
+                }
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.center)
+                .monospacedDigit()
+                .frame(width: 48)
+                .padding(.vertical, 6)
+                .background(.quaternary, in: .rect(cornerRadius: 8))
+                .accessibilityIdentifier("event-amount")
+            Picker("Unit", selection: $timing.unit) {
+                ForEach(EventTiming.Unit.allCases, id: \.self) { Text($0.short).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("event-unit")
+            Picker("Direction", selection: $timing.direction) {
+                Text("Before").tag(EventTiming.Direction.before)
+                Text("After").tag(EventTiming.Direction.after)
+            }
+            .pickerStyle(.segmented)
+            .disabled(timing.amount == 0)
+            .accessibilityIdentifier("event-direction")
+        }
+    }
+
+    private var amount: Binding<String> {
+        Binding(
+            get: { timing.amount == 0 ? "" : String(timing.amount) },
+            set: { timing.amount = Int(String($0.filter(\.isNumber).prefix(3))) ?? 0 }
+        )
     }
 }
 

@@ -171,13 +171,13 @@ enum PlacesDemo {
             guard let notes = store.addTask(NewTask(title: "Post standup notes")) else { return }
             store.updateTask(notes.id, TaskPatch(
                 reminders: [.before(minutes: 10)],
-                event: .some(calendar.taskEvent(standup, edge: .after, minutes: 15, onlyThis: false, upcoming: upcoming))
+                event: .some(calendar.taskEvent(standup, timing: EventTiming(edge: .after, minutes: 15), onlyThis: false, upcoming: upcoming))
             ))
         }
         if let dentist = upcoming.first(where: { $0.title == "Dentist" }) {
             guard let floss = store.addTask(NewTask(title: "Floss first")) else { return }
             store.updateTask(floss.id, TaskPatch(
-                event: .some(calendar.taskEvent(dentist, edge: .before, minutes: 60, onlyThis: false, upcoming: upcoming))
+                event: .some(calendar.taskEvent(dentist, timing: EventTiming(edge: .before, minutes: 60), onlyThis: false, upcoming: upcoming))
             ))
         }
     }

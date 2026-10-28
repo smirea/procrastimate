@@ -19,6 +19,7 @@ public enum Triggers {
         switch event.edge {
         case .before: occurrence.start - event.minutes * 60_000
         case .start, .during: occurrence.start
+        case .afterStart: occurrence.start + event.minutes * 60_000
         case .beforeEnd: occurrence.end - event.minutes * 60_000
         case .after: occurrence.end + event.minutes * 60_000
         }
@@ -52,7 +53,7 @@ public enum Triggers {
         switch edge {
         case .before, .beforeEnd: -1
         case .start, .during: 0
-        case .after: 1
+        case .afterStart, .after: 1
         }
     }
 
@@ -104,6 +105,9 @@ public enum Triggers {
             event.minutes > 0
                 ? "\(Format.formatMinutes(event.minutes)) before \(event.title)" : "When \(event.title) starts"
         case .start: "When \(event.title) starts"
+        case .afterStart:
+            event.minutes > 0
+                ? "\(Format.formatMinutes(event.minutes)) after \(event.title) starts" : "When \(event.title) starts"
         case .during: "During \(event.title)"
         case .beforeEnd:
             event.minutes > 0
@@ -119,13 +123,18 @@ public enum Triggers {
         let lead = switch event.edge {
         case .before: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) before" : "Start of"
         case .start: "Start of"
+        case .afterStart: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) after" : "Start of"
         case .during: "During"
         case .beforeEnd: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) before" : "End of"
         case .after: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) after" : "After"
         }
         let due = occurrenceDue(event, currentOccurrence(event, today, in: zone), in: zone)
         let when = due.date != today ? Format.formatDue(due, today) : due.time.map(Format.formatTime)
-        let trail = event.edge == .beforeEnd && event.minutes > 0 ? "ends" : nil
+        let trail: String? = switch event.edge {
+        case .afterStart where event.minutes > 0: "starts"
+        case .beforeEnd where event.minutes > 0: "ends"
+        default: nil
+        }
         return EventLabel(lead: lead, title: event.title, trail: trail, when: when)
     }
 

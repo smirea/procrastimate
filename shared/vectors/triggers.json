@@ -192,12 +192,106 @@
 		},
 		{
 			"fn": "scheduledDue",
-			"test": "scheduledDue › a day before an all-day stay ends lands on the day before its last day",
+			"test": "scheduledDue › an event task sits on its edge",
 			"input": [
 				{
 					"completedAt": null,
 					"completedBy": null,
 					"createdAt": 5,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "afterStart",
+						"id": "meetup",
+						"minutes": 45,
+						"occurrences": [
+							{
+								"end": 1792020600000,
+								"original": 1792015200000,
+								"start": 1792015200000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "e",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "e"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"time": "18:45"
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › days after an all-day event starts step forward from its first day",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 6,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": true,
+						"edge": "afterStart",
+						"id": "meetup",
+						"minutes": 2880,
+						"occurrences": [
+							{
+								"end": 1792382399000,
+								"original": 1791950400000,
+								"start": 1791950400000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-16",
+				"time": null
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › a day before an all-day stay ends lands on the day before its last day",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 7,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -244,7 +338,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 6,
+					"createdAt": 8,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -291,7 +385,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 7,
+					"createdAt": 9,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -339,7 +433,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 8,
+					"createdAt": 10,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -387,7 +481,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 9,
+					"createdAt": 11,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -435,7 +529,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 10,
+					"createdAt": 12,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -556,7 +650,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 11,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
@@ -602,7 +696,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 12,
+					"createdAt": 14,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
@@ -645,7 +739,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 13,
+					"createdAt": 15,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
@@ -684,7 +778,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 14,
+					"createdAt": 16,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -736,7 +830,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 15,
+					"createdAt": 17,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -782,7 +876,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 16,
+					"createdAt": 18,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -834,7 +928,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 17,
+					"createdAt": 19,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -886,7 +980,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 20,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -926,7 +1020,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 19,
+					"createdAt": 21,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -995,6 +1089,50 @@
 				{
 					"allDay": false,
 					"edge": "start",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1792020600000,
+							"original": 1792015200000,
+							"start": 1792015200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				}
+			],
+			"output": "When Walking meetup starts"
+		},
+		{
+			"fn": "formatEvent",
+			"test": "labels › events read by edge",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "afterStart",
+					"id": "meetup",
+					"minutes": 300,
+					"occurrences": [
+						{
+							"end": 1792020600000,
+							"original": 1792015200000,
+							"start": 1792015200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				}
+			],
+			"output": "5h after Walking meetup starts"
+		},
+		{
+			"fn": "formatEvent",
+			"test": "labels › events read by edge",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "afterStart",
 					"id": "meetup",
 					"minutes": 0,
 					"occurrences": [
@@ -1174,6 +1312,34 @@
 				"title": "Walking meetup",
 				"trail": "ends",
 				"when": "5pm"
+			}
+		},
+		{
+			"fn": "eventLabel",
+			"test": "labels › a row names the task's moment with only the day and time today leaves ambiguous",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "afterStart",
+					"id": "meetup",
+					"minutes": 90,
+					"occurrences": [
+						{
+							"end": 1792008000000,
+							"original": 1792004400000,
+							"start": 1792004400000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"lead": "90m after",
+				"title": "Walking meetup",
+				"trail": "starts",
+				"when": "4:30pm"
 			}
 		},
 		{
@@ -1963,7 +2129,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 20,
+						"createdAt": 22,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1992,7 +2158,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 21,
+						"createdAt": 23,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2021,7 +2187,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 22,
+						"createdAt": 24,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2050,7 +2216,7 @@
 					{
 						"completedAt": 1,
 						"completedBy": null,
-						"createdAt": 23,
+						"createdAt": 25,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2079,7 +2245,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 24,
+						"createdAt": 26,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2122,7 +2288,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 25,
+						"createdAt": 27,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2154,7 +2320,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 20,
+						"createdAt": 22,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2183,7 +2349,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 21,
+						"createdAt": 23,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2212,7 +2378,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 22,
+						"createdAt": 24,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2241,7 +2407,7 @@
 					{
 						"completedAt": 1,
 						"completedBy": null,
-						"createdAt": 23,
+						"createdAt": 25,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2270,7 +2436,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 24,
+						"createdAt": 26,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2321,7 +2487,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 26,
+						"createdAt": 28,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2357,7 +2523,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 27,
+						"createdAt": 29,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2393,7 +2559,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 28,
+						"createdAt": 30,
 						"createdBy": null,
 						"due": null,
 						"event": {

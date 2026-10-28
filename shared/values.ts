@@ -153,10 +153,13 @@ export const savedPlaceSchema = taskLocationSchema.omit({ name: true, trigger: t
 export type SavedPlace = z.infer<typeof savedPlaceSchema>;
 
 /**
- * Where a task sits relative to its calendar event: `minutes` before the start, at the start, while it runs,
- * `minutes` before the end, or `minutes` after the end.
+ * Where a task sits relative to its calendar event: `minutes` before the start, at the start, `minutes` after the
+ * start, while it runs, `minutes` before the end, or `minutes` after the end. With no `minutes`, `before` and
+ * `afterStart` are the start, and `beforeEnd` and `after` the end.
  */
-export const eventEdgeSchema = z.enum(['before', 'start', 'during', 'beforeEnd', 'after']).meta({ id: 'EventEdge' });
+export const eventEdgeSchema = z
+	.enum(['before', 'start', 'afterStart', 'during', 'beforeEnd', 'after'])
+	.meta({ id: 'EventEdge' });
 export type EventEdge = z.infer<typeof eventEdgeSchema>;
 
 const epochMs = z.number().int();
