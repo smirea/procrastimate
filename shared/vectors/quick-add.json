@@ -38207,6 +38207,7 @@
 					],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 0,
 							"id": "s-garden",
 							"name": "Garden",
