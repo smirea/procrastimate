@@ -57,6 +57,44 @@ describe('scheduledDue', () => {
 			time: '20:30',
 		});
 		expect(scheduledDue(task('c', { event: meetup({ allDay: true }) }), today)).toEqual({ date: today, time: null });
+		expect(scheduledDue(task('d', { event: meetup({ edge: 'beforeEnd', minutes: 15 }) }), today)).toEqual({
+			date: today,
+			time: '19:15',
+		});
+	});
+
+	test('a day before an all-day stay ends lands on the day before its last day', () => {
+		const stay = meetup({
+			allDay: true,
+			edge: 'beforeEnd',
+			minutes: 1440,
+			occurrences: [{ start: local(14, 0), end: local(18, 23, 59) + 59_000, original: local(14, 0) }],
+		});
+		expect(scheduledDue(task('a', { event: stay }), today)).toEqual({ date: '2026-10-17', time: null });
+		expect(scheduledDue(task('b', { event: { ...stay, minutes: 300 } }), today)).toEqual({
+			date: '2026-10-18',
+			time: null,
+		});
+	});
+
+	test('days of offset on an all-day event step calendar days across a daylight saving change', () => {
+		const zone = 'America/New_York';
+		const fallBack = meetup({
+			allDay: true,
+			edge: 'beforeEnd',
+			minutes: 1440,
+			occurrences: [{ start: Date.UTC(2026, 9, 30, 4), end: Date.UTC(2026, 10, 2, 4, 59, 59), original: 0 }],
+		});
+		expect(scheduledDue(task('a', { event: fallBack }), today, zone)).toEqual({ date: '2026-10-31', time: null });
+		const springForward = meetup({
+			allDay: true,
+			edge: 'before',
+			minutes: 1440,
+			occurrences: [{ start: Date.UTC(2026, 2, 9, 4), end: Date.UTC(2026, 2, 10, 3, 59, 59), original: 0 }],
+		});
+		expect(scheduledDue(task('b', { event: springForward }), today, zone)).toEqual({ date: '2026-03-08', time: null });
+		const start = { ...springForward, edge: 'start' as const };
+		expect(scheduledDue(task('c', { event: start }), today, zone)).toEqual({ date: '2026-03-09', time: null });
 	});
 
 	test('a single event stays on its passed occurrence, so it goes overdue', () => {
@@ -102,6 +140,15 @@ describe('taskNotificationTimes', () => {
 		]);
 	});
 
+	test('an event that ends notifies before its end', () => {
+		const event = meetup({
+			edge: 'beforeEnd',
+			minutes: 300,
+			occurrences: [{ start: local(14, 9), end: local(14, 22), original: local(14, 9) }],
+		});
+		expect(taskNotificationTimes(task('a', { event }), today)).toEqual([new Date(local(14, 17))]);
+	});
+
 	test('a series notifies at every listed occurrence, and an all-day event only at its reminders', () => {
 		const series = meetup({
 			series: true,
@@ -141,6 +188,8 @@ describe('labels', () => {
 		expect(formatEvent(meetup({ edge: 'before', minutes: 30 }))).toBe('30m before Walking meetup');
 		expect(formatEvent(meetup({ edge: 'start' }))).toBe('When Walking meetup starts');
 		expect(formatEvent(meetup({ edge: 'during' }))).toBe('During Walking meetup');
+		expect(formatEvent(meetup({ edge: 'beforeEnd', minutes: 1440 }))).toBe('1d before Walking meetup ends');
+		expect(formatEvent(meetup({ edge: 'beforeEnd', minutes: 0 }))).toBe('When Walking meetup ends');
 		expect(formatEvent(meetup({ edge: 'after', minutes: 0 }))).toBe('After Walking meetup');
 		expect(formatEvent(meetup({ edge: 'after', minutes: 60 }))).toBe('1h after Walking meetup');
 	});
@@ -152,7 +201,20 @@ describe('labels', () => {
 		expect(eventLabel(meetup({ edge: 'after', minutes: 15, occurrences: on(14, 15) }), today)).toEqual({
 			lead: '15m after',
 			title: 'Walking meetup',
+			trail: null,
 			when: '4:15pm',
+		});
+		expect(eventLabel(meetup({ edge: 'beforeEnd', minutes: 300, occurrences: on(14, 21) }), today)).toEqual({
+			lead: '5h before',
+			title: 'Walking meetup',
+			trail: 'ends',
+			when: '5pm',
+		});
+		expect(eventLabel(meetup({ edge: 'beforeEnd', occurrences: on(14, 21) }), today)).toEqual({
+			lead: 'End of',
+			title: 'Walking meetup',
+			trail: null,
+			when: '10pm',
 		});
 		expect(eventLabel(meetup({ edge: 'before', minutes: 60, occurrences: on(20, 9, 30) }), today).when).toBe(
 			'Tuesday 8:30am',
@@ -160,6 +222,7 @@ describe('labels', () => {
 		expect(eventLabel(meetup({ occurrences: on(21, 18) }), today)).toEqual({
 			lead: 'Start of',
 			title: 'Walking meetup',
+			trail: null,
 			when: 'Oct 21 6pm',
 		});
 		expect(eventLabel(meetup({ edge: 'during', occurrences: on(12, 18) }), today).when).toBe('Oct 12 6pm');
@@ -178,7 +241,12 @@ describe('labels', () => {
 				{ start: local(15, 10), end: local(15, 11), original: local(15, 10) },
 			],
 		});
-		expect(eventLabel(series, today)).toEqual({ lead: 'After', title: 'Walking meetup', when: 'Tomorrow 11am' });
+		expect(eventLabel(series, today)).toEqual({
+			lead: 'After',
+			title: 'Walking meetup',
+			trail: null,
+			when: 'Tomorrow 11am',
+		});
 	});
 
 	test('places read by trigger', () => {

@@ -588,6 +588,9 @@ describe('AI accounts', () => {
 		expect(together.status).toBe(400);
 		const linked = await json<{ event: { id: string } | null }>(asAi('PATCH', `/api/tasks?id=${task.id}`, { event }));
 		expect(linked.event?.id).toBe('standup');
+		const beforeEnd = { ...event, edge: 'beforeEnd', minutes: 1440 };
+		const anchored = await json<{ event: unknown }>(asAi('PATCH', `/api/tasks?id=${task.id}`, { event: beforeEnd }));
+		expect(anchored.event).toEqual(beforeEnd);
 		const dated = await asAi('PATCH', `/api/tasks?id=${task.id}`, { due: { date: '2026-10-20', time: null } });
 		expect(await dated.json()).toMatchObject({ message: 'An event stands in for the date and the repeat' });
 	});

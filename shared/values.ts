@@ -152,8 +152,11 @@ export type TaskLocation = z.infer<typeof taskLocationSchema>;
 export const savedPlaceSchema = taskLocationSchema.omit({ name: true, trigger: true }).meta({ id: 'SavedPlace' });
 export type SavedPlace = z.infer<typeof savedPlaceSchema>;
 
-/** Where a task sits relative to its calendar event: `minutes` before the start, at the start, while it runs, or `minutes` after the end. */
-export const eventEdgeSchema = z.enum(['before', 'start', 'during', 'after']).meta({ id: 'EventEdge' });
+/**
+ * Where a task sits relative to its calendar event: `minutes` before the start, at the start, while it runs,
+ * `minutes` before the end, or `minutes` after the end.
+ */
+export const eventEdgeSchema = z.enum(['before', 'start', 'during', 'beforeEnd', 'after']).meta({ id: 'EventEdge' });
 export type EventEdge = z.infer<typeof eventEdgeSchema>;
 
 const epochMs = z.number().int();

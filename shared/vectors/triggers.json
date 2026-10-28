@@ -145,12 +145,297 @@
 		},
 		{
 			"fn": "scheduledDue",
-			"test": "scheduledDue › a single event stays on its passed occurrence, so it goes overdue",
+			"test": "scheduledDue › an event task sits on its edge",
 			"input": [
 				{
 					"completedAt": null,
 					"completedBy": null,
 					"createdAt": 4,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "beforeEnd",
+						"id": "meetup",
+						"minutes": 15,
+						"occurrences": [
+							{
+								"end": 1792020600000,
+								"original": 1792015200000,
+								"start": 1792015200000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "d",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "d"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"time": "19:15"
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › a day before an all-day stay ends lands on the day before its last day",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 5,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": true,
+						"edge": "beforeEnd",
+						"id": "meetup",
+						"minutes": 1440,
+						"occurrences": [
+							{
+								"end": 1792382399000,
+								"original": 1791950400000,
+								"start": 1791950400000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-17",
+				"time": null
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › a day before an all-day stay ends lands on the day before its last day",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 6,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": true,
+						"edge": "beforeEnd",
+						"id": "meetup",
+						"minutes": 300,
+						"occurrences": [
+							{
+								"end": 1792382399000,
+								"original": 1791950400000,
+								"start": 1791950400000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "b",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "b"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-18",
+				"time": null
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › days of offset on an all-day event step calendar days across a daylight saving change",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 7,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": true,
+						"edge": "beforeEnd",
+						"id": "meetup",
+						"minutes": 1440,
+						"occurrences": [
+							{
+								"end": 1793595599000,
+								"original": 0,
+								"start": 1793332800000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14",
+				"America/New_York"
+			],
+			"output": {
+				"date": "2026-10-31",
+				"time": null
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › days of offset on an all-day event step calendar days across a daylight saving change",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 8,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": true,
+						"edge": "before",
+						"id": "meetup",
+						"minutes": 1440,
+						"occurrences": [
+							{
+								"end": 1773115199000,
+								"original": 0,
+								"start": 1773028800000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "b",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "b"
+				},
+				"2026-10-14",
+				"America/New_York"
+			],
+			"output": {
+				"date": "2026-03-08",
+				"time": null
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › days of offset on an all-day event step calendar days across a daylight saving change",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 9,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": true,
+						"edge": "start",
+						"id": "meetup",
+						"minutes": 1440,
+						"occurrences": [
+							{
+								"end": 1773115199000,
+								"original": 0,
+								"start": 1773028800000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "c",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "c"
+				},
+				"2026-10-14",
+				"America/New_York"
+			],
+			"output": {
+				"date": "2026-03-09",
+				"time": null
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › a single event stays on its passed occurrence, so it goes overdue",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 10,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -271,7 +556,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 5,
+					"createdAt": 11,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
@@ -317,7 +602,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 6,
+					"createdAt": 12,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
@@ -360,7 +645,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 7,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
@@ -399,7 +684,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 8,
+					"createdAt": 14,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -446,12 +731,58 @@
 		},
 		{
 			"fn": "taskNotificationTimes",
+			"test": "taskNotificationTimes › an event that ends notifies before its end",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 15,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "beforeEnd",
+						"id": "meetup",
+						"minutes": 300,
+						"occurrences": [
+							{
+								"end": 1792029600000,
+								"original": 1791982800000,
+								"start": 1791982800000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "a",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a"
+				},
+				"2026-10-14"
+			],
+			"output": [
+				1792011600000
+			]
+		},
+		{
+			"fn": "taskNotificationTimes",
 			"test": "taskNotificationTimes › a series notifies at every listed occurrence, and an all-day event only at its reminders",
 			"input": [
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 9,
+					"createdAt": 16,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -503,7 +834,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 10,
+					"createdAt": 17,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -555,7 +886,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 11,
+					"createdAt": 18,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -595,7 +926,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 12,
+					"createdAt": 19,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -707,6 +1038,50 @@
 			"input": [
 				{
 					"allDay": false,
+					"edge": "beforeEnd",
+					"id": "meetup",
+					"minutes": 1440,
+					"occurrences": [
+						{
+							"end": 1792020600000,
+							"original": 1792015200000,
+							"start": 1792015200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				}
+			],
+			"output": "1d before Walking meetup ends"
+		},
+		{
+			"fn": "formatEvent",
+			"test": "labels › events read by edge",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "beforeEnd",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1792020600000,
+							"original": 1792015200000,
+							"start": 1792015200000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				}
+			],
+			"output": "When Walking meetup ends"
+		},
+		{
+			"fn": "formatEvent",
+			"test": "labels › events read by edge",
+			"input": [
+				{
+					"allDay": false,
 					"edge": "after",
 					"id": "meetup",
 					"minutes": 0,
@@ -769,7 +1144,64 @@
 			"output": {
 				"lead": "15m after",
 				"title": "Walking meetup",
+				"trail": null,
 				"when": "4:15pm"
+			}
+		},
+		{
+			"fn": "eventLabel",
+			"test": "labels › a row names the task's moment with only the day and time today leaves ambiguous",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "beforeEnd",
+					"id": "meetup",
+					"minutes": 300,
+					"occurrences": [
+						{
+							"end": 1792029600000,
+							"original": 1792026000000,
+							"start": 1792026000000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"lead": "5h before",
+				"title": "Walking meetup",
+				"trail": "ends",
+				"when": "5pm"
+			}
+		},
+		{
+			"fn": "eventLabel",
+			"test": "labels › a row names the task's moment with only the day and time today leaves ambiguous",
+			"input": [
+				{
+					"allDay": false,
+					"edge": "beforeEnd",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1792029600000,
+							"original": 1792026000000,
+							"start": 1792026000000
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"lead": "End of",
+				"title": "Walking meetup",
+				"trail": null,
+				"when": "10pm"
 			}
 		},
 		{
@@ -796,6 +1228,7 @@
 			"output": {
 				"lead": "1h before",
 				"title": "Walking meetup",
+				"trail": null,
 				"when": "Tuesday 8:30am"
 			}
 		},
@@ -823,6 +1256,7 @@
 			"output": {
 				"lead": "Start of",
 				"title": "Walking meetup",
+				"trail": null,
 				"when": "Oct 21 6pm"
 			}
 		},
@@ -850,6 +1284,7 @@
 			"output": {
 				"lead": "During",
 				"title": "Walking meetup",
+				"trail": null,
 				"when": "Oct 12 6pm"
 			}
 		},
@@ -877,6 +1312,7 @@
 			"output": {
 				"lead": "Start of",
 				"title": "Walking meetup",
+				"trail": null,
 				"when": null
 			}
 		},
@@ -904,6 +1340,7 @@
 			"output": {
 				"lead": "Start of",
 				"title": "Walking meetup",
+				"trail": null,
 				"when": "Friday"
 			}
 		},
@@ -931,6 +1368,7 @@
 			"output": {
 				"lead": "Start of",
 				"title": "Walking meetup",
+				"trail": null,
 				"when": "Oct 14, 2026 6pm"
 			}
 		},
@@ -963,6 +1401,7 @@
 			"output": {
 				"lead": "After",
 				"title": "Walking meetup",
+				"trail": null,
 				"when": "Tomorrow 11am"
 			}
 		},
@@ -1524,7 +1963,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 13,
+						"createdAt": 20,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1553,7 +1992,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 14,
+						"createdAt": 21,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1582,7 +2021,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 15,
+						"createdAt": 22,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1611,7 +2050,7 @@
 					{
 						"completedAt": 1,
 						"completedBy": null,
-						"createdAt": 16,
+						"createdAt": 23,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1640,7 +2079,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 17,
+						"createdAt": 24,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1683,7 +2122,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 18,
+						"createdAt": 25,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1715,7 +2154,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 13,
+						"createdAt": 20,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1744,7 +2183,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 14,
+						"createdAt": 21,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1773,7 +2212,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 15,
+						"createdAt": 22,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1802,7 +2241,7 @@
 					{
 						"completedAt": 1,
 						"completedBy": null,
-						"createdAt": 16,
+						"createdAt": 23,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1831,7 +2270,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 17,
+						"createdAt": 24,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1882,7 +2321,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 19,
+						"createdAt": 26,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -1918,7 +2357,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 20,
+						"createdAt": 27,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -1954,7 +2393,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 21,
+						"createdAt": 28,
 						"createdBy": null,
 						"due": null,
 						"event": {

@@ -21,7 +21,8 @@ struct EventChip: View {
                 systemImage: event == nil ? "calendar.badge.plus" : "calendar.badge.clock",
                 text: event.map(Triggers.formatEvent) ?? "Event",
                 tone: event == nil ? .muted : .ink,
-                iconTone: event == nil ? nil : .toneWeek
+                iconTone: event == nil ? nil : .toneWeek,
+                truncation: .middle
             )
         } content: { _ in
             EventSheet(event: event, onChange: onChange)
@@ -35,15 +36,25 @@ extension EventEdge {
         case .before: "Before"
         case .start: "Start"
         case .during: "During"
+        case .beforeEnd: "End"
         case .after: "After"
         }
     }
 
-    var takesMinutes: Bool { self == .before || self == .after }
+    var offsetName: String? {
+        switch self {
+        case .before: "Before start"
+        case .beforeEnd: "Before end"
+        case .after: "After end"
+        case .start, .during: nil
+        }
+    }
+
+    var takesMinutes: Bool { offsetName != nil }
 }
 
 private struct EventSheet: View {
-    static let minuteChoices = [0, 5, 10, 15, 30, 60, 120]
+    static let minuteChoices = [0, 5, 10, 15, 30, 60, 120, 180, 300, 720, 1440, 2880, 10080]
 
     @Environment(CalendarSync.self) private var calendar
     @Environment(\.dismiss) private var dismiss
@@ -68,6 +79,9 @@ private struct EventSheet: View {
         _onlyThis = State(initialValue: event.map { !$0.series } ?? false)
     }
 
+    /// Keeps a stored offset the presets lack, as one set through the API, so the picker still shows it.
+    private var minuteChoices: [Int] { Array(Set(Self.minuteChoices + [event?.minutes ?? 0])).sorted() }
+
     private var repeating: Bool { picked.map(CalendarSync.repeats) ?? (event?.series ?? false) }
 
     var body: some View {
@@ -80,9 +94,9 @@ private struct EventSheet: View {
                     .pickerStyle(.segmented)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
-                    if edge.takesMinutes {
-                        Picker(edge == .before ? "Minutes before" : "Minutes after", selection: $minutes) {
-                            ForEach(Self.minuteChoices, id: \.self) { minutes in
+                    if let offsetName = edge.offsetName {
+                        Picker(offsetName, selection: $minutes) {
+                            ForEach(minuteChoices, id: \.self) { minutes in
                                 Text(minutes == 0 ? "None" : Format.formatMinutes(minutes)).tag(minutes)
                             }
                         }

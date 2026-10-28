@@ -241,7 +241,8 @@ private struct EventDetail: View {
 
     var body: some View {
         let repeats = series ? Text("\(Image(systemName: "repeat")) ") : Text("")
-        let meta = Text("\(repeats)\(label.lead) \(Image(systemName: "calendar")) \(label.title)")
+        let trail = label.trail.map { " \($0)" } ?? ""
+        let meta = Text("\(repeats)\(label.lead) \(Image(systemName: "calendar")) \(label.title)\(trail)")
         Group {
             if let when = label.when {
                 Text("\(Text(when).foregroundStyle(tone)) \(Text("(\(meta))").foregroundStyle(.muted))")
@@ -250,8 +251,11 @@ private struct EventDetail: View {
             }
         }
         .imageScale(.small)
+        // Middle truncation cuts inside a long title, so the `ends` after it stays on screen.
+        .truncationMode(label.trail == nil ? .tail : .middle)
         .accessibilityLabel(
-            [label.when, "\(label.lead) \(series ? "every " : "")\(label.title)"].compactMap { $0 }.joined(separator: ", ")
+            [label.when, "\(label.lead) \(series ? "every " : "")\(label.title)\(trail)"].compactMap { $0 }
+                .joined(separator: ", ")
         )
     }
 }

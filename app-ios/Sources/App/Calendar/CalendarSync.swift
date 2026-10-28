@@ -82,7 +82,7 @@ final class CalendarSync {
             allDay: event.isAllDay,
             series: series,
             edge: edge,
-            minutes: edge == .before || edge == .after ? minutes : 0,
+            minutes: edge.takesMinutes ? minutes : 0,
             occurrences: series && !listed.isEmpty ? Array(listed) : [Self.occurrence(event)]
         )
     }
