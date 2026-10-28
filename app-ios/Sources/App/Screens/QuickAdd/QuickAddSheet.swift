@@ -44,13 +44,8 @@ struct QuickAddSheet: View {
     @FocusState private var focused: Bool
     @FocusState private var subtaskFocused: Bool
 
-    private let capture: QuickAddCapture?
-    /// The camera's full-screen cover makes the card appear again when it closes, which must not reopen the camera.
-    @State private var captured = false
-
-    init(defaults: QuickAddDefaults, capture: QuickAddCapture? = nil) {
+    init(defaults: QuickAddDefaults) {
         _draft = State(initialValue: QuickAddDraft(defaults: defaults))
-        self.capture = capture
     }
 
     private var showMic: Bool { draft.text.isEmpty }
@@ -148,17 +143,9 @@ struct QuickAddSheet: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
         .onAppear {
-            // Opened on the camera, the keyboard waits for the camera to close, so it does not rise behind it.
-            guard !captured else { return }
-            if let capture {
-                captured = true
-                imageSource = capture.source
-            } else {
-                focused = true
-            }
+            focused = true
             draft.startAtPlace(spaceLabels)
         }
-        .onChange(of: imageSource) { if imageSource == nil { focused = true } }
         .onChange(of: pillInputs(parsed, resolved), initial: true) { _, inputs in
             pills = suggestionPills(inputs)
         }

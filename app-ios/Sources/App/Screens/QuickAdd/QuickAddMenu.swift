@@ -68,6 +68,10 @@ struct QuickAddMenu: View {
                         Button(button.name, systemImage: button.systemImage) { run(button) }
                     }
                 }
+                // A shortcut into `Images`' camera, not a button of its own, so it has no chip to pin.
+                if Camera.isAvailable {
+                    Button("Camera", systemImage: "camera") { onImage(.camera) }
+                }
             }
             Menu {
                 ForEach(QuickAddButton.allCases) { button in

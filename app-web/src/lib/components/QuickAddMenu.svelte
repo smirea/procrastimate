@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Camera from 'phosphor-svelte/lib/Camera';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import PushPin from 'phosphor-svelte/lib/PushPin';
 	import { toggleButton } from 'shared/quick-add-buttons.ts';
@@ -7,7 +8,11 @@
 	import { BUTTON_INFO, WEB_BUTTONS, type WebButton } from '../quick-add-buttons.ts';
 
 	/** `values` spells out what each attribute is set to, so a hidden one still reads in the list. */
-	let { values, onrun }: { values: Partial<Record<WebButton, string>>; onrun: (button: WebButton) => void } = $props();
+	let {
+		values,
+		onrun,
+		oncamera,
+	}: { values: Partial<Record<WebButton, string>>; onrun: (button: WebButton) => void; oncamera: () => void } = $props();
 </script>
 
 <Popover label="Quick add actions" align="end">
@@ -56,6 +61,20 @@
 					</button>
 				</div>
 			{/each}
+			<!-- Touch screens only: desktop browsers ignore `capture` and would show the same picker as Images. -->
+			<button
+				type="button"
+				role="menuitem"
+				class="menu-item hidden w-full touch:flex"
+				onmousedown={(e) => e.preventDefault()}
+				onclick={() => {
+					close();
+					oncamera();
+				}}
+			>
+				<Camera size={15} />
+				<span class="flex-1 truncate">Camera</span>
+			</button>
 			<p class="px-2 pt-1.5 pb-1 text-[11px] text-faint">Pinned actions show in the row on every device.</p>
 		</div>
 	{/snippet}

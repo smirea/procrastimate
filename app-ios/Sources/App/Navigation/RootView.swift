@@ -237,16 +237,8 @@ private struct TabBarItems: View {
         .glassEffect(.regular.interactive(), in: .capsule)
     }
 
-    /// A long press offers quick add that opens on the camera, or the library where there is none, and attaches what
-    /// it gives. A menu on the button keeps the tap as fast as before, where a camera button inside quick add would
-    /// cost a tap and a keyboard first.
     private var addButton: some View {
-        Menu {
-            if Camera.isAvailable {
-                Button("Take Photo", systemImage: "camera") { openQuickAdd(.camera) }
-            }
-            Button("Photo Library", systemImage: "photo.on.rectangle") { openQuickAdd(.library) }
-        } label: {
+        Button { navigator.sheet = .quickAdd(navigator.listDefaults(store)) } label: {
             Image(systemName: "plus")
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(.white)
@@ -254,19 +246,11 @@ private struct TabBarItems: View {
                 .contentShape(.circle)
                 // On the label, not the button: glass around a plain-style button shrinks its tap area to the glyph.
                 .glassEffect(.regular.tint(.accent).interactive(), in: .circle)
-        } primaryAction: {
-            openQuickAdd(nil)
         }
-        .menuStyle(.button)
-        .menuOrder(.fixed)
         .buttonStyle(.plain)
         .accessibilityLabel("Quick add")
         // The open quick add card's identifier is also `Quick add`, so a test matching the label can hit the card.
         .accessibilityIdentifier("quick-add-button")
-    }
-
-    private func openQuickAdd(_ capture: QuickAddCapture?) {
-        navigator.sheet = .quickAdd(navigator.listDefaults(store), capture: capture)
     }
 
     /// Tapping an open pin at its root, or long pressing any pin, lists the screens it can switch to. A plain `Menu`
@@ -369,7 +353,7 @@ private struct QuickAddOverlay: View {
                     .onTapGesture { navigator.sheet = nil }
                     .accessibilityHidden(true)
                     .transition(.opacity)
-                QuickAddSheet(defaults: defaults, capture: navigator.quickAddCapture)
+                QuickAddSheet(defaults: defaults)
                     .transition(.move(edge: .bottom))
             }
         }
@@ -435,7 +419,7 @@ private struct SheetView: View {
 
     var body: some View {
         switch sheet {
-        case let .quickAdd(defaults, capture): QuickAddSheet(defaults: defaults, capture: capture)
+        case let .quickAdd(defaults): QuickAddSheet(defaults: defaults)
         case let .ramble(defaults): RambleDrawer(defaults: defaults)
         case let .details(taskID): TaskDetailsSheet(stack: Subtasks.ancestorsOf(store.allTasks, taskID).map(\.id) + [taskID])
         case .settings: SettingsSheet()
