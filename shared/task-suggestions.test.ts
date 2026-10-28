@@ -58,9 +58,10 @@ function task(title: string, fields: Partial<Task> = {}, daysAgo = 10): Task {
 	};
 }
 
-const empty: DraftFields = { projectId: null, labelIds: [], location: null };
+const empty: DraftFields = { projectId: null, sectionId: null, labelIds: [], location: null };
 const everything: Available = {
 	projectIds: ['home', 'work'],
+	sectionIds: ['garden', 'kitchen', 'meetings'],
 	labelIds: ['calls', 'weekend'],
 };
 
@@ -87,16 +88,18 @@ describe('suggestionWords', () => {
 });
 
 describe('suggestionPills', () => {
-	test('a title like past ones offers their project and label, never their section', () => {
+	test('a title like past ones offers their project and label, and their section when nearly all agree', () => {
 		expect(pills(history, 'water the roses', NOW, empty, everything)).toEqual([
-			{ kind: 'project', projectId: 'home' },
+			{ kind: 'project', projectId: 'home', sectionId: 'garden' },
 			{ kind: 'label', labelId: 'weekend' },
 		]);
 	});
 
 	test('a tie, or a value under half the vote, offers nothing for that field', () => {
 		expect(pills(history, 'call someone', NOW, empty, everything)).toEqual([{ kind: 'label', labelId: 'calls' }]);
-		expect(pills(history, 'mow the lawn', NOW, empty, everything)).toEqual([{ kind: 'project', projectId: 'home' }]);
+		expect(pills(history, 'mow the lawn', NOW, empty, everything)).toEqual([
+			{ kind: 'project', projectId: 'home', sectionId: 'garden' },
+		]);
 	});
 
 	test('a place offers the past task’s place', () => {
@@ -111,20 +114,64 @@ describe('suggestionPills', () => {
 
 	test('a recent habit outweighs an older one', () => {
 		const changed = [task('Pay rent', { projectId: 'home' }, 400), task('Pay rent', { projectId: 'work' }, 5)];
-		expect(pills(changed, 'pay rent', NOW, empty, everything)).toEqual([{ kind: 'project', projectId: 'work' }]);
+		expect(pills(changed, 'pay rent', NOW, empty, everything)).toEqual([
+			{ kind: 'project', projectId: 'work', sectionId: null },
+		]);
 	});
 
 	test('a field the draft already holds shows no pill, and a place matches by spot, whatever its name', () => {
-		const draft: DraftFields = { projectId: 'home', labelIds: ['weekend'], location: null };
+		const draft: DraftFields = { projectId: 'home', sectionId: 'garden', labelIds: ['weekend'], location: null };
 		expect(pills(history, 'water the roses', NOW, draft, everything)).toEqual([]);
 		expect(
 			pills(history, 'Back day', NOW, { ...empty, location: { ...gym, name: 'My gym', trigger: 'leave' } }, everything),
 		).toEqual([]);
 	});
 
-	test('a project or label the draft cannot use shows no pill', () => {
-		const only: Available = { projectIds: ['home'], labelIds: [] };
-		expect(pills(history, 'water the roses', NOW, empty, only)).toEqual([{ kind: 'project', projectId: 'home' }]);
+	test('a project, section, or label the draft cannot use shows no pill', () => {
+		const only: Available = { projectIds: ['home'], sectionIds: [], labelIds: [] };
+		expect(pills(history, 'water the roses', NOW, empty, only)).toEqual([
+			{ kind: 'project', projectId: 'home', sectionId: null },
+		]);
 		expect(pills(history, 'water the roses', NOW, empty, { ...only, projectIds: [] })).toEqual([]);
+	});
+});
+
+describe('suggestionPills inside a project or section', () => {
+	const kitchen: DraftFields = { ...empty, projectId: 'home', sectionId: 'kitchen' };
+	const meetings: DraftFields = { ...empty, projectId: 'work', sectionId: 'meetings' };
+	const split = [
+		task('Plan the trip', { projectId: 'home', sectionId: 'garden' }),
+		task('Plan the trip', { projectId: 'home', sectionId: 'kitchen' }),
+		task('Plan the trip', { projectId: 'home', sectionId: 'kitchen' }),
+		task('Plan the trip', { projectId: 'work', sectionId: 'meetings' }),
+	];
+
+	test('the section quick add opened in stays when the vote agrees or is split', () => {
+		expect(pills(split, 'plan the trip', NOW, kitchen, everything)).toEqual([]);
+		expect(pills(split, 'plan the trip', NOW, { ...kitchen, sectionId: 'garden' }, everything)).toEqual([]);
+	});
+
+	test('another project only shows when nearly the whole vote is for it', () => {
+		expect(pills(split, 'plan the trip', NOW, empty, everything)).toEqual([
+			{ kind: 'project', projectId: 'home', sectionId: null },
+		]);
+		expect(pills(split, 'plan the trip', NOW, meetings, everything)).toEqual([]);
+		expect(pills(split, 'plan the trip', NOW, { ...meetings, sectionId: null }, everything)).toEqual([]);
+		expect(pills(history, 'water the roses', NOW, meetings, everything)).toEqual([
+			{ kind: 'project', projectId: 'home', sectionId: 'garden' },
+			{ kind: 'label', labelId: 'weekend' },
+		]);
+	});
+
+	test('a sure section of the same project shows, inside a project or another of its sections', () => {
+		const project: DraftFields = { ...kitchen, sectionId: null };
+		expect(pills(history, 'water the roses', NOW, project, everything)).toEqual([
+			{ kind: 'project', projectId: 'home', sectionId: 'garden' },
+			{ kind: 'label', labelId: 'weekend' },
+		]);
+		expect(pills(history, 'water the roses', NOW, kitchen, everything)).toEqual([
+			{ kind: 'project', projectId: 'home', sectionId: 'garden' },
+			{ kind: 'label', labelId: 'weekend' },
+		]);
 	});
 });

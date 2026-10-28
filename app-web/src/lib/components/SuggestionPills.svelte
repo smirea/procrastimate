@@ -14,8 +14,15 @@
 
 	function describe(pill: SuggestionPill) {
 		switch (pill.kind) {
-			case 'project':
-				return { key: `project:${pill.projectId}`, kind: 'project', name: store.project(pill.projectId)?.name ?? '' };
+			case 'project': {
+				const project = store.project(pill.projectId)?.name ?? '';
+				const section = store.section(pill.sectionId)?.name;
+				return {
+					key: `project:${pill.projectId}:${pill.sectionId}`,
+					kind: 'project',
+					name: section ? `${project} / ${section}` : project,
+				};
+			}
 			case 'label':
 				return { key: `label:${pill.labelId}`, kind: 'label', name: store.label(pill.labelId)?.name ?? '' };
 			case 'place':

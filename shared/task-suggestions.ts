@@ -6,17 +6,29 @@ import { taskLocationSchema } from './values.ts';
 export const suggestionFieldsSchema = z
 	.object({
 		projectId: z.string().nullable(),
+		sure: z.boolean(),
+		sectionId: z.string().nullable(),
 		labelIds: z.array(z.string()),
 		location: taskLocationSchema.nullable(),
 	})
 	.meta({
 		id: 'SuggestionFields',
 		description:
-			'The fields a suggestion pill can set: what similar past tasks agree on, or what the draft already holds. A split vote leaves a field null or empty.',
+			"What similar past tasks agree on. A split vote leaves a field null or empty. `sure` says the project holds nearly the whole vote, and a section shows only when nearly all of that project's matching tasks sit in it.",
 	});
 export type MetadataSuggestions = z.infer<typeof suggestionFieldsSchema>;
 
-type Filed = Pick<Task, 'title' | 'createdAt' | 'projectId' | 'labelIds' | 'location'>;
+export const suggestionDraftSchema = z
+	.object({
+		projectId: z.string().nullable(),
+		sectionId: z.string().nullable(),
+		labelIds: z.array(z.string()),
+		location: taskLocationSchema.nullable(),
+	})
+	.meta({ id: 'SuggestionDraft', description: 'What the quick add draft already holds, which no pill repeats.' });
+export type DraftFields = z.infer<typeof suggestionDraftSchema>;
+
+type Filed = Pick<Task, 'title' | 'createdAt' | 'projectId' | 'sectionId' | 'labelIds' | 'location'>;
 
 export type SuggestionIndex = {
 	tasks: readonly Filed[];
@@ -44,6 +56,11 @@ const STOP_WORDS = new Set([
 	'up',
 ]);
 const NEIGHBORS = 8;
+/**
+ * The share of the vote that overrides where the draft already sits, or names a section. Half the vote was right on
+ * only 59% of section pills; 90% of a project's own matching tasks was right on 81% (see docs/decisions/quick-add.md).
+ */
+const SURE = 0.9;
 /** Days for a past task's recency weight to fall by e, so a habit that changed wins over the old one. */
 const RECENCY_DAYS = 120;
 const DAY = 86_400_000;
@@ -77,13 +94,13 @@ function norm(words: ReadonlySet<string>, idf: ReadonlyMap<string, number>): num
  * The project, labels, and place that the eight past tasks sharing the most rare words with `title` agree on,
  * each past task weighted by how closely and how recently it matches. A value shows only when the tasks that hold it
  * carry at least half the vote, and a missing value votes too, so a word that sometimes means Home shows nothing.
- * Sections are never suggested: on real history they were right only about 60% of the time, because one project's
- * sections share their words (see docs/decisions/quick-add.md).
+ * A section needs `SURE` of the vote among the project's own matching tasks, because one project's sections share
+ * their words, and at half the vote they were right only about 60% of the time (see docs/decisions/quick-add.md).
  */
 export function suggestMetadata(index: SuggestionIndex, title: string, now: number): MetadataSuggestions {
 	const query = suggestionWords(title);
 	const queryNorm = norm(query, index.idf);
-	const none: MetadataSuggestions = { projectId: null, labelIds: [], location: null };
+	const none: MetadataSuggestions = { projectId: null, sure: false, sectionId: null, labelIds: [], location: null };
 	if (queryNorm === 0) return none;
 	const neighbors: { task: Filed; score: number }[] = [];
 	index.tasks.forEach((task, i) => {
@@ -94,11 +111,13 @@ export function suggestMetadata(index: SuggestionIndex, title: string, now: numb
 		neighbors.push({ task, score: (shared / (queryNorm * index.norms[i]!)) * (0.5 + 0.5 * recency) });
 	});
 	const near = neighbors.toSorted((a, b) => b.score - a.score).slice(0, NEIGHBORS);
-	const quorum = near.reduce((sum, n) => sum + n.score, 0) / 2;
 
-	function agreed(valuesOf: (task: Filed) => readonly string[]): string[] {
+	const total = near.reduce((sum, n) => sum + n.score, 0);
+
+	function agreed(valuesOf: (task: Filed) => readonly string[], voters = near, share = 0.5): string[] {
+		const quorum = voters.reduce((sum, n) => sum + n.score, 0) * share;
 		const weights = new Map<string, number>();
-		for (const { task, score } of near)
+		for (const { task, score } of voters)
 			for (const value of valuesOf(task)) weights.set(value, (weights.get(value) ?? 0) + score);
 		return [...weights]
 			.filter(([, weight]) => weight >= quorum)
@@ -109,9 +128,13 @@ export function suggestMetadata(index: SuggestionIndex, title: string, now: numb
 	// Two values can both hold exactly half the vote, and a tie suggests neither.
 	const only = (values: string[]) => (values.length === 1 ? values[0]! : null);
 	const projectId = only(agreed(task => (task.projectId ? [task.projectId] : [])));
+	const project = near.filter(({ task }) => projectId !== null && task.projectId === projectId);
+	const sectionId = only(agreed(task => (task.sectionId ? [task.sectionId] : []), project, SURE));
 	const place = only(agreed(task => (task.location ? [placeKey(task.location)] : [])));
 	return {
 		projectId,
+		sure: projectId !== null && project.reduce((sum, n) => sum + n.score, 0) >= total * SURE,
+		sectionId,
 		labelIds: agreed(task => task.labelIds),
 		location: place ? near.find(({ task }) => task.location && placeKey(task.location) === place)!.task.location : null,
 	};
@@ -119,39 +142,46 @@ export function suggestMetadata(index: SuggestionIndex, title: string, now: numb
 
 export const suggestionPillSchema = z
 	.discriminatedUnion('kind', [
-		z.object({ kind: z.literal('project'), projectId: z.string() }),
+		z.object({ kind: z.literal('project'), projectId: z.string(), sectionId: z.string().nullable() }),
 		z.object({ kind: z.literal('label'), labelId: z.string() }),
 		z.object({ kind: z.literal('place'), location: taskLocationSchema }),
 	])
 	.meta({
 		id: 'SuggestionPill',
-		description: 'A value quick add offers under the title.',
+		description: 'A value quick add offers under the title. A project pill may name a section of it too.',
 		'x-inline': true,
 	});
 export type SuggestionPill = z.infer<typeof suggestionPillSchema>;
 
-/** What the draft already holds, which no pill repeats. */
-export type DraftFields = MetadataSuggestions;
-
 export const suggestionAvailableSchema = z
-	.object({ projectIds: z.array(z.string()), labelIds: z.array(z.string()) })
+	.object({ projectIds: z.array(z.string()), sectionIds: z.array(z.string()), labelIds: z.array(z.string()) })
 	.meta({
 		id: 'SuggestionAvailable',
 		description:
-			'Ids the draft may still use. A suggestion naming a deleted or view-only project or label never shows.',
+			'Ids the draft may still use. A suggestion naming a deleted or view-only project, section, or label never shows.',
 	});
 export type Available = z.infer<typeof suggestionAvailableSchema>;
 
-/** The pills to show, in field order: each suggestion the draft can use and does not already hold. */
+/**
+ * The pills to show, in field order: each suggestion the draft can use and does not already hold. Where the draft
+ * already sits, the project and section quick add opened in or Stefan picked, moves only on a sure vote, so adding
+ * inside a section stays quiet unless the history strongly says otherwise. A section of the draft's own project still
+ * shows when the vote names one, since a more specific place is not a contradiction.
+ */
 export function suggestionPills(
 	suggestions: MetadataSuggestions,
 	draft: DraftFields,
 	available: Available,
 ): SuggestionPill[] {
 	const pills: SuggestionPill[] = [];
-	const { projectId, labelIds, location } = suggestions;
-	if (projectId && available.projectIds.includes(projectId) && draft.projectId !== projectId)
-		pills.push({ kind: 'project', projectId });
+	const { projectId, sure, labelIds, location } = suggestions;
+	const sectionId =
+		suggestions.sectionId && available.sectionIds.includes(suggestions.sectionId) ? suggestions.sectionId : null;
+	if (projectId && available.projectIds.includes(projectId)) {
+		const moves = draft.projectId !== projectId;
+		if (moves ? sure || draft.projectId === null : sectionId !== null && sectionId !== draft.sectionId)
+			pills.push({ kind: 'project', projectId, sectionId });
+	}
 	for (const labelId of labelIds) {
 		if (available.labelIds.includes(labelId) && !draft.labelIds.includes(labelId))
 			pills.push({ kind: 'label', labelId });

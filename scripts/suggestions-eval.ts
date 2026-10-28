@@ -22,9 +22,10 @@ const minHistory = Number(minArg ?? 30);
 const view = (await Bun.file(file).json()) as { tasks: Task[] };
 const tasks = view.tasks.filter(t => t.parentId === null).toSorted((a, b) => a.createdAt - b.createdAt);
 
-function pills(m: MetadataSuggestions) {
+function pills(m: Pick<MetadataSuggestions, 'projectId' | 'sectionId' | 'labelIds' | 'location'>) {
 	const set = new Set<string>();
 	if (m.projectId) set.add(`project:${m.projectId}`);
+	if (m.sectionId) set.add(`section:${m.sectionId}`);
 	for (const id of m.labelIds) set.add(`label:${id}`);
 	if (m.location) set.add(`place:${placeKey(m.location)}`);
 	return set;
@@ -96,7 +97,7 @@ for (let i = minHistory; i < tasks.length; i++) {
 	const half = words.slice(0, Math.max(1, Math.ceil(words.length / 2))).join(' ');
 	score('half typed', pills(suggestMetadata(index, half, task.createdAt)), want);
 	const projectId = mostUsed(history.map(t => t.projectId));
-	score('baseline', pills({ projectId, labelIds: [], location: null }), want);
+	score('baseline', pills({ projectId, sectionId: null, labelIds: [], location: null }), want);
 }
 
 const pct = (a: number, b: number) => (b ? `${Math.round((100 * a) / b)}%` : '-');
