@@ -27,7 +27,7 @@ struct ProcrastimateApp: App {
         CaretKeeper.shared.start()
         ImagePaste.shared.start()
         let clock = Launch.prepare()
-        let navigator = Navigator()
+        let navigator = Navigator(clock: clock)
         let toasts = Toasts()
         let sync = SyncClient.shared(clock: clock)
         let store = sync.store
@@ -133,14 +133,7 @@ struct ProcrastimateApp: App {
                     today = clock.today
                     Task { await notifications.sync() }
                 }
-                .onChange(of: scenePhase) {
-                    guard scenePhase == .active else { return }
-                    today = clock.today
-                    sync.resume()
-                    calendar.sync()
-                    Task { await notifications.detect() }
-                    Task { await places.sync() }
-                }
+                .onChange(of: scenePhase) { old, new in phaseChanged(from: old, to: new) }
         }
         .backgroundTask(.appRefresh(LocalNotifications.refreshTaskID)) { [notifications, calendar, places] in
             await calendar.sync()
@@ -151,6 +144,29 @@ struct ProcrastimateApp: App {
             await calendar.sync()
             await places.sync()
         }
+    }
+
+    private func phaseChanged(from old: ScenePhase, to new: ScenePhase) {
+        // On the way back, before `.active`, so stale tabs reset before the first frame shows.
+        if new == .background {
+            navigator.leftApp()
+        } else if old == .background {
+            navigator.returnedToApp(covered: Self.presenting)
+        }
+        guard new == .active else { return }
+        today = clock.today
+        sync.resume()
+        calendar.sync()
+        Task { await notifications.detect() }
+        Task { await places.sync() }
+    }
+
+    /// Whether a sheet, alert, or menu is up over the tabs, in UIKit's terms, since SwiftUI doesn't expose an alert a
+    /// screen presents.
+    private static var presenting: Bool {
+        UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .contains { $0.rootViewController?.presentedViewController != nil }
     }
 
     private func open(_ url: URL) {

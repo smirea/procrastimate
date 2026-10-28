@@ -71,6 +71,7 @@ private struct Tabs: View {
         let shown = navigator.tab == tab
         if shown || visited.contains(tab) {
             content()
+                .id(navigator.resets[tab, default: 0])
                 .opacity(shown ? 1 : 0)
                 .allowsHitTesting(shown)
                 .accessibilityHidden(!shown)

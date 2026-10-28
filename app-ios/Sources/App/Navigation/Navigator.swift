@@ -8,7 +8,12 @@ final class Navigator {
     /// the query, because that never leaves Browse.
     var tab: AppTab {
         didSet {
-            if tab != oldValue, tab == .browse { searchQuery = "" }
+            if tab != oldValue {
+                if tab == .browse { searchQuery = "" }
+                memory.hide(oldValue, at: clock.now)
+                memory.show(tab)
+                scheduleReset()
+            }
             forgetAddedElsewhere()
         }
     }
@@ -21,10 +26,17 @@ final class Navigator {
     var sheet: Sheet?
     /// Asks Browse to focus its search field, as Cmd-K does. Browse clears it once focused.
     var focusSearch = false
+    /// Bumped when a tab goes back to its default state, so its screens rebuild at the top while it is out of sight.
+    private(set) var resets: [AppTab: Int] = [:]
+
+    @ObservationIgnored private let clock: AppClock
+    @ObservationIgnored private var memory = TabMemory<AppTab>()
+    @ObservationIgnored private var resetTimer: Task<Void, Never>?
 
     static let pinsKey = "procrastimate-pins"
 
-    init() {
+    init(clock: AppClock) {
+        self.clock = clock
         let stored = UserDefaults.standard.data(forKey: Self.pinsKey)
             .flatMap { try? JSONDecoder().decode([Pin].self, from: $0) }
         let pins = stored ?? Pin.defaults
@@ -37,6 +49,38 @@ final class Navigator {
         if let route = paths[tab]?.last { return route }
         if case let .pin(pin) = tab { return pin.route }
         return nil
+    }
+
+    /// The app went to the background, which takes the open tab out of sight too.
+    func leftApp() {
+        memory.hide(tab, at: clock.now)
+    }
+
+    /// The app is back. Every tab away for `TabReset.after` resets before it draws, except the open one while something
+    /// is presented over it, such as task details or an alert, which may hold an unsaved draft.
+    func returnedToApp(covered: Bool) {
+        for stale in memory.stale(at: clock.now, keeping: covered || sheet != nil ? tab : nil) { reset(stale) }
+        memory.show(tab)
+        scheduleReset()
+    }
+
+    private func reset(_ tab: AppTab) {
+        paths[tab] = []
+        resets[tab, default: 0] += 1
+        if tab == .browse { searchQuery = "" }
+    }
+
+    /// Resets each hidden tab as its time comes, while it is still out of sight. The open tab only resets on returning
+    /// to the app, which checks what is presented over it.
+    private func scheduleReset() {
+        resetTimer?.cancel()
+        guard let due = memory.nextReset(keeping: tab) else { return }
+        resetTimer = Task { [weak self, clock] in
+            try? await Task.sleep(for: .seconds(max(0, due.timeIntervalSince(clock.now))))
+            guard !Task.isCancelled, let self else { return }
+            for stale in memory.stale(at: clock.now, keeping: tab) { reset(stale) }
+            scheduleReset()
+        }
     }
 
     func setPins(_ next: [Pin]) {
