@@ -12,6 +12,7 @@
 	import type { ExplodeMethod } from 'shared/store.ts';
 	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
+	import SubtaskPlainText from './SubtaskPlainText.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import Popover from './Popover.svelte';
 	import TaskRow from './TaskRow.svelte';
@@ -27,13 +28,16 @@
 	const progress = $derived(store.progress(task.id));
 
 	let draft = $state('');
-	const parsed = $derived(parseSubtask(draft));
+	let literal = $state(false);
+	let input = $state<SmartInput>();
+	const parsed = $derived(parseSubtask(draft, literal));
 
 	function add() {
 		const subtask = subtaskTask(parsed);
 		if (!subtask) return;
 		store.addTask(subtask, task.id);
 		draft = '';
+		literal = false;
 	}
 
 	function onkeydown(event: KeyboardEvent) {
@@ -42,8 +46,10 @@
 			add();
 		} else if (event.key === 'Escape') {
 			event.preventDefault();
-			if (draft) draft = '';
-			else sheets.close();
+			if (draft) {
+				draft = '';
+				literal = false;
+			} else sheets.close();
 		}
 	}
 
@@ -147,14 +153,23 @@
 		<div class="flex items-center gap-3 px-2">
 			<span class="grid size-[18px] shrink-0 place-items-center rounded-full text-accent touch:size-5"><Plus size={13} weight="bold" /></span>
 			<SmartInput
+				bind:this={input}
 				bind:value={draft}
 				tokens={parsed.tokens}
 				label="Add subtask"
 				placeholder="Add subtask"
 				enterkeyhint="enter"
 				suggestProjects={false}
+				suggestNames={!literal}
 				class="min-w-0 flex-1 py-2 text-[14px] touch:py-3"
 				{onkeydown}
+			/>
+			<SubtaskPlainText
+				on={literal}
+				toggle={() => {
+					literal = !literal;
+					input?.focus();
+				}}
 			/>
 		</div>
 	{/if}

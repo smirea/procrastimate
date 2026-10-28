@@ -20,6 +20,7 @@
 	import { DEFAULT_PRIORITY } from 'shared/task.ts';
 	import Sheet from './Sheet.svelte';
 	import SmartInput from './SmartInput.svelte';
+	import SubtaskPlainText from './SubtaskPlainText.svelte';
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
 	import ReminderPicker from './ReminderPicker.svelte';
@@ -335,22 +336,6 @@
 	</span>
 {/snippet}
 
-<!-- A line's own toggle, apart from the task's: off by default, and it can't turn off where parsing would leave no title. -->
-{#snippet subtaskPlainText(on: boolean, enabled: boolean, toggle: () => void)}
-	<button
-		type="button"
-		class="grid size-8 shrink-0 place-items-center rounded-full transition-colors touch:size-11 {on ? 'text-accent' : 'text-faint hover:text-ink'} disabled:opacity-40"
-		aria-label="Plain text subtask"
-		aria-pressed={on}
-		title="Plain text: keep this subtask's dates, times, and tags in its title"
-		disabled={!enabled}
-		onmousedown={(e) => e.preventDefault()}
-		onclick={toggle}
-	>
-		<TextT size={14} weight={on ? 'bold' : 'regular'} />
-	</button>
-{/snippet}
-
 <Sheet label="Quick add" desktop="scale" {onpaste} {ondragover} {ondrop} class="flex-col md:top-[14vh] md:left-1/2 md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:rounded-panel">
 	<div class="px-4 pt-4 pb-2">
 		<div class="relative">
@@ -437,10 +422,14 @@
 								</div>
 							{/if}
 						</div>
-						{@render subtaskPlainText(literal, !literal || !!subtaskTask(parseSubtask(text)), () => {
-							const subtask = subtasks.find((s) => s.key === key);
-							if (subtask) subtask.literal = !subtask.literal;
-						})}
+						<SubtaskPlainText
+							on={literal}
+							disabled={literal && !subtaskTask(parseSubtask(text))}
+							toggle={() => {
+								const subtask = subtasks.find((s) => s.key === key);
+								if (subtask) subtask.literal = !subtask.literal;
+							}}
+						/>
 						<button
 							type="button"
 							class="grid size-8 shrink-0 place-items-center rounded-full text-faint transition-colors hover:text-ink touch:size-11"
@@ -471,7 +460,7 @@
 						if (!subtaskText && !subtasks.length) subtasksOpen = false;
 					}}
 				/>
-				{@render subtaskPlainText(subtaskLiteral, true, () => (subtaskLiteral = !subtaskLiteral))}
+				<SubtaskPlainText on={subtaskLiteral} toggle={() => (subtaskLiteral = !subtaskLiteral)} />
 			</div>
 		</div>
 	{/if}

@@ -70,7 +70,7 @@ struct QuickAddSubtasks: View {
                 )
                 .font(.subheadline)
                 .padding(.leading, -5)
-                plainTextToggle(literal) { literal.toggle() }
+                SubtaskPlainTextToggle(on: literal) { literal.toggle() }
             }
             .frame(minHeight: 36)
         }
@@ -91,23 +91,6 @@ struct QuickAddSubtasks: View {
         subtasks.append(DraftSubtask(text: text, literal: literal))
         text = ""
         literal = false
-    }
-
-    /// A line's own toggle, apart from the task's. It can't turn off where parsing would leave no title.
-    private func plainTextToggle(_ on: Bool, enabled: Bool = true, toggle: @escaping () -> Void) -> some View {
-        Button(action: toggle) {
-            Image(systemName: "textformat")
-                .font(.caption.weight(on ? .bold : .regular))
-                .foregroundStyle(on ? Color.accent : Color.muted)
-                .frame(width: 36, height: 44)
-                .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
-        .opacity(enabled ? 1 : 0.4)
-        .accessibilityLabel("Plain text subtask")
-        .accessibilityValue(on ? "On" : "Off")
-        .accessibilityAddTraits(on ? .isSelected : [])
     }
 
     @ViewBuilder
@@ -148,8 +131,8 @@ struct QuickAddSubtasks: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            plainTextToggle(
-                subtask.literal,
+            SubtaskPlainTextToggle(
+                on: subtask.literal,
                 enabled: !subtask.literal || subtask.parsed(now: clock.now, labels: spaceLabels, in: clock.timeZone, literal: false) != nil
             ) {
                 guard let index = subtasks.firstIndex(where: { $0.id == subtask.id }) else { return }
