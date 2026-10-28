@@ -187,7 +187,7 @@
 
 	/** Saves the task with its subtasks and images. */
 	function save(options?: { untitled: boolean }) {
-		const next = draft.task(options);
+		const next = draft.task({ ...options, images: drafted.length });
 		if (!next) return null;
 		const task = store.addTask(next);
 		if (!task) return null;
@@ -534,7 +534,7 @@
 				<ArrowsOutSimple size={16} weight="bold" />
 			</button>
 			<button type="button" class="btn btn-quiet" onclick={() => sheets.close()}>Cancel</button>
-			<button type="button" class="btn btn-primary" disabled={!parsed.title} onmousedown={(e) => e.preventDefault()} onclick={submit}>Add task</button>
+			<button type="button" class="btn btn-primary" disabled={!parsed.title && !drafted.length} onmousedown={(e) => e.preventDefault()} onclick={submit}>Add task</button>
 		</div>
 	</div>
 	<input bind:this={imagePicker} type="file" accept="image/*" multiple class="hidden" aria-hidden="true" tabindex="-1" onchange={pickedImages} />

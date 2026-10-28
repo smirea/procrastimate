@@ -15,6 +15,7 @@ const formatReminder = recorded('format', format.formatReminder);
 const formatTime = recorded('format', format.formatTime);
 const postponeOptions = recorded('format', format.postponeOptions);
 const priorityLabel = recorded('format', format.priorityLabel);
+const imagesTitle = recorded('format', format.imagesTitle);
 const relativeDay = recorded('format', format.relativeDay);
 const addedAgo = recorded('format', format.addedAgo);
 const repeatLabel = recorded('format', format.repeatLabel);
@@ -260,5 +261,12 @@ describe('postpone', () => {
 			{ label: 'Next weekend', date: '2026-10-24' },
 			{ label: 'Next week', date: '2026-10-19' },
 		]);
+	});
+});
+
+describe('imagesTitle', () => {
+	test('names one photo, or counts several', () => {
+		expect(imagesTitle(1)).toBe('Photo');
+		expect(imagesTitle(3)).toBe('3 photos');
 	});
 });

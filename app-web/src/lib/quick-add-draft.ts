@@ -1,4 +1,5 @@
 import { typedOver, type Placed } from 'shared/quick-add-merge.ts';
+import { imagesTitle } from 'shared/format.ts';
 import type { ParsedQuickAdd, QuickAddToken } from 'shared/quick-add.ts';
 import type { ListDefaults } from 'shared/screens.ts';
 import { DEFAULT_PRIORITY, type Due, type Label, type Priority, type Recurrence, type Reminder } from 'shared/task.ts';
@@ -96,18 +97,19 @@ export function labelPick(
 
 /**
  * The task to save, or null while the title is empty. Expanding into details saves even an untitled one, which details
- * deletes if it closes still untitled. An event stands in for the date and the repeat.
+ * deletes if it closes still untitled. A draft holding only `images` saves too, named for them, as on iOS. An event
+ * stands in for the date and the repeat.
  */
 export function draftTask(
 	parsed: ParsedQuickAdd,
 	picked: Picked,
 	labels: readonly Label[],
-	{ untitled = false } = {},
+	{ untitled = false, images = 0 } = {},
 ): NewTask | null {
-	if (!parsed.title && !untitled) return null;
+	if (!parsed.title && !untitled && !images) return null;
 	const applied = applyPickedLabels(labels, shownLabelIds(parsed, picked, labels), picked.location);
 	return {
-		title: parsed.title,
+		title: parsed.title || untitled ? parsed.title : imagesTitle(images),
 		...typedOver({ ...picked, priority: picked.priority ?? DEFAULT_PRIORITY }, parsed, picked.event),
 		labelIds: applied.labelIds,
 		reminders: [...parsed.reminders, ...picked.reminders],

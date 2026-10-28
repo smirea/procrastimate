@@ -242,6 +242,7 @@ private struct Occurrence: Decodable {
     switch fn {
     case "calendarDay": return try json(Format.calendarDay(a(0), a(1)))
     case "clockTime": return try json(Format.clockTime(a(0)))
+    case "imagesTitle": return try json(Format.imagesTitle(a(0)))
     case "completedToast": return try json(Format.completedToast(a(0), a(1), a(2)))
     case "dayHeading": return try json(Format.dayHeading(a(0), a(1)))
     case "dueTone": return try json(Format.dueTone(a(0), a(1)))

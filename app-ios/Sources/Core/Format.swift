@@ -23,6 +23,9 @@ public enum Format {
 
     public static func priorityLabel(_ priority: Priority) -> String { "Priority \(priority.rawValue)" }
 
+    /// The title quick add gives a draft holding only images.
+    public static func imagesTitle(_ count: Int) -> String { count == 1 ? "Photo" : "\(count) photos" }
+
     /// `5pm`, `9:05am`.
     public static func formatTime(_ time: TimeOfDay) -> String {
         let (h, m) = hoursMinutes(time)
