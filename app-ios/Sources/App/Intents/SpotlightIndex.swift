@@ -49,6 +49,6 @@ enum SpotlightIndex {
         let open = IntentRules.indexedTasks(store.openTasks)
         router.spotlight = open.map(\.title).sorted().joined(separator: ", ")
         let projects = store.snapshot.projects
-        return open.map { TaskEntity.make($0, projects: projects, labels: store.labels, today: today) }
+        return open.map { TaskEntity.make($0, completedAt: Triggers.completedAt(of: $0, lookup: store.task), projects: projects, labels: store.labels, today: today) }
     }
 }

@@ -37,10 +37,11 @@ struct TaskEntity: AppEntity, IndexedEntity, Equatable {
         a.id == b.id && a.title == b.title && a.details == b.details && a.keywords == b.keywords
     }
 
-    static func make(_ task: TaskItem, projects: [Project], labels: [Label], today: DateKey) -> TaskEntity {
+    /// Pass `completedAt` from `Triggers.completedAt`, so a task under a completed parent reads as completed.
+    static func make(_ task: TaskItem, completedAt: Int?, projects: [Project], labels: [Label], today: DateKey) -> TaskEntity {
         var parts: [String] = []
         if let due = task.due { parts.append(Format.formatDue(due, today)) }
-        if task.completedAt != nil { parts.append("Completed") }
+        if completedAt != nil { parts.append("Completed") }
         if !task.notes.isEmpty { parts.append(task.notes) }
         var keywords = [task.title]
         if let name = projects.first(where: { $0.id == task.projectId })?.name {

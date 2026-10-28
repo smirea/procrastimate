@@ -92,3 +92,33 @@ test('a filter that hides a parent lets its dated subtask show alone, and search
 	await expect(search.getByRole('group')).toHaveText([/^Tasks/]);
 	await expect(search.getByRole('option').filter({ hasText: 'Pack bags' }).locator('.status.done')).toHaveCount(0);
 });
+
+test('task details offer Reopen for a subtask under a completed parent, and reopening it reopens the parent', async ({
+	app,
+	page,
+}) => {
+	const trip = crypto.randomUUID();
+	await app.seed(
+		{
+			kind: 'task',
+			fields: task(trip, { title: 'Trip', createdAt: NOW.getTime(), completedAt: NOW.getTime() - 86_400_000 }),
+		},
+		{
+			kind: 'task',
+			fields: task(crypto.randomUUID(), { title: 'Pack bags', createdAt: NOW.getTime() + 1, parentId: trip }),
+		},
+	);
+	await app.go('Inbox');
+	await page.keyboard.press('/');
+	const search = page.getByRole('dialog', { name: 'Search' });
+	await search.getByRole('combobox', { name: 'Search' }).fill('pack');
+	await search.getByRole('option').filter({ hasText: 'Pack bags' }).click();
+
+	const details = app.details();
+	await expect(details.getByRole('button', { name: 'Complete', exact: true })).toHaveCount(0);
+	await details.getByRole('button', { name: 'Reopen', exact: true }).click();
+	await expect(details.getByRole('button', { name: 'Complete', exact: true })).toBeVisible();
+	await details.getByRole('button', { name: 'Back to Trip' }).click();
+	await expect(details.getByRole('group', { name: 'Trip' })).toBeVisible();
+	await expect(details.getByRole('button', { name: 'Complete', exact: true })).toBeVisible();
+});

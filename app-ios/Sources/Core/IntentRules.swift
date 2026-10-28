@@ -74,18 +74,18 @@ public enum IntentRules {
     }
 
     /// Exact title matches, ignoring case and accents. Open tasks come first, newest first; completed tasks follow,
-    /// most recently completed first.
+    /// most recently completed first, a task under a completed parent counting as completed with it.
     public static func titleMatches(_ tasks: [TaskItem], _ title: String) -> [TaskItem] {
         let query = fold(title)
         guard !query.isEmpty else { return [] }
-        return byRecency(tasks.filter { fold($0.title) == query })
+        return byRecency(tasks.filter { fold($0.title) == query }, in: tasks)
     }
 
     /// Titles that start with `title`, excluding exact matches, in the same order as `titleMatches`.
     public static func prefixMatches(_ tasks: [TaskItem], _ title: String) -> [TaskItem] {
         let query = fold(title)
         guard !query.isEmpty else { return [] }
-        return byRecency(tasks.filter { fold($0.title) != query && fold($0.title).hasPrefix(query) })
+        return byRecency(tasks.filter { fold($0.title) != query && fold($0.title).hasPrefix(query) }, in: tasks)
     }
 
     /// Tasks a spoken name can mean: the exact title, else a prefix, else the same search the app uses.
@@ -110,7 +110,7 @@ public enum IntentRules {
 
     /// Newest open tasks, then recently completed ones, for the Shortcuts picker.
     public static func suggestedTasks(_ tasks: [TaskItem], limit: Int = 25) -> [TaskItem] {
-        Array(byRecency(tasks).prefix(limit))
+        Array(byRecency(tasks, in: tasks).prefix(limit))
     }
 
     /// The task Complete or Uncomplete should change. The chosen task wins when it is already in the right state, so a
@@ -164,15 +164,19 @@ public enum IntentRules {
         return items.filter { fold(name($0)).contains(folded) }
     }
 
-    private static func byRecency(_ tasks: [TaskItem]) -> [TaskItem] {
-        tasks.sorted { lhs, rhs in
-            let lhsDone = lhs.completedAt != nil
-            let rhsDone = rhs.completedAt != nil
-            if lhsDone != rhsDone { return !lhsDone }
-            if !lhsDone {
+    /// A task under a completed parent sorts with the completed ones, by the parent's completion. `all` holds the
+    /// tasks above them.
+    private static func byRecency(_ tasks: [TaskItem], in all: [TaskItem]) -> [TaskItem] {
+        let byID = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let doneAt = Dictionary(tasks.map { ($0.id, Triggers.completedAt(of: $0, in: byID)) }, uniquingKeysWith: { first, _ in first })
+        return tasks.sorted { lhs, rhs in
+            let lhsDoneAt = doneAt[lhs.id] ?? nil
+            let rhsDoneAt = doneAt[rhs.id] ?? nil
+            if (lhsDoneAt == nil) != (rhsDoneAt == nil) { return lhsDoneAt == nil }
+            if lhsDoneAt == nil {
                 if lhs.createdAt != rhs.createdAt { return lhs.createdAt > rhs.createdAt }
-            } else if lhs.completedAt != rhs.completedAt {
-                return (lhs.completedAt ?? 0) > (rhs.completedAt ?? 0)
+            } else if lhsDoneAt != rhsDoneAt {
+                return (lhsDoneAt ?? 0) > (rhsDoneAt ?? 0)
             }
             return lhs.id > rhs.id
         }
