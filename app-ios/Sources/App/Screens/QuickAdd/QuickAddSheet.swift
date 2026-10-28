@@ -44,8 +44,11 @@ struct QuickAddSheet: View {
     @FocusState private var focused: Bool
     @FocusState private var subtaskFocused: Bool
 
-    init(defaults: QuickAddDefaults) {
+    private let capture: QuickAddCapture?
+
+    init(defaults: QuickAddDefaults, capture: QuickAddCapture? = nil) {
         _draft = State(initialValue: QuickAddDraft(defaults: defaults))
+        self.capture = capture
     }
 
     private var showMic: Bool { draft.text.isEmpty }
@@ -113,7 +116,7 @@ struct QuickAddSheet: View {
                 Button("Add task") { submit() }
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
-                    .disabled(parsed.title.isEmpty || loadingImages > 0)
+                    .disabled((parsed.title.isEmpty && drafted.isEmpty) || loadingImages > 0)
             }
         }
         .animation(.snappy(duration: 0.2), value: subtasksOpen)
@@ -143,9 +146,11 @@ struct QuickAddSheet: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Quick add")
         .onAppear {
-            focused = true
+            // Opened on the camera, the keyboard waits for the camera to close, so it does not rise behind it.
+            if let capture { imageSource = capture.source } else { focused = true }
             draft.startAtPlace(spaceLabels)
         }
+        .onChange(of: imageSource) { if imageSource == nil { focused = true } }
         .onChange(of: pillInputs(parsed, resolved), initial: true) { _, inputs in
             pills = suggestionPills(inputs)
         }
@@ -470,7 +475,7 @@ struct QuickAddSheet: View {
     /// Saves the task with its subtasks and images.
     private func save(untitled: Bool = false) -> TaskItem? {
         guard loadingImages == 0 else { return nil }
-        guard let task = draft.resolve(draft.parse(context), untitled: untitled) else { return nil }
+        guard let task = draft.resolve(draft.parse(context), untitled: untitled, images: drafted.count) else { return nil }
         let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
         let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])
         let added: TaskItem? = withAnimation(.snappy) {
