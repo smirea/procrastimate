@@ -40,7 +40,7 @@ export const computeNotifications = (open: readonly Task[], zone: string, now: n
 	upcomingNotifications(open, now - STALE_AFTER_MS - 1, Number.POSITIVE_INFINITY, zone);
 
 // `projectId` because a group of tasks at one moment opens the project they share.
-const PUSH_FIELDS = ['due', 'reminders', 'recurrence', 'completedAt', 'event', 'location', 'projectId'];
+const PUSH_FIELDS = ['due', 'reminders', 'recurrence', 'completedAt', 'event', 'location', 'projectId', 'parentId'];
 
 /** Whether a write can move when a notification is due: a task created, deleted, scheduled, or completed, or the time zone. */
 export function touchesPush(write: RowWrite): boolean {
