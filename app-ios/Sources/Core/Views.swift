@@ -6,6 +6,7 @@ public enum Views {
     public typealias Today = API.Today
     public typealias DueList = API.DueList
     public typealias DueDays = API.DueDays
+    public typealias DueFilter = API.DueFilter
     public typealias CompletedPreset = API.CompletedPreset
     public typealias CompletedRange = API.CompletedRange
     public typealias ProjectGroup = API.ProjectGroup
@@ -127,13 +128,14 @@ public enum Views {
     /// The rows of a dated list from `from` through `to`, each with the day it sits on, which for an event or a repeat
     /// at a place is not its stored due date. A nil end is open. A subtask has a row of its own only while no task
     /// above it has one in the same list: under a listed task it shows as that task's progress, as in a project, and
-    /// once none above it is listed it shows alone.
+    /// once none above it is listed it shows alone. The filter runs first, so a subtask whose parent the filter hides
+    /// gets its own row.
     static func dated(
-        _ tasks: [TaskItem], _ today: DateKey, from: DateKey?, to: DateKey?, in zone: TimeZone
+        _ tasks: [TaskItem], _ today: DateKey, from: DateKey?, to: DateKey?, filtered: DueFilter?, in zone: TimeZone
     ) -> [(task: TaskItem, date: DateKey)] {
         let open = open(tasks)
         var days: [String: DateKey] = [:]
-        for task in open {
+        for task in filtered.map({ ListFilters.filterTasks(open, $0.filter, me: $0.me) }) ?? open {
             guard let date = Triggers.scheduledDue(task, today, in: zone)?.date else { continue }
             if from.map({ date >= $0 }) ?? true, to.map({ date <= $0 }) ?? true { days[task.id] = date }
         }
@@ -146,8 +148,10 @@ public enum Views {
     }
 
     /// A dated list's rows: overdue, today's, then each later day.
-    static func byDay(_ tasks: [TaskItem], _ today: DateKey, from: DateKey?, to: DateKey?, in zone: TimeZone) -> DueDays {
-        let rows = byDue(dated(tasks, today, from: from, to: to, in: zone), task: \.task, today: today, in: zone)
+    static func byDay(
+        _ tasks: [TaskItem], _ today: DateKey, from: DateKey?, to: DateKey?, filtered: DueFilter? = nil, in zone: TimeZone
+    ) -> DueDays {
+        let rows = byDue(dated(tasks, today, from: from, to: to, filtered: filtered, in: zone), task: \.task, today: today, in: zone)
         var days: [DayGroup] = []
         // Sorted by the day each sits on, so a group is always the last one or a new one.
         for (task, date) in rows where date > today {
@@ -190,11 +194,14 @@ public enum Views {
 
     /// The days a dated list covers. Inbox lists every dated task, This week the overdue ones through the end of the
     /// week, and Tomorrow only tomorrow's, since overdue tasks are already today's business.
-    public static func dueDays(_ tasks: [TaskItem], _ today: DateKey, _ list: DueList, in zone: TimeZone) -> DueDays {
+    public static func dueDays(
+        _ tasks: [TaskItem], _ today: DateKey, _ list: DueList, filtered: DueFilter? = nil, in zone: TimeZone
+    ) -> DueDays {
         switch list {
-        case .inbox: byDay(tasks, today, from: nil, to: nil, in: zone)
-        case .thisWeek: byDay(tasks, today, from: nil, to: weekEnd(today), in: zone)
-        case .tomorrow: byDay(tasks, today, from: Dates.addDays(today, 1), to: Dates.addDays(today, 1), in: zone)
+        case .inbox: byDay(tasks, today, from: nil, to: nil, filtered: filtered, in: zone)
+        case .thisWeek: byDay(tasks, today, from: nil, to: weekEnd(today), filtered: filtered, in: zone)
+        case .tomorrow:
+            byDay(tasks, today, from: Dates.addDays(today, 1), to: Dates.addDays(today, 1), filtered: filtered, in: zone)
         }
     }
 

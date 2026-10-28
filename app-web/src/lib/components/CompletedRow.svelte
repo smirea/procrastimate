@@ -34,7 +34,7 @@
 	const by = $derived(other ? store.person(task.completedBy) : undefined);
 	const project = $derived(lookup.project(task.projectId));
 	const parent = $derived(task.parentId ? lookup.task(task.parentId) : undefined);
-	const progress = $derived(progressOf(lookup.subtasks(task.id)));
+	const progress = $derived(progressOf(lookup.subtasks(task.id), !rolled));
 	const tone = $derived(PRIORITIES[task.priority].tone);
 
 	function reopen() {

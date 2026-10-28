@@ -221,7 +221,10 @@ export const eventGroupSchema = z
 export type EventGroup = z.infer<typeof eventGroupSchema>;
 
 /** The tasks above `task` in `byId`, nearest first, up to a missing parent or a loop. */
-export function ancestorsIn<T extends Pick<Task, 'id' | 'parentId'>>(byId: ReadonlyMap<string, T>, task: T): T[] {
+export function ancestorsIn<T extends Pick<Task, 'id' | 'parentId'>>(
+	byId: Pick<ReadonlyMap<string, T>, 'get'>,
+	task: T,
+): T[] {
 	const out: T[] = [];
 	const seen = new Set([task.id]);
 	for (
@@ -242,7 +245,18 @@ export function ancestorsIn<T extends Pick<Task, 'id' | 'parentId'>>(byId: Reado
  */
 export function openTasks<T extends Pick<Task, 'id' | 'parentId' | 'completedAt'>>(tasks: readonly T[]): T[] {
 	const byId = new Map(tasks.map(t => [t.id, t]));
-	return tasks.filter(t => t.completedAt === null && ancestorsIn(byId, t).every(p => p.completedAt === null));
+	return tasks.filter(t => completedAtIn(byId, t) === null);
+}
+
+/**
+ * When `task` counts as done: its own `completedAt`, else that of the nearest completed task above it in `byId`, so a
+ * task left open under a completed parent reads as completed with it. Null while it is open.
+ */
+export function completedAtIn<T extends Pick<Task, 'id' | 'parentId' | 'completedAt'>>(
+	byId: Pick<ReadonlyMap<string, T>, 'get'>,
+	task: T,
+): number | null {
+	return task.completedAt ?? ancestorsIn(byId, task).find(p => p.completedAt !== null)?.completedAt ?? null;
 }
 const open = openTasks;
 

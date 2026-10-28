@@ -7,6 +7,7 @@ import type { SavedPlace, SectionCounter } from 'shared/values.ts';
 import { DEFAULT_SETTINGS, type Comment, type Settings, type Snapshot } from 'shared/model.ts';
 import { rowWrites, sameValue } from 'shared/rows.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
+import { completedAtIn } from 'shared/triggers.ts';
 import { newId } from 'shared/id.ts';
 import type { Person } from 'shared/sharing.ts';
 import * as comments from 'shared/comments.ts';
@@ -437,8 +438,13 @@ class Store {
 		return this.#children.get(id) ?? [];
 	}
 
-	progress(id: string) {
-		return progressOf(this.children(id));
+	/** When the task counts as done, which for a task left open under a completed parent is the parent's completion. */
+	completedAt(task: Task) {
+		return completedAtIn(this.#taskById, task);
+	}
+
+	progress(task: Task) {
+		return progressOf(this.children(task.id), this.completedAt(task) !== null);
 	}
 
 	project(id: string | null) {

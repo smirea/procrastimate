@@ -62,9 +62,10 @@
 	const labelChips = $derived(lookup.labelsOf(task).map((label) => ({ text: label.name, ranges: [], color: label.color })));
 	const parent = $derived(task.parentId && !subtask ? lookup.task(task.parentId) : undefined);
 	const subtasks = $derived(lookup.subtasks(task.id));
-	const progress = $derived(progressOf(subtasks));
-	const pending = $derived(subtasks.filter((s) => s.completedAt === null));
-	const done = $derived(task.completedAt !== null);
+	/** A task left open under a completed parent is done with it. */
+	const done = $derived(lookup.completedAt(task) !== null);
+	const progress = $derived(progressOf(subtasks, done));
+	const pending = $derived(done ? [] : subtasks.filter((s) => s.completedAt === null));
 	const due = $derived(done ? null : scheduledDue(task, clock.today));
 	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
 	const fromMemo = $derived(parseMemoSource(task.sourceKey) !== null);

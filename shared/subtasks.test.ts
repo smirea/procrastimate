@@ -72,8 +72,13 @@ describe('subtask tree', () => {
 
 	test('progress counts done direct children and is null without any', () => {
 		const tasks = trip().map(t => (t.id === 'passport' ? { ...t, completedAt: 5 } : t));
-		expect(progressOf(groupChildren(tasks).get('trip')!)).toEqual({ done: 1, total: 3 });
-		expect(progressOf([])).toBeNull();
+		expect(progressOf(groupChildren(tasks).get('trip')!, false)).toEqual({ done: 1, total: 3 });
+		expect(progressOf([], false)).toBeNull();
+	});
+
+	test('a completed parent counts every subtask as done, even one left open', () => {
+		expect(progressOf(groupChildren(trip()).get('trip')!, true)).toEqual({ done: 3, total: 3 });
+		expect(progressOf([], true)).toBeNull();
 	});
 });
 

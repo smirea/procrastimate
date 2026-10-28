@@ -132,6 +132,19 @@ import Testing
         #expect(IntentRules.completionTarget(.complete, id: "missing", title: "Buy milk", in: tasks)?.id == "open")
     }
 
+    @Test func aSubtaskUnderACompletedParentCountsAsCompleted() {
+        let move = task("Move", id: "move", createdAt: 1, completedAt: 5)
+        var movers = task("Call movers", id: "movers", createdAt: 3)
+        movers.parentId = "move"
+        let older = task("Call movers", id: "older", createdAt: 2)
+        let tasks = [move, movers, older]
+
+        #expect(IntentRules.completionTarget(.complete, id: "movers", title: "Call movers", in: tasks)?.id == "older")
+        #expect(IntentRules.completionTarget(.complete, id: "movers", title: "Call movers", in: [move, movers]) == nil)
+        #expect(IntentRules.completionTarget(.reopen, id: "movers", title: "Call movers", in: tasks)?.id == "movers")
+        #expect(IntentRules.completionTarget(.reopen, id: "older", title: "Call movers", in: tasks)?.id == "movers")
+    }
+
     @Test func spotlightIndexesOpenTasksOnly() {
         let tasks = [
             task("Buy milk", id: "open"),

@@ -186,7 +186,7 @@ private struct Occurrence: Decodable {
     case "groupChildren": return try json(Subtasks.groupChildren(a(0)))
     case "moveSubtask": return try json(Subtasks.moveSubtask(a(0), a(1), a(2)))
     case "nextSiblingOrder": return try json(Subtasks.nextSiblingOrder(a(0), a(1)))
-    case "progressOf": return try json(Subtasks.progressOf(a(0)))
+    case "progressOf": return try json(Subtasks.progressOf(a(0), parentDone: a(1)))
     case "reopenTask": return try json(Subtasks.reopenTask(a(0), a(1)))
     case "completeTask":
         guard let completion = Subtasks.completeTask(
@@ -216,7 +216,7 @@ private struct Occurrence: Decodable {
     case "eventTasks": return try json(Views.eventTasks(a(0), a(1), a(2), in: a.zone))
     case "todayTasks": return try json(Views.todayTasks(a(0), a(1), in: a.zone))
     case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1), in: a.zone))
-    case "dueDays": return try json(Views.dueDays(a(0), a(1), a(2), in: a.zone))
+    case "dueDays": return try json(Views.dueDays(a(0), a(1), a(2), filtered: a(3, as: Views.DueFilter?.self), in: a.zone))
     case "weekEnd": return try json(Views.weekEnd(a(0)))
     case "completedRange": return try json(Views.completedRange(a(0), a(1)))
     case "completedTasks": return try json(Views.completedTasks(a(0), a(1), in: a.zone))
@@ -448,6 +448,9 @@ private struct ParseInput: Decodable {
     case "formatLocation": return try json(Triggers.formatLocation(a(0)))
     case "formatRadius": return try json(Triggers.formatRadius(a(0)))
     case "openTasks": return try json(Triggers.openTasks(a(0)))
+    case "completedAtIn":
+        let byID = try a(0, as: [String: TaskItem].self)
+        return try json(Triggers.completedAt(of: a(1), in: byID))
     case "placeGroups": return try json(Triggers.placeGroups(a(0), a(1)))
     case "placeLocation": return try json(Triggers.placeLocation(a(0), a(1)))
     case "pickedLabels":

@@ -130,15 +130,16 @@ struct TaskRow<Trailing: View>: View {
         if case .subtask = placement { true } else { false }
     }
 
-    private var done: Bool { task.completedAt != nil }
+    /// A task left open under a completed parent is done with it.
+    private var done: Bool { Triggers.completedAt(of: task, lookup: store.task) != nil }
 
     private var offered: RowActions { RowActions(task, in: store) }
     private var project: Project? { store.project(task.projectId) }
     private var labels: [Core.Label] { store.labels(of: task) }
     private var parent: TaskItem? { isSubtask ? nil : task.parentId.flatMap(store.task) }
     private var subtasks: [TaskItem] { store.children(of: task.id) }
-    private var progress: Subtasks.Progress? { Subtasks.progressOf(subtasks) }
-    private var pending: [TaskItem] { subtasks.filter { $0.completedAt == nil } }
+    private var progress: Subtasks.Progress? { Subtasks.progressOf(subtasks, parentDone: done) }
+    private var pending: [TaskItem] { done ? [] : subtasks.filter { $0.completedAt == nil } }
     private var commentBadge: CommentBadge? { store.commentBadge(task.id, me: store.me) }
 
     /// A nil `createdBy` is a task the user made before the server stamped it, or an import, so it names no one.
