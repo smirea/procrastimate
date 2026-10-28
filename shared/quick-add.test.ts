@@ -1321,3 +1321,32 @@ describe('plain text', () => {
 		});
 	});
 });
+
+describe('subtask lines', () => {
+	const parseSubtask = recorded('quick-add', quickAdd.parseSubtask);
+
+	test('read phrases but never a project', () => {
+		const parsed = parseSubtask('Buy milk tomorrow p2 @calls #Home', { now, labels });
+		expect(parsed.title).toBe('Buy milk #Home');
+		expect(parsed.due).toEqual({ date: '2026-10-15', time: null });
+		expect(parsed.priority).toBe(2);
+		expect(parsed.labelIds).toEqual(['l-calls']);
+		expect(parsed.projectId).toBeNull();
+	});
+
+	test('with their own plain text toggle on, keep the line as typed', () => {
+		const parsed = parseSubtask('Buy milk  tomorrow p2 @calls', { now, labels, literal: true });
+		expect(parsed).toEqual({
+			title: 'Buy milk tomorrow p2 @calls',
+			due: null,
+			recurrence: null,
+			priority: null,
+			reminders: [],
+			projectId: null,
+			sectionId: null,
+			labelIds: [],
+			location: null,
+			tokens: [],
+		});
+	});
+});

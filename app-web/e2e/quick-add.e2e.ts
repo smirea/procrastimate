@@ -115,6 +115,60 @@ test('plain text saves the title as typed, keeps picked values, and resets for t
 	await expect(page.getByRole('button', { name: 'Priority 2' })).toBeVisible();
 });
 
+test('each subtask line has its own plain text toggle, off for every new line and apart from the task’s', async ({
+	app,
+	page,
+}) => {
+	await app.openQuickAdd();
+	const quickAdd = app.quickAdd();
+	await app.taskInput().pressSequentially('Groceries tomorrow');
+	await quickAdd.getByRole('button', { name: 'Add subtask' }).click();
+	const add = quickAdd.getByRole('textbox', { name: 'Add subtask' });
+	const list = quickAdd.getByRole('list', { name: 'Subtasks' });
+	const typingToggle = quickAdd.getByRole('button', { name: 'Plain text subtask' }).last();
+
+	await typingToggle.click();
+	await expect(typingToggle).toHaveAttribute('aria-pressed', 'true');
+	await expect(add).toBeFocused();
+	await add.pressSequentially('Call shop at 9am p1 @phone');
+	await expect(quickAdd.locator('[data-token]')).toHaveText(['tomorrow']);
+	await add.press('Enter');
+	await expect(typingToggle).toHaveAttribute('aria-pressed', 'false');
+	const literalRow = list.getByRole('listitem').filter({ hasText: 'Call shop at 9am p1 @phone' });
+	await expect(literalRow.getByRole('button', { name: 'Plain text subtask' })).toHaveAttribute('aria-pressed', 'true');
+
+	await add.pressSequentially('Buy milk friday');
+	await add.press('Enter');
+	const parsedRow = list.getByRole('listitem').filter({ hasText: 'Buy milk' });
+	await expect(parsedRow).toContainText('Fri');
+	await parsedRow.getByRole('button', { name: 'Plain text subtask' }).click();
+	await expect(parsedRow.getByText('Buy milk friday', { exact: true })).toBeVisible();
+	await parsedRow.getByRole('button', { name: 'Plain text subtask' }).click();
+	await expect(parsedRow.getByText('Buy milk', { exact: true })).toBeVisible();
+	await literalRow.getByRole('button', { name: 'Plain text subtask' }).click();
+	await expect(list.getByText('Call shop @phone', { exact: true })).toBeVisible();
+	await list
+		.getByRole('listitem')
+		.filter({ hasText: 'Call shop' })
+		.getByRole('button', { name: 'Plain text subtask' })
+		.click();
+	await expect(list.getByText('Call shop at 9am p1 @phone', { exact: true })).toBeVisible();
+	await expect(quickAdd.getByRole('button', { name: 'Plain text', exact: true })).toHaveAttribute(
+		'aria-pressed',
+		'false',
+	);
+	await expect(quickAdd.locator('[data-token="due"]')).toHaveText('tomorrow');
+	await app.settle();
+	await page.screenshot({ path: 'test-results/quick-add/subtask-plain-text.png' });
+
+	await add.press('Enter');
+	await app.closeQuickAdd();
+	await app.go('Tomorrow');
+	await app.row('Groceries').getByRole('button', { name: 'Groceries', exact: true }).click();
+	await expect(app.details().locator('[data-subtask="Call shop at 9am p1 @phone"]')).toBeVisible();
+	await expect(app.details().locator('[data-subtask="Buy milk"]')).toBeVisible();
+});
+
 test('quick add reuses the last task’s project, section, and labels while the list it saved from stays open', async ({
 	app,
 	page,

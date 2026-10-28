@@ -37,7 +37,6 @@
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
 	import { formatEvent, formatLocation, placeKey, savedPlaceAt } from 'shared/triggers.ts';
 	import { reusedDefaults, type ListDefaults } from 'shared/screens.ts';
-	import type { NewTask } from 'shared/store.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { QuickAddDraft } from '../quick-add-draft.svelte.ts';
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
@@ -59,8 +58,10 @@
 	let input: SmartInput;
 	let subtaskInput = $state<SmartInput>();
 	let subtaskList = $state<HTMLUListElement>();
-	let subtasks = $state<{ key: number; task: NewTask }[]>([]);
+	/** Each line keeps its text, so its own plain text toggle can re-read it after it is added. */
+	let subtasks = $state<{ key: number; text: string; literal: boolean }[]>([]);
 	let subtaskText = $state('');
+	let subtaskLiteral = $state(false);
 	let subtasksOpen = $state(false);
 	let subtaskKey = 0;
 	let listAt = $state<number | null>(null);
@@ -71,7 +72,13 @@
 	let cameraPicker = $state<HTMLInputElement>();
 
 	const showMic = $derived(!draft.text);
-	const subtaskParsed = $derived(parseSubtask(subtaskText));
+	const subtaskParsed = $derived(parseSubtask(subtaskText, subtaskLiteral));
+	const subtaskRows = $derived(
+		subtasks.flatMap((subtask) => {
+			const task = subtaskTask(parseSubtask(subtask.text, subtask.literal));
+			return task ? [{ ...subtask, task }] : [];
+		}),
+	);
 	const parsed = $derived(draft.parsed);
 	const { due, recurrence, priority, projectId, sectionId } = $derived(draft.merged);
 	const picked = $derived(draft.picked);
@@ -194,7 +201,7 @@
 		const task = store.addTask(next);
 		if (!task) return null;
 		const typing = subtaskTask(subtaskParsed);
-		for (const child of [...subtasks.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
+		for (const child of [...subtaskRows.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
 		if (drafted.length) void images.attach(task.id, drafted.map((d) => d.file));
 		reuseAdded(page.url.pathname, task);
 		return task;
@@ -210,6 +217,7 @@
 		picker = null;
 		subtasks = [];
 		subtaskText = '';
+		subtaskLiteral = false;
 		subtasksOpen = false;
 		for (const { url } of drafted) URL.revokeObjectURL(url);
 		drafted = [];
@@ -272,10 +280,10 @@
 
 	async function addSubtask() {
 		if (!subtaskText.trim()) return submit();
-		const task = subtaskTask(subtaskParsed);
-		if (!task) return;
-		subtasks.push({ key: subtaskKey++, task });
+		if (!subtaskTask(subtaskParsed)) return;
+		subtasks.push({ key: subtaskKey++, text: subtaskText, literal: subtaskLiteral });
 		subtaskText = '';
+		subtaskLiteral = false;
 		await tick();
 		subtaskList?.scrollTo({ top: subtaskList.scrollHeight, behavior: 'smooth' });
 	}
@@ -324,6 +332,22 @@
 			<X size={11} weight="bold" />
 		</button>
 	</span>
+{/snippet}
+
+<!-- A line's own toggle, apart from the task's: off by default, and it can't turn off where parsing would leave no title. -->
+{#snippet subtaskPlainText(on: boolean, enabled: boolean, toggle: () => void)}
+	<button
+		type="button"
+		class="grid size-8 shrink-0 place-items-center rounded-full transition-colors touch:size-11 {on ? 'text-accent' : 'text-faint hover:text-ink'} disabled:opacity-40"
+		aria-label="Plain text subtask"
+		aria-pressed={on}
+		title="Plain text: keep this subtask's dates, times, and tags in its title"
+		disabled={!enabled}
+		onmousedown={(e) => e.preventDefault()}
+		onclick={toggle}
+	>
+		<TextT size={14} weight={on ? 'bold' : 'regular'} />
+	</button>
 {/snippet}
 
 <Sheet label="Quick add" desktop="scale" {onpaste} {ondragover} {ondrop} class="flex-col md:top-[14vh] md:left-1/2 md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:rounded-panel">
@@ -385,7 +409,7 @@
 	{#if subtasksOpen || subtasks.length}
 		<div class="mx-4 mb-2 ml-5 border-l border-ink/10 pl-3" transition:slide={motion({ duration: 180, easing: cubicOut })}>
 			<ul bind:this={subtaskList} class="max-h-48 overflow-y-auto" aria-label="Subtasks">
-				{#each subtasks as { key, task } (key)}
+				{#each subtaskRows as { key, text, literal, task } (key)}
 					<li
 						class="flex items-center gap-2.5"
 						animate:flip={motion({ duration: 200, easing: cubicOut })}
@@ -412,6 +436,10 @@
 								</div>
 							{/if}
 						</div>
+						{@render subtaskPlainText(literal, !literal || !!subtaskTask(parseSubtask(text)), () => {
+							const subtask = subtasks.find((s) => s.key === key);
+							if (subtask) subtask.literal = !subtask.literal;
+						})}
 						<button
 							type="button"
 							class="grid size-8 shrink-0 place-items-center rounded-full text-faint transition-colors hover:text-ink touch:size-11"
@@ -434,6 +462,7 @@
 					placeholder="Add subtask"
 					enterkeyhint="enter"
 					suggestProjects={false}
+					suggestNames={!subtaskLiteral}
 					lines={3}
 					class="-ml-1 min-w-0 flex-1 py-1.5 text-[14px]"
 					onkeydown={onsubtaskkeydown}
@@ -441,6 +470,7 @@
 						if (!subtaskText && !subtasks.length) subtasksOpen = false;
 					}}
 				/>
+				{@render subtaskPlainText(subtaskLiteral, true, () => (subtaskLiteral = !subtaskLiteral))}
 			</div>
 		</div>
 	{/if}

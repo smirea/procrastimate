@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { labelSchema, projectSchema, sectionSchema, taskSchema } from './model.ts';
+import type { Label } from './model.ts';
 import { linkify } from './links.ts';
 import { isSavedPlace, placeLocation } from './triggers.ts';
 import { DATE_KEY_PATTERN, MAX_RECURRENCE_INTERVAL } from './values.ts';
@@ -814,4 +815,15 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 		location: place && isSavedPlace(place) ? placeLocation(place, 'arrive') : null,
 		tokens,
 	};
+}
+
+/**
+ * A subtask line parses like quick add without `#` projects, because a subtask always shares its root's project.
+ * `literal` is that line's own plain text toggle, separate from its parent's.
+ */
+export function parseSubtask(
+	input: string,
+	{ now, labels, literal = false }: { now: Date; labels: Label[]; literal?: boolean },
+): ParsedQuickAdd {
+	return parseQuickAdd(input, { now, projects: [], labels, due: null, literal });
 }
