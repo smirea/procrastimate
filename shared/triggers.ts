@@ -10,7 +10,7 @@ import {
 	type Label,
 	type Task,
 } from './task.ts';
-import type { EventOccurrence, LocationTrigger, SavedPlace, TaskEvent, TaskLocation } from './values.ts';
+import type { EventEdge, EventOccurrence, LocationTrigger, SavedPlace, TaskEvent, TaskLocation } from './values.ts';
 import { compareIds } from './order.ts';
 import { zonedDateKey, zonedTimeOfDay } from './zoned-time.ts';
 
@@ -22,6 +22,9 @@ import { zonedDateKey, zonedTimeOfDay } from './zoned-time.ts';
 type Scheduled = Pick<Task, 'due' | 'recurrence' | 'reminders' | 'location' | 'event'>;
 
 const MINUTE = 60_000;
+
+/** Which way an edge's offset moves an all-day event, in calendar days. The start and during ignore `minutes`. */
+const DAY_STEP: Record<EventEdge, -1 | 0 | 1> = { before: -1, start: 0, during: 0, beforeEnd: -1, after: 1 };
 
 /** The moment the task's edge names on one occurrence: `minutes` before the start, the start, or `minutes` before or after the end. */
 export function eventAnchor(event: TaskEvent, occurrence: EventOccurrence): number {
@@ -63,7 +66,7 @@ export function occurrenceDue(event: TaskEvent, occurrence: EventOccurrence, zon
 	}
 	const days = Math.trunc(event.minutes / 1440);
 	const at = eventAnchor({ ...event, minutes: event.minutes % 1440 }, occurrence);
-	return { date: addDays(zonedDateKey(at, zone), event.edge === 'after' ? days : -days), time: null };
+	return { date: addDays(zonedDateKey(at, zone), DAY_STEP[event.edge] * days), time: null };
 }
 
 /**

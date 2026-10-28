@@ -93,6 +93,8 @@ describe('scheduledDue', () => {
 			occurrences: [{ start: Date.UTC(2026, 2, 9, 4), end: Date.UTC(2026, 2, 10, 3, 59, 59), original: 0 }],
 		});
 		expect(scheduledDue(task('b', { event: springForward }), today, zone)).toEqual({ date: '2026-03-08', time: null });
+		const start = { ...springForward, edge: 'start' as const };
+		expect(scheduledDue(task('c', { event: start }), today, zone)).toEqual({ date: '2026-03-09', time: null });
 	});
 
 	test('a single event stays on its passed occurrence, so it goes overdue', () => {

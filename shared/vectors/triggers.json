@@ -382,12 +382,60 @@
 		},
 		{
 			"fn": "scheduledDue",
-			"test": "scheduledDue › a single event stays on its passed occurrence, so it goes overdue",
+			"test": "scheduledDue › days of offset on an all-day event step calendar days across a daylight saving change",
 			"input": [
 				{
 					"completedAt": null,
 					"completedBy": null,
 					"createdAt": 9,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": true,
+						"edge": "start",
+						"id": "meetup",
+						"minutes": 1440,
+						"occurrences": [
+							{
+								"end": 1773115199000,
+								"original": 0,
+								"start": 1773028800000
+							}
+						],
+						"series": false,
+						"title": "Walking meetup"
+					},
+					"id": "c",
+					"images": [],
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "c"
+				},
+				"2026-10-14",
+				"America/New_York"
+			],
+			"output": {
+				"date": "2026-03-09",
+				"time": null
+			}
+		},
+		{
+			"fn": "scheduledDue",
+			"test": "scheduledDue › a single event stays on its passed occurrence, so it goes overdue",
+			"input": [
+				{
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 10,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -508,7 +556,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 10,
+					"createdAt": 11,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
@@ -554,7 +602,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 11,
+					"createdAt": 12,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
@@ -597,7 +645,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 12,
+					"createdAt": 13,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-09",
@@ -636,7 +684,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 13,
+					"createdAt": 14,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -688,7 +736,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 14,
+					"createdAt": 15,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -734,7 +782,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 15,
+					"createdAt": 16,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -786,7 +834,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 16,
+					"createdAt": 17,
 					"createdBy": null,
 					"due": null,
 					"event": {
@@ -838,7 +886,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 17,
+					"createdAt": 18,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -878,7 +926,7 @@
 				{
 					"completedAt": null,
 					"completedBy": null,
-					"createdAt": 18,
+					"createdAt": 19,
 					"createdBy": null,
 					"due": {
 						"date": "2026-10-14",
@@ -1915,7 +1963,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 19,
+						"createdAt": 20,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1944,7 +1992,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 20,
+						"createdAt": 21,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -1973,7 +2021,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 21,
+						"createdAt": 22,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2002,7 +2050,7 @@
 					{
 						"completedAt": 1,
 						"completedBy": null,
-						"createdAt": 22,
+						"createdAt": 23,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2031,7 +2079,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 23,
+						"createdAt": 24,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2074,7 +2122,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 24,
+						"createdAt": 25,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2106,7 +2154,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 19,
+						"createdAt": 20,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2135,7 +2183,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 20,
+						"createdAt": 21,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2164,7 +2212,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 21,
+						"createdAt": 22,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2193,7 +2241,7 @@
 					{
 						"completedAt": 1,
 						"completedBy": null,
-						"createdAt": 22,
+						"createdAt": 23,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2222,7 +2270,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 23,
+						"createdAt": 24,
 						"createdBy": null,
 						"due": null,
 						"event": null,
@@ -2273,7 +2321,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 25,
+						"createdAt": 26,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2309,7 +2357,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 26,
+						"createdAt": 27,
 						"createdBy": null,
 						"due": null,
 						"event": {
@@ -2345,7 +2393,7 @@
 					{
 						"completedAt": null,
 						"completedBy": null,
-						"createdAt": 27,
+						"createdAt": 28,
 						"createdBy": null,
 						"due": null,
 						"event": {

@@ -44,7 +44,16 @@ public enum Triggers {
         withinDay.minutes = event.minutes % 1440
         let at = eventAnchor(withinDay, occurrence)
         let date = Dates.toDateKey(Date(epochMilliseconds: at), in: zone)
-        return Due(date: Dates.addDays(date, event.edge == .after ? days : -days), time: nil)
+        return Due(date: Dates.addDays(date, dayStep(event.edge) * days), time: nil)
+    }
+
+    /// Which way an edge's offset moves an all-day event, in calendar days. The start and during ignore `minutes`.
+    private static func dayStep(_ edge: EventEdge) -> Int {
+        switch edge {
+        case .before, .beforeEnd: -1
+        case .start, .during: 0
+        case .after: 1
+        }
     }
 
     public static func wallTime(_ epochMilliseconds: Int, in zone: TimeZone) -> TimeOfDay {
