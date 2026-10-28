@@ -71,11 +71,12 @@ struct Chip: View {
     var fill: Color?
     /// Replaces the capsule's color outright, as a label's fill does.
     var background: Color?
+    var truncation: Text.TruncationMode = .tail
 
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: systemImage).imageScale(.small).foregroundStyle(iconTone ?? tone)
-            if !text.isEmpty { Text(text).lineLimit(1) }
+            if !text.isEmpty { Text(text).lineLimit(1).truncationMode(truncation) }
         }
         .font(.subheadline.weight(.medium))
         .foregroundStyle(tone)

@@ -136,7 +136,7 @@
 					{#if task.event && event && due}
 						<span
 							class="flex min-w-0 items-center gap-1"
-							aria-label={[event.when, `${event.lead}${task.event.series ? ' every' : ''} ${event.title}`].filter(Boolean).join(', ')}
+							aria-label={[event.when, `${event.lead}${task.event.series ? ' every' : ''} ${event.title}${event.trail ? ` ${event.trail}` : ''}`].filter(Boolean).join(', ')}
 						>
 							{#if event.when}<span class="shrink-0" style={`color: var(--tone-${dueTone(due, clock.today)})`}>{event.when}</span>{/if}
 							<span class="flex min-w-0 items-center gap-1 text-muted">
@@ -145,6 +145,7 @@
 								<span class="shrink-0">{event.lead}</span>
 								<CalendarStar size={12} class="shrink-0" />
 								<span class="truncate">{event.title}</span>
+								{#if event.trail}<span class="shrink-0">{event.trail}</span>{/if}
 								{#if event.when}<span class="-ml-1 shrink-0">)</span>{/if}
 							</span>
 						</span>

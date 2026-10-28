@@ -19,6 +19,7 @@ public enum Triggers {
         switch event.edge {
         case .before: occurrence.start - event.minutes * 60_000
         case .start, .during: occurrence.start
+        case .beforeEnd: occurrence.end - event.minutes * 60_000
         case .after: occurrence.end + event.minutes * 60_000
         }
     }
@@ -27,15 +28,23 @@ public enum Triggers {
     public static func currentOccurrence(_ event: TaskEvent, _ today: DateKey, in zone: TimeZone) -> EventOccurrence {
         guard event.series else { return event.occurrences[0] }
         return event.occurrences.first {
-            Dates.toDateKey(Date(epochMilliseconds: eventAnchor(event, $0)), in: zone) >= today
+            occurrenceDue(event, $0, in: zone).date >= today
         } ?? event.occurrences[event.occurrences.count - 1]
     }
 
-    /// An occurrence's moment as a due date, without a time for an all-day event.
+    /// An occurrence's moment as a due date, without a time for an all-day event. An all-day event's whole days of
+    /// offset step calendar days, since a day across a daylight saving change is not 24 hours.
     public static func occurrenceDue(_ event: TaskEvent, _ occurrence: EventOccurrence, in zone: TimeZone) -> Due {
-        let at = eventAnchor(event, occurrence)
+        guard event.allDay else {
+            let at = eventAnchor(event, occurrence)
+            return Due(date: Dates.toDateKey(Date(epochMilliseconds: at), in: zone), time: wallTime(at, in: zone))
+        }
+        let days = event.minutes / 1440
+        var withinDay = event
+        withinDay.minutes = event.minutes % 1440
+        let at = eventAnchor(withinDay, occurrence)
         let date = Dates.toDateKey(Date(epochMilliseconds: at), in: zone)
-        return Due(date: date, time: event.allDay ? nil : wallTime(at, in: zone))
+        return Due(date: Dates.addDays(date, event.edge == .after ? days : -days), time: nil)
     }
 
     public static func wallTime(_ epochMilliseconds: Int, in zone: TimeZone) -> TimeOfDay {
@@ -87,23 +96,28 @@ public enum Triggers {
                 ? "\(Format.formatMinutes(event.minutes)) before \(event.title)" : "When \(event.title) starts"
         case .start: "When \(event.title) starts"
         case .during: "During \(event.title)"
+        case .beforeEnd:
+            event.minutes > 0
+                ? "\(Format.formatMinutes(event.minutes)) before \(event.title) ends" : "When \(event.title) ends"
         case .after:
             event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) after \(event.title)" : "After \(event.title)"
         }
     }
 
-    /// A row's event line in parts: `4:15pm`, `15m after`, `Standup`. `when` is the task's moment on its occurrence,
-    /// worded like any due date but without the day when it is today.
+    /// A row's event line in parts: `4:15pm`, `15m after`, `Standup`, and a `trail` after the title, as in `ends`.
+    /// `when` is the task's moment on its occurrence, worded like any due date but without the day when it is today.
     public static func eventLabel(_ event: TaskEvent, _ today: DateKey, in zone: TimeZone) -> EventLabel {
         let lead = switch event.edge {
         case .before: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) before" : "Start of"
         case .start: "Start of"
         case .during: "During"
+        case .beforeEnd: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) before" : "End of"
         case .after: event.minutes > 0 ? "\(Format.formatMinutes(event.minutes)) after" : "After"
         }
         let due = occurrenceDue(event, currentOccurrence(event, today, in: zone), in: zone)
         let when = due.date != today ? Format.formatDue(due, today) : due.time.map(Format.formatTime)
-        return EventLabel(lead: lead, title: event.title, when: when)
+        let trail = event.edge == .beforeEnd && event.minutes > 0 ? "ends" : nil
+        return EventLabel(lead: lead, title: event.title, trail: trail, when: when)
     }
 
     public static func formatLocation(_ location: TaskLocation) -> String {

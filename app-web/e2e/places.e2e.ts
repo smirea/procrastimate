@@ -54,3 +54,33 @@ test('a place saved under a name lists with the labels, and @name or the labels 
 	await page.getByRole('menuitemcheckbox', { name: 'Home' }).click();
 	await expect(app.details().getByText('Arriving at Home 500 m')).toHaveCount(0);
 });
+
+test('a task anchored a day before an all-day event ends sits on the day before its last day', async ({
+	app,
+	page,
+}) => {
+	await app.add('Book the cleaner');
+	const start = Date.UTC(2026, 9, 28);
+	const end = Date.UTC(2026, 9, 30, 23, 59, 59);
+	await app.pushFromOtherDevice({
+		kind: 'task',
+		id: await app.taskId('Book the cleaner'),
+		fields: {
+			event: {
+				id: 'stay',
+				title: 'Stay at the cottage',
+				allDay: true,
+				series: false,
+				edge: 'beforeEnd',
+				minutes: 1440,
+				occurrences: [{ start, end, original: start }],
+			},
+		},
+	});
+
+	await app.go('Inbox');
+	const row = page.locator('[data-task="Book the cleaner"]');
+	await expect(row.getByLabel('Oct 29, 1d before Stay at the cottage ends')).toBeVisible();
+	await row.getByRole('button', { name: 'Book the cleaner' }).click();
+	await expect(page.getByText('1d before Stay at the cottage ends · Oct 29')).toBeVisible();
+});

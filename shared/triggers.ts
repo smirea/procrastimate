@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { formatDue, formatMinutes, formatTime } from './format.ts';
 import {
+	addDays,
 	notificationTimes,
 	reminderFiresAt,
 	stepRecurrence,
@@ -22,7 +23,7 @@ type Scheduled = Pick<Task, 'due' | 'recurrence' | 'reminders' | 'location' | 'e
 
 const MINUTE = 60_000;
 
-/** The moment the task's edge names on one occurrence: `minutes` before the start, the start, or `minutes` after the end. */
+/** The moment the task's edge names on one occurrence: `minutes` before the start, the start, or `minutes` before or after the end. */
 export function eventAnchor(event: TaskEvent, occurrence: EventOccurrence): number {
 	switch (event.edge) {
 		case 'before':
@@ -30,6 +31,8 @@ export function eventAnchor(event: TaskEvent, occurrence: EventOccurrence): numb
 		case 'start':
 		case 'during':
 			return occurrence.start;
+		case 'beforeEnd':
+			return occurrence.end - event.minutes * MINUTE;
 		case 'after':
 			return occurrence.end + event.minutes * MINUTE;
 		default: {
@@ -45,13 +48,22 @@ export function eventAnchor(event: TaskEvent, occurrence: EventOccurrence): numb
  */
 export function currentOccurrence(event: TaskEvent, today: DateKey, zone?: string): EventOccurrence {
 	if (!event.series) return event.occurrences[0]!;
-	return event.occurrences.find(o => zonedDateKey(eventAnchor(event, o), zone) >= today) ?? event.occurrences.at(-1)!;
+	return event.occurrences.find(o => occurrenceDue(event, o, zone).date >= today) ?? event.occurrences.at(-1)!;
 }
 
-/** An occurrence's moment as a due date, without a time for an all-day event. */
+/**
+ * An occurrence's moment as a due date, without a time for an all-day event. An all-day event ends at 23:59:59 on its
+ * last day, and its whole days of offset step calendar days, since a day across a daylight saving change is not 24
+ * hours: `1d before` a stay ends is always the day before its last day.
+ */
 export function occurrenceDue(event: TaskEvent, occurrence: EventOccurrence, zone?: string): Due {
-	const at = eventAnchor(event, occurrence);
-	return { date: zonedDateKey(at, zone), time: event.allDay ? null : zonedTimeOfDay(at, zone) };
+	if (!event.allDay) {
+		const at = eventAnchor(event, occurrence);
+		return { date: zonedDateKey(at, zone), time: zonedTimeOfDay(at, zone) };
+	}
+	const days = Math.trunc(event.minutes / 1440);
+	const at = eventAnchor({ ...event, minutes: event.minutes % 1440 }, occurrence);
+	return { date: addDays(zonedDateKey(at, zone), event.edge === 'after' ? days : -days), time: null };
 }
 
 /**
@@ -92,7 +104,10 @@ export function taskNotificationTimes(task: Scheduled, today: DateKey, zone?: st
 	return [...unique.values()].sort((a, b) => a.getTime() - b.getTime());
 }
 
-/** `30m before Night out`, `When Walking meetup starts`, `During Walking meetup`, `After Workshop`, `1h after Workshop`. */
+/**
+ * `30m before Night out`, `When Walking meetup starts`, `During Walking meetup`, `1d before Trip ends`, `When Trip
+ * ends`, `After Workshop`, `1h after Workshop`.
+ */
 export function formatEvent(event: TaskEvent): string {
 	switch (event.edge) {
 		case 'before':
@@ -101,6 +116,8 @@ export function formatEvent(event: TaskEvent): string {
 			return `When ${event.title} starts`;
 		case 'during':
 			return `During ${event.title}`;
+		case 'beforeEnd':
+			return event.minutes ? `${formatMinutes(event.minutes)} before ${event.title} ends` : `When ${event.title} ends`;
 		case 'after':
 			return event.minutes ? `${formatMinutes(event.minutes)} after ${event.title}` : `After ${event.title}`;
 		default: {
@@ -111,12 +128,13 @@ export function formatEvent(event: TaskEvent): string {
 }
 
 export const eventLabelSchema = z
-	.object({ lead: z.string(), title: z.string(), when: z.string().nullable() })
+	.object({ lead: z.string(), title: z.string(), trail: z.string().nullable(), when: z.string().nullable() })
 	.meta({ id: 'EventLabel' });
 export type EventLabel = z.infer<typeof eventLabelSchema>;
 
 /**
- * A row's event line in parts: `4:15pm` `(15m after` `Standup)`, with icons before the title. `when` is the task's
+ * A row's event line in parts: `4:15pm` `(15m after` `Standup)`, with icons before the title. `trail` follows the
+ * title, as in `(1d before` `Trip` `ends)`, so a truncated title never hides it. `when` is the task's
  * moment on the occurrence it is on, worded like any due date but without the day when it is today. A row shows it
  * even under a day heading, which is easy to lose in a long list.
  */
@@ -129,6 +147,8 @@ export function eventLabel(event: TaskEvent, today: DateKey, zone?: string): Eve
 				return 'Start of';
 			case 'during':
 				return 'During';
+			case 'beforeEnd':
+				return event.minutes ? `${formatMinutes(event.minutes)} before` : 'End of';
 			case 'after':
 				return event.minutes ? `${formatMinutes(event.minutes)} after` : 'After';
 			default: {
@@ -139,7 +159,7 @@ export function eventLabel(event: TaskEvent, today: DateKey, zone?: string): Eve
 	})();
 	const due = occurrenceDue(event, currentOccurrence(event, today, zone), zone);
 	const when = due.date !== today ? formatDue(due, today) : due.time ? formatTime(due.time) : null;
-	return { lead, title: event.title, when };
+	return { lead, title: event.title, trail: event.edge === 'beforeEnd' && event.minutes ? 'ends' : null, when };
 }
 
 /** `Arriving at Rewe`, `Leaving Rewe`, `While at Rewe`. */
