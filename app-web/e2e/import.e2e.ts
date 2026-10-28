@@ -29,8 +29,7 @@ test('a Todoist backup imports once with its sections, a second import skips eve
 		/cancel/,
 		/Renew passport #Travel/,
 		/Water plants/,
-		/Book flights.*Visit Japan/,
-		/Visit Japan/,
+		/Visit Japan.*〇 Book flights/s,
 	]);
 	await expect(app.row('Call the dentist')).toContainText('Oct 22');
 	await expect(app.row('Water plants')).toContainText('home');
