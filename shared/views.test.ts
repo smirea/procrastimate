@@ -12,6 +12,7 @@ const projectGroups = recorded('views', views.projectGroups);
 const todayTasks = recorded('views', views.todayTasks);
 const upcomingGroups = recorded('views', views.upcomingGroups);
 const dueDays = recorded('views', views.dueDays);
+const dueCandidates = recorded('views', views.dueCandidates);
 const weekEnd = recorded('views', views.weekEnd);
 const placeTasks = recorded('views', views.placeTasks);
 const labelViewTasks = recorded('views', views.labelViewTasks);
@@ -291,6 +292,22 @@ describe('due days', () => {
 		expect(days(dueDays(list, today, 'tomorrow'))).toEqual([[], [], [['2026-10-15', ['pack']]]]);
 		expect(ids(todayTasks(list, today).today)).toEqual(['book flights', 'buy milk']);
 		expect(upcomingGroups(list, today).map(g => [g.date, ids(g.tasks)])).toEqual([['2026-10-16', ['trip']]]);
+	});
+
+	test('a filter runs first, so a subtask whose parent it hides gets its own row', () => {
+		const list = [
+			task('move', { priority: 4, due: { date: today, time: null } }),
+			task('call movers', { parentId: 'move', priority: 1, due: { date: today, time: null } }),
+			task('book van', { parentId: 'call movers', priority: 1, due: { date: today, time: null } }),
+			task('pay rent', { priority: 1, due: { date: today, time: null } }),
+		];
+		const urgent = { filter: { people: null, priorities: [1 as const] }, me: 'me' };
+		expect(days(dueDays(list, today, 'inbox'))).toEqual([[], ['pay rent', 'move'], []]);
+		expect(days(dueDays(list, today, 'inbox', urgent))).toEqual([[], ['call movers', 'pay rent'], []]);
+		const lowest = { filter: { people: null, priorities: [4 as const] }, me: 'me' };
+		expect(days(dueDays(list, today, 'inbox', lowest))).toEqual([[], ['move'], []]);
+		expect(ids(dueCandidates(list, today, 'inbox'))).toEqual(['move', 'call movers', 'book van', 'pay rent']);
+		expect(ids(dueCandidates(list, today, 'tomorrow'))).toEqual([]);
 	});
 });
 

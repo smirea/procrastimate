@@ -116,24 +116,28 @@ public enum IntentRules {
     /// The task Complete or Uncomplete should change. The chosen task wins when it is already in the right state, so a
     /// Shortcuts pick is honored. Otherwise the newest open match, or the most recently completed match, is used, which
     /// is what a spoken title means when the resolver handed back the other one.
+    /// A task under a completed parent counts as completed, so Complete never picks it and Uncomplete reopens it with
+    /// its parents.
     public static func completionTarget(_ change: TaskStateChange, id: String, title: String, in tasks: [TaskItem]) -> TaskItem? {
-        if let current = tasks.first(where: { $0.id == id }) {
+        let byID = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let done = { (task: TaskItem) in Triggers.completedAt(of: task, in: byID) != nil }
+        if let current = byID[id] {
             switch change {
-            case .complete where current.completedAt == nil: return current
-            case .reopen where current.completedAt != nil: return current
+            case .complete where !done(current): return current
+            case .reopen where done(current): return current
             case .complete, .reopen: break
             }
         }
         let matches = titleMatches(tasks, title)
         switch change {
-        case .complete: return matches.first { $0.completedAt == nil }
-        case .reopen: return matches.first { $0.completedAt != nil }
+        case .complete: return matches.first { !done($0) }
+        case .reopen: return matches.first(where: done)
         }
     }
 
-    /// Open tasks, which are the ones Spotlight lists. A completed task leaves the index.
+    /// Open tasks, which are the ones Spotlight lists. A completed task, and any task under one, leaves the index.
     public static func indexedTasks(_ tasks: [TaskItem]) -> [TaskItem] {
-        tasks.filter { $0.completedAt == nil }
+        Triggers.openTasks(tasks)
     }
 
     /// Search hits in the app's order: open, then completed.

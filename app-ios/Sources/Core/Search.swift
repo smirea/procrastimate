@@ -147,6 +147,8 @@ public enum Search {
         )
         let hits = tasks.compactMap { scoreTask($0, terms, context) }
         let open = Set(Triggers.openTasks(tasks).map(\.id))
+        let byID = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let doneAt = { (task: TaskItem) in Triggers.completedAt(of: task, in: byID) ?? 0 }
         return Results(
             projects: searchNames(projects, terms),
             labels: searchNames(labels, terms),
@@ -157,7 +159,7 @@ public enum Search {
             },
             completed: hits.filter { !open.contains($0.task.id) }.stableSorted { a, b in
                 if a.score != b.score { return a.score > b.score }
-                let (x, y) = (a.task.completedAt ?? 0, b.task.completedAt ?? 0)
+                let (x, y) = (doneAt(a.task), doneAt(b.task))
                 return x == y ? nil : x > y
             }
         )

@@ -6,7 +6,7 @@ import UIKit
 /// DEBUG-only. The simulator has no way to tap, so `PROCRASTIMATE_DEMO` seeds place and event tasks through the store,
 /// adds calendar events through EventKit, and opens the screen to screenshot. Release builds omit it.
 ///
-/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row, a parent with open subtasks, and a saved place `gym`), `subtasks` (a parent due today with a subtask due today, and an undated parent with one), `move` (shifts the next Standup an hour later, then logs what the task holds),
+/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row, a parent with open subtasks, and a saved place `gym`), `subtasks` (a parent due today with a subtask due today, and an undated parent with one), `filtered` (a priority 4 parent due today with a priority 1 subtask due today, another priority 1 task, and a completed parent with an open subtask), `move` (shifts the next Standup an hour later, then logs what the task holds),
 /// `browse`, `sections` (see `SectionsDemo`), `details:<task title>`, `link:<share token>`, `sharing` (see `SharingDemo`), `sheet:location`, `sheet:event`, and
 /// `query:<words with + for spaces>` for the first location search.
 enum PlacesDemo {
@@ -40,6 +40,7 @@ enum PlacesDemo {
         if has("seed") { await seed(store: store, calendar: calendar, clock: clock) }
         if has("rows") { seedRows(store: store, clock: clock) }
         if has("subtasks") { seedSubtasks(store: store, clock: clock) }
+        if has("filtered") { seedFiltered(store: store, clock: clock) }
         if has("move") { await move(store: store, calendar: calendar) }
         if has("browse") { navigator.tab = .browse }
         if has("nodate") { navigator.open(.noDate) }
@@ -174,6 +175,23 @@ enum PlacesDemo {
         if let errands = store.addTask(NewTask(title: "Errands")) {
             _ = store.addTask(NewTask(title: "Buy milk", due: today), parentId: errands.id)
         }
+    }
+
+    @MainActor
+    private static func seedFiltered(store: Store, clock: AppClock) {
+        guard !store.tasks.contains(where: { $0.title == "Pay rent" }) else { return }
+        let today = Due(date: clock.today)
+        if let move = store.addTask(NewTask(title: "Move", due: today, priority: .p4)) {
+            _ = store.addTask(NewTask(title: "Call movers", due: today, priority: .p1), parentId: move.id)
+        }
+        _ = store.addTask(NewTask(title: "Pay rent", due: today, priority: .p1))
+        guard let trip = store.addTask(NewTask(title: "Trip")),
+              let pack = store.addTask(NewTask(title: "Pack bags"), parentId: trip.id) else { return }
+        _ = store.completeTask(trip.id)
+        // Another device can leave a subtask open under a completed parent, which no store command does.
+        var data = store.data(in: .own)
+        data.tasks = data.tasks.map { $0.id == pack.id ? { var task = $0; task.completedAt = nil; return task }($0) : $0 }
+        store.commit(data)
     }
 
     @MainActor

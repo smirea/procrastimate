@@ -244,14 +244,29 @@ public enum Triggers {
 
     /// The tasks above `task` in `byID`, nearest first, up to a missing parent or a loop.
     public static func ancestors(of task: TaskItem, in byID: [String: TaskItem]) -> [TaskItem] {
+        ancestors(of: task) { byID[$0] }
+    }
+
+    /// The tasks above `task` as `lookup` finds them, nearest first, up to a missing parent or a loop.
+    public static func ancestors(of task: TaskItem, lookup: (String) -> TaskItem?) -> [TaskItem] {
         var out: [TaskItem] = []
         var seen: Set<String> = [task.id]
-        var next = task.parentId.flatMap { byID[$0] }
+        var next = task.parentId.flatMap(lookup)
         while let parent = next, seen.insert(parent.id).inserted {
             out.append(parent)
-            next = parent.parentId.flatMap { byID[$0] }
+            next = parent.parentId.flatMap(lookup)
         }
         return out
+    }
+
+    /// When `task` counts as done: its own `completedAt`, else that of the nearest completed task above it, so a task
+    /// left open under a completed parent reads as completed with it. Nil while it is open.
+    public static func completedAt(of task: TaskItem, lookup: (String) -> TaskItem?) -> Int? {
+        task.completedAt ?? ancestors(of: task, lookup: lookup).first { $0.completedAt != nil }?.completedAt
+    }
+
+    public static func completedAt(of task: TaskItem, in byID: [String: TaskItem]) -> Int? {
+        completedAt(of: task) { byID[$0] }
     }
 
     /// Tasks that are open with every task above them open too. Completing a parent sets every task under it aside,
@@ -259,9 +274,7 @@ public enum Triggers {
     /// from `tasks` does not count.
     public static func openTasks(_ tasks: [TaskItem]) -> [TaskItem] {
         let byID = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        return tasks.filter { task in
-            task.completedAt == nil && ancestors(of: task, in: byID).allSatisfy { $0.completedAt == nil }
-        }
+        return tasks.filter { completedAt(of: $0, in: byID) == nil }
     }
 
     static func open(_ tasks: [TaskItem]) -> [TaskItem] {

@@ -212,7 +212,8 @@
 								{@const task = row.hit.task}
 								{@const project = projectOf(row.hit)}
 								{@const notes = row.hit.matches.notes?.[0]}
-								{@const done = task.completedAt !== null}
+								{@const completedAt = store.completedAt(task)}
+								{@const done = completedAt !== null}
 								{@const parent = task.parentId ? store.task(task.parentId) : undefined}
 								<span
 									class="status mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-full border-[1.5px]"
@@ -239,7 +240,7 @@
 									{/if}
 									{#if done}
 										<span class="mt-0.5 block text-[12px] leading-4 text-muted">
-											Completed {formatDate(toDateKey(new Date(task.completedAt!)), clock.today)}
+											Completed {formatDate(toDateKey(new Date(completedAt!)), clock.today)}
 										</span>
 									{:else if task.due}
 										<span

@@ -28,7 +28,7 @@ struct SubtaskList: View {
 
     var body: some View {
         let children = store.children(of: task.id)
-        let progress = Subtasks.progressOf(children)
+        let progress = Subtasks.progressOf(children, parentDone: Triggers.completedAt(of: task, lookup: store.task) != nil)
         let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels(in: taskSpace), literal: literal, in: clock.timeZone)
         VStack(alignment: .leading, spacing: 4) {
             HStack {

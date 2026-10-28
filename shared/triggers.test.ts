@@ -17,6 +17,7 @@ const pickedLabels = recorded('triggers', triggers.pickedLabels);
 const applyPickedLabels = recorded('triggers', triggers.applyPickedLabels);
 const savedPlaceAt = recorded('triggers', triggers.savedPlaceAt);
 const openTasks = recorded('triggers', triggers.openTasks);
+const completedAtIn = recorded('triggers', triggers.completedAtIn);
 const scheduledDue = recorded('triggers', triggers.scheduledDue);
 const taskNotificationTimes = recorded('triggers', triggers.taskNotificationTimes);
 
@@ -58,6 +59,19 @@ describe('openTasks', () => {
 		];
 		expect(openTasks(tasks).map(t => t.id)).toEqual(['orphan']);
 		expect(openTasks(tasks.with(0, base('trip'))).map(t => t.id)).toEqual(['trip', 'flights', 'seats', 'orphan']);
+	});
+
+	test('a task under a completed one reads as completed when the nearest completed task above it was', () => {
+		const tasks = [
+			base('move', { completedAt: 5 }),
+			base('pack', { parentId: 'move', completedAt: 7 }),
+			base('boxes', { parentId: 'pack' }),
+			base('movers', { parentId: 'move' }),
+			base('own', { parentId: 'move', completedAt: 3 }),
+			base('orphan', { parentId: 'gone' }),
+		];
+		const byId = new Map(tasks.map(t => [t.id, t]));
+		expect(tasks.map(t => completedAtIn(byId, t))).toEqual([5, 7, 7, 5, 3, null]);
 	});
 });
 

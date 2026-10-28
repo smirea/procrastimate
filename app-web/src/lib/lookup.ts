@@ -1,6 +1,7 @@
 import { getContext, setContext } from 'svelte';
 import type { CommentBadge } from 'shared/comments.ts';
 import { groupChildren } from 'shared/subtasks.ts';
+import { completedAtIn } from 'shared/triggers.ts';
 import type { StoreData } from 'shared/store.ts';
 import type { Label, Project, Section, Task } from 'shared/task.ts';
 import { comments } from './comments.svelte.ts';
@@ -17,6 +18,8 @@ export type Lookup = {
 	section: (id: string | null) => Section | undefined;
 	labelsOf: (task: Pick<Task, 'labelIds'>) => Label[];
 	task: (id: string) => Task | undefined;
+	/** When the task counts as done, which for a task left open under a completed parent is the parent's completion. */
+	completedAt: (task: Task) => number | null;
 	/** Direct subtasks in sibling order. */
 	subtasks: (id: string) => Task[];
 	canEdit: (id: string) => boolean;
@@ -35,6 +38,7 @@ const storeLookup: Lookup = {
 	section: id => store.section(id),
 	labelsOf: task => store.labelsOf(task),
 	task: id => store.task(id),
+	completedAt: task => store.completedAt(task),
 	subtasks: id => store.children(id),
 	canEdit: id => store.canEdit(id),
 	commentBadge: id => comments.badge(id),
@@ -77,6 +81,7 @@ export function provideReadOnlyLookup(data: () => Pick<StoreData, 'tasks' | 'pro
 		section: id => (id ? index().sections.get(id) : undefined),
 		labelsOf: task => task.labelIds.flatMap(id => index().labels.get(id) ?? []),
 		task: id => index().tasks.get(id),
+		completedAt: task => completedAtIn(index().tasks, task),
 		subtasks: id => index().children.get(id) ?? [],
 		canEdit: () => false,
 		commentBadge: () => undefined,

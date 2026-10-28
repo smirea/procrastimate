@@ -12,6 +12,7 @@ import {
 	type Section,
 	type Task,
 } from './task.ts';
+import { filterTasks, listFilterSchema } from './list-filters.ts';
 import { compareIds } from './order.ts';
 import { ancestorsIn, occurrenceDue, openTasks, placeKey, scheduledDue } from './triggers.ts';
 import { dateKeySchema } from './values.ts';
@@ -123,19 +124,29 @@ export function labelTasks(tasks: readonly Task[], labelId: string) {
 /** The days a dated list covers, both ends included. A null end is open. */
 type Span = { from: DateKey | null; to: DateKey | null };
 
+const dayIn = (task: Task, today: DateKey, span: Span): DateKey | null => {
+	const date = scheduledDue(task, today)?.date;
+	return date && (span.from === null || date >= span.from) && (span.to === null || date <= span.to) ? date : null;
+};
+
+export const dueFilterSchema = z.object({ filter: listFilterSchema, me: z.string() }).meta({
+	id: 'DueFilter',
+	description: "A dated list's filter menu, and who the user is, since a filter on people reads a task's creator.",
+});
+export type DueFilter = z.infer<typeof dueFilterSchema>;
+
 /**
  * The rows of a dated list over `span`, each with the day it sits on, which for an event or a repeat at a place is not
  * its stored due date. A subtask has a row of its own only while no task above it has one in the same list: under a
- * listed task it shows as that task's progress, as in a project, and once none above it is listed it shows alone.
+ * listed task it shows as that task's progress, as in a project, and once none above it is listed it shows alone. The
+ * filter runs first, so a subtask whose parent the filter hides gets its own row.
  */
-const dated = (tasks: readonly Task[], today: DateKey, span: Span) => {
+const dated = (tasks: readonly Task[], today: DateKey, span: Span, filtered?: DueFilter) => {
 	const open = openTasks(tasks);
 	const days = new Map<string, DateKey>();
-	for (const task of open) {
-		const date = scheduledDue(task, today)?.date;
-		if (date && (span.from === null || date >= span.from) && (span.to === null || date <= span.to)) {
-			days.set(task.id, date);
-		}
+	for (const task of filtered ? filterTasks(open, filtered.filter, filtered.me) : open) {
+		const date = dayIn(task, today, span);
+		if (date) days.set(task.id, date);
 	}
 	const byId = new Map(open.map(t => [t.id, t]));
 	return open.flatMap(task => {
@@ -145,8 +156,8 @@ const dated = (tasks: readonly Task[], today: DateKey, span: Span) => {
 };
 
 /** A dated list's rows: overdue, today's, then each later day. */
-function byDay(tasks: readonly Task[], today: DateKey, span: Span): DueDays {
-	const rows = dated(tasks, today, span).toSorted((a, b) => compareTasks(a.task, b.task, today));
+function byDay(tasks: readonly Task[], today: DateKey, span: Span, filtered?: DueFilter): DueDays {
+	const rows = dated(tasks, today, span, filtered).toSorted((a, b) => compareTasks(a.task, b.task, today));
 	const groups = new Map<DateKey, Task[]>();
 	for (const { task, date } of rows.filter(t => t.date > today)) groups.set(date, [...(groups.get(date) ?? []), task]);
 	return {
@@ -184,19 +195,32 @@ export const weekEnd = (today: DateKey): DateKey => addDays(today, 6 - mondayInd
  * The days a dated list covers. Inbox lists every dated task, This week the overdue ones through the end of the week,
  * and Tomorrow only tomorrow's, since overdue tasks are already today's business.
  */
-export function dueDays(tasks: readonly Task[], today: DateKey, list: DueList): DueDays {
+export function dueDays(tasks: readonly Task[], today: DateKey, list: DueList, filtered?: DueFilter): DueDays {
+	return byDay(tasks, today, spanOf(list, today), filtered);
+}
+
+function spanOf(list: DueList, today: DateKey): Span {
 	switch (list) {
 		case 'inbox':
-			return byDay(tasks, today, { from: null, to: null });
+			return { from: null, to: null };
 		case 'this-week':
-			return byDay(tasks, today, { from: null, to: weekEnd(today) });
+			return { from: null, to: weekEnd(today) };
 		case 'tomorrow':
-			return byDay(tasks, today, { from: addDays(today, 1), to: addDays(today, 1) });
+			return { from: addDays(today, 1), to: addDays(today, 1) };
 		default: {
 			const never: never = list;
 			return never;
 		}
 	}
+}
+
+/**
+ * What a dated list's filter menu counts: every open task due in the days it covers, subtasks under a listed task
+ * included, so a choice that would surface a subtask by hiding its parent is offered.
+ */
+export function dueCandidates(tasks: readonly Task[], today: DateKey, list: DueList): Task[] {
+	const span = spanOf(list, today);
+	return openTasks(tasks).filter(task => dayIn(task, today, span) !== null);
 }
 
 export function placeTasks(tasks: readonly Task[], key: string) {

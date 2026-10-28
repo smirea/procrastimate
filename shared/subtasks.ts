@@ -65,9 +65,13 @@ export function ancestorsOf(tasks: readonly Task[], id: string): Task[] {
 	return out;
 }
 
-export function progressOf(children: readonly Task[]): Progress | null {
+/** A completed parent's subtasks all count as done, whatever their own `completedAt` says. Pass `parentDone` from `completedAtIn`. */
+export function progressOf(children: readonly Task[], parentDone: boolean): Progress | null {
 	if (!children.length) return null;
-	return { done: children.filter(c => c.completedAt !== null).length, total: children.length };
+	return {
+		done: parentDone ? children.length : children.filter(c => c.completedAt !== null).length,
+		total: children.length,
+	};
 }
 
 export function nextSiblingOrder(tasks: readonly Task[], parentId: string): number {

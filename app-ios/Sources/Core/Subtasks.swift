@@ -49,10 +49,11 @@ public enum Subtasks {
         return out
     }
 
-    /// Counts direct children, or nil for a task without any.
-    public static func progressOf(_ children: [TaskItem]) -> Progress? {
+    /// Counts direct children, or nil for a task without any. A completed parent's subtasks all count as done, whatever
+    /// their own `completedAt` says. Pass `parentDone` from `Triggers.completedAt`.
+    public static func progressOf(_ children: [TaskItem], parentDone: Bool) -> Progress? {
         if children.isEmpty { return nil }
-        return Progress(done: children.count { $0.completedAt != nil }, total: children.count)
+        return Progress(done: parentDone ? children.count : children.count { $0.completedAt != nil }, total: children.count)
     }
 
     public static func nextSiblingOrder(_ tasks: [TaskItem], _ parentId: String) -> Double {

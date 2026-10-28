@@ -25,7 +25,7 @@
 
 	const children = $derived(store.children(task.id));
 	const editable = $derived(store.canEdit(task.id));
-	const progress = $derived(store.progress(task.id));
+	const progress = $derived(store.progress(task));
 
 	let draft = $state('');
 	let literal = $state(false);

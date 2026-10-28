@@ -11,24 +11,19 @@
 	import { listFilters } from '../list-filters.svelte.ts';
 	import { session } from '../session.svelte.ts';
 	import { clock, leaving, motion } from '../ui.svelte.ts';
-	import type { DateKey, Task } from 'shared/task.ts';
-	import { filterKey, filterTasks } from 'shared/list-filters.ts';
+	import type { DateKey } from 'shared/task.ts';
+	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
 	import type { Screen } from 'shared/screens.ts';
-	import { dueDays, type DueList } from 'shared/views.ts';
+	import { dueCandidates, dueDays, type DueList } from 'shared/views.ts';
 	import { dayHeading } from 'shared/format.ts';
 
 	let { list, name, emptyTitle, emptyHint }: { list: DueList; name: string; emptyTitle: string; emptyHint: string } = $props();
 
 	const key = $derived(filterKey({ kind: list }));
-	const shown = (tasks: Task[]) => filterTasks(tasks, listFilters.get(key), session.userId ?? '');
-	const all = $derived(dueDays(store.own.tasks, clock.today, list));
-	const due = $derived({
-		overdue: shown(all.overdue),
-		today: shown(all.today),
-		days: all.days.map((group) => ({ ...group, tasks: shown(group.tasks) })).filter((group) => group.tasks.length),
-	});
-	const empty = $derived(all.overdue.length + all.today.length + all.days.length === 0);
+	const due = $derived(dueDays(store.own.tasks, clock.today, list, { filter: listFilters.get(key), me: session.userId ?? '' }));
+	const candidates = $derived(dueCandidates(store.own.tasks, clock.today, list));
+	const empty = $derived(candidates.length === 0);
 	const sections = $derived([
 		{ heading: 'Overdue', tasks: due.overdue },
 		{ heading: 'Today', tasks: due.today },
@@ -48,7 +43,7 @@
 	{emptyTitle}
 	{emptyHint}
 	canAdd={empty}
-	filter={{ list: key, tasks: [...all.overdue, ...all.today, ...all.days.flatMap((group) => group.tasks)] }}
+	filter={{ list: key, tasks: candidates }}
 >
 	{#snippet actions()}
 		<ListMenu

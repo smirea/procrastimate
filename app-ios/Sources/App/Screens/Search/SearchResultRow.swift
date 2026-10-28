@@ -51,7 +51,7 @@ struct SearchResultRow: View {
             if let notes = hit.matches[.notes]?.first { parts.append(Search.excerpt(notes).text) }
             if let parent = task.parentId.flatMap(store.task) { parts.append("Subtask of \(parent.title)") }
             parts += (hit.matches[.labels] ?? []).map(\.text)
-            if let completedAt = task.completedAt {
+            if let completedAt = Triggers.completedAt(of: task, lookup: store.task) {
                 parts.append(Browse.completedLine(completedAt, today: today, in: clock.timeZone))
             } else if let due = task.due {
                 parts.append(Format.formatDue(due, today))
@@ -117,7 +117,8 @@ private struct TaskResult: View {
 
     var body: some View {
         let task = hit.task
-        let done = task.completedAt != nil
+        let completedAt = Triggers.completedAt(of: task, lookup: store.task)
+        let done = completedAt != nil
         let project = store.project(task.projectId)
         HStack(alignment: .top, spacing: 12) {
             Status(done: done, tone: task.priority.tone)
@@ -147,7 +148,7 @@ private struct TaskResult: View {
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel("Subtask of \(parent.title)")
                 }
-                if let completedAt = task.completedAt {
+                if let completedAt {
                     Text(Browse.completedLine(completedAt, today: today, in: clock.timeZone))
                         .font(.caption)
                         .foregroundStyle(.muted)
