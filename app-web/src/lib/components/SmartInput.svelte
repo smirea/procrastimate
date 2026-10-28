@@ -17,6 +17,7 @@
 		placeholder = '',
 		autofocus = false,
 		suggestProjects: projectSuggestions = true,
+		suggestNames = true,
 		projectId = null,
 		enterkeyhint,
 		listAt = $bindable(null),
@@ -33,6 +34,8 @@
 		placeholder?: string;
 		autofocus?: boolean;
 		suggestProjects?: boolean;
+		/** Off, no `#`, `@`, or `/` list opens, as when quick add reads the text as plain text. */
+		suggestNames?: boolean;
 		/** The project in effect, whose sections `/` suggests. Only the user's own projects get sections here. */
 		projectId?: string | null;
 		enterkeyhint?: 'enter' | 'done' | 'send';
@@ -75,11 +78,15 @@
 		return out;
 	});
 
-	const sources = $derived<Partial<Record<NameKind, NameSource>>>({
-		...(projectSuggestions ? { project: NAME_SOURCES.project } : {}),
-		...(projectSuggestions && projectId && store.homeOf(projectId) === null ? { section: sectionSource(projectId) } : {}),
-		label: NAME_SOURCES.label,
-	});
+	const sources = $derived<Partial<Record<NameKind, NameSource>>>(
+		suggestNames
+			? {
+					...(projectSuggestions ? { project: NAME_SOURCES.project } : {}),
+					...(projectSuggestions && projectId && store.homeOf(projectId) === null ? { section: sectionSource(projectId) } : {}),
+					label: NAME_SOURCES.label,
+				}
+			: {},
+	);
 	const fragment = $derived.by(() => {
 		if (!focused) return null;
 		let closest: (SigilFragment & { kind: NameKind }) | null = null;

@@ -20,6 +20,8 @@ import { clock } from './ui.svelte.ts';
 export class QuickAddDraft {
 	text = $state('');
 	picked: Picked = $state(initialPicked(NO_DEFAULTS));
+	/** The plain text toggle: the text saves as typed, with no phrase read. It belongs to one task. */
+	literal = $state(false);
 
 	/** What the draft starts from: the sheet's opening defaults, then each restart's. */
 	defaults: ListDefaults = $state.raw(NO_DEFAULTS);
@@ -32,6 +34,7 @@ export class QuickAddDraft {
 	restart(next: ListDefaults) {
 		this.defaults = next;
 		this.text = '';
+		this.literal = false;
 		this.picked = initialPicked(next);
 	}
 
@@ -48,6 +51,7 @@ export class QuickAddDraft {
 			labels: this.labels,
 			projectId: this.picked.projectId,
 			due: this.picked.due,
+			literal: this.literal,
 		}),
 	);
 	merged = $derived(merged(this.parsed, this.picked));

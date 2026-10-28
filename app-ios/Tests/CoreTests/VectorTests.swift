@@ -411,6 +411,7 @@ private struct ParseInput: Decodable {
     let projectId: String?
     let due: Due?
     let spoken: Bool?
+    let literal: Bool?
 
     var options: QuickAdd.Options {
         QuickAdd.Options(
@@ -420,7 +421,8 @@ private struct ParseInput: Decodable {
             labels: labels ?? [],
             projectId: projectId,
             due: due,
-            spoken: spoken ?? false
+            spoken: spoken ?? false,
+            literal: literal ?? false
         )
     }
 }

@@ -14,6 +14,7 @@
 	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
+	import TextT from 'phosphor-svelte/lib/TextT';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
 	import { suggestionIndex, suggestionPills, suggestMetadata, type SuggestionPill } from 'shared/task-suggestions.ts';
 	import { DEFAULT_PRIORITY } from 'shared/task.ts';
@@ -93,7 +94,7 @@
 	);
 	/** Names to offer creating. The one the suggestion list is open on already offers it there. */
 	const unknown = $derived(
-		unknownNames(draft.text, parsed.tokens, store.projects, store.labels).filter((name) => name.start !== listAt),
+		draft.literal ? [] : unknownNames(draft.text, parsed.tokens, store.projects, store.labels).filter((name) => name.start !== listAt),
 	);
 
 	/** Built on the first keystroke, not on open, and again only when the tasks change. */
@@ -332,6 +333,7 @@
 				bind:value={draft.text}
 				bind:listAt
 				tokens={parsed.tokens}
+				suggestNames={!draft.literal}
 				{projectId}
 				label="Task name"
 				placeholder="Call mom tomorrow 5pm p1 remind me 30m before"
@@ -452,6 +454,18 @@
 			role="group"
 			aria-label="Task attributes"
 		>
+			<button
+				type="button"
+				class="chip shrink-0 data-[active=true]:bg-accent/15 data-[active=true]:text-accent"
+				data-active={draft.literal}
+				aria-pressed={draft.literal}
+				aria-label="Plain text"
+				title="Plain text: keep dates, times, and tags in the title"
+				onmousedown={(e) => e.preventDefault()}
+				onclick={() => (draft.literal = !draft.literal)}
+			>
+				<TextT size={16} weight={draft.literal ? 'bold' : 'regular'} />
+			</button>
 			{#if draft.applied.location}
 				{@render trigger(MapPin, formatLocation(draft.applied.location), 'place', () => draft.clearPlace())}
 			{/if}

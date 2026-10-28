@@ -1293,3 +1293,24 @@ describe('spoken', () => {
 		expect(parsed.due).toEqual({ date: '2026-10-14', time: '10:05' });
 	});
 });
+
+describe('plain text', () => {
+	test('reads no phrase, so the whole text is the title', () => {
+		const parsed = parse('Standup  at 9am tomorrow #Home /Garden @calls p1 every mon remind me 5m before', {
+			literal: true,
+			sections: [{ id: 's-garden', projectId: 'p-home', name: 'Garden', order: 0, createdAt: 0 }],
+		});
+		expect(parsed).toEqual({
+			title: 'Standup at 9am tomorrow #Home /Garden @calls p1 every mon remind me 5m before',
+			due: null,
+			recurrence: null,
+			priority: null,
+			reminders: [],
+			projectId: null,
+			sectionId: null,
+			labelIds: [],
+			location: null,
+			tokens: [],
+		});
+	});
+});

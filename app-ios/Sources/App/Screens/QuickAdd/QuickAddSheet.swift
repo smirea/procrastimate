@@ -67,6 +67,7 @@ struct QuickAddSheet: View {
                 tokens: parsed.tokens,
                 label: "Task name",
                 placeholder: "Call mom tomorrow 5pm p1 remind me 30m before",
+                suggestNames: !draft.literal,
                 projectId: resolved.projectId,
                 listAt: $listAt,
                 // Ten lines, so a long dictated title stays readable. With the subtask list open the card has to fit it
@@ -169,6 +170,19 @@ struct QuickAddSheet: View {
         .onChange(of: subtaskFocused) {
             if !subtaskFocused, subtaskText.isEmpty, subtasks.isEmpty { subtasksOpen = false }
         }
+    }
+
+    private var plainTextChip: some View {
+        Button {
+            draft.literal.toggle()
+        } label: {
+            Chip(systemImage: "textformat", text: "", tone: draft.literal ? .accent : .muted, fill: draft.literal ? .accent : nil)
+                .contentShape(.rect.inset(by: -6))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Plain text")
+        .accessibilityValue(draft.literal ? "On" : "Off")
+        .accessibilityAddTraits(draft.literal ? .isSelected : [])
     }
 
     private var subtaskChip: some View {
@@ -364,11 +378,12 @@ struct QuickAddSheet: View {
     @ViewBuilder
     private func chips(_ parsed: QuickAdd.Parsed, _ resolved: Resolved) -> some View {
         let buttons = QuickAddButtons.rowButtons(store.quickAddButtons, opened + filled(parsed, resolved), supported)
+        plainTextChip
         ForEach(buttons) { button in
             chip(button, parsed, resolved).id(button)
         }
         // The name the suggestion list is open on already offers to create it there.
-        ForEach(NameSearch.unknownNames(draft.text, parsed.tokens, spaceProjects, spaceLabels).filter { $0.start != listAt }, id: \.self) { name in
+        ForEach(draft.literal ? [] : NameSearch.unknownNames(draft.text, parsed.tokens, spaceProjects, spaceLabels).filter { $0.start != listAt }, id: \.self) { name in
             let title = "Create \(name.sigil.rawValue)\(name.name)"
             Button { create(name) } label: {
                 Chip(systemImage: "plus", text: title, tone: .accent)

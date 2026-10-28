@@ -28,6 +28,22 @@ import Testing
         #expect(task.priority == .p1)
     }
 
+    @Test func plainTextSavesTheTextAsTypedWithThePicksAndResetsForTheNextTask() throws {
+        var draft = QuickAddDraft(defaults: .init(date: today))
+        draft.setText("Standup 9am tomorrow p1 @Calls")
+        draft.literal = true
+        draft.picked.priority = .p2
+        let task = try #require(draft.resolve(parse(draft)))
+        #expect(task.title == "Standup 9am tomorrow p1 @Calls")
+        #expect(task.due == Due(date: today, time: nil))
+        #expect(task.priority == .p2)
+        #expect(task.labelIds.isEmpty)
+
+        draft.reset()
+        draft.setText("Standup tomorrow")
+        #expect(parse(draft).due == Due(date: "2026-10-15", time: nil))
+    }
+
     @Test func aSectionDefaultStaysOnlyInItsProjectAndSlashPicksAnother() throws {
         let projects = [Project(id: "p-home", name: "Home", createdAt: 0), Project(id: "p-work", name: "Work", createdAt: 0)]
         let sections = [

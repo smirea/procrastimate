@@ -656,7 +656,7 @@ public enum QuickAdd {
             // A saved place is a label, so names never collide, and like a project its last `@name` wins.
             namedRule(.place, "@", options.labels.filter { $0.place != nil }.map { ($0.id, $0.name) }) { .place($0) },
         ].compactMap { $0 }
-        let rules = [reminderRule, recurrenceRule] + named + [priorityRule, dueRule]
+        let rules = options.literal ? [] : [reminderRule, recurrenceRule] + named + [priorityRule, dueRule]
         let source = NSString(string: input)
         // Every phrase a rule recognizes is masked out of both views, including superseded ones, so a
         // later rule never reads part of it as something else.
