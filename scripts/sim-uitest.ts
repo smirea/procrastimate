@@ -203,6 +203,10 @@ export async function runUITests(device: Device, root: string, argv: string[]): 
 				join(dir, 'dd'),
 				'-resultBundlePath',
 				result,
+				// On a failure xcodebuild otherwise runs `simctl diagnose` (its own 600 s timeout) before it exits, and on a
+				// loaded Mac that can stall past our deadline after the tests already finished.
+				'-collect-test-diagnostics',
+				'never',
 				...(values.only ?? []).map(test => `-only-testing:UITests/${test}`),
 			],
 			log,
