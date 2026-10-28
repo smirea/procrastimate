@@ -38,8 +38,11 @@ struct QuickAddSheet: View {
     @State private var suggestionIndex: TaskSuggestions.Index?
     /// Scoring scans the whole index, so it reruns only when its inputs change, not on every frame of a drag.
     @State private var pills: [TaskSuggestions.Pill] = []
-    /// How far the grabber's drag has pulled the card up, rubber-banded.
-    @State private var lift: CGFloat = 0
+    /// How far the finger has moved the grabber, up negative. Up grows the card toward the top of the screen, down
+    /// lowers it, both 1:1.
+    @State private var pull: CGFloat = 0
+    /// How far the card can grow before it reaches the top, measured while it rests.
+    @State private var room: CGFloat = 0
     @State private var saves = 0
     @State private var confirmation: Int?
     @FocusState private var focused: Bool
@@ -86,10 +89,6 @@ struct QuickAddSheet: View {
                 QuickAddSubtasks(spaceLabels: spaceLabels, subtasks: $subtasks, text: $subtaskText, literal: $subtaskLiteral, focused: $subtaskFocused) { submit() }
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
-            if !pills.isEmpty {
-                SuggestionPills(pills: pills) { use($0, parsed, resolved) }
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            }
             HStack(spacing: 6) {
                 chipRow(parsed, resolved)
                 QuickAddMenu(
@@ -101,6 +100,8 @@ struct QuickAddSheet: View {
                 )
             }
             .animation(.snappy(duration: 0.16), value: parsed.tokens)
+            // The room a drag up adds, so the chips and footer stay on the keyboard while the card grows.
+            .padding(.top, grow)
 
             HStack(spacing: 8) {
                 ProjectChip(projectId: resolved.projectId, sectionId: resolved.sectionId) { projectId, sectionId in
@@ -119,7 +120,6 @@ struct QuickAddSheet: View {
             }
         }
         .animation(.snappy(duration: 0.2), value: subtasksOpen)
-        .animation(.snappy(duration: 0.2), value: pills)
         .animation(.snappy(duration: 0.2), value: drafted)
         .imageSource($imageSource) { addImages($0) }
         .padding(.horizontal, 16)
@@ -136,7 +136,22 @@ struct QuickAddSheet: View {
         }
         // A tap between controls, or just beside the plain mic glyph, would otherwise reach the scrim and close the card.
         .contentShape(.rect)
-        .offset(y: lift)
+        .onGeometryChange(for: CGFloat.self, of: { $0.frame(in: .global).minY }) { top in
+            if pull == 0 { room = max(0, top - 70) }
+        }
+        // Pills float over the scrim above the card, so their coming and going never moves the field being typed in.
+        .overlay(alignment: .top) {
+            ZStack {
+                if !pills.isEmpty {
+                    SuggestionPills(pills: pills) { use($0, parsed, resolved) }
+                        .padding(.horizontal, 16)
+                        .transition(.opacity.combined(with: .offset(y: 8)))
+                }
+            }
+            .animation(.snappy(duration: 0.2), value: pills)
+            .alignmentGuide(.top) { $0[.bottom] + 8 }
+        }
+        .offset(y: max(pull, 0))
         // The labels picker lists, and creates in, the space the task will land in, as the web's draft home does.
         .environment(\.space, store.creationSpace(projectId: resolved.projectId, labelIds: resolved.labelIds))
         .environment(\.namesFromEverySpace, true)
@@ -261,23 +276,36 @@ struct QuickAddSheet: View {
         }
     }
 
-    /// Dragging the grabber up, or tapping it, opens the draft in task details, the full editor.
+    /// The card's extra height while dragged up, past its room rubber-banded like a scroll view.
+    private var grow: CGFloat {
+        guard pull < 0 else { return 0 }
+        let over = -pull - room
+        return over <= 0 ? -pull : room + (1 - 1 / (over * 0.55 / 120 + 1)) * 120
+    }
+
+    /// The grabber drags the card with the finger. Released, it grows into task details, closes, or springs back,
+    /// by how far it went or how fast it was thrown. A tap expands too.
     private var grabber: some View {
         Capsule()
             .fill(Color.ink.opacity(0.25))
             .frame(width: 36, height: 5)
-            .frame(maxWidth: .infinity, minHeight: 20)
+            .frame(maxWidth: .infinity, minHeight: 24)
             .contentShape(.rect)
             .gesture(
-                DragGesture(minimumDistance: 4)
-                    .onChanged { value in
-                        let pull = -value.translation.height
-                        lift = pull > 0 ? -pow(pull, 0.7) : min(-pull, 40) * 0.25
-                    }
+                // Global, because the grabber rides on the card it moves, and local translations would feed back.
+                DragGesture(minimumDistance: 4, coordinateSpace: .global)
+                    .onChanged { pull = $0.translation.height }
                     .onEnded { value in
-                        let opens = value.translation.height < -60 || value.predictedEndTranslation.height < -160
-                        withAnimation(.snappy) { lift = 0 }
-                        if opens { expand() }
+                        let velocity = value.velocity.height
+                        if pull < -8, -pull > room * 0.3 || velocity < -500 {
+                            withAnimation(.snappy(duration: 0.26)) { pull = -room } completion: {
+                                if !expand() { withAnimation(.spring(duration: 0.35, bounce: 0.15)) { pull = 0 } }
+                            }
+                        } else if pull > 8, pull > 120 || velocity > 500 {
+                            navigator.sheet = nil
+                        } else {
+                            withAnimation(.spring(duration: 0.35, bounce: 0.15)) { pull = 0 }
+                        }
                     }
             )
             .onTapGesture { expand() }
@@ -543,11 +571,13 @@ struct QuickAddSheet: View {
     }
 
     /// The full editor is task details, so expanding saves the draft, even untitled, closes quick add, and opens it there.
-    private func expand() {
-        guard let added = save(untitled: true) else { return }
+    @discardableResult
+    private func expand() -> Bool {
+        guard let added = save(untitled: true) else { return false }
         navigator.sheet = nil
         navigator.reveal(added, labels: store.labels, today: clock.today, in: clock.timeZone)
         navigator.sheet = .details(taskID: added.id)
+        return true
     }
 }
 

@@ -244,6 +244,34 @@ test('quick add suggests the project, section, and label of similar past tasks, 
 	await expect(app.row('water the roses')).toContainText('weekend');
 });
 
+test('suggestion pills float above quick add, so the field never moves while they come and go', async ({
+	app,
+	page,
+}) => {
+	await app.addCreating('Mow @weekend lawn');
+	await app.add('Water the plants @weekend', 'Water the lawn @weekend');
+	await app.go('Inbox');
+	await app.openQuickAdd();
+	await app.settle();
+	const sheet = app.quickAdd();
+	const field = async () => (await app.taskInput().boundingBox())!;
+	const before = { field: await field(), sheet: (await sheet.boundingBox())! };
+
+	await app.taskInput().pressSequentially('water the roses');
+	const suggestions = sheet.getByRole('group', { name: 'Suggestions' });
+	await expect(suggestions.getByRole('button')).toHaveText(['weekend']);
+	await app.settle();
+	expect(await field()).toEqual(before.field);
+	expect((await sheet.boundingBox())!.height).toBe(before.sheet.height);
+	const pills = (await suggestions.boundingBox())!;
+	expect(pills.y + pills.height).toBeLessThanOrEqual(before.sheet.y);
+	await page.screenshot({ path: 'test-results/quick-add/pills-above.png' });
+
+	await app.taskInput().fill('');
+	await expect(suggestions).toBeHidden();
+	expect(await field()).toEqual(before.field);
+});
+
 test('quick add opened in a section keeps it, and suggests another place only when the history is sure', async ({
 	app,
 	page,
@@ -370,6 +398,57 @@ test('expanding a titled draft saves it and opens it in task details', async ({ 
 
 test.describe('on a phone', () => {
 	test.use({ viewport: { width: 393, height: 852 } });
+
+	test('dragging the grabber follows the finger, and an empty draft dragged up opens in task details', async ({
+		app,
+		page,
+	}) => {
+		await app.openQuickAdd();
+		await app.settle();
+		const sheet = app.quickAdd();
+		const rest = (await sheet.boundingBox())!;
+		const grip = (await sheet.locator('[data-quick-add-grabber]').boundingBox())!;
+		const x = grip.x + grip.width / 2;
+		const y = grip.y + grip.height / 2;
+
+		await page.mouse.move(x, y);
+		await page.mouse.down();
+		await page.mouse.move(x, y + 60, { steps: 6 });
+		expect((await sheet.boundingBox())!.y).toBeCloseTo(rest.y + 60, 0);
+		await page.mouse.move(x, y + 10, { steps: 6 });
+		await page.mouse.up();
+		await app.settle();
+		expect((await sheet.boundingBox())!).toEqual(rest);
+
+		await page.mouse.move(x, y);
+		await page.mouse.down();
+		await page.mouse.move(x, y - 120, { steps: 12 });
+		const pulled = (await sheet.boundingBox())!;
+		expect(pulled.height).toBeCloseTo(rest.height + 120, 0);
+		expect(pulled.y + pulled.height).toBeCloseTo(rest.y + rest.height, 0);
+		await page.screenshot({ path: 'test-results/quick-add/mid-drag.png' });
+		await page.mouse.move(x, y - 320, { steps: 12 });
+		await page.mouse.up();
+
+		await expect(sheet).toBeHidden();
+		const title = app.details().getByRole('textbox', { name: 'Title' });
+		await expect(title).toBeFocused();
+		await expect(title).toHaveValue('');
+	});
+
+	test('dragging the grabber down far enough closes quick add', async ({ app, page }) => {
+		await app.openQuickAdd();
+		await app.settle();
+		const grip = (await app.quickAdd().locator('[data-quick-add-grabber]').boundingBox())!;
+		const x = grip.x + grip.width / 2;
+		const y = grip.y + grip.height / 2;
+		await page.mouse.move(x, y);
+		await page.mouse.down();
+		await page.mouse.move(x, y + 300, { steps: 12 });
+		await page.mouse.up();
+		await expect(app.quickAdd()).toBeHidden();
+		await expect(app.details()).toBeHidden();
+	});
 
 	test('quick add fits its chips and footer on screen', async ({ app, page }) => {
 		await app.openQuickAdd();

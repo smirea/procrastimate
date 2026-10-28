@@ -1,7 +1,7 @@
 import Core
 import SwiftUI
 
-/// Values similar past tasks were filed under, offered under the title. A tap sets one, and its pill goes.
+/// Values similar past tasks were filed under, offered above the card. A tap sets one, and its pill goes.
 struct SuggestionPills: View {
     @Environment(Store.self) private var store
     let pills: [TaskSuggestions.Pill]
@@ -23,6 +23,8 @@ struct SuggestionPills: View {
                         .frame(minHeight: 30)
                         // Dashed and unfilled, so an offer reads apart from the chips of what the task already holds.
                         .overlay { Capsule().strokeBorder(shown.tone.opacity(0.45), style: StrokeStyle(lineWidth: 1, dash: [3, 3])) }
+                        // Glass, so the offer reads over the scrim above the card.
+                        .glassEffect(.regular, in: .capsule)
                         .frame(minHeight: 44)
                         .contentShape(.rect)
                     }
@@ -33,6 +35,7 @@ struct SuggestionPills: View {
             }
         }
         .scrollIndicators(.hidden)
+        .scrollClipDisabled()
         .padding(.vertical, -6)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Suggestions")
