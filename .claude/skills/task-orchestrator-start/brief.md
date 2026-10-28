@@ -17,7 +17,7 @@ The Mac runs many jobs at once, and each booted simulator slows all of them. Cli
 3. UI behavior: `./sim test <file.swift>... [--only Class/test]`. It builds, boots, runs throwaway XCUITests under a time limit, and shuts the simulator down. In each test, start the app with `launchApp(demo:reset:environment:)` and save screenshots with `shot("name")`; both come from the generated `Support.swift`. Write the test files outside the repo, batch every check into one run, and finish the web side first so the simulator boots once, late. Never build your own XCUITest project in `/tmp`.
 
 - Only when you must look at the live app by hand: `./sim --no-watch` builds and launches it headless, and `xcrun simctl io $(./sim udid) screenshot <file>.png` captures it. Never `simctl boot` yourself. `--keep` on `./sim test` and a manual launch both leave it booted: `./sim stop` as soon as you have what you need.
-- A headless simulator can't prove notification banners, pushes, or anything needing a physical device. Prove the logic with tests, then report the on-device check as a followup instead of trying.
+- A headless simulator can't prove notification banners, pushes, or real camera hardware. Prove the logic with tests, then report the on-device check as a followup instead of trying. Everything else, including widgets, their animations, and layouts, the simulator can prove: test it there with `./sim test` and never hand it to Stefan as a device check.
 - You have no `device_open`; agent device access is off.
 
 ## Shell
