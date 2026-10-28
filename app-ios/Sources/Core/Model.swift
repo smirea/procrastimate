@@ -20,5 +20,6 @@ public typealias Project = API.Project
 public typealias ProjectIcon = API.ProjectIcon
 /// SwiftUI has its own `Section`, so a project's section is a `ProjectSection`.
 public typealias ProjectSection = API.ProjectSection
+public typealias SectionCounter = API.SectionCounter
 public typealias Label = API.Label
 public typealias Person = API.Person

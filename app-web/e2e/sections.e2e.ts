@@ -1,3 +1,5 @@
+import type { DateKey } from '../../shared/task.ts';
+import { project, section, task } from '../../shared/testing.ts';
 import { NOW, expect, test } from './fixtures';
 
 test('sections group a project, take tasks from quick add and details, and rename, reorder, and delete', async ({
@@ -90,4 +92,57 @@ test('sections group a project, take tasks from quick add and details, and renam
 	await expect(page.getByRole('region', { name: 'Someday' })).toHaveCount(0);
 	await expect(app.row('Fix fence')).toHaveCount(0);
 	await expect(app.row('Paint door')).toBeVisible();
+});
+
+test('a section can show a pending count badge: due tasks like the Inbox badge, else every open task in the accent', async ({
+	app,
+	page,
+}) => {
+	const home = crypto.randomUUID();
+	const errands = crypto.randomUUID();
+	let createdAt = NOW.getTime();
+	const row = (title: string, due: DateKey | null = null) => ({
+		kind: 'task' as const,
+		fields: task(crypto.randomUUID(), {
+			title,
+			projectId: home,
+			sectionId: errands,
+			due: due ? { date: due, time: null } : null,
+			createdAt: createdAt++,
+		}),
+	});
+	await app.seed(
+		{ kind: 'project', fields: project(home, { name: 'Home', createdAt: createdAt++ }) },
+		{ kind: 'section', fields: section(errands, home, { name: 'Errands', createdAt: createdAt++ }) },
+		row('Post the parcel', '2026-10-14'),
+		row('Buy stamps', '2026-10-20'),
+		row('Return the drill'),
+	);
+	await app.nav('Home').click();
+	const region = page.getByRole('region', { name: 'Errands' });
+	await expect(region.locator('[data-badge]')).toHaveCount(0);
+
+	await page.getByRole('button', { name: 'Errands', exact: true }).click();
+	const toggle = page.getByRole('menuitemcheckbox', { name: 'Show pending count' });
+	await expect(toggle).toHaveAttribute('aria-checked', 'false');
+	await toggle.click();
+	const badge = region.locator('[data-badge]');
+	await expect(badge).toHaveAttribute('data-badge', 'due');
+	await expect(badge).toHaveText('1 due or overdue');
+	await app.settle();
+	await page.screenshot({ path: 'test-results/sections/badge-due.png' });
+
+	await app.row('Post the parcel').getByRole('checkbox', { name: 'Complete Post the parcel' }).click();
+	await expect(badge).toHaveAttribute('data-badge', 'pending');
+	await expect(badge).toHaveText('2 open');
+	await app.settle();
+	await page.screenshot({ path: 'test-results/sections/badge-pending.png' });
+
+	await app.reload();
+	await expect(page.getByRole('region', { name: 'Errands' }).locator('[data-badge]')).toHaveText('2 open');
+
+	await page.getByRole('button', { name: 'Errands', exact: true }).click();
+	await expect(toggle).toHaveAttribute('aria-checked', 'true');
+	await toggle.click();
+	await expect(page.getByRole('region', { name: 'Errands' }).locator('[data-badge]')).toHaveCount(0);
 });

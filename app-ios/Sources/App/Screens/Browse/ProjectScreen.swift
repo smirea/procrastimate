@@ -85,12 +85,13 @@ struct ProjectScreen: View {
 }
 
 /// A section's heading in its project. Its accent `+` adds a task to it. A tap or a long press anywhere else opens its
-/// menu, titled with the section's name: add a task to it, copy it, and in the user's own project rename, move, and
-/// delete it.
+/// menu, titled with the section's name: add a task to it, copy it, and in the user's own project show its pending count
+/// badge, rename, move, and delete it.
 private struct SectionHeading: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(TaskActions.self) private var actions
+    @Environment(\.today) private var today
     let section: ProjectSection
     let tasks: [TaskItem]
     let index: Int
@@ -149,6 +150,10 @@ private struct SectionHeading: View {
                     )
                 }
                 if editable {
+                    Toggle("Show pending count", systemImage: "1.circle", isOn: Binding(
+                        get: { section.counter == .badge },
+                        set: { on in withAnimation(.snappy) { store.setSectionCounter(section.id, on ? .badge : .quiet) } }
+                    ))
                     Button("Rename", systemImage: "pencil") {
                         draft = section.name
                         renaming = true
@@ -170,7 +175,11 @@ private struct SectionHeading: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.ink)
                 Spacer(minLength: 0)
-                PendingCount(open: tasks.count)
+                if section.counter == .badge {
+                    SectionBadgeView(badge: Views.sectionBadge(tasks, today, in: store.timeZone))
+                } else {
+                    PendingCount(open: tasks.count)
+                }
             }
             .frame(minHeight: 44)
             .contentShape(.rect)
@@ -178,5 +187,26 @@ private struct SectionHeading: View {
         .buttonStyle(.plain)
         .accessibilityAddTraits(.isHeader)
         .accessibilityIdentifier("heading-\(section.name)")
+    }
+}
+
+/// A section's opt-in pill, drawn like the Inbox tab's badge: red while it counts due tasks, in the accent otherwise.
+private struct SectionBadgeView: View {
+    let badge: Views.SectionBadge?
+
+    var body: some View {
+        if let badge {
+            Text("\(badge.count)")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.white)
+                .monospacedDigit()
+                .contentTransition(.numericText(value: Double(badge.count)))
+                .padding(.horizontal, 5)
+                .frame(minWidth: 18, minHeight: 18)
+                .background(badge.due ? Color.red : Color.accent, in: .capsule)
+                .animation(.snappy, value: badge)
+                .accessibilityLabel(badge.due ? "\(badge.count) due or overdue" : "\(badge.count) open")
+                .accessibilityIdentifier(badge.due ? "section-badge-due" : "section-badge-pending")
+        }
     }
 }

@@ -968,6 +968,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Later",
@@ -1055,6 +1056,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Later",
@@ -1183,6 +1185,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Later",
@@ -1642,6 +1645,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-3",
 							"name": "Someday",
@@ -1650,6 +1654,7 @@
 							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
 						},
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-4",
 							"name": "Reading",
@@ -2286,6 +2291,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-3",
 							"name": "Someday",
@@ -2294,6 +2300,7 @@
 							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
 						},
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-4",
 							"name": "Reading",
@@ -2684,6 +2691,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-3",
 							"name": "Someday",
@@ -2692,6 +2700,7 @@
 							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
 						},
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-4",
 							"name": "Reading",
@@ -3303,6 +3312,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-3",
 							"name": "Someday",
@@ -3311,6 +3321,7 @@
 							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
 						},
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-4",
 							"name": "Reading",
@@ -3947,6 +3958,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-3",
 							"name": "Someday",
@@ -3955,6 +3967,7 @@
 							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
 						},
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-4",
 							"name": "Reading",
@@ -5563,6 +5576,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 2000,
 							"id": "id-1",
 							"name": "Someday",
@@ -5571,6 +5585,7 @@
 							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
 						},
 						{
+							"counter": "quiet",
 							"createdAt": 2000,
 							"id": "id-2",
 							"name": "Reading",
@@ -5930,6 +5945,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 0,
 							"id": "s-mine",
 							"name": "someday",
@@ -6223,6 +6239,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 0,
 							"id": "s-mine",
 							"name": "someday",
@@ -6231,6 +6248,7 @@
 							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
 						},
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Reading",
@@ -7681,6 +7699,7 @@
 					"reads": [],
 					"sections": [
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-2",
 							"name": "Someday",
@@ -7689,6 +7708,7 @@
 							"sourceKey": "todoist:section:8Xmpl2Wq:Someday"
 						},
 						{
+							"counter": "quiet",
 							"createdAt": 1000,
 							"id": "id-3",
 							"name": "Reading",

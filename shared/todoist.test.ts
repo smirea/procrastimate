@@ -331,7 +331,9 @@ describe('merging into the store', () => {
 		const state: ImportState = {
 			tasks: [],
 			projects: [{ id: 'p-long', name: 'Long Term', order: 0, icon: null, createdAt: 0 }],
-			sections: [{ id: 's-mine', projectId: 'p-long', name: 'someday', order: 0, createdAt: 0 }],
+			sections: [
+				{ id: 's-mine', projectId: 'p-long', name: 'someday', order: 0, counter: 'quiet' as const, createdAt: 0 },
+			],
 			labels: [],
 			comments: [],
 			reads: [],

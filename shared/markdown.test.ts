@@ -73,7 +73,14 @@ describe('toMarkdown', () => {
 
 	test('a project copies its loose tasks first, then each section with tasks under its name', () => {
 		const work = { id: 'work', name: 'Work', order: 0, icon: null, createdAt: 0 };
-		const section = (id: string, name: string) => ({ id, projectId: 'work', name, order: 0, createdAt: 0 });
+		const section = (id: string, name: string) => ({
+			id,
+			projectId: 'work',
+			name,
+			order: 0,
+			counter: 'quiet' as const,
+			createdAt: 0,
+		});
 		const loose = task('Inbox zero', { projectId: 'work' });
 		const next = task('Ship it', { projectId: 'work', sectionId: 'next' });
 		const document = projectDocument(work, [

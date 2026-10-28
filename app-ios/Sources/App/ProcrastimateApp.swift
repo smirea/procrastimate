@@ -118,7 +118,7 @@ struct ProcrastimateApp: App {
                 .task { await IntentHarness.run() }
                 .task { await SharingDemo.run(sync: sync) }
                 .task {
-                    SectionsDemo.run(store: store, navigator: navigator)
+                    SectionsDemo.run(store: store, navigator: navigator, clock: clock)
                     WidgetsDemo.run(store: store, clock: clock)
                     await PlacesDemo.run(store: store, calendar: calendar, navigator: navigator, clock: clock)
                 }

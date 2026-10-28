@@ -1,6 +1,8 @@
 <script lang="ts">
 	import ArrowDown from 'phosphor-svelte/lib/ArrowDown';
 	import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
+	import Check from 'phosphor-svelte/lib/Check';
+	import NumberCircleOne from 'phosphor-svelte/lib/NumberCircleOne';
 	import { sectionTasks } from 'shared/store.ts';
 	import type { Section, Task } from 'shared/task.ts';
 	import CompletedList from './CompletedList.svelte';
@@ -26,10 +28,11 @@
 	}: { section: Section; tasks: Task[]; done: Task[]; index: number; count: number; editable: boolean; canAdd: boolean } = $props();
 
 	let renaming = $state(false);
+	const badged = $derived(section.counter === 'badge');
 </script>
 
 <section class="mt-6" aria-label={section.name}>
-	<SectionHeading heading={section.name} {tasks} add={canAdd ? { kind: 'project', id: section.projectId, sectionId: section.id } : undefined}>
+	<SectionHeading heading={section.name} {tasks} badge={badged} add={canAdd ? { kind: 'project', id: section.projectId, sectionId: section.id } : undefined}>
 		{#snippet title()}
 			{#if renaming}
 				<InlineEdit
@@ -50,6 +53,14 @@
 						Delete <strong>{section.name}</strong>{removing ? ` and its ${removing} task${removing === 1 ? '' : 's'}` : ''}?
 					{/snippet}
 					{#snippet after({ close })}
+						<button type="button" role="menuitemcheckbox" aria-checked={badged} class="menu-item" onclick={() => {
+							store.setSectionCounter(section.id, badged ? 'quiet' : 'badge');
+							close();
+						}}>
+							<NumberCircleOne size={15} weight={badged ? 'fill' : 'regular'} class={badged ? 'text-accent' : ''} />
+							<span class="flex-1">Show pending count</span>
+							{#if badged}<Check size={14} weight="bold" class="text-accent" />{/if}
+						</button>
 						<button type="button" class="menu-item" disabled={index === 0} onclick={() => {
 							store.moveSection(section.id, index - 1);
 							close();

@@ -3,7 +3,7 @@ import type { LabelColor } from 'shared/label-colors.ts';
 import type { ProjectIcon } from 'shared/project-icons.ts';
 import type { QuickAddButton } from 'shared/quick-add-buttons.ts';
 import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
-import type { SavedPlace } from 'shared/values.ts';
+import type { SavedPlace, SectionCounter } from 'shared/values.ts';
 import { DEFAULT_SETTINGS, type Comment, type Settings, type Snapshot } from 'shared/model.ts';
 import { rowWrites, sameValue } from 'shared/rows.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
@@ -560,6 +560,10 @@ class Store {
 
 	renameSection(id: string, name: string) {
 		if (this.homeOf(id) === null) this.#apply(rules.renameSection(this.own, id, name));
+	}
+
+	setSectionCounter(id: string, counter: SectionCounter) {
+		if (this.homeOf(id) === null) this.#apply(rules.setSectionCounter(this.own, id, counter));
 	}
 
 	moveSection(id: string, index: number) {

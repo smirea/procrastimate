@@ -14,6 +14,7 @@ import {
 	reminderSchema,
 	roleSchema,
 	savedPlaceSchema,
+	sectionCounterSchema,
 	shareTargetKindSchema,
 	taskEventSchema,
 	taskLocationSchema,
@@ -37,6 +38,7 @@ export const COLUMN_VALUES = {
 		images: z.array(imageRefSchema),
 	},
 	projects: { icon: projectIconSchema },
+	sections: { counter: sectionCounterSchema },
 	labels: { color: labelColorSchema, place: savedPlaceSchema },
 	settings: {
 		dictation: dictationChoiceSchema,

@@ -380,6 +380,7 @@
 					},
 					{
 						"section": {
+							"counter": "quiet",
 							"createdAt": 0,
 							"id": "next",
 							"name": "Next up",
@@ -413,6 +414,7 @@
 					},
 					{
 						"section": {
+							"counter": "quiet",
 							"createdAt": 0,
 							"id": "later",
 							"name": "Later",

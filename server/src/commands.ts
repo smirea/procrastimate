@@ -50,6 +50,7 @@ import {
 	savePlace,
 	setLabelColor,
 	setProjectIcon,
+	setSectionCounter,
 	setPlaceRadius,
 	updateTask,
 	type Creation,
@@ -441,6 +442,7 @@ export async function editSection(command: Command, id: string, edit: SectionEdi
 			if (next === data)
 				throw new ORPCError('BAD_REQUEST', { message: 'Another section in the project has that name' });
 		}
+		if (edit.counter !== undefined) next = setSectionCounter(next, id, edit.counter);
 		return edit.index === undefined ? next : moveSection(next, id, edit.index);
 	});
 	return visibleIn(snapshot.sections, id, 'section');

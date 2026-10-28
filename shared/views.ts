@@ -35,6 +35,13 @@ export type ProjectCompleted = z.infer<typeof projectCompletedSchema>;
 export const todaySchema = z.object({ overdue: z.array(taskSchema), today: z.array(taskSchema) }).meta({ id: 'Today' });
 export type Today = z.infer<typeof todaySchema>;
 
+export const sectionBadgeSchema = z.object({ count: z.number().int(), due: z.boolean() }).meta({
+	id: 'SectionBadge',
+	description:
+		"A section heading's opt-in pill. `due` paints it like the Inbox tab's badge; otherwise it is in the accent.",
+});
+export type SectionBadge = z.infer<typeof sectionBadgeSchema>;
+
 export const dueListSchema = z.enum(['inbox', 'tomorrow', 'this-week']).meta({ id: 'DueList' });
 export type DueList = z.infer<typeof dueListSchema>;
 
@@ -119,6 +126,17 @@ const dated = (tasks: readonly Task[], today: DateKey) =>
 		const due = scheduledDue(task, today);
 		return due ? [{ task, date: due.date }] : [];
 	});
+
+/**
+ * The pill a section with `counter: 'badge'` shows over its open rows: the overdue and today's ones when it has any, the
+ * same rule as the Inbox badge, else every open row. An empty section shows none.
+ */
+export function sectionBadge(rows: readonly Task[], today: DateKey): SectionBadge | null {
+	const due = todayTasks(rows, today);
+	const count = due.overdue.length + due.today.length;
+	if (count) return { count, due: true };
+	return rows.length ? { count: rows.length, due: false } : null;
+}
 
 export function todayTasks(tasks: readonly Task[], today: DateKey): Today {
 	const due = dated(tasks, today)

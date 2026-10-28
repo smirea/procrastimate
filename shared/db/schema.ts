@@ -6,7 +6,7 @@ import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 import { KINDS } from '../kinds.ts';
 import { LABEL_COLORS } from '../label-colors.ts';
 import { PROJECT_ICONS } from '../project-icons.ts';
-import { DEFAULT_PRIORITY, ROLES, SERVER_ACTOR, SHARE_TARGET_KINDS } from '../values.ts';
+import { DEFAULT_PRIORITY, ROLES, SECTION_COUNTERS, SERVER_ACTOR, SHARE_TARGET_KINDS } from '../values.ts';
 import type { ColumnValue } from './json.ts';
 
 /**
@@ -88,6 +88,10 @@ export const sections = sqliteTable(
 		projectId: text('project_id').notNull(),
 		name: text('name').notNull(),
 		order: real('position').notNull().default(0),
+		counter: text('counter', { enum: SECTION_COUNTERS })
+			.$type<ColumnValue<'sections', 'counter'>>()
+			.notNull()
+			.default('quiet'),
 		createdAt: millis('created_at').notNull(),
 		sourceKey: text('source_key'),
 	},

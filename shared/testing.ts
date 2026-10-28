@@ -40,6 +40,7 @@ export const section = (id: string, projectId: string, fields: Partial<Section> 
 	projectId,
 	name: id,
 	order: 0,
+	counter: 'quiet',
 	createdAt: 1,
 	...fields,
 });

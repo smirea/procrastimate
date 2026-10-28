@@ -122,6 +122,13 @@ export const agentExamples: readonly Example[] = [
 		query: { id: SECTION_ID },
 		body: { name: 'This week', index: 0 },
 	},
+	{
+		title: 'Show a section’s pending count badge',
+		method: 'PATCH',
+		path: '/api/sections',
+		query: { id: SECTION_ID },
+		body: { counter: 'badge' },
+	},
 	{ title: 'Add a label', method: 'POST', path: '/api/labels', body: { name: 'waiting', color: 'orange' } },
 	{
 		title: 'Rename and recolor a label',

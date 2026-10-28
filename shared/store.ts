@@ -7,7 +7,7 @@ import { labelSchema, projectSchema, sectionSchema, snapshotSchema, taskSchema }
 import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Section, type Task } from './task.ts';
 import { byCreation } from './snapshot.ts';
 import { placeKey } from './triggers.ts';
-import { imageRefSchema, type SavedPlace, type TaskLocation } from './values.ts';
+import { imageRefSchema, type SavedPlace, type SectionCounter, type TaskLocation } from './values.ts';
 
 /**
  * The store's commands as pure functions over its data, so the web store and the Swift store apply the same
@@ -390,7 +390,7 @@ export function addSection(
 	const existing = data.sections.find(s => s.projectId === projectId && sameName(s.name, name));
 	if (existing) return { data, section: existing };
 	const last = sectionsOf(data.sections, projectId).at(-1);
-	const section: Section = { id, projectId, name, order: last ? last.order + 1 : 0, createdAt: now };
+	const section: Section = { id, projectId, name, order: last ? last.order + 1 : 0, counter: 'quiet', createdAt: now };
 	return { data: { ...data, sections: [...data.sections, section] }, section };
 }
 
@@ -398,6 +398,10 @@ export function renameSection(data: StoreData, id: string, name: string): StoreD
 	const section = data.sections.find(s => s.id === id);
 	if (!section || takenIn(data, section.projectId, name, id)) return data;
 	return { ...data, sections: data.sections.map(s => (s.id === id ? { ...s, name } : s)) };
+}
+
+export function setSectionCounter(data: StoreData, id: string, counter: SectionCounter): StoreData {
+	return { ...data, sections: data.sections.map(s => (s.id === id ? { ...s, counter } : s)) };
 }
 
 export function moveSection(data: StoreData, id: string, index: number): StoreData {
