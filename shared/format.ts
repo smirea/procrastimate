@@ -20,6 +20,9 @@ export type DueTone = z.infer<typeof dueToneSchema>;
 
 export const priorityLabel = (priority: Priority) => `Priority ${priority}`;
 
+/** The title quick add gives a draft holding only images, so a snapped photo is one tap from a task. */
+export const imagesTitle = (count: number) => (count === 1 ? 'Photo' : `${count} photos`);
+
 export function formatTime(time: TimeOfDay): string {
 	const [h, m] = time.split(':').map(Number) as [number, number];
 	const suffix = h < 12 ? 'am' : 'pm';

@@ -106,6 +106,32 @@ test(
 	},
 );
 
+test('a quick add draft with images and no title saves named for them', async ({ app, page }) => {
+	const pick = async (count: number) => {
+		await app.quickAdd().getByRole('button', { name: 'More quick add actions' }).click();
+		const chooser = page.waitForEvent('filechooser');
+		await page.getByRole('menuitem', { name: 'Images' }).click();
+		await (await chooser).setFiles(await Promise.all(Array.from({ length: count }, () => png(page, 400, 300))));
+		await expect(app.quickAdd().getByRole('list', { name: 'Images to attach' }).locator('img')).toHaveCount(count);
+	};
+	const add = app.quickAdd().getByRole('button', { name: 'Add task', exact: true });
+	await app.openQuickAdd();
+	await expect(add).toBeDisabled();
+	await pick(1);
+	await expect(add).toBeEnabled();
+	await add.click();
+	await expect(app.taskInput()).toHaveValue('');
+	await expect(add).toBeDisabled();
+
+	await pick(2);
+	await app.taskInput().press('Enter');
+	await expect(app.taskInput()).toHaveValue('');
+	await app.closeQuickAdd();
+	await app.go('No date');
+	await expect(app.row('Photo').getByRole('img', { name: '1 image' })).toBeVisible();
+	await expect(app.row('2 photos').getByRole('img', { name: '2 images' })).toBeVisible();
+});
+
 test('images pasted or picked in quick add attach to the new task, and pasting or dropping into details adds more', async ({
 	app,
 	page,

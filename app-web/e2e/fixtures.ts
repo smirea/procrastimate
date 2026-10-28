@@ -328,7 +328,7 @@ export class App {
 		return boot(this.page, () => this.page.reload());
 	}
 
-	quickAdd = () => this.page.getByRole('dialog', { name: 'Quick add' });
+	quickAdd = () => this.page.getByRole('dialog', { name: 'Quick add', exact: true });
 	taskInput = () => this.quickAdd().getByRole('textbox', { name: 'Task name' });
 	details = () => this.page.getByRole('dialog', { name: 'Task details' });
 	/** Skips a row animating out, which `leaving` hides from assistive tech, so a moving row resolves once. */

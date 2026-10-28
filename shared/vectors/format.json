@@ -1298,6 +1298,22 @@
 					"label": "Next week"
 				}
 			]
+		},
+		{
+			"fn": "imagesTitle",
+			"test": "imagesTitle › names one photo, or counts several",
+			"input": [
+				1
+			],
+			"output": "Photo"
+		},
+		{
+			"fn": "imagesTitle",
+			"test": "imagesTitle › names one photo, or counts several",
+			"input": [
+				3
+			],
+			"output": "3 photos"
 		}
 	]
 }
