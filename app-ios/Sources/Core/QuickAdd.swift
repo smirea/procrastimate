@@ -763,4 +763,10 @@ public enum QuickAdd {
             tokens: tokens
         )
     }
+
+    /// A subtask line parses like quick add without `#` projects, because a subtask always shares its root's project.
+    /// `literal` is that line's own plain text toggle, separate from its parent's.
+    public static func parseSubtask(_ text: String, now: Date, labels: [Label], literal: Bool = false, in zone: TimeZone) -> Parsed {
+        parse(text, Options(now: now, labels: labels, literal: literal), in: zone)
+    }
 }

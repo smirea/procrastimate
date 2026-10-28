@@ -176,13 +176,6 @@ private struct SubtaskRow<Reorder: Gesture>: View {
     }
 }
 
-extension QuickAdd {
-    /// A subtask line parses like quick add without `#` projects, because a subtask always shares its root's project.
-    static func parseSubtask(_ text: String, now: Date, labels: [Core.Label], in timeZone: TimeZone) -> Parsed {
-        parse(text, Options(now: now, labels: labels), in: timeZone)
-    }
-}
-
 extension NewTask {
     init?(subtask parsed: QuickAdd.Parsed) {
         guard !parsed.title.isEmpty else { return nil }

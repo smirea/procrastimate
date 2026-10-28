@@ -432,6 +432,9 @@ private struct ParseInput: Decodable {
 @Sendable func quickAddVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "parseQuickAdd": return try json(QuickAdd.parse(a(0), a(1, as: ParseInput.self).options, in: a.zone))
+    case "parseSubtask":
+        let options = try a(1, as: ParseInput.self).options
+        return try json(QuickAdd.parseSubtask(a(0), now: options.now, labels: options.labels, literal: options.literal, in: a.zone))
     default: throw unknown(fn)
     }
 }

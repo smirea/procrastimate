@@ -38229,6 +38229,135 @@
 				"title": "Standup at 9am tomorrow #Home /Garden @calls p1 every mon remind me 5m before",
 				"tokens": []
 			}
+		},
+		{
+			"fn": "parseSubtask",
+			"test": "subtask lines › read phrases but never a project",
+			"input": [
+				"Buy milk tomorrow p2 @calls #Home",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom",
+							"place": null
+						}
+					],
+					"now": 1791986400000
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": null
+				},
+				"labelIds": [
+					"l-calls"
+				],
+				"location": null,
+				"priority": 2,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Buy milk #Home",
+				"tokens": [
+					{
+						"end": 17,
+						"kind": "due",
+						"start": 9,
+						"text": "tomorrow"
+					},
+					{
+						"end": 20,
+						"kind": "priority",
+						"start": 18,
+						"text": "p2"
+					},
+					{
+						"end": 27,
+						"kind": "label",
+						"start": 21,
+						"text": "@calls"
+					}
+				]
+			}
+		},
+		{
+			"fn": "parseSubtask",
+			"test": "subtask lines › with their own plain text toggle on, keep the line as typed",
+			"input": [
+				"Buy milk  tomorrow p2 @calls",
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-waiting",
+							"name": "Waiting",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-deep",
+							"name": "deep work",
+							"place": null
+						},
+						{
+							"color": "gray",
+							"createdAt": 0,
+							"id": "l-tom",
+							"name": "tom",
+							"place": null
+						}
+					],
+					"literal": true,
+					"now": 1791986400000
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Buy milk tomorrow p2 @calls",
+				"tokens": []
+			}
 		}
 	]
 }

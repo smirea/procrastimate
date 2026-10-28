@@ -22,6 +22,7 @@ struct QuickAddSheet: View {
     @State private var listAt: Int?
     @State private var subtasks: [DraftSubtask] = []
     @State private var subtaskText = ""
+    @State private var subtaskLiteral = false
     @State private var subtasksOpen = false
     /// Buttons opened from the `+` menu stay in the row for this draft, so their picker has a chip to hang from.
     @State private var opened: [QuickAddButton] = []
@@ -82,7 +83,7 @@ struct QuickAddSheet: View {
                 draftedImages.transition(.opacity.combined(with: .move(edge: .top)))
             }
             if subtasksOpen || !subtasks.isEmpty {
-                QuickAddSubtasks(spaceLabels: spaceLabels, subtasks: $subtasks, text: $subtaskText, focused: $subtaskFocused) { submit() }
+                QuickAddSubtasks(spaceLabels: spaceLabels, subtasks: $subtasks, text: $subtaskText, literal: $subtaskLiteral, focused: $subtaskFocused) { submit() }
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
             if !pills.isEmpty {
@@ -488,8 +489,9 @@ struct QuickAddSheet: View {
     private func save(untitled: Bool = false) -> TaskItem? {
         guard loadingImages == 0 else { return nil }
         guard let task = draft.resolve(draft.parse(context), untitled: untitled, images: drafted.count) else { return nil }
-        let typing = NewTask(subtask: QuickAdd.parseSubtask(subtaskText, now: clock.now, labels: spaceLabels, in: clock.timeZone))
-        let children = subtasks.map(\.task) + (typing.map { [$0] } ?? [])
+        let typing = DraftSubtask(text: subtaskText, literal: subtaskLiteral)
+            .parsed(now: clock.now, labels: spaceLabels, in: clock.timeZone, literal: subtaskLiteral)
+        let children = subtasks.compactMap { $0.task(now: clock.now, labels: spaceLabels, in: clock.timeZone) } + (typing.map { [$0] } ?? [])
         let added: TaskItem? = withAnimation(.snappy) {
             guard let added = store.addTask(task) else { return nil }
             for child in children { _ = store.addTask(child, parentId: added.id) }
@@ -513,6 +515,7 @@ struct QuickAddSheet: View {
             draft.startAtPlace(spaceLabels)
             subtasks = []
             subtaskText = ""
+            subtaskLiteral = false
             subtasksOpen = false
             opened = []
             drafted = []
