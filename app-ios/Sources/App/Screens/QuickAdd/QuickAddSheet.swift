@@ -490,7 +490,8 @@ struct QuickAddSheet: View {
         guard loadingImages == 0 else { return nil }
         guard let task = draft.resolve(draft.parse(context), untitled: untitled, images: drafted.count) else { return nil }
         let typing = DraftSubtask(text: subtaskText, literal: subtaskLiteral)
-        let children = (subtasks + [typing]).compactMap { $0.task(now: clock.now, labels: spaceLabels, in: clock.timeZone) }
+            .parsed(now: clock.now, labels: spaceLabels, in: clock.timeZone, literal: subtaskLiteral)
+        let children = subtasks.compactMap { $0.task(now: clock.now, labels: spaceLabels, in: clock.timeZone) } + (typing.map { [$0] } ?? [])
         let added: TaskItem? = withAnimation(.snappy) {
             guard let added = store.addTask(task) else { return nil }
             for child in children { _ = store.addTask(child, parentId: added.id) }

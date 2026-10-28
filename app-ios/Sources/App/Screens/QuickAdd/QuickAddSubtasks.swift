@@ -8,8 +8,13 @@ struct DraftSubtask: Identifiable, Hashable {
     let text: String
     var literal: Bool
 
-    func task(now: Date, labels: [Core.Label], in zone: TimeZone, literal: Bool? = nil) -> NewTask? {
-        NewTask(subtask: QuickAdd.parseSubtask(text, now: now, labels: labels, literal: literal ?? self.literal, in: zone))
+    /// It re-reads its line on every change, so a label created since could leave it no title; it keeps its text then.
+    func task(now: Date, labels: [Core.Label], in zone: TimeZone) -> NewTask? {
+        parsed(now: now, labels: labels, in: zone, literal: literal) ?? parsed(now: now, labels: labels, in: zone, literal: true)
+    }
+
+    func parsed(now: Date, labels: [Core.Label], in zone: TimeZone, literal: Bool) -> NewTask? {
+        NewTask(subtask: QuickAdd.parseSubtask(text, now: now, labels: labels, literal: literal, in: zone))
     }
 }
 
@@ -145,7 +150,7 @@ struct QuickAddSubtasks: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             plainTextToggle(
                 subtask.literal,
-                enabled: !subtask.literal || subtask.task(now: clock.now, labels: spaceLabels, in: clock.timeZone, literal: false) != nil
+                enabled: !subtask.literal || subtask.parsed(now: clock.now, labels: spaceLabels, in: clock.timeZone, literal: false) != nil
             ) {
                 guard let index = subtasks.firstIndex(where: { $0.id == subtask.id }) else { return }
                 subtasks[index].literal.toggle()

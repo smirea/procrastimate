@@ -75,7 +75,8 @@
 	const subtaskParsed = $derived(parseSubtask(subtaskText, subtaskLiteral));
 	const subtaskRows = $derived(
 		subtasks.flatMap((subtask) => {
-			const task = subtaskTask(parseSubtask(subtask.text, subtask.literal));
+			// A row re-reads its line on every change, so a label created since could leave it no title; it keeps its text then.
+			const task = subtaskTask(parseSubtask(subtask.text, subtask.literal)) ?? subtaskTask(parseSubtask(subtask.text, true));
 			return task ? [{ ...subtask, task }] : [];
 		}),
 	);
