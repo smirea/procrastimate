@@ -5,6 +5,8 @@
  *   ./sim [n] [launcher args]          build and run the app headless; --show opens Device Hub
  *   ./sim test [n] <file.swift>... [opts]  run throwaway XCUITests against the app (see sim-uitest.ts)
  *   ./sim stop                         shut down every simulator of this worktree
+ *
+ * A headless boot (`./sim`, `./sim test`) first waits while the Mac's total CPU is above 70%; see waitForCpu.
  *   ./sim udid [n]                     print the simulator's UDID, creating it if needed
  *
  * `n` picks an extra simulator named `<name>-n`.
@@ -12,7 +14,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { claim, type Device, devices, shutdown, simctl } from './simulators';
+import { claim, type Device, devices, shutdown, simctl, waitForCpu } from './simulators';
 import { runUITests } from './sim-uitest';
 
 const [base, ...args] = process.argv.slice(2);
@@ -65,12 +67,16 @@ if (command === 'stop') {
 	process.exitCode =
 		spawnSync('bun', ['app-ios/scripts/run', '-t', ensure().udid, '--build-only'], { stdio: 'inherit' }).status ?? 1;
 } else if (command === 'test') {
-	process.exitCode = await runUITests(ensure(), root, args);
+	const device = ensure();
+	if (device.state !== 'Booted') await waitForCpu(`booting ${name}`);
+	process.exitCode = await runUITests(device, root, args);
 } else if (args.some(arg => ['-h', '--help', '--targets'].includes(arg))) {
 	process.exitCode = spawnSync('bun', ['app-ios/scripts/run', ...args], { stdio: 'inherit' }).status ?? 1;
 } else {
 	const device = ensure();
 	const show = args.includes('--show');
+	// --show is the owner watching; only agents' headless boots wait.
+	if (!show && device.state !== 'Booted') await waitForCpu(`booting ${name}`);
 	const launcher = args.filter(arg => arg !== '--show');
 	process.exitCode =
 		spawnSync('bun', ['app-ios/scripts/run', '-t', device.udid, ...(show ? [] : ['--headless']), ...launcher], {
