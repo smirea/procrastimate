@@ -2,7 +2,7 @@
 # Calls the production agent API as the AI account.
 #   pm <METHOD> <path> [curl args...]                   raw call, e.g. pm GET /view
 #   pm complete <task id> <pr url> [note]               comment "<pr url>\n<note>", then complete; safe to rerun
-#   pm file <project id> <title> [notes] [--section id] [--parent id]
+#   pm file <project name or id> <title> [notes] [--section id] [--parent id]
 #                                                       add a task unless an open one in the project has this title;
 #                                                       prints "<id> <public link>"; safe to rerun
 #   pm link <task id>...                                print "<id> <public read-only link>" per task
@@ -37,6 +37,11 @@ api() {
 		"$APP_BOT_API_URL$path" "$@"
 }
 
+project_id() {
+	api GET /view | jq -r --arg p "$1" '[.projects[] | select(.id == $p or .name == $p)]
+		| if length == 1 then .[0].id else error("expected one project named \($p), found \(length)") end'
+}
+
 link() {
 	jq -n --arg id "$1" '{target:{kind:"task",id:$id}}' | api POST /links -d @- | jq -r .url
 }
@@ -53,7 +58,7 @@ complete)
 	echo "completed $task"
 	;;
 file)
-	project=$2 title=$3
+	project=$(project_id "$2") title=$3
 	shift 3
 	notes='' section='' parent=''
 	while (($#)); do

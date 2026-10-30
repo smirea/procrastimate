@@ -4,14 +4,14 @@
  *   - deletes simulators claimed by a worktree that no longer exists
  *   - shuts down claimed simulators unused for 15 minutes that no running process names
  *   - deletes Xcode DerivedData of the App project at paths that no longer exist
- *   - prints load, booted simulators, and worktree count
+ *   - prints CPU, load, booted simulators, and worktree count
  *   - lists worktrees whose PR merged, for teardown-worktree.ts
  */
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { run, worktrees } from './lib';
-import { devices, owner, remove, shutdown } from './simulators';
+import { cpuUsage, devices, owner, remove, shutdown } from './simulators';
 
 const dryRun = process.argv.includes('--dry-run');
 const IDLE_MS = 15 * 60_000;
@@ -57,7 +57,7 @@ const booted = devices()
 	.filter(device => device.state === 'Booted')
 	.map(device => device.name);
 console.log(
-	`Load ${tryRun(['sysctl', '-n', 'vm.loadavg']).replaceAll(/[{}]/g, '').trim()} on ${navigator.hardwareConcurrency} cores; ${booted.length} booted simulators${booted.length ? ` (${booted.join(', ')})` : ''}; ${known.length - 1} worktrees.`,
+	`CPU ${cpuUsage()}% (headless simulator boots wait above 70%); load ${tryRun(['sysctl', '-n', 'vm.loadavg']).replaceAll(/[{}]/g, '').trim()} on ${navigator.hardwareConcurrency} cores; ${booted.length} booted simulators${booted.length ? ` (${booted.join(', ')})` : ''}; ${known.length - 1} worktrees.`,
 );
 
 for (const { path, branch } of known.slice(1)) {
