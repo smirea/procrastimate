@@ -66,7 +66,11 @@ jobs:
 
       - name: Playwright version
         id: playwright
-        run: echo "version=$(bunx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+        # Playwright downloads browsers built for the runner's Ubuntu release, so the cache keys on ImageOS (ubuntu24,
+        # ubuntu26): a WebKit from 24.04 fails on 26.04 with a missing libicudata.so.74.
+        run: |
+          echo "version=$(bunx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+          echo "os=$ImageOS" >> "$GITHUB_OUTPUT"
         working-directory: app-web
 
       - name: Cache Playwright browsers
@@ -74,7 +78,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-chromium-webkit-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ steps.playwright.outputs.os }}-chromium-webkit-${{ steps.playwright.outputs.version }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
