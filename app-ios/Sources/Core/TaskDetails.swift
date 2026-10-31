@@ -84,6 +84,12 @@ public enum TaskDetails {
         return draft
     }
 
+    /// The phrases the field highlights: only an edit's, since the edit is what applies them. A phrase left in the
+    /// saved title stays text, so highlighting it would read as parsed while the chips keep the task's own values.
+    public static func tokens(_ task: TaskItem, title: String, _ parsed: QuickAdd.Parsed) -> [QuickAdd.Token] {
+        title == task.title ? [] : parsed.tokens
+    }
+
     public static func commitTitle(_ task: TaskItem, title: String, _ parsed: QuickAdd.Parsed) -> TitleCommit {
         if title == task.title { return .unchanged }
         if parsed.title.isEmpty { return .revert }

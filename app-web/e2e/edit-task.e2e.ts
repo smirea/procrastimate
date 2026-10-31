@@ -73,3 +73,28 @@ test('a rename from another device reaches an open, untouched title field, and c
 		.poll(() => app.page.evaluate(id => window.procrastimate.entity('task', id), id))
 		.toMatchObject({ title: 'Buy oat milk' });
 });
+
+test('a phrase left in a saved title stays text until the title is edited, so the highlight matches the chips', async ({
+	app,
+}) => {
+	await app.add('Sign out of prime');
+	const id = await app.taskId('Sign out of prime');
+	await app.pushFromOtherDevice({ kind: 'task', id, fields: { title: 'Sign out of prime nov 7' } });
+	await app
+		.row('Sign out of prime nov 7')
+		.getByRole('button', { name: 'Sign out of prime nov 7', exact: true })
+		.click();
+	const details = app.details();
+	const title = details.getByRole('textbox', { name: 'Title' });
+	await expect(title).toHaveValue('Sign out of prime nov 7');
+	await expect(details.locator('[data-token]')).toHaveCount(0);
+	await expect(details.getByRole('button', { name: 'Set due date' })).toBeVisible();
+
+	await title.press('End');
+	await title.pressSequentially(' p1');
+	await expect(details.locator('[data-token]')).toHaveText(['nov 7', 'p1']);
+	await expect(details.getByRole('button', { name: /^Due / })).toBeVisible();
+	await title.press('Enter');
+	await expect(title).toHaveValue('Sign out of prime');
+	await expect(details.getByRole('button', { name: /^Due / })).toBeVisible();
+});

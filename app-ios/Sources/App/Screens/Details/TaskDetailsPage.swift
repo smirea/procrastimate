@@ -84,7 +84,7 @@ private struct TaskDetailsForm: View {
                 LinkedField(text: title, focused: $titleFocused, inset: EdgeInsets(top: 8, leading: 5, bottom: 8, trailing: 5)) {
                     SmartInput(
                         text: $title,
-                        tokens: parsed.tokens,
+                        tokens: TaskDetails.tokens(task, title: title, parsed),
                         label: "Title",
                         suggestProjects: parent == nil,
                         projectId: draft.projectId,

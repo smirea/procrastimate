@@ -69,9 +69,12 @@
 			due: task.due,
 		}),
 	);
+	const edited = $derived(title !== task.title);
+	// A phrase left in the saved title stays text, so only an edit's phrases highlight, matching what the chips apply.
+	const tokens = $derived(edited ? parsed.tokens : []);
 	// The chips below show what the title will apply, so the edit can be checked before Enter or blur commits it.
 	const draft = $derived(
-		title !== task.title && parsed.title
+		edited && parsed.title
 			? {
 					title: parsed.title,
 					...typedOver(task, parsed, task.event),
@@ -227,7 +230,7 @@
 		{/if}
 		{#if editable}
 			<LinkedField text={title} class="px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre-wrap [overflow-wrap:anywhere]">
-				<SmartInput bind:value={() => title, (value) => (typed = value)} autofocus={untitled} placeholder="Task name" tokens={parsed.tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+				<SmartInput bind:value={() => title, (value) => (typed = value)} autofocus={untitled} placeholder="Task name" {tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
 			</LinkedField>
 		{:else}
 			<h2 class="text-[19px] font-semibold break-words"><LinkedText text={task.title} /></h2>
