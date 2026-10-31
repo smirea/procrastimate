@@ -25,6 +25,17 @@ import Testing
         #expect(TaskDetails.draft(task, title: task.title, parse(task.title, task)) == TaskDetails.Draft(task))
     }
 
+    /// A phrase left in a saved title, as plain text or from another source, is text: highlighting it read as parsed
+    /// while the chips kept the task's own date.
+    @Test func onlyAnEditedTitleHighlightsWhatItWillApply() {
+        let task = TaskItem(id: "t", title: "Sign out of prime and yt nov 7", due: Due(date: today, time: "09:00"), createdAt: 0)
+        #expect(TaskDetails.tokens(task, title: task.title, parse(task.title, task)).isEmpty)
+        #expect(TaskDetails.draft(task, title: task.title, parse(task.title, task)).due == Due(date: today, time: "09:00"))
+        let edited = task.title + " p1"
+        #expect(TaskDetails.tokens(task, title: edited, parse(edited, task)).map(\.text) == ["nov 7", "p1"])
+        #expect(TaskDetails.draft(task, title: edited, parse(edited, task)).due == Due(date: "2026-11-07", time: nil))
+    }
+
     @Test func committingTheTitleSavesTheDraftOrReverts() {
         let task = TaskItem(id: "t", title: "Standup", priority: .p3, createdAt: 0)
         #expect(TaskDetails.commitTitle(task, title: "Standup", parse("Standup", task)) == .unchanged)
