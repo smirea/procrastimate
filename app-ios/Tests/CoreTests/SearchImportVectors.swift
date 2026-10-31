@@ -44,16 +44,6 @@ private struct SearchNames: Decodable {
     }
 }
 
-@Sendable func taskSuggestionsVector(_ fn: String, _ a: Args) throws -> JSONValue {
-    switch fn {
-    case "suggestionWords": return try json(TaskSuggestions.words(a(0)))
-    case "pills":
-        let suggestions = TaskSuggestions.suggest(TaskSuggestions.index(try a(0)), try a(1), now: try a(2))
-        return try json(TaskSuggestions.pills(suggestions, draft: try a(3), available: try a(4)))
-    default: throw unknown(fn)
-    }
-}
-
 private struct MergeOptions: Decodable {
     let now: Int
 }

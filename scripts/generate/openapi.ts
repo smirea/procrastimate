@@ -18,7 +18,6 @@ import '../../shared/search';
 import '../../shared/snapshot';
 import '../../shared/store';
 import '../../shared/subtasks';
-import '../../shared/task-suggestions';
 import '../../shared/list-filters';
 import '../../shared/list-header';
 import '../../shared/theme';

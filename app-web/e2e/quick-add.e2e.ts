@@ -206,76 +206,7 @@ test('quick add reuses the last task’s project, section, and labels while the 
 	await expect(app.quickAdd().getByRole('button', { name: /^Labels/ })).toBeHidden();
 });
 
-test('quick add suggests the project, section, and label of similar past tasks, and a tap sets each', async ({
-	app,
-	page,
-}) => {
-	await app.addCreating('Mow @weekend lawn');
-	await app.createProject('Home');
-	await page.getByRole('button', { name: 'Add section' }).click();
-	await page.getByRole('textbox', { name: 'New section name' }).fill('Garden');
-	await page.getByRole('textbox', { name: 'New section name' }).press('Enter');
-	await app.add('Water the plants /Garden @weekend', 'Water the lawn /Garden @weekend');
-
-	await app.go('Inbox');
-	await app.openQuickAdd();
-	await app.taskInput().pressSequentially('water the roses');
-	const suggestions = app.quickAdd().getByRole('group', { name: 'Suggestions' });
-	await expect(suggestions.getByRole('button')).toHaveText(['Home / Garden', 'weekend']);
-
-	await suggestions.getByRole('button', { name: 'Suggest Home / Garden as project' }).click();
-	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Garden' })).toBeVisible();
-	await expect(suggestions.getByRole('button')).toHaveText(['weekend']);
-	await expect(app.taskInput()).toBeFocused();
-
-	await suggestions.getByRole('button', { name: 'Suggest weekend as label' }).click();
-	await expect(app.quickAdd().getByRole('button', { name: 'Labels weekend' })).toBeVisible();
-	await expect(suggestions).toBeHidden();
-	await expect(app.taskInput()).toHaveValue('water the roses');
-
-	await app.taskInput().press('Enter');
-	await expect(app.taskInput()).toHaveValue('');
-	await app.taskInput().pressSequentially('water the tulips');
-	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Garden' })).toBeVisible();
-	await expect(suggestions).toBeHidden();
-
-	await page.getByRole('button', { name: 'Show' }).click();
-	await expect(page.getByRole('list', { name: 'Garden tasks' }).locator('[data-task="water the roses"]')).toBeVisible();
-	await expect(app.row('water the roses')).toContainText('weekend');
-});
-
-test('suggestion pills float above quick add, so the field never moves while they come and go', async ({
-	app,
-	page,
-}) => {
-	await app.addCreating('Mow @weekend lawn');
-	await app.add('Water the plants @weekend', 'Water the lawn @weekend');
-	await app.go('Inbox');
-	await app.openQuickAdd();
-	await app.settle();
-	const sheet = app.quickAdd();
-	const field = async () => (await app.taskInput().boundingBox())!;
-	const before = { field: await field(), sheet: (await sheet.boundingBox())! };
-
-	await app.taskInput().pressSequentially('water the roses');
-	const suggestions = sheet.getByRole('group', { name: 'Suggestions' });
-	await expect(suggestions.getByRole('button')).toHaveText(['weekend']);
-	await app.settle();
-	expect(await field()).toEqual(before.field);
-	expect((await sheet.boundingBox())!.height).toBe(before.sheet.height);
-	const pills = (await suggestions.boundingBox())!;
-	expect(pills.y + pills.height).toBeLessThanOrEqual(before.sheet.y);
-	await page.screenshot({ path: 'test-results/quick-add/pills-above.png' });
-
-	await app.taskInput().fill('');
-	await expect(suggestions).toBeHidden();
-	expect(await field()).toEqual(before.field);
-});
-
-test('quick add opened in a section keeps it, and suggests another place only when the history is sure', async ({
-	app,
-	page,
-}) => {
+test('quick add opened in a section starts in it, and saves there', async ({ app, page }) => {
 	await app.createProject('Home');
 	for (const name of ['Garden', 'Kitchen']) {
 		await page.getByRole('button', { name: 'Add section' }).click();
@@ -283,36 +214,15 @@ test('quick add opened in a section keeps it, and suggests another place only wh
 		await page.getByRole('textbox', { name: 'New section name' }).press('Enter');
 	}
 	await app.add('Water the plants /Garden', 'Water the lawn /Garden', 'Water the herbs /Kitchen');
-	const suggestions = app.quickAdd().getByRole('group', { name: 'Suggestions' });
 
-	await app.go('Inbox');
-	await app.openQuickAdd();
-	await app.taskInput().pressSequentially('water the roses');
-	await expect(suggestions.getByRole('button')).toHaveText(['Home']);
-	await app.closeQuickAdd();
-
-	await app.nav('Home').click();
 	await page.getByRole('region', { name: 'Kitchen' }).getByRole('button', { name: 'Add task to Kitchen' }).click();
 	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Kitchen' })).toBeVisible();
 	await app.taskInput().pressSequentially('water the roses');
 	await expect(app.quickAdd().getByRole('button', { name: 'Project Home / Kitchen' })).toBeVisible();
-	await expect(suggestions).toBeHidden();
 	await app.taskInput().press('Enter');
 	await expect(
 		page.getByRole('list', { name: 'Kitchen tasks' }).locator('[data-task="water the roses"]'),
 	).toBeAttached();
-	await app.closeQuickAdd();
-
-	await app.createProject('Work');
-	await page.getByRole('button', { name: 'Add section' }).click();
-	await page.getByRole('textbox', { name: 'New section name' }).fill('Desk');
-	await page.getByRole('textbox', { name: 'New section name' }).press('Enter');
-	await page.getByRole('region', { name: 'Desk' }).getByRole('button', { name: 'Add task to Desk' }).click();
-	await expect(app.quickAdd().getByRole('button', { name: 'Project Work / Desk' })).toBeVisible();
-	await app.taskInput().pressSequentially('water the ferns');
-	await expect(suggestions.getByRole('button')).toHaveText(['Home']);
-	await app.settle();
-	await page.screenshot({ path: 'test-results/quick-add/section-sure.png' });
 });
 
 test('expanding an untitled draft opens a new task in details with its metadata, the title focused', async ({
