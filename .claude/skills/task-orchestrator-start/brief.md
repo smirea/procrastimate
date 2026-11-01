@@ -12,7 +12,7 @@ You own this job end to end, through the merge. Stefan authorized you to merge y
 
 ## iOS: boot a simulator only to look at the app
 
-The Mac runs many jobs at once, and each booted simulator slows all of them. Climb this ladder and stop at the first rung that proves the change:
+The Mac runs many jobs at once, and each booted simulator slows all of them. Climb this ladder and stop at the first rung that proves the change, but a change to what the user sees or taps always reaches rung 3, and the test taps it:
 
 1. Logic in `app-ios/Sources/Core`: `app-ios/scripts/test` (seconds, no simulator).
 2. Does the app compile: `./sim build` (no boot). Use it after every rebase too. Never use `./sim --no-watch` as a compile check.
@@ -31,6 +31,14 @@ The Mac runs many jobs at once, and each booted simulator slows all of them. Cli
 - Never use `git stash`; it is shared with every worktree. Use a WIP commit. For a baseline on master, `git worktree add` a throwaway checkout instead.
 - The machine is loaded, so run e2e specs one or two at a time, and only those that cover the change. A timeout that passes when rerun alone is load; a failure that repeats is yours.
 - Git hooks can't be skipped (a Claude Code hook blocks it). A failing hook gets its cause fixed, in this PR or as a followup. A flaky test is a bad test: fix why it flakes, or report it as a followup with the failing output, and never add retries or sleeps. "Fails only in this environment" is a followup too, not a reason to move on.
+
+## Done means
+
+- You proved the change the way Stefan will use it: the tap and what it does, the command he runs, the page at desktop and phone widths. A screenshot proves a layout, not a behavior, so drive the interaction. `.cursor/skills/verify-procrastimate/features/` says how to drive each feature.
+- "The simulator can't test this" holds only for the device-only checks the iOS section lists. Anything else is a problem to solve, not a result.
+- Never make a path the default, or merge it, before it has worked once end to end.
+- A change to entitlements, `Info.plist`, app extensions, signing, or on-device stored data can crash the installed app at launch while every test passes. Install master's build on your simulator (from a throwaway `git worktree add`), then yours over it, and launch with the existing data. A Release-only setting you can't build locally gets a `tooling` followup and a line in `verification`.
+- The report's `verification` says what you ran, what you saw, and what you could not verify.
 
 ## PR
 
@@ -52,10 +60,11 @@ The Mac runs many jobs at once, and each booted simulator slows all of them. Cli
 
 ## Scope and report
 
+- Write the code yourself. Subagents only review or research, in the foreground.
 - Note bugs, weird interactions, bad UX, jank, or performance issues you find along the way as followups instead of fixing out-of-scope work. Report only real bugs and clearly useful gaps, not every edge case you can imagine. Dev-tooling friction (a slow command, a flaky tool, a manual step) is a followup with `"type": "tooling"` unless the fix is small enough to make in this PR.
 - Don't message the orchestrator mid-job. If you need input, end with `needs_input`, and keep your worktree as it is.
 - End with only this JSON:
 
 ```json
-{"status": "merged" | "needs_input" | "blocked", "pr": "<url or null>", "branch": "...", "worktree": "<absolute path>", "tasks": {"done": ["<id>"], "not_done": [{"id": "...", "reason": "..."}]}, "summary": "<2-4 sentences: what changed, clients covered, verification>", "questions": "<for needs_input/blocked>", "followups": [{"title": "...", "description": "...", "type": "bug" | "feature" | "tooling", "relatedTaskId": "..."}]}
+{"status": "merged" | "needs_input" | "blocked", "pr": "<url or null>", "branch": "...", "worktree": "<absolute path>", "tasks": {"done": ["<id>"], "not_done": [{"id": "...", "reason": "..."}]}, "summary": "<2-4 sentences: what changed, clients covered>", "verification": "<what you ran, what you saw, what you could not verify>", "questions": "<for needs_input/blocked>", "followups": [{"title": "...", "description": "...", "type": "bug" | "feature" | "tooling", "relatedTaskId": "..."}]}
 ```
