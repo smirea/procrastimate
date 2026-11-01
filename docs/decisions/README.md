@@ -34,7 +34,7 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Sharing](sharing.md): spaces, actors, shares, public links, AI accounts and their tokens, and who did what.
 - [Link previews](link-previews.md): a pasted URL becoming `[title](url)`, the server's title and favicon routes, and the site icon before every link.
 - [Comments](comments.md): comments on tasks, who may write them, per-user read markers, row badges, and the agent routes.
-- [Integrations](integrations.md): other apps, starting with Notouroboros, creating and reading tasks through the server, the shared keychain link, and deep links.
+- [Integrations](integrations.md): other apps, starting with Notouroboros, creating and reading tasks through the server, the shared keychain link, and deep links, and the Tinycast launcher extension.
 - [Observability](observability.md): Sentry projects for every client, when they report, the browser tunnel, distributed tracing, and releases.
 - [Sync tokens and access](sync-auth.md): the session token sync carries, the `access` table, admission on sync, and the install id.
 - [sync-engine migration](../sync-engine-migration.md): why Postgres and PowerSync gave way to sync-engine, the target design, and how production's data moved.

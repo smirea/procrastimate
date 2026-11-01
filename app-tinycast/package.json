@@ -1,0 +1,70 @@
+{
+	"$schema": "https://www.raycast.com/schemas/extension.json",
+	"name": "procrastimate",
+	"description": "Add tasks with quick add, see what is due, complete them, and move their dates.",
+	"categories": [
+		"Productivity"
+	],
+	"license": "MIT",
+	"author": "smirea",
+	"scripts": {
+		"build": "bun run --cwd .. generate && ray build -e dist -o dist",
+		"dev": "bun run --cwd .. generate && ray develop",
+		"check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@raycast/api": "^1.104.1"
+	},
+	"devDependencies": {
+		"@types/node": "26.6.4",
+		"@types/react": "19.0.10",
+		"typescript": "^5.9.3"
+	},
+	"icon": "icon.png",
+	"commands": [
+		{
+			"name": "add-task",
+			"title": "Add Task",
+			"subtitle": "ProcrastiMate",
+			"description": "Add a task the way quick add reads it: dates, repeats, p1 to p4, #Project, and @label.",
+			"mode": "no-view",
+			"arguments": [
+				{
+					"name": "text",
+					"placeholder": "Call the plumber tomorrow 5pm #Home p1",
+					"type": "text",
+					"required": true
+				}
+			]
+		},
+		{
+			"name": "tasks",
+			"title": "Tasks",
+			"subtitle": "ProcrastiMate",
+			"description": "See Today, the Inbox, This week, a project, or a label. Complete tasks, move their dates, or type to add one.",
+			"mode": "view"
+		}
+	],
+	"platforms": [
+		"macOS"
+	],
+	"preferences": [
+		{
+			"name": "token",
+			"title": "API Token",
+			"description": "An AI account token from ProcrastiMate's Settings, starting with pm.",
+			"type": "password",
+			"required": true,
+			"placeholder": "pm.…"
+		},
+		{
+			"name": "origin",
+			"title": "Server",
+			"description": "The ProcrastiMate address the token belongs to.",
+			"type": "textfield",
+			"required": false,
+			"default": "https://procrastimate.stf.lol"
+		}
+	],
+	"title": "ProcrastiMate"
+}
