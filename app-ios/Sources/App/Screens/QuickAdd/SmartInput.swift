@@ -213,7 +213,13 @@ struct SmartInput: View {
         while start < old.count, old[start] == new[start] { start += 1 }
         var end = 0
         while end < old.count - start, old[old.count - 1 - end] == new[new.count - 1 - end] { end += 1 }
-        let inserted = String(decoding: new[start ..< new.count - end], as: UTF16.self)
+        // Pasting `https://…` before an `h` matches one unit too many from the front; sliding the window back finds it.
+        var inserted = String(decoding: new[start ..< new.count - end], as: UTF16.self)
+        while Links.pastedUrl(inserted) == nil, start > 0, new[start - 1] == new[new.count - end - 1] {
+            start -= 1
+            end += 1
+            inserted = String(decoding: new[start ..< new.count - end], as: UTF16.self)
+        }
         guard let url = Links.pastedUrl(inserted) else { return }
         let at = start + inserted.utf16.count - String(inserted.drop { $0.isWhitespace }).utf16.count
         Task {

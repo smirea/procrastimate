@@ -161,7 +161,10 @@ function tags(html: string, name: string): Record<string, string>[] {
 
 const tidy = (title: string) => {
 	const text = decodeEntities(title).replace(/\s+/g, ' ').trim();
-	return text ? text.slice(0, TITLE_LENGTH) : null;
+	if (!text) return null;
+	// A cut through an emoji would leave half a surrogate pair, which Swift's JSON decoder refuses.
+	const end = /[\ud800-\udbff]/.test(text[TITLE_LENGTH - 1] ?? '') ? TITLE_LENGTH - 1 : TITLE_LENGTH;
+	return text.slice(0, end);
 };
 
 /** The `<title>` the browser tab shows, else the page's Open Graph or Twitter title, which pages built by script often only set. */
@@ -233,7 +236,11 @@ export async function faviconRoute(request: Request, app: App): Promise<Response
 		const icon = await fetchIcon(candidate);
 		if (icon) {
 			return new Response(icon.bytes, {
-				headers: { 'Content-Type': icon.type, 'Cache-Control': `private, max-age=${7 * DAY_S}` },
+				headers: {
+					'Content-Type': icon.type,
+					'Cache-Control': `private, max-age=${7 * DAY_S}`,
+					'X-Content-Type-Options': 'nosniff',
+				},
 			});
 		}
 	}

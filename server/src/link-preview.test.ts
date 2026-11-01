@@ -41,6 +41,7 @@ describe('pageTitle', () => {
 		["<meta name='twitter:title' content='Tweet'>", 'Tweet'],
 		['<body><title>In an SVG</title></body>', null],
 		['no markup', null],
+		[`<title>${'a'.repeat(199)}😀 more</title>`, 'a'.repeat(199)],
 	])('%p reads %p', (page, title) => {
 		expect(pageTitle(page)).toBe(title);
 	});
