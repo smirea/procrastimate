@@ -80,14 +80,9 @@ public enum Links {
         return segments
     }
 
-    /// A link's icon, fetched by the server from the link's host. See `docs/decisions/link-previews.md`.
+    /// A link's icon, fetched by the server from the page the link opens. See `docs/decisions/link-previews.md`.
     public static let faviconPath = "/api/favicon"
 
-    /// The host whose icon a link shows, lowercased, or nil for an href that does not parse.
-    public static func linkHost(_ href: String) -> String? {
-        guard let host = URL(string: href)?.host(), !host.isEmpty else { return nil }
-        return host.lowercased()
-    }
 
     /// The pasted text, trimmed, when it is one bare web URL and nothing else, the paste that becomes a titled link.
     public static func pastedUrl(_ pasted: String) -> String? {

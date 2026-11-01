@@ -43,7 +43,22 @@ describe('pageTitle', () => {
 		['no markup', null],
 		[`<title>${'a'.repeat(199)}😀 more</title>`, 'a'.repeat(199)],
 	])('%p reads %p', (page, title) => {
-		expect(pageTitle(page)).toBe(title);
+		expect(pageTitle(page, new URL('https://site.com/page'))).toBe(title);
+	});
+
+	const MAPS_PLACE =
+		'<title>Google Maps</title><meta content="HEAT Bootcamp · 5.0★(190) · Fitness center" property="og:title">';
+	test.each([
+		['a Google Maps place reads its name alone', 'https://www.google.com/maps?q=HEAT', MAPS_PLACE, 'HEAT Bootcamp'],
+		[
+			'a map that is not a place keeps the tab title',
+			'https://www.google.com/maps/@30,-97,12z',
+			'<title>Google Maps</title><meta content="Google Maps" property="og:title">',
+			'Google Maps',
+		],
+		['the same tags on another site keep the tab title', 'https://site.com/maps', MAPS_PLACE, 'Google Maps'],
+	])('%s', (_, url, page, title) => {
+		expect(pageTitle(page, new URL(url))).toBe(title);
 	});
 });
 
@@ -116,12 +131,17 @@ describe('GET /api/link-preview', () => {
 });
 
 describe('GET /api/favicon', () => {
-	const favicon = (host: string, session: Session | null = owner) =>
-		app.fetch(`/api/favicon?host=${host}`, { headers: session?.headers ?? {} });
+	const favicon = (url: string, session: Session | null = owner) =>
+		app.fetch(`/api/favicon?url=${encodeURIComponent(url)}`, { headers: session?.headers ?? {} });
 
-	test('answers the declared icon, cached for a week', async () => {
-		web({ 'https://site.com/': html('<link rel="icon" href="/icon.png">'), 'https://site.com/icon.png': png });
-		const response = await favicon('site.com');
+	test('answers the icon the page a link lands on declares, cached for a week', async () => {
+		web({
+			'https://short.link/x': () =>
+				new Response(null, { status: 302, headers: { location: 'https://site.com/maps?q=1' } }),
+			'https://site.com/maps?q=1': html('<link rel="icon" href="//cdn.site.com/maps.png">'),
+			'https://cdn.site.com/maps.png': png,
+		});
+		const response = await favicon('https://short.link/x');
 		expect(response.status).toBe(200);
 		expect(response.headers.get('content-type')).toBe('image/png');
 		expect(response.headers.get('cache-control')).toBe('private, max-age=604800');
@@ -130,14 +150,15 @@ describe('GET /api/favicon', () => {
 
 	test('falls back to /favicon.ico, and answers a miss cached for a day', async () => {
 		web({ 'https://plain.com/favicon.ico': png });
-		expect((await favicon('plain.com')).status).toBe(200);
-		const miss = await favicon('none.com');
+		expect((await favicon('https://plain.com/a/page')).status).toBe(200);
+		const miss = await favicon('https://none.com/page');
 		expect(miss.status).toBe(404);
 		expect(miss.headers.get('cache-control')).toBe('private, max-age=86400');
 	});
 
 	test('refuses a private host and a caller without a session', async () => {
-		expect((await favicon('localhost')).status).toBe(400);
-		expect((await favicon('site.com', null)).status).toBe(401);
+		expect((await favicon('http://localhost/x')).status).toBe(400);
+		expect((await favicon('not a url')).status).toBe(400);
+		expect((await favicon('https://site.com/', null)).status).toBe(401);
 	});
 });

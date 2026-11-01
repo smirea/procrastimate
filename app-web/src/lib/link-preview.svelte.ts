@@ -1,15 +1,14 @@
-import { FAVICON_PATH, linkHost } from 'shared/links.ts';
+import { FAVICON_PATH } from 'shared/links.ts';
 import { SvelteSet } from 'svelte/reactivity';
 import { api } from './api.ts';
 
-/** Icons that failed to load, which every link to that host then skips instead of leaving a gap. */
+/** Icons that failed to load, which every link to that page then skips instead of leaving a gap. */
 const missing = new SvelteSet<string>();
 
-/** The icon a link shows before its text, from the server's favicon route. Null for a host without one. */
+/** The icon a link shows before its text, from the server's favicon route. Null for a page without one. */
 export function faviconSrc(href: string): string | null {
-	const host = linkHost(href);
-	const src = host && `${FAVICON_PATH}?host=${encodeURIComponent(host)}`;
-	return src && !missing.has(src) ? src : null;
+	const src = `${FAVICON_PATH}?url=${encodeURIComponent(href)}`;
+	return missing.has(src) ? null : src;
 }
 
 /** A site without an icon, or a public link viewer without a session. */
