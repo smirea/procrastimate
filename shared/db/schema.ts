@@ -289,7 +289,10 @@ export const shares = sqliteTable(
 	table => [primaryKey({ columns: [table.userId, table.id] }), index('shares_grantee').on(table.grantee)],
 );
 
-/** An AI account's API token, kept by its owner. Only the secret's SHA-256 is stored. */
+/**
+ * An API token, kept by its owner. It acts as the owner's AI account `aiUserId`, or as the owner when `aiUserId` is the
+ * owner's own id (a personal token). Only the secret's SHA-256 is stored.
+ */
 export const apiTokens = sqliteTable(
 	'api_tokens',
 	{

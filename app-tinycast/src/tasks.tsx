@@ -8,6 +8,7 @@ import {
 	Icon,
 	List,
 	open,
+	openExtensionPreferences,
 	showToast,
 	Toast,
 	type Image,
@@ -21,7 +22,7 @@ import type { AgentTask, SpaceView } from 'shared/sharing.ts';
 import { projectsInOrder, type TaskPatch } from 'shared/store.ts';
 import { toDateKey, toTimeOfDay, type DateKey, type Due, type Priority, type Task } from 'shared/task.ts';
 import { dueDays, inboxTasks, labelViewTasks, projectGroups, todayTasks, type DueDays } from 'shared/views.ts';
-import { agentClient, showFailure, webUrl } from './api.ts';
+import { agentClient, failureOf, showFailure, webUrl, type Failure } from './api.ts';
 import {
 	addedMessage,
 	dueColor,
@@ -113,6 +114,8 @@ function listDefaults(list: ListId, today: DateKey): { projectId?: string; label
 export default function Tasks() {
 	const [view, setView] = useState<SpaceView | null>(cachedView);
 	const [loading, setLoading] = useState(true);
+	/** Why the last load failed, so an empty list says so instead of `All clear`. */
+	const [loadFailure, setLoadFailure] = useState<Failure | null>(null);
 	const [list, setList] = useState<ListId>('today');
 	const [query, setQuery] = useState('');
 	const today = todayKey();
@@ -123,7 +126,9 @@ export default function Tasks() {
 			const fresh = await agentClient().view({ query: {} });
 			cache.set(VIEW_KEY, JSON.stringify(fresh));
 			setView(fresh);
+			setLoadFailure(null);
 		} catch (error) {
+			setLoadFailure(failureOf(error, 'Could not load your tasks'));
 			await showFailure(error, 'Could not load your tasks');
 		} finally {
 			setLoading(false);
@@ -383,9 +388,26 @@ export default function Tasks() {
 					))}
 				</List.Section>
 			))}
-			{!loading && groups.every(group => group.tasks.length === 0) && !draft?.title && (
-				<List.EmptyView icon={Icon.CheckCircle} title={trimmed ? 'No matching tasks' : 'All clear'} />
-			)}
+			{!loading &&
+				groups.every(group => group.tasks.length === 0) &&
+				!draft?.title &&
+				(loadFailure ? (
+					<List.EmptyView
+						icon={Icon.ExclamationMark}
+						title={loadFailure.title}
+						description={loadFailure.message}
+						actions={
+							<ActionPanel>
+								{loadFailure.refused && (
+									<Action title='Open Preferences' onAction={() => void openExtensionPreferences()} />
+								)}
+								<Action title='Try Again' icon={Icon.ArrowClockwise} onAction={() => void reload()} />
+							</ActionPanel>
+						}
+					/>
+				) : (
+					<List.EmptyView icon={Icon.CheckCircle} title={trimmed ? 'No matching tasks' : 'All clear'} />
+				))}
 		</List>
 	);
 }

@@ -1,16 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { flip } from 'svelte/animate';
-	import { fly, slide } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import Check from 'phosphor-svelte/lib/Check';
-	import Copy from 'phosphor-svelte/lib/Copy';
 	import Key from 'phosphor-svelte/lib/Key';
 	import Plus from 'phosphor-svelte/lib/Plus';
-	import Robot from 'phosphor-svelte/lib/Robot';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import type { Person } from 'shared/sharing.ts';
 	import PersonName from './PersonName.svelte';
+	import TokenReveal from './TokenReveal.svelte';
 	import { api } from '../api.ts';
 	import { OptimisticList, type Row } from '../optimistic.svelte.ts';
 	import { session } from '../session.svelte.ts';
@@ -22,7 +20,6 @@
 	let name = $state('');
 	/** The secret is only ever in this response, so it lives here until the popover closes. Null while it is made. */
 	let token = $state.raw<{ key: string; made: { value: string; prompt: string } | null } | null>(null);
-	let copied = $state<'token' | 'prompt' | null>(null);
 	let confirming = $state<string | null>(null);
 
 	onMount(async () => {
@@ -53,7 +50,6 @@
 	async function generate(row: Row<Person>) {
 		const pending = { key: row.key, made: null };
 		token = pending;
-		copied = null;
 		const account = await row.saved;
 		const created = account
 			? await api.tokens.create({ aiUserId: account.id, name: account.name }).catch(() => null)
@@ -65,13 +61,6 @@
 			token = null;
 			if (account) toasts.show('Could not make a token');
 		}
-	}
-
-	async function copy(what: 'token' | 'prompt') {
-		const made = token?.made;
-		if (!made) return;
-		await navigator.clipboard?.writeText(what === 'token' ? made.value : made.prompt).catch(() => undefined);
-		copied = what;
 	}
 
 	function remove(row: Row<Person>) {
@@ -109,22 +98,7 @@
 					{/if}
 				</div>
 				{#if token?.key === row.key}
-					<div class="token mx-1.5 mb-1 flex flex-col gap-1.5 rounded-xl p-2" transition:slide={motion({ duration: 200, easing: cubicOut })}>
-						<p class="text-[12px] text-muted">Copy it now. It will not be shown again.</p>
-						<div class="flex items-center gap-1.5">
-							{#if token.made === null}
-								<span class="pending-value h-4 min-w-0 flex-1" role="status" aria-label="Making a token"></span>
-							{:else}
-								<code class="min-w-0 flex-1 truncate text-[12px] select-all" aria-label="Token" in:fly={motion({ y: 3, duration: 140 })}>{token.made.value}</code>
-							{/if}
-							<button type="button" class="btn btn-quiet h-8 px-3 text-[12px] touch:h-11" disabled={token.made === null} onclick={() => copy('token')}>
-								{#if copied === 'token'}<span class="flex items-center gap-1" in:fly={motion({ y: 3, duration: 140 })}><Check size={13} weight="bold" />Copied</span>{:else}<Copy size={13} />Copy{/if}
-							</button>
-						</div>
-						<button type="button" class="btn btn-quiet h-8 self-start px-3 text-[12px] touch:h-11" title="Copies the token with where to find the API docs" disabled={token.made === null} onclick={() => copy('prompt')}>
-							{#if copied === 'prompt'}<span class="flex items-center gap-1" in:fly={motion({ y: 3, duration: 140 })}><Check size={13} weight="bold" />Copied</span>{:else}<Robot size={13} />Copy prompt for your AI{/if}
-						</button>
-					</div>
+					<TokenReveal made={token.made} />
 				{/if}
 			</li>
 		{/each}
@@ -144,9 +118,5 @@
 		letter-spacing: 0.025em;
 		text-transform: uppercase;
 		color: var(--color-faint);
-	}
-
-	.token {
-		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 	}
 </style>

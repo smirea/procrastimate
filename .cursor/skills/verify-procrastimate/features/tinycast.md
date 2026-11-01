@@ -1,6 +1,6 @@
 # Tinycast
 
-The Tinycast launcher on the Mac adds and manages ProcrastiMate tasks through the `ProcrastiMate` extension in `app-tinycast/`. `Add Task` takes a line of quick add text and adds it. `Tasks` lists Today, Inbox, Tomorrow, This week, No date, a project, or a label, searches every open task as you type, and offers the typed text as a new task. Each row can be completed, moved to another date, given a priority, opened in the web app, or deleted. The extension signs in with an AI account token, so tasks it adds show that AI account as their creator.
+The Tinycast launcher on the Mac adds and manages ProcrastiMate tasks through the `ProcrastiMate` extension in `app-tinycast/`. `Add Task` takes a line of quick add text and adds it. `Tasks` lists Today, Inbox, Tomorrow, This week, No date, a project, or a label, searches every open task as you type, and offers the typed text as a new task. Each row can be completed, moved to another date, given a priority, opened in the web app, or deleted. The extension signs in with a personal token, so tasks it adds are the user's own. An AI account token also works, and then its tasks show that AI account as their creator.
 
 ## Sub-features
 
@@ -13,7 +13,7 @@ The Tinycast launcher on the Mac adds and manages ProcrastiMate tasks through th
 - `priority` sets priority 1 to 4 with `⌘P`.
 - `open` opens the task's details in the web app with `⌘O`, and the first link in its title with `⌘L`.
 - `delete` deletes a task and its subtasks with `⌃X` after a confirmation.
-- `bad-token` shows `ProcrastiMate refused the token` with `Open Preferences` when the token is wrong or revoked.
+- `bad-token` shows `ProcrastiMate refused the token` with `Open Preferences` when the token is wrong or revoked, and an empty `Tasks` list says the same instead of `All clear`.
 
 ## How to get to it (user POV)
 
@@ -25,7 +25,7 @@ The Tinycast launcher on the Mac adds and manages ProcrastiMate tasks through th
 Preconditions:
 
 - `bun run --cwd app-tinycast build`, then Tinycast → Settings → Extensions → Add from folder → `app-tinycast/dist`.
-- An AI account token from ProcrastiMate's Settings, pasted as the extension's `API Token`. For a disposable account, run the server locally, sign up, create an AI account and token, and set `Server` to the local address.
+- A personal token from ProcrastiMate's Settings (`Personal token`, `Generate token`), pasted as the extension's `API Token`. For a disposable account, run the server locally, sign up, generate a personal token, and set `Server` to the local address.
 
 - **Add command.** Run `Add Task` with `Call the plumber tomorrow 5pm p1`. The HUD reads `Added “Call the plumber” · Tomorrow 5pm`, and the web app's Tomorrow list shows it at 5pm with a red flag.
 - **Lists.** Run `Tasks`, pick `Tomorrow`. The row shows `Call the plumber` with `Tomorrow 5pm`.

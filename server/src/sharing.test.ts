@@ -561,6 +561,24 @@ describe('AI accounts', () => {
 		expect((await app.fetch('/api/view', { headers })).status).toBe(401);
 	});
 
+	test('a personal token acts as its owner until it is deleted, and is only ever the owner’s', async () => {
+		const made = await json<{ id: string; token: string }>(
+			call(owner, 'POST', '/api/ai-tokens', { aiUserId: owner.person.id, name: 'Tinycast' }),
+		);
+		const headers = tokenHeaders(made.token);
+		const created = await json<{ createdBy: string }>(
+			app.fetch('/api/tasks', { method: 'POST', headers, body: JSON.stringify({ title: 'From the launcher' }) }),
+		);
+		expect(created.createdBy).toBe(owner.person.id);
+		expect((await app.fetch('/api/me', { headers })).status).toBe(200);
+
+		const forGuest = await call(owner, 'POST', '/api/ai-tokens', { aiUserId: guest.person.id, name: 'Theirs' });
+		expect(forGuest.status).toBe(404);
+
+		expect((await call(owner, 'DELETE', `/api/ai-tokens?id=${made.id}`)).status).toBe(200);
+		expect((await app.fetch('/api/view', { headers })).status).toBe(401);
+	});
+
 	test('the agent API refuses a date or a repeat beside an event, which stands in for both', async () => {
 		const { token } = await aiAccount(app, owner, 'Planner');
 		const headers = tokenHeaders(token);

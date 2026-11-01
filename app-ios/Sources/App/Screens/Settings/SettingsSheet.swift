@@ -62,6 +62,8 @@ struct SettingsSheet: View {
                     }
                 }
 
+                PersonalTokenSection()
+
                 AIAccountsSection()
 
                 Section("Data") {

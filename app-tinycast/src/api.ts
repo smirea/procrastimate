@@ -11,7 +11,7 @@ export type AgentClient = JsonifiedClient<RouterContractClient<typeof agentContr
 
 function preferences(): Preferences {
 	const { token, origin } = getPreferenceValues<Preferences>();
-	if (!token.startsWith('pm.')) throw new Error('The API token must be an AI account token starting with pm.');
+	if (!token.startsWith('pm.')) throw new Error('The API token must be a ProcrastiMate token starting with pm.');
 	return { token, origin: new URL(origin).origin };
 }
 
@@ -30,19 +30,26 @@ export function agentClient(): AgentClient {
 	);
 }
 
-export async function showFailure(error: unknown, title: string) {
-	if (error instanceof ORPCError && error.code === 'UNAUTHORIZED') {
-		await showToast({
-			style: Toast.Style.Failure,
+export type Failure = { title: string; message: string; refused: boolean };
+
+export function failureOf(error: unknown, title: string): Failure {
+	if (error instanceof ORPCError && error.code === 'UNAUTHORIZED')
+		return {
 			title: 'ProcrastiMate refused the token',
-			message: 'Paste a fresh AI account token in the extension preferences.',
-			primaryAction: { title: 'Open Preferences', onAction: () => void openExtensionPreferences() },
-		});
-		return;
-	}
+			message: 'Paste a fresh token from ProcrastiMate’s Settings in the extension preferences.',
+			refused: true,
+		};
+	return { title, message: error instanceof Error ? error.message : String(error), refused: false };
+}
+
+export async function showFailure(error: unknown, title: string) {
+	const failure = failureOf(error, title);
 	await showToast({
 		style: Toast.Style.Failure,
-		title,
-		message: error instanceof Error ? error.message : String(error),
+		title: failure.title,
+		message: failure.message,
+		primaryAction: failure.refused
+			? { title: 'Open Preferences', onAction: () => void openExtensionPreferences() }
+			: undefined,
 	});
 }

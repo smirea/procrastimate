@@ -97,9 +97,11 @@ export const activityEntrySchema = z
 	});
 export type ActivityEntry = z.infer<typeof activityEntrySchema>;
 
-export const apiTokenSchema = apiTokensRowSchema
-	.omit({ userId: true, tokenHash: true })
-	.meta({ id: 'ApiToken', description: 'An AI account’s token. The secret is shown once, when it is made.' });
+export const apiTokenSchema = apiTokensRowSchema.omit({ userId: true, tokenHash: true }).meta({
+	id: 'ApiToken',
+	description:
+		'A token that acts as the owner’s AI account `aiUserId`, or as the owner when `aiUserId` is the owner’s own id. The secret is shown once, when it is made.',
+});
 export type ApiToken = z.infer<typeof apiTokenSchema>;
 
 export const createdApiTokenSchema = z

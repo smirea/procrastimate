@@ -6,6 +6,7 @@
 	import type { ImportSummary } from 'shared/todoist.ts';
 	import AccentPicker from './AccentPicker.svelte';
 	import AiAccounts from './AiAccounts.svelte';
+	import PersonalToken from './PersonalToken.svelte';
 	import Desktop from 'phosphor-svelte/lib/Desktop';
 	import Moon from 'phosphor-svelte/lib/Moon';
 	import Sun from 'phosphor-svelte/lib/Sun';
@@ -112,6 +113,8 @@
 	{:else}
 		<p class="px-1.5 text-[13px] text-ink">{notificationLine}</p>
 	{/if}
+
+	<PersonalToken />
 
 	<AiAccounts />
 
