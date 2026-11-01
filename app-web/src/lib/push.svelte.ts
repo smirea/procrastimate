@@ -5,7 +5,7 @@ import { notificationHref, pushSubscriptionSchema, type PushSubscriptionInfo } f
 import { api, isUnauthorized } from './api.ts';
 import { DEVICE_KEYS, installId } from './device.ts';
 import { forgetInstallId, rememberInstallId } from './install-cache.ts';
-import { isPushRefusal, refusalOver, refusedRecently } from './push-refusal.ts';
+import { refusalOver, refusedRecently, subscribe } from './push-refusal.ts';
 import { reportError } from './sentry.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
@@ -93,7 +93,9 @@ class Push {
 			await this.#subscribe(Promise.resolve('granted' as NotificationPermission), key);
 			return this.state;
 		}
-		const info = pushSubscriptionSchema.parse((current ?? (await rekey(registration, subscription, key))).toJSON());
+		const fresh = current ?? (await rekey(registration, subscription, key));
+		if (fresh === 'refused') return { kind: 'off' };
+		const info = pushSubscriptionSchema.parse(fresh.toJSON());
 		await this.#register(info);
 		return { kind: 'on', subscription: info };
 	}
@@ -140,6 +142,10 @@ class Push {
 				return;
 			}
 			const subscription = await subscribe(await navigator.serviceWorker.ready, key);
+			if (subscription === 'refused') {
+				this.state = { kind: 'off' };
+				return;
+			}
 			const info = pushSubscriptionSchema.parse(subscription.toJSON());
 			await this.#register(info);
 			this.state = { kind: 'on', subscription: info };
@@ -215,32 +221,22 @@ const REKEY_KEY = DEVICE_KEYS.pushRekey;
 /**
  * Moves a subscription made for a rotated server key to the current one. Permission is already granted, so this
  * needs no prompt. Browsers refuse a second key on a live subscription, so the old one goes first. A failed
- * subscribe throws, which leaves push in the `error` state that retries when the device comes back online or visible.
+ * subscribe throws, which leaves push in the `error` state that retries when the device comes back online or visible;
+ * a refused one waits out the backoff.
  */
 async function rekey(
 	registration: ServiceWorkerRegistration,
 	stale: PushSubscription | null | undefined,
 	key: Uint8Array<ArrayBuffer>,
-): Promise<PushSubscription> {
+): Promise<PushSubscription | 'refused'> {
 	localStorage.setItem(REKEY_KEY, '1');
 	await stale?.unsubscribe();
 	const fresh = await subscribe(registration, key);
-	localStorage.removeItem(REKEY_KEY);
+	if (fresh !== 'refused') localStorage.removeItem(REKEY_KEY);
 	return fresh;
 }
 
 const REFUSED_KEY = DEVICE_KEYS.pushRefusedAt;
-
-async function subscribe(registration: ServiceWorkerRegistration, key: Uint8Array<ArrayBuffer>) {
-	try {
-		const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
-		localStorage.removeItem(REFUSED_KEY);
-		return subscription;
-	} catch (error) {
-		if (isPushRefusal(error)) localStorage.setItem(REFUSED_KEY, String(Date.now()));
-		throw error;
-	}
-}
 
 function sameKey(current: ArrayBuffer | null, key: Uint8Array) {
 	if (!current) return false;
