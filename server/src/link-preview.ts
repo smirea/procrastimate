@@ -13,6 +13,7 @@ import { identify } from './sentry';
 const TIMEOUT_MS = 5000;
 const PAGE_BYTES = 2 * 1024 * 1024;
 const ICON_BYTES = 256 * 1024;
+const OEMBED_BYTES = 64 * 1024;
 const REDIRECTS = 5;
 const TITLE_LENGTH = 200;
 /** The link expanders' token gets the server-rendered metadata from sites that refuse unknown bots, such as the NYT. */
@@ -33,7 +34,8 @@ export function publicHost(host: string): boolean {
 
 /**
  * Follows redirects by hand, so each hop's host is checked, and answers where it landed. Null for a refused host, a
- * timeout, or no answer.
+ * timeout, or no answer. A redirect to Google's captcha is not followed: it answers the redirect, from the address that
+ * sent it.
  */
 async function fetchPublic(url: URL, accept: string): Promise<{ response: Response; url: URL } | null> {
 	const signal = AbortSignal.timeout(TIMEOUT_MS);
@@ -49,6 +51,7 @@ async function fetchPublic(url: URL, accept: string): Promise<{ response: Respon
 		await response.body?.cancel();
 		const next = URL.parse(location, at);
 		if (!next) return null;
+		if (botWall(next)) return { response, url: at };
 		at = next;
 	}
 	return null;
@@ -83,15 +86,17 @@ async function readCapped(response: Response, limit: number): Promise<Uint8Array
 
 /**
  * The page's head, read until `</head>` or `<body`, at most `PAGE_BYTES`: some heads are large, as YouTube's puts the
- * `<title>` 770 KB in.
+ * `<title>` 770 KB in. An answer that is not an HTML page reads as an empty one, at the address it came from, which
+ * still names the page to a site rule.
  */
 async function fetchPage(url: URL): Promise<{ html: string; url: URL } | null> {
 	const fetched = await fetchPublic(url, 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5');
-	const response = fetched?.response;
-	const type = response?.headers.get('content-type') ?? '';
-	if (!fetched || !response?.ok || !response.body || !/html/i.test(type)) {
-		await response?.body?.cancel();
-		return null;
+	if (!fetched) return null;
+	const { response } = fetched;
+	const type = response.headers.get('content-type') ?? '';
+	if (!response.ok || !response.body || !/html/i.test(type)) {
+		await response.body?.cancel().catch(() => {});
+		return { html: '', url: fetched.url };
 	}
 	const charset = /charset=["']?([\w-]+)/i.exec(type)?.[1];
 	let decoder: TextDecoder;
@@ -119,6 +124,26 @@ async function fetchPage(url: URL): Promise<{ html: string; url: URL } | null> {
 		await reader.cancel().catch(() => {});
 	}
 	return { html, url: fetched.url };
+}
+
+/** Google sends datacenter addresses, the Worker's included, to its captcha instead of the page they asked for. */
+const botWall = (url: URL) => url.hostname === 'www.google.com' && url.pathname.startsWith('/sorry/');
+
+async function oembedTitle(endpoint: string, url: URL): Promise<string | null> {
+	const response = (
+		await fetchPublic(new URL(`${endpoint}?format=json&url=${encodeURIComponent(url.href)}`), 'application/json')
+	)?.response;
+	if (!response?.ok) {
+		await response?.body?.cancel();
+		return null;
+	}
+	const bytes = await readCapped(response, OEMBED_BYTES);
+	try {
+		const { title } = JSON.parse(new TextDecoder().decode(bytes ?? undefined)) as { title?: unknown };
+		return typeof title === 'string' ? tidy(title) : null;
+	} catch {
+		return null;
+	}
 }
 
 const ENTITIES: Record<string, string> = {
@@ -181,21 +206,43 @@ function metaContent(head: string): Map<string, string> {
 	return found;
 }
 
-/**
- * Sites whose `<title>` names the site rather than the page, each with where its page's own name is. A rule that
- * finds nothing falls back to the general one.
- */
-const SITE_TITLES: { matches: (url: URL) => boolean; title: (meta: Map<string, string>) => string | undefined }[] = [
+type Site = {
+	matches: (url: URL) => boolean;
+	/** The page's own name, where its `<title>` names the site. Undefined falls back to the general rule. */
+	title?: (url: URL, meta: Map<string, string>) => string | undefined;
+	/** Read for the title before the page, for sites whose pages datacenters cannot read. */
+	oembed?: string;
+	/** Its icon, for sites whose pages datacenters cannot read. */
+	icon?: string;
+};
+
+/** Sites that need more than the general rules. From Cloudflare, Google sends both of these to its captcha. */
+const SITES: Site[] = [
 	{
-		// A place reads `Google Maps` in its tab; `og:title` is `HEAT Bootcamp · 5.0★(190) · Fitness center`, and the
-		// rating and category after the name would go stale in a task title.
-		matches: url => /(^|\.)google\.[a-z.]+$/.test(url.hostname) && url.pathname.startsWith('/maps'),
-		title: meta => {
+		// oEmbed answers datacenters, and its title has no ` - YouTube`.
+		matches: url => /(^|\.)youtube\.com$/.test(url.hostname) || url.hostname === 'youtu.be',
+		oembed: 'https://www.youtube.com/oembed',
+		icon: 'https://www.youtube.com/favicon.ico',
+	},
+	{
+		matches: url =>
+			/(^|\.)google\.[a-z.]+$/.test(url.hostname) &&
+			(url.hostname.startsWith('maps.') || url.pathname.startsWith('/maps')),
+		title: (url, meta) => {
+			// A place reads `Google Maps` in its tab; `og:title` is `HEAT Bootcamp · 5.0★(190) · Fitness center`, and
+			// the rating and category after the name would go stale in a task title.
 			const name = meta.get('og:title')?.split(' · ')[0];
-			return name === 'Google Maps' ? undefined : name;
+			if (name && name !== 'Google Maps') return name;
+			// Behind the captcha there is no page, but a shared place's short link redirects to a search for
+			// `HEAT Bootcamp, 2210 S 1st St #A, Austin, TX 78704`. A dropped pin searches its coordinates.
+			const query = url.searchParams.get('q')?.split(',')[0]?.trim();
+			return query && !/^[-+\d.\s]+$/.test(query) ? query : undefined;
 		},
+		icon: 'https://www.google.com/images/branding/product/ico/web_maps_icon_32dp.ico',
 	},
 ];
+
+const siteOf = (url: URL) => SITES.find(site => site.matches(url));
 
 /**
  * The page's own name: a site rule's, else the `<title>` the browser tab shows, else the Open Graph or Twitter title,
@@ -204,7 +251,7 @@ const SITE_TITLES: { matches: (url: URL) => boolean; title: (meta: Map<string, s
 export function pageTitle(html: string, url: URL): string | null {
 	const head = html.split(/<body\b/i)[0]!;
 	const meta = metaContent(head);
-	const site = SITE_TITLES.find(rule => rule.matches(url))?.title(meta);
+	const site = siteOf(url)?.title?.(url, meta);
 	const title = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(head)?.[1];
 	for (const candidate of [site, title, meta.get('og:title'), meta.get('twitter:title')]) {
 		const tidied = candidate && tidy(candidate);
@@ -236,6 +283,9 @@ export async function linkTitle(url: string): Promise<string | null> {
 	// A pasted `www.` address has no scheme, which links read as `https://`.
 	const parsed = URL.parse(/^https?:\/\//i.test(url) ? url : `https://${url}`);
 	if (!parsed) return null;
+	const oembed = siteOf(parsed)?.oembed;
+	const embedded = oembed && (await oembedTitle(oembed, parsed));
+	if (embedded) return embedded;
 	const page = await fetchPage(parsed);
 	return page && pageTitle(page.html, page.url);
 }
@@ -249,6 +299,16 @@ async function fetchIcon(url: URL): Promise<{ type: string; bytes: Uint8Array<Ar
 	}
 	const bytes = await readCapped(response, ICON_BYTES + 1);
 	return bytes?.byteLength && bytes.byteLength <= ICON_BYTES ? { type, bytes } : null;
+}
+
+/** A site's own icon when the link or the page it lands on is a known site, else the page's declared ones. */
+async function iconCandidates(url: URL): Promise<URL[]> {
+	const known = siteOf(url)?.icon;
+	if (known) return [new URL(known)];
+	const page = await fetchPage(url);
+	if (!page) return [new URL('/favicon.ico', url)];
+	const landed = siteOf(page.url)?.icon;
+	return landed ? [new URL(landed)] : [...iconLinks(page.html, page.url), new URL('/favicon.ico', page.url)];
 }
 
 /**
@@ -266,9 +326,7 @@ export async function faviconRoute(request: Request, app: App): Promise<Response
 	if (!url || !/^https?:$/.test(url.protocol) || !publicHost(url.hostname)) {
 		return errorResponse('BAD_REQUEST', 'Needs the web address of a public site');
 	}
-	const page = await fetchPage(url);
-	const candidates = [...(page ? iconLinks(page.html, page.url) : []), new URL('/favicon.ico', page?.url ?? url)];
-	for (const candidate of candidates.slice(0, 4)) {
+	for (const candidate of (await iconCandidates(url)).slice(0, 4)) {
 		const icon = await fetchIcon(candidate);
 		if (icon) {
 			return new Response(icon.bytes, {
