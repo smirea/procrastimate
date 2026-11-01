@@ -59,7 +59,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version-file: .bun-version
 
       - run: bun install --frozen-lockfile
 
@@ -131,7 +131,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version-file: .bun-version
 
       # Nothing generates before the build, so it proves a fresh clone builds in one pass: Core's Generate phase writes
       # API.swift, Tokens.swift, and the AccentColor asset with the root's dependencies.

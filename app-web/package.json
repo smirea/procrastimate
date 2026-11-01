@@ -9,7 +9,7 @@
 		"start": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run vite",
 		"dev": "bun run start",
 		"build": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run vite build",
-		"check": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run svelte-kit sync && bun --env-file=.env.local run svelte-check --tsconfig ./tsconfig.json && tsc -p src/service-worker",
+		"check": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run svelte-kit sync && bun --env-file=.env.local run svelte-check-native --tsconfig ./tsconfig.json && bun check --no-script -p src/service-worker",
 		"test:e2e": "bun ../scripts/generate/index.ts && bun --env-file=.env.local scripts/e2e-build.ts && bun --env-file=.env.local run playwright test"
 	},
 	"devDependencies": {
@@ -27,7 +27,7 @@
 		"fflate": "^0.8.3",
 		"phosphor-svelte": "^3.1.1",
 		"svelte": "^5.57.2",
-		"svelte-check": "^4.7.6",
+		"svelte-check-native": "^1.10.0",
 		"typescript": "^6"
 	}
 }

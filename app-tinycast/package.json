@@ -10,7 +10,7 @@
 	"scripts": {
 		"build": "bun run --cwd .. generate && ray build -e dist -o dist",
 		"dev": "bun run --cwd .. generate && ray develop",
-		"check": "tsc --noEmit"
+		"check": "bun check --no-script"
 	},
 	"dependencies": {
 		"@raycast/api": "^1.104.1"
