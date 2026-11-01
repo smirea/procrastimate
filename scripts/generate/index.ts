@@ -16,6 +16,11 @@ import { tableDefaults, zodModule } from './zod';
 
 const root = join(import.meta.dir, '../..');
 
+// Older Bun ignores `bun check --no-script` and runs the `check` script instead, which calls itself forever.
+const requiredBun = readFileSync(join(root, '.bun-version'), 'utf8').trim();
+if (Bun.semver.order(Bun.version, requiredBun) < 0)
+	throw new Error(`Bun ${requiredBun} or newer is required, found ${Bun.version}. Run \`bun upgrade\`.`);
+
 const json = (value: unknown) => `${JSON.stringify(value, null, '\t')}\n`;
 
 const read = (path: string) => {
