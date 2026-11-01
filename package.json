@@ -13,7 +13,7 @@
 		"generate:watch": "bun --watch --no-clear-screen scripts/generate/index.ts",
 		"vectors": "VECTORS=record TZ=America/New_York bun test shared",
 		"test:e2e": "bun run --cwd app-web test:e2e",
-		"check": "bun run generate && bunx --bun tsc --noEmit && bun run --cwd app-web check && bun run --cwd app-tinycast check",
+		"check": "bun run generate && bun check --no-script && bun run --cwd app-web check && bun run --cwd app-tinycast check",
 		"start": "bun run generate && concurrently --raw -k -s first \"bun run start:server\" \"bun run start:client\" \"bun run generate:watch\"",
 		"start:client": "bun run --cwd app-web start",
 		"start:server": "bun run --cwd server start",
