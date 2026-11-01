@@ -4,7 +4,7 @@ ProcrastiMate works fully without a network. Every change applies locally at onc
 
 ## Sub-features
 
-- `sync-offline` keeps every feature working with no network. Changes wait in sync-engine's outbox in the local database until the network returns, and the data survives a reload. On the web a reload or cold launch with no network opens from the cached shell, the database worker and its wasm included, even with the HTTP cache empty, and a connection that barely answers opens it within 1.5 s. Test: `a cold launch offline, or on a connection that barely answers, opens the app from the cached shell`.
+- `sync-offline` keeps every feature working with no network. Changes wait in sync-engine's outbox in the local database until the network returns, and the data survives a reload. On the web a reload or cold launch with no network opens from the cached shell, the database worker and its wasm included, even with the HTTP cache empty, and a connection that barely answers opens it within 1.5 s. Test: `a cold launch offline, or on a connection that barely answers, opens the app from the cached shell`. A page started from a shell whose chunks a later deploy deleted reloads once into the current build instead of staying blank. Test: `a page whose shell names a chunk the last deploy deleted reloads into the current build` in `e2e/stale-build.e2e.ts`.
 - `sync-propagate` shows a change from one client on the other.
 - `sync-realtime` brings that change over at once while both clients are open: the engine's live socket hears the new head and pulls it, with no focus, timer, or reload.
 - `sync-reconnect` uploads offline changes after the network returns.

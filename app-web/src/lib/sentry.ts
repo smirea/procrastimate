@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/sveltekit';
 import { SENTRY_TUNNEL_PATH } from 'shared/sentry.ts';
+import { reloadingForNewBuild } from './stale-build.ts';
 
 /**
  * `vite.config.ts` bakes the target into the build, null in development or wherever no `SENTRY_ENVIRONMENT` is set, and then nothing is
@@ -20,6 +21,7 @@ export function initSentry() {
 		// Whole transactions named by route, like the Worker's.
 		traceLifecycle: 'static',
 		tracesSampleRate: 1,
+		beforeSend: event => (reloadingForNewBuild() ? null : event),
 	});
 }
 
