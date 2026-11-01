@@ -180,8 +180,10 @@ struct SmartInput: View {
         } else if plain.contains("\n"), pasted(plain) {
             // The field is one line of text that wraps, so a pasted line break becomes a space instead of saving.
             let joined = plain.replacingOccurrences(of: "\r\n", with: " ").replacingOccurrences(of: "\n", with: " ")
+            let before = written
             write(joined)
             replace(with: joined, caret: caret)
+            titlePastedLink(from: before, to: joined)
         } else if plain.contains("\n") {
             if let match = match(at: max(0, caret - 1)), let suggestion = returnPick(in: match) {
                 pick(suggestion, in: match)
@@ -194,7 +196,40 @@ struct SmartInput: View {
             // Replacing the text mid-keystroke can resign the editor after the save already asked for focus.
             Task { focused.wrappedValue = true }
         } else if plain != text {
+            let before = written
             write(plain)
+            titlePastedLink(from: before, to: plain)
+        }
+    }
+
+    /// A pasted bare URL becomes `[title](url)` once the server reads the page's title, if the field still has focus and
+    /// the URL still sits where it landed. A paste is the one edit that inserts a whole URL at once; the text goes in
+    /// right away, so a slow page never holds up typing.
+    private func titlePastedLink(from before: String, to after: String) {
+        let old = Array(before.utf16)
+        let new = Array(after.utf16)
+        guard new.count - old.count > 1 else { return }
+        var start = 0
+        while start < old.count, old[start] == new[start] { start += 1 }
+        var end = 0
+        while end < old.count - start, old[old.count - 1 - end] == new[new.count - 1 - end] { end += 1 }
+        // Pasting `https://…` before an `h` matches one unit too many from the front; sliding the window back finds it.
+        var inserted = String(decoding: new[start ..< new.count - end], as: UTF16.self)
+        while Links.pastedUrl(inserted) == nil, start > 0, new[start - 1] == new[new.count - end - 1] {
+            start -= 1
+            end += 1
+            inserted = String(decoding: new[start ..< new.count - end], as: UTF16.self)
+        }
+        guard let url = Links.pastedUrl(inserted) else { return }
+        let at = start + inserted.utf16.count - String(inserted.drop { $0.isWhitespace }).utf16.count
+        Task {
+            guard let preview = try? await APIClient.send(API.Endpoints.LinkPreview.self, NoInput(), query: ["url": url]),
+                  let title = preview.title, focused.wrappedValue,
+                  let next = Links.titleLink(text, at, url, title) else { return }
+            let shift = next.utf16.count - text.utf16.count
+            let now = caret
+            write(next)
+            replace(with: next, caret: now >= at + url.utf16.count ? now + shift : now)
         }
     }
 

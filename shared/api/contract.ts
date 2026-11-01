@@ -100,6 +100,7 @@ export const newApiTokenSchema = z
 	.meta({ id: 'NewApiToken' });
 export const taskCommentsSchema = z.object({ comments: z.array(taskCommentSchema) }).meta({ id: 'TaskComments' });
 export const activitySchema = z.object({ entries: z.array(activityEntrySchema) }).meta({ id: 'Activity' });
+export const linkPreviewSchema = z.object({ title: z.string().nullable() }).meta({ id: 'LinkPreview' });
 export const linksSchema = z.object({ links: z.array(shareViewSchema) }).meta({ id: 'Links' });
 
 /**
@@ -506,6 +507,23 @@ export const contract = {
 			.input(rambleOutlineInputSchema)
 			.output(rambleOutlineSchema),
 	},
+	/**
+	 * The title of the page at `url`, for a pasted link. Null when the page cannot be read: a private host, no HTML, or
+	 * no answer within 5 seconds. Human users only.
+	 */
+	linkPreview: allowed
+		.meta(openapi({ method: 'GET', path: '/api/link-preview', inputStructure: 'detailed' }))
+		.input(z.object({ query: z.object({ url: z.string() }) }))
+		.output(linkPreviewSchema),
+	/**
+	 * The icon of the site at `host`, as image bytes, for the icon before a link. `api.ts` answers it before the router,
+	 * like image bytes. `NOT_FOUND`, cached for a day, when the site has none.
+	 */
+	favicon: allowed
+		.errors({ BAD_REQUEST: {}, NOT_FOUND: {} })
+		.meta(openapi({ method: 'GET', path: '/api/favicon', inputStructure: 'detailed' }))
+		.input(z.object({ query: z.object({ host: z.string() }) }))
+		.output(z.file()),
 	/** Smoke tests for Sentry: each throws, so a 500 and an event in `procrastimate-worker` prove the path. */
 	debug: {
 		error: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/error' })).output(okSchema),

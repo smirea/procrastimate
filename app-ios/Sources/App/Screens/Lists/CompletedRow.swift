@@ -21,7 +21,7 @@ struct CompletedRow: View {
                 .accessibilityLabel(canReopen ? "Reopen \(task.title)" : "Completed \(task.title)")
                 .disabled(!canReopen)
             VStack(alignment: .leading, spacing: 2) {
-                Text(Links.attributed(task.title))
+                Links.text(task.title)
                     .font(.body)
                     .foregroundStyle(reopening ? Color.ink : Color.muted)
                     .strikethrough(!reopening, color: .faint)

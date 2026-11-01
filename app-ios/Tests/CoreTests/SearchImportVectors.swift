@@ -27,6 +27,9 @@ private struct SearchNames: Decodable {
 @Sendable func linksVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "linkify": return try json(Links.linkify(a(0), a(1, as: [Range<Int>]?.self) ?? []))
+    case "linkHost": return try json(Links.linkHost(a(0)))
+    case "pastedUrl": return try json(Links.pastedUrl(a(0)))
+    case "titleLink": return try json(Links.titleLink(a(0), a(1), a(2), a(3)))
     default: throw unknown(fn)
     }
 }

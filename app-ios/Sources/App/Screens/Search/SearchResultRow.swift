@@ -125,7 +125,7 @@ private struct TaskResult: View {
                 .padding(.top, 2)
             VStack(alignment: .leading, spacing: 2) {
                 TitleFlow(
-                    title: Links.attributed(task.title, hit.matches[.title]?.first?.ranges ?? []),
+                    title: Links.text(task.title, hit.matches[.title]?.first?.ranges ?? []),
                     labels: (hit.matches[.labels] ?? []).map { match in
                         TitleFlow.Chip(text: match.attributed, color: store.labels.first { $0.name == match.text }?.color ?? .gray)
                     },
@@ -133,7 +133,7 @@ private struct TaskResult: View {
                 )
                 if let notes = hit.matches[.notes]?.first {
                     let excerpt = Search.excerpt(notes)
-                    Text(Links.attributed(excerpt.text, excerpt.ranges))
+                    Links.text(excerpt.text, excerpt.ranges, icon: 12)
                         .font(.footnote)
                         .foregroundStyle(.muted)
                         .lineLimit(1)
