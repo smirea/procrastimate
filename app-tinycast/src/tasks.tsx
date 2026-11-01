@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { completedToast, dayHeading, postponeOptions, reopenedToast } from 'shared/format.ts';
 import { parseQuickAdd } from 'shared/quick-add.ts';
 import { search } from 'shared/search.ts';
+import { descendantsOf } from 'shared/subtasks.ts';
 import type { AgentTask, SpaceView } from 'shared/sharing.ts';
 import { projectsInOrder, type TaskPatch } from 'shared/store.ts';
 import { toDateKey, toTimeOfDay, type DateKey, type Due, type Priority, type Task } from 'shared/task.ts';
@@ -133,13 +134,22 @@ export default function Tasks() {
 		void reload();
 	}, [reload]);
 
-	/** Shows the change at once, then keeps the server's copy of the task, or reloads when the server refused it. */
+	/**
+	 * Shows the change at once, then keeps the server's copy of the task, or reloads when the server refused it.
+	 * Completing, reopening, and deleting also change subtasks on the server, which answers with the task alone, so
+	 * those reload the view (`subtree`) instead.
+	 */
 	const change = useCallback(
-		async (local: (tasks: AgentTask[]) => AgentTask[], request: () => Promise<AgentTask | null>, failure: string) => {
+		async (
+			local: (tasks: AgentTask[]) => AgentTask[],
+			request: () => Promise<AgentTask | 'subtree'>,
+			failure: string,
+		) => {
 			setView(current => current && { ...current, tasks: local(current.tasks) });
 			try {
 				const saved = await request();
-				if (saved) setView(current => current && { ...current, tasks: replace(current.tasks, saved) });
+				if (saved === 'subtree') await reload();
+				else setView(current => current && { ...current, tasks: replace(current.tasks, saved) });
 			} catch (error) {
 				await showFailure(error, failure);
 				await reload();
@@ -188,9 +198,14 @@ export default function Tasks() {
 					...(defaults.labelIds ? { labelIds: [...new Set([...draft.labelIds, ...defaults.labelIds])] } : {}),
 				},
 			});
-			// The create route takes no date, so a task typed into Today or Tomorrow without one gets the list's day after.
-			if (defaults.due && !task.due && !task.recurrence && !task.event)
-				task = await api.tasks.update({ query: { id: task.id }, body: { due: defaults.due } });
+			// The create route takes no list date, so the server reads `5pm` or `every week` from today. The preview read
+			// them from the list's day, as the app's quick add does, so its date and repeat are the ones to keep.
+			const scheduled = {
+				due: draft.due ?? (draft.recurrence ? null : (defaults.due ?? null)),
+				recurrence: draft.recurrence,
+			};
+			if (!task.event && JSON.stringify(scheduled) !== JSON.stringify({ due: task.due, recurrence: task.recurrence }))
+				task = await api.tasks.update({ query: { id: task.id }, body: scheduled });
 			setView(current => current && { ...current, tasks: [...current.tasks, task] });
 			setQuery('');
 			toast.style = Toast.Style.Success;
@@ -213,7 +228,7 @@ export default function Tasks() {
 					title: completedToast(plainTitle(task.title), rolled, today),
 					primaryAction: rolled ? undefined : { title: 'Undo', onAction: () => reopen(task) },
 				});
-				return saved;
+				return 'subtree';
 			},
 			'Could not complete the task',
 		);
@@ -223,9 +238,9 @@ export default function Tasks() {
 		void change(
 			tasks => tasks.map(t => (t.id === task.id ? { ...t, completedAt: null } : t)),
 			async () => {
-				const saved = await agentClient().tasks.reopen({ query: { id: task.id } });
+				await agentClient().tasks.reopen({ query: { id: task.id } });
 				await showToast({ style: Toast.Style.Success, title: reopenedToast(plainTitle(task.title)) });
-				return saved;
+				return 'subtree';
 			},
 			'Could not reopen the task',
 		);
@@ -262,11 +277,14 @@ export default function Tasks() {
 		});
 		if (!confirmed) return;
 		void change(
-			tasks => tasks.filter(t => t.id !== task.id && t.parentId !== task.id),
+			tasks => {
+				const gone = new Set([task.id, ...descendantsOf(tasks, task.id).map(t => t.id)]);
+				return tasks.filter(t => !gone.has(t.id));
+			},
 			async () => {
 				await agentClient().tasks.delete({ query: { id: task.id } });
 				await showToast({ style: Toast.Style.Success, title: `Deleted “${plainTitle(task.title)}”` });
-				return null;
+				return 'subtree';
 			},
 			'Could not delete the task',
 		);
