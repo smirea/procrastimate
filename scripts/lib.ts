@@ -1,10 +1,5 @@
-/**
- * What the repository scripts share: a process runner, the dotenv reader, and the worktree list. No npm imports:
- * `setup-worktree` runs before `bun install`.
- */
+/** What the repository scripts share: a process runner and the dotenv reader. No npm imports. */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 export type Values = Record<string, string>;
 
@@ -63,23 +58,4 @@ export function parseDotenv(text: string): Values {
 		if (value) values[key] = value;
 	}
 	return values;
-}
-
-/** A worktree's `.env.override`, which `setup-worktree` writes with its ports and database, or null without one. */
-export function readOverride(worktree: string): Values | null {
-	const file = join(worktree, '.env.override');
-	return existsSync(file) ? parseDotenv(readFileSync(file, 'utf8')) : null;
-}
-
-export type Worktree = { path: string; branch?: string };
-
-/** Every worktree of the repository `cwd` is in. Throws when `git` fails, so a bad checkout never reads as "none". */
-export function worktrees(cwd: string): Worktree[] {
-	return run(['git', '-C', cwd, 'worktree', 'list', '--porcelain'])
-		.split('\n\n')
-		.flatMap(block => {
-			const path = block.match(/^worktree (.+)$/m)?.[1];
-			const branch = block.match(/^branch refs\/heads\/(.+)$/m)?.[1];
-			return path ? [{ path, branch }] : [];
-		});
 }

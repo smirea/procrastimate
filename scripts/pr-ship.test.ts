@@ -3,41 +3,30 @@ import { TimeoutError } from './lib';
 import { type Io, type Pr, ship } from './pr-ship';
 
 const HEAD = 'abc1234def';
-const MINUTE = 60_000;
 const SUMMARY_DONE = '<!-- codex-review-state:v1 {"code_review":{"status":"completed"}} -->';
-
-type Call = { cmd: string; env?: Record<string, string> };
 
 /**
  * A GitHub on a fake clock. `durations` maps a command prefix (`gh pr merge`) to how long it takes, so a test can
  * make any phase slow. Commands honor `timeoutMs` the way `run` does: they burn the timeout, then throw.
  */
 function fakeGitHub({
-	start = Date.parse('2026-10-31T12:00:00Z'),
-	createdAt = start,
 	checksDoneAt = 0,
 	codexDoneAt = 0,
-	comments = [],
-	ownerToken = 'owner-token',
 	durations = {},
 }: {
-	start?: number;
-	createdAt?: number;
 	checksDoneAt?: number;
 	codexDoneAt?: number;
-	comments?: Pr['comments'];
-	ownerToken?: string | null;
 	durations?: Record<string, number>;
 } = {}) {
+	const start = Date.parse('2026-10-31T12:00:00Z');
 	let now = start;
 	let state = 'OPEN';
-	const calls: Call[] = [];
+	const calls: string[] = [];
 	const elapsed = () => now - start;
 	const pr = (): Pr => ({
 		number: 7,
 		url: 'https://github.com/smirea/procrastimate/pull/7',
 		state,
-		createdAt: new Date(createdAt).toISOString(),
 		headRefOid: HEAD,
 		mergeable: 'MERGEABLE',
 		statusCheckRollup: [
@@ -45,12 +34,7 @@ function fakeGitHub({
 				? { __typename: 'CheckRun', name: 'ci', status: 'COMPLETED', conclusion: 'SUCCESS' }
 				: { __typename: 'CheckRun', name: 'ci', status: 'IN_PROGRESS' },
 		],
-		comments: [
-			...comments,
-			...(elapsed() >= codexDoneAt
-				? [{ author: { login: 'chatgpt-codex-connector' }, body: SUMMARY_DONE, createdAt: '' }]
-				: []),
-		],
+		comments: elapsed() >= codexDoneAt ? [{ body: SUMMARY_DONE }] : [],
 	});
 	const answer = (cmd: string): string => {
 		if (cmd === 'git rev-parse HEAD') return HEAD;
@@ -62,14 +46,6 @@ function fakeGitHub({
 			state = 'MERGED';
 			return '';
 		}
-		if (cmd === 'gh auth token --user smirea') {
-			if (!ownerToken) throw new Error('`gh auth token --user smirea` failed\nno oauth token found for smirea');
-			return ownerToken;
-		}
-		if (cmd.startsWith('gh pr comment')) {
-			comments.push({ author: { login: 'smirea' }, body: '@codex review', createdAt: new Date(now).toISOString() });
-			return '';
-		}
 		throw new Error(`unexpected command: ${cmd}`);
 	};
 	const io: Io = {
@@ -79,7 +55,7 @@ function fakeGitHub({
 		},
 		run: (cmd, options = {}) => {
 			const line = cmd.join(' ');
-			calls.push({ cmd: line, env: options.env });
+			calls.push(line);
 			const duration = Object.entries(durations).find(([prefix]) => line.startsWith(prefix))?.[1] ?? 1000;
 			if (options.timeoutMs !== undefined && duration > options.timeoutMs) {
 				now += options.timeoutMs;
@@ -118,50 +94,9 @@ test('merges a green PR and exits 0', async () => {
 	});
 });
 
-test('nudges Codex once from the repository owner account after 15 minutes', async () => {
-	const comments: Pr['comments'] = [];
-	const start = Date.parse('2026-10-31T12:00:00Z');
-	const github = fakeGitHub({ start, createdAt: start - 16 * MINUTE, codexDoneAt: Infinity, comments });
+test('waits while the Codex review is pending, then exits 3 to rerun', async () => {
+	const github = fakeGitHub({ codexDoneAt: Infinity });
 	const verdict = await ship(github.io, { merge: true, budgetMs: BUDGET_MS });
-
-	const nudges = github.calls.filter(call => call.cmd.startsWith('gh pr comment'));
-	expect(nudges).toEqual([{ cmd: 'gh pr comment 7 --body @codex review', env: { GH_TOKEN: 'owner-token' } }]);
-	expect(verdict.code).toBe(3);
-	expect(verdict.message).toBe('Still waiting on Codex review. Asked Codex to review as smirea. Rerun.');
-
-	const rerun = fakeGitHub({
-		start: start + 10 * MINUTE,
-		createdAt: start - 16 * MINUTE,
-		codexDoneAt: Infinity,
-		comments,
-	});
-	await ship(rerun.io, { merge: true, budgetMs: BUDGET_MS });
-	expect(rerun.calls.filter(call => call.cmd.startsWith('gh pr comment'))).toEqual([]);
-});
-
-test('needs input when Codex is overdue and the owner account is not logged in', async () => {
-	const start = Date.parse('2026-10-31T12:00:00Z');
-	const github = fakeGitHub({ start, createdAt: start - 16 * MINUTE, codexDoneAt: Infinity, ownerToken: null });
-	const verdict = await ship(github.io, { merge: true, budgetMs: BUDGET_MS });
-	expect(github.calls.filter(call => call.cmd.startsWith('gh pr comment'))).toEqual([]);
-	expect(verdict).toEqual({
-		code: 4,
-		message:
-			'Codex has not reviewed https://github.com/smirea/procrastimate/pull/7 after 15 minutes, and Codex answers only smirea, whose gh login is missing here. Report needs_input: ask smirea to comment `@codex review` on the PR.',
-	});
-});
-
-test('needs input when Codex still has not reviewed 15 minutes after the nudge', async () => {
-	const start = Date.parse('2026-10-31T12:00:00Z');
-	const comments: Pr['comments'] = [
-		{ author: { login: 'smirea' }, body: '@codex review', createdAt: new Date(start - 16 * MINUTE).toISOString() },
-	];
-	const github = fakeGitHub({ start, createdAt: start - 40 * MINUTE, codexDoneAt: Infinity, comments });
-	const verdict = await ship(github.io, { merge: true, budgetMs: BUDGET_MS });
-	expect(github.calls.filter(call => call.cmd.startsWith('gh pr comment'))).toEqual([]);
-	expect(verdict).toEqual({
-		code: 4,
-		message:
-			'Codex has not reviewed https://github.com/smirea/procrastimate/pull/7 15 minutes after smirea asked it to. Report needs_input: ask smirea to check the Codex integration.',
-	});
+	expect(github.calls.filter(call => call.startsWith('gh pr merge'))).toEqual([]);
+	expect(verdict).toEqual({ code: 3, message: 'Still waiting on Codex review. Rerun.' });
 });
