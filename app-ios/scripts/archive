@@ -31,9 +31,9 @@ esac
 
 read -r year monthday time < <(date -u '+%Y %m%d %H%M%S')
 build_number=${BUILD_NUMBER:-$year.$((10#$monthday)).$((10#$time))}
+team=FNYFHG5SV7
 out=build/archive
 archive=$out/App.xcarchive
-options=$out/ExportOptions.plist
 auth=(
     -allowProvisioningUpdates
     -authenticationKeyPath "$key_path"
@@ -41,9 +41,10 @@ auth=(
     -authenticationKeyIssuerID "$ASC_ISSUER_ID"
 )
 
-rm -rf "$out"
-mkdir -p "$out"
-cat > "$options" <<PLIST
+export_archive() {
+    local destination=$1 path=$2
+    mkdir -p "$path"
+    cat > "$path.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -53,7 +54,7 @@ cat > "$options" <<PLIST
     <key>destination</key>
     <string>$destination</string>
     <key>teamID</key>
-    <string>FNYFHG5SV7</string>
+    <string>$team</string>
     <key>signingStyle</key>
     <string>automatic</string>
     <key>manageAppVersionAndBuildNumber</key>
@@ -61,6 +62,26 @@ cat > "$options" <<PLIST
 </dict>
 </plist>
 PLIST
+    xcodebuild -exportArchive -archivePath "$archive" -exportOptionsPlist "$path.plist" \
+        -exportPath "$path" "${auth[@]}"
+}
+
+# Each bundle's entitlements file is Config/<bundle name>.entitlements, as CODE_SIGN_ENTITLEMENTS sets in the project,
+# with the team prefix Xcode would substitute. A bundle without one stops the script.
+bundles() {
+    local app=$1
+    echo "$app"
+    find "$app/PlugIns" -maxdepth 1 -name '*.appex' 2>/dev/null
+}
+expected_entitlements() {
+    local file
+    file=Config/$(basename "${1%.*}").entitlements
+    test -f "$file" || { echo "No $file for $(basename "$1")" >&2; return 1; }
+    sed "s/\$(AppIdentifierPrefix)/$team./g" "$file"
+}
+
+rm -rf "$out"
+mkdir -p "$out"
 
 ./scripts/generate
 
@@ -75,13 +96,41 @@ xcodebuild archive -project App.xcodeproj -scheme App -configuration Release \
     CODE_SIGNING_REQUIRED=NO \
     CODE_SIGN_IDENTITY=""
 
+# Export keeps only the entitlements the archived binaries are signed with, and an unsigned archive has none: TestFlight
+# builds shipped without the app group, keychain groups, and associated domains (PROCRASTIMATE-IOS-C). An ad hoc
+# signature carries them to export, which also adds their capabilities to the App Store profiles. Extensions first,
+# since signing the app seals its PlugIns.
+echo "Signing the archive ad hoc with each bundle's entitlements"
+app=$(echo "$archive"/Products/Applications/*.app)
+while read -r bundle; do
+    expected_entitlements "$bundle" > "$out/sign.entitlements"
+    codesign --force --sign - --entitlements "$out/sign.entitlements" "$bundle"
+done < <(bundles "$app" | tail -r)
+
 echo "Uploading dSYMs to Sentry"
 bunx @sentry/cli@3.8.0 debug-files upload --org self-uo7 --project procrastimate-ios "$archive/dSYMs"
 
-xcodebuild -exportArchive -archivePath "$archive" -exportOptionsPlist "$options" \
-    -exportPath "$out/export" "${auth[@]}"
+# Upload mode leaves no .ipa to inspect, so every run exports one and checks its signed entitlements first. The upload
+# re-exports the same archive with the same profiles.
+export_archive export "$out/export"
+rm -rf "$out/ipa"
+ditto -x -k "$out/export/App.ipa" "$out/ipa"
+ipa_app=$(echo "$out"/ipa/Payload/*.app)
+while read -r bundle; do
+    expected_entitlements "$bundle" | plutil -convert json -o "$out/expected.json" -
+    codesign -d --entitlements - --xml "$bundle" 2>/dev/null | plutil -convert json -o "$out/signed.json" -
+    missing=$(jq -r --slurpfile signed "$out/signed.json" \
+        'to_entries[] | select(.value != $signed[0][.key]) | .key' "$out/expected.json")
+    if [ -n "$missing" ]; then
+        echo "The exported $(basename "$bundle") lacks entitlements from its Config file:" >&2
+        echo "$missing" >&2
+        exit 1
+    fi
+done < <(bundles "$ipa_app")
+echo "Every bundle in the .ipa carries its entitlements"
 
 if [ "$destination" = upload ]; then
+    export_archive upload "$out/upload"
     echo "Uploaded build $build_number. It shows in TestFlight once App Store Connect finishes processing."
 else
     echo "Exported $out/export/App.ipa (build $build_number)"
