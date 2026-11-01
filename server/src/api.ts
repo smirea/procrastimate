@@ -6,6 +6,7 @@ import { forgetSession, readActor } from './actor';
 import type { App } from './app';
 import { errorResponse } from './errors';
 import { imagesRoute, isImageRoute } from './images';
+import { faviconRoute, isFaviconRoute } from './link-preview';
 import { router } from './router';
 import { identify, reportRpcError, sentryTunnel } from './sentry';
 import { handleSync, withBearer } from 'sync-engine/core';
@@ -74,8 +75,8 @@ async function liveRoute(request: Request, app: App): Promise<Response> {
 }
 
 /**
- * One fetch handler for `/api/*`: the Sentry tunnel, sync and its live socket, image bytes, Ramble's socket, the
- * contract's procedures, then Better Auth for the rest of `/api/auth/*`. `index.ts` serves it with Bun and the `App`
+ * One fetch handler for `/api/*`: the Sentry tunnel, sync and its live socket, image bytes, link icons, Ramble's
+ * socket, the contract's procedures, then Better Auth for the rest of `/api/auth/*`. `index.ts` serves it with Bun and the `App`
  * Durable Object on Cloudflare, so it stays free of Bun and Node APIs.
  */
 export async function handle(request: Request, app: App): Promise<Response> {
@@ -84,6 +85,7 @@ export async function handle(request: Request, app: App): Promise<Response> {
 	if (request.method === 'POST' && url.pathname === '/api/sync') return syncRoute(request, app);
 	if (url.pathname === '/api/live') return liveRoute(request, app);
 	if (isImageRoute(request)) return imagesRoute(request, app);
+	if (isFaviconRoute(request)) return faviconRoute(request, app);
 	if (url.pathname === RAMBLE_SOCKET_PATH) return rambleRoute(request, app);
 	const { matched, response } = await rpc.handle(request, { context: { app, request } });
 	if (matched) return response;

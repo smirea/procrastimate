@@ -69,3 +69,34 @@ export function linkify(text: string, ranges: readonly Range[] = []): TextSegmen
 	push(text.slice(cursor), null, cursor, text.length, cursor);
 	return segments;
 }
+
+/** A link's icon, fetched by the server from the link's host. See `docs/decisions/link-previews.md`. */
+export const FAVICON_PATH = '/api/favicon';
+
+/** The host whose icon a link shows, lowercased, or null for an href that does not parse. */
+export function linkHost(href: string): string | null {
+	return URL.parse(href)?.hostname.toLowerCase() || null;
+}
+
+/** The pasted text, trimmed, when it is one bare web URL and nothing else, the paste that becomes a titled link. */
+export function pastedUrl(pasted: string): string | null {
+	const text = pasted.trim();
+	const segments = linkify(text);
+	const only = segments[0];
+	return segments.length === 1 && only?.href && only.text === text ? text : null;
+}
+
+/**
+ * `text` with the bare `url` pasted at `at` turned into `[title](url)`, once the page's title arrives. Null when the
+ * text no longer holds that bare URL there, or the title leaves no label. Brackets in the title become parentheses, the
+ * only characters a Markdown label cannot hold.
+ */
+export function titleLink(text: string, at: number, url: string, title: string): string | null {
+	const label = title.replace(/\[/g, '(').replace(/\]/g, ')').replace(/\s+/g, ' ').trim();
+	const bare = linkify(text).find(s => s.start === at);
+	if (!label || !bare?.href || bare.text !== url || bare.end !== at + url.length) return null;
+	const link = `[${label}](${bare.href})`;
+	const next = text.slice(0, at) + link + text.slice(bare.end);
+	const titled = linkify(next).find(s => s.start === at);
+	return titled?.text === label && titled.end === at + link.length ? next : null;
+}

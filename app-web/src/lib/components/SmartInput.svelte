@@ -9,6 +9,8 @@
 	import NameSuggestions from './NameSuggestions.svelte';
 	import { store } from '../store.svelte.ts';
 	import { NAME_SOURCES, sectionSource, type NameKind, type NameSource } from '../names.ts';
+	import { pastedUrl, titleLink } from 'shared/links.ts';
+	import { pageTitle } from '../link-preview.svelte.ts';
 
 	let {
 		value = $bindable(),
@@ -117,6 +119,28 @@
 		value = input.value.replace(/\r\n?|\n/g, ' ');
 		input.value = value;
 		input.setSelectionRange(at, at);
+	}
+
+	/**
+	 * A pasted bare URL becomes `[title](url)` once the server reads the page's title, if the field still has focus and
+	 * the URL still sits where it landed. The paste itself goes in at once, so a slow page never holds up typing.
+	 */
+	async function titlePastedLink(event: ClipboardEvent) {
+		const pasted = event.clipboardData?.getData('text/plain') ?? '';
+		const url = pastedUrl(pasted);
+		if (!url) return;
+		const at = input.selectionStart + pasted.length - pasted.trimStart().length;
+		const title = await pageTitle(url);
+		if (!title || document.activeElement !== input) return;
+		const next = titleLink(value, at, url, title);
+		if (next === null) return;
+		const shift = (offset: number) => (offset >= at + url.length ? offset + next.length - value.length : offset);
+		const [start, end] = [shift(input.selectionStart), shift(input.selectionEnd)];
+		value = next;
+		await tick();
+		input.setSelectionRange(start, end);
+		caret = end;
+		oninput?.();
 	}
 
 	const syncCaret = () => {
@@ -231,6 +255,7 @@
 		{enterkeyhint}
 		spellcheck="false"
 		onscroll={syncScroll}
+		onpaste={titlePastedLink}
 		oninput={() => {
 			dropLineBreaks();
 			syncScroll();

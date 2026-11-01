@@ -100,6 +100,7 @@ export const newApiTokenSchema = z
 	.meta({ id: 'NewApiToken' });
 export const taskCommentsSchema = z.object({ comments: z.array(taskCommentSchema) }).meta({ id: 'TaskComments' });
 export const activitySchema = z.object({ entries: z.array(activityEntrySchema) }).meta({ id: 'Activity' });
+export const linkPreviewSchema = z.object({ title: z.string().nullable() }).meta({ id: 'LinkPreview' });
 export const linksSchema = z.object({ links: z.array(shareViewSchema) }).meta({ id: 'Links' });
 
 /**
@@ -506,6 +507,14 @@ export const contract = {
 			.input(rambleOutlineInputSchema)
 			.output(rambleOutlineSchema),
 	},
+	/**
+	 * The title of the page at `url`, for a pasted link. Null when the page cannot be read: a private host, no HTML, or
+	 * no answer within 5 seconds. Human users only.
+	 */
+	linkPreview: allowed
+		.meta(openapi({ method: 'GET', path: '/api/link-preview', inputStructure: 'detailed' }))
+		.input(z.object({ query: z.object({ url: z.string() }) }))
+		.output(linkPreviewSchema),
 	/** Smoke tests for Sentry: each throws, so a 500 and an event in `procrastimate-worker` prove the path. */
 	debug: {
 		error: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/error' })).output(okSchema),

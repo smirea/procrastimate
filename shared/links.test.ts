@@ -4,6 +4,9 @@ import type { TextSegment } from './links.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
 const linkify = recorded('links', links.linkify);
+const linkHost = recorded('links', links.linkHost);
+const pastedUrl = recorded('links', links.pastedUrl);
+const titleLink = recorded('links', links.titleLink);
 
 /** `[text](href)` for a link and the bare text otherwise, so a table row reads like what the user sees. */
 const shown = (segments: TextSegment[]) => segments.map(s => (s.href ? `[${s.text}](${s.href})` : s.text)).join('|');
@@ -73,5 +76,60 @@ describe('linkify', () => {
 			{ text: 'https://a.com', href: 'https://a.com', start: 3, end: 16, marks: [] },
 			{ text: ' 🎉', href: null, start: 16, end: 19, marks: [] },
 		]);
+	});
+});
+
+describe('linkHost', () => {
+	test.each([
+		['https://Docs.Example.com/a?b', 'docs.example.com'],
+		['https://www.site.com', 'www.site.com'],
+		['http://x.dev:8080/p', 'x.dev'],
+		['not a url', null],
+	])('%p has host %p', (href, host) => {
+		expect(linkHost(href)).toBe(host);
+	});
+});
+
+describe('pastedUrl', () => {
+	test.each([
+		['https://example.com/a?b=1', 'https://example.com/a?b=1'],
+		['  https://example.com/a\n', 'https://example.com/a'],
+		['www.site.com/path', 'www.site.com/path'],
+		['https://en.wikipedia.org/wiki/Foo_(bar)', 'https://en.wikipedia.org/wiki/Foo_(bar)'],
+	])('%p pastes as %p', (pasted, url) => {
+		expect(pastedUrl(pasted)).toBe(url);
+	});
+
+	test.each([
+		['text around the URL', 'see https://a.com'],
+		['two URLs', 'https://a.com https://b.com'],
+		['a Markdown link', '[a](https://a.com)'],
+		['trailing punctuation the link leaves out', 'https://a.com.'],
+		['a bare domain', 'example.com'],
+		['plain text', 'Buy milk'],
+	])('%s is not a pasted URL', (_, pasted) => {
+		expect(pastedUrl(pasted)).toBeNull();
+	});
+});
+
+describe('titleLink', () => {
+	test.each([
+		['Read https://a.com/x later', 5, 'https://a.com/x', 'The X page', 'Read [The X page](https://a.com/x) later'],
+		['https://a.com', 0, 'https://a.com', '  A \n  site  ', '[A site](https://a.com)'],
+		['www.site.com', 0, 'www.site.com', 'Site', '[Site](https://www.site.com)'],
+		['https://a.com', 0, 'https://a.com', 'Array[0] docs', '[Array(0) docs](https://a.com)'],
+		['🎉 https://a.com', 3, 'https://a.com', 'A', '🎉 [A](https://a.com)'],
+	])('%p at %p with %p titled %p reads %p', (text, at, url, title, expected) => {
+		expect(titleLink(text, at, url, title)).toBe(expected);
+	});
+
+	test.each([
+		['the URL moved', 'x https://a.com', 0, 'https://a.com', 'A'],
+		['the URL was edited', 'https://a.com/more', 0, 'https://a.com', 'A'],
+		['the URL is gone', 'Buy milk', 0, 'https://a.com', 'A'],
+		['the title is blank', 'https://a.com', 0, 'https://a.com', '   '],
+		['the URL already sits in a Markdown link', '[x](https://a.com)', 0, 'https://a.com', 'A'],
+	])('%s leaves the text alone', (_, text, at, url, title) => {
+		expect(titleLink(text, at, url, title)).toBeNull();
 	});
 });

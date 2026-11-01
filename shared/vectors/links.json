@@ -553,6 +553,228 @@
 					"text": " 🎉"
 				}
 			]
+		},
+		{
+			"fn": "linkHost",
+			"test": "linkHost › \"https://Docs.Example.com/a?b\" has host \"docs.example.com\"",
+			"input": [
+				"https://Docs.Example.com/a?b"
+			],
+			"output": "docs.example.com"
+		},
+		{
+			"fn": "linkHost",
+			"test": "linkHost › \"https://www.site.com\" has host \"www.site.com\"",
+			"input": [
+				"https://www.site.com"
+			],
+			"output": "www.site.com"
+		},
+		{
+			"fn": "linkHost",
+			"test": "linkHost › \"http://x.dev:8080/p\" has host \"x.dev\"",
+			"input": [
+				"http://x.dev:8080/p"
+			],
+			"output": "x.dev"
+		},
+		{
+			"fn": "linkHost",
+			"test": "linkHost › \"not a url\" has host null",
+			"input": [
+				"not a url"
+			],
+			"output": null
+		},
+		{
+			"fn": "pastedUrl",
+			"test": "pastedUrl › \"https://example.com/a?b=1\" pastes as \"https://example.com/a?b=1\"",
+			"input": [
+				"https://example.com/a?b=1"
+			],
+			"output": "https://example.com/a?b=1"
+		},
+		{
+			"fn": "pastedUrl",
+			"test": "pastedUrl › \"  https://example.com/a\\n\" pastes as \"https://example.com/a\"",
+			"input": [
+				"  https://example.com/a\n"
+			],
+			"output": "https://example.com/a"
+		},
+		{
+			"fn": "pastedUrl",
+			"test": "pastedUrl › \"www.site.com/path\" pastes as \"www.site.com/path\"",
+			"input": [
+				"www.site.com/path"
+			],
+			"output": "www.site.com/path"
+		},
+		{
+			"fn": "pastedUrl",
+			"test": "pastedUrl › \"https://en.wikipedia.org/wiki/Foo_(bar)\" pastes as \"https://en.wikipedia.org/wiki/Foo_(bar)\"",
+			"input": [
+				"https://en.wikipedia.org/wiki/Foo_(bar)"
+			],
+			"output": "https://en.wikipedia.org/wiki/Foo_(bar)"
+		},
+		{
+			"fn": "pastedUrl",
+			"test": "pastedUrl › text around the URL is not a pasted URL",
+			"input": [
+				"see https://a.com"
+			],
+			"output": null
+		},
+		{
+			"fn": "pastedUrl",
+			"test": "pastedUrl › two URLs is not a pasted URL",
+			"input": [
+				"https://a.com https://b.com"
+			],
+			"output": null
+		},
+		{
+			"fn": "pastedUrl",
+			"test": "pastedUrl › a Markdown link is not a pasted URL",
+			"input": [
+				"[a](https://a.com)"
+			],
+			"output": null
+		},
+		{
+			"fn": "pastedUrl",
+			"test": "pastedUrl › trailing punctuation the link leaves out is not a pasted URL",
+			"input": [
+				"https://a.com."
+			],
+			"output": null
+		},
+		{
+			"fn": "pastedUrl",
+			"test": "pastedUrl › a bare domain is not a pasted URL",
+			"input": [
+				"example.com"
+			],
+			"output": null
+		},
+		{
+			"fn": "pastedUrl",
+			"test": "pastedUrl › plain text is not a pasted URL",
+			"input": [
+				"Buy milk"
+			],
+			"output": null
+		},
+		{
+			"fn": "titleLink",
+			"test": "titleLink › \"Read https://a.com/x later\" at 5 with \"https://a.com/x\" titled \"The X page\" reads \"Read [The X page](https://a.com/x) later\"",
+			"input": [
+				"Read https://a.com/x later",
+				5,
+				"https://a.com/x",
+				"The X page"
+			],
+			"output": "Read [The X page](https://a.com/x) later"
+		},
+		{
+			"fn": "titleLink",
+			"test": "titleLink › \"https://a.com\" at 0 with \"https://a.com\" titled \"  A \\n  site  \" reads \"[A site](https://a.com)\"",
+			"input": [
+				"https://a.com",
+				0,
+				"https://a.com",
+				"  A \n  site  "
+			],
+			"output": "[A site](https://a.com)"
+		},
+		{
+			"fn": "titleLink",
+			"test": "titleLink › \"www.site.com\" at 0 with \"www.site.com\" titled \"Site\" reads \"[Site](https://www.site.com)\"",
+			"input": [
+				"www.site.com",
+				0,
+				"www.site.com",
+				"Site"
+			],
+			"output": "[Site](https://www.site.com)"
+		},
+		{
+			"fn": "titleLink",
+			"test": "titleLink › \"https://a.com\" at 0 with \"https://a.com\" titled \"Array[0] docs\" reads \"[Array(0) docs](https://a.com)\"",
+			"input": [
+				"https://a.com",
+				0,
+				"https://a.com",
+				"Array[0] docs"
+			],
+			"output": "[Array(0) docs](https://a.com)"
+		},
+		{
+			"fn": "titleLink",
+			"test": "titleLink › \"🎉 https://a.com\" at 3 with \"https://a.com\" titled \"A\" reads \"🎉 [A](https://a.com)\"",
+			"input": [
+				"🎉 https://a.com",
+				3,
+				"https://a.com",
+				"A"
+			],
+			"output": "🎉 [A](https://a.com)"
+		},
+		{
+			"fn": "titleLink",
+			"test": "titleLink › the URL moved leaves the text alone",
+			"input": [
+				"x https://a.com",
+				0,
+				"https://a.com",
+				"A"
+			],
+			"output": null
+		},
+		{
+			"fn": "titleLink",
+			"test": "titleLink › the URL was edited leaves the text alone",
+			"input": [
+				"https://a.com/more",
+				0,
+				"https://a.com",
+				"A"
+			],
+			"output": null
+		},
+		{
+			"fn": "titleLink",
+			"test": "titleLink › the URL is gone leaves the text alone",
+			"input": [
+				"Buy milk",
+				0,
+				"https://a.com",
+				"A"
+			],
+			"output": null
+		},
+		{
+			"fn": "titleLink",
+			"test": "titleLink › the title is blank leaves the text alone",
+			"input": [
+				"https://a.com",
+				0,
+				"https://a.com",
+				"   "
+			],
+			"output": null
+		},
+		{
+			"fn": "titleLink",
+			"test": "titleLink › the URL already sits in a Markdown link leaves the text alone",
+			"input": [
+				"[x](https://a.com)",
+				0,
+				"https://a.com",
+				"A"
+			],
+			"output": null
 		}
 	]
 }

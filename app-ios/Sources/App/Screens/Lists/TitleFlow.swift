@@ -10,14 +10,14 @@ struct TitleFlow: View {
         var color: LabelColor
     }
 
-    let title: AttributedString
+    let title: Text
     let labels: [Chip]
     var done = false
     /// Nil shows the whole title, as a subtask row in task details does.
     var lineLimit: Int? = 2
 
     var body: some View {
-        var text = Text(title)
+        var text = title
             .foregroundStyle(done ? Color.faint : Color.ink)
             .strikethrough(done, color: .faint)
         for label in labels {

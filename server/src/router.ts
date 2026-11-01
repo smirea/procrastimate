@@ -46,6 +46,7 @@ import {
 	revokeAi,
 	sharedView,
 } from './sharing';
+import { linkTitle } from './link-preview';
 import { personById, searchPeople } from './people';
 import { OUTLINE_TIMEOUT_MS, outlineRamble, RAMBLE_GEMINI } from './ramble-outline';
 import { reportError } from './sentry';
@@ -221,6 +222,10 @@ export const router = os.router({
 			return ok;
 		}),
 	},
+	linkPreview: os.linkPreview.handler(async ({ input, context }) => {
+		await requireHuman(context.request, context.app);
+		return { title: await linkTitle(input.query.url) };
+	}),
 	ramble: {
 		outline: os.ramble.outline.handler(async ({ input, context, errors }) => {
 			await requireHuman(context.request, context.app);

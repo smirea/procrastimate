@@ -45,14 +45,14 @@ struct TaskRow<Trailing: View>: View {
                 .disabled(offered.toggle == nil)
             VStack(alignment: .leading, spacing: 2) {
                 TitleFlow(
-                    title: Links.attributed(task.title),
+                    title: Links.text(task.title),
                     labels: labels.map { TitleFlow.Chip(text: AttributedString($0.name), color: $0.color) },
                     done: checking || done,
                     lineLimit: isSubtask ? nil : 2
                 )
                 .font(.body)
                 if !task.notes.isEmpty {
-                    Text(Links.attributed(task.notes)).font(.footnote).foregroundStyle(.muted).lineLimit(1)
+                    Links.text(task.notes, icon: 12).font(.footnote).foregroundStyle(.muted).lineLimit(1)
                 }
                 if !pending.isEmpty {
                     PendingSubtasks(titles: pending.map(\.title))

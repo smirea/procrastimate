@@ -2,18 +2,24 @@ import Core
 import SwiftUI
 
 extension Links {
-    /// The text with each link tappable in the accent color and each highlight mark on `tokenMatch`. A tap on a link
-    /// opens it through `openURL` and never reaches the row's own tap.
-    @MainActor static func attributed(_ text: String, _ ranges: [Range<Int>] = []) -> AttributedString {
-        var out = AttributedString()
+    /// The text with each link tappable in the accent color, its site's icon before it, and each highlight mark on
+    /// `tokenMatch`. A tap on a link opens it through `openURL` and never reaches the row's own tap. `icon` is the icon's
+    /// side in points, about the font's cap height plus its descenders.
+    @MainActor static func text(_ text: String, _ ranges: [Range<Int>] = [], icon: CGFloat = 15) -> Text {
+        var out = Text(verbatim: "")
         for segment in linkify(text, ranges) {
             var piece = Search.Highlight(text: segment.text, ranges: segment.marks).attributed
             if let href = segment.href, let url = URL(string: href) {
                 piece.link = url
                 piece.foregroundColor = .accent
                 piece.underlineStyle = .single
+                if let host = linkHost(href), let image = Favicons.shared.icon(host, side: icon) {
+                    let favicon = Text(Image(decorative: image, scale: UITraitCollection.current.displayScale))
+                        .baselineOffset(-icon * 0.18)
+                    out = Text("\(out)\(favicon)\u{2009}")
+                }
             }
-            out += piece
+            out = Text("\(out)\(Text(piece))")
         }
         return out
     }
@@ -35,7 +41,7 @@ struct LinkedField<Field: View>: View {
             .opacity(linked ? 0 : 1)
             .overlay(alignment: .topLeading) {
                 if linked {
-                    Text(Links.attributed(text))
+                    Links.text(text)
                         .padding(inset)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .contentShape(.rect)

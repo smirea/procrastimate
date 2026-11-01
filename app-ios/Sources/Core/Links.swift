@@ -79,4 +79,38 @@ public enum Links {
         push(slice(cursor, units.count), nil, cursor, units.count, cursor)
         return segments
     }
+
+    /// A link's icon, fetched by the server from the link's host. See `docs/decisions/link-previews.md`.
+    public static let faviconPath = "/api/favicon"
+
+    /// The host whose icon a link shows, lowercased, or nil for an href that does not parse.
+    public static func linkHost(_ href: String) -> String? {
+        guard let host = URL(string: href)?.host(), !host.isEmpty else { return nil }
+        return host.lowercased()
+    }
+
+    /// The pasted text, trimmed, when it is one bare web URL and nothing else, the paste that becomes a titled link.
+    public static func pastedUrl(_ pasted: String) -> String? {
+        let text = UTF16Text.trim(pasted)
+        let segments = linkify(text)
+        guard segments.count == 1, let only = segments.first, only.href != nil, UTF16Text.equal(only.text, text) else { return nil }
+        return text
+    }
+
+    /// `text` with the bare `url` pasted at `at` turned into `[title](url)`, once the page's title arrives. Nil when the
+    /// text no longer holds that bare URL there, or the title leaves no label. Brackets in the title become parentheses,
+    /// the only characters a Markdown label cannot hold.
+    public static func titleLink(_ text: String, _ at: Int, _ url: String, _ title: String) -> String? {
+        let bracketed = title.replacingOccurrences(of: "[", with: "(").replacingOccurrences(of: "]", with: ")")
+        let label = UTF16Text.words(Array(bracketed.utf16)).filter { !$0.isEmpty }.map(UTF16Text.string).joined(separator: " ")
+        let urlLength = url.utf16.count
+        guard !label.isEmpty, let bare = linkify(text).first(where: { $0.start == at }), let href = bare.href,
+              UTF16Text.equal(bare.text, url), bare.end == at + urlLength else { return nil }
+        let units = Array(text.utf16)
+        let link = "[\(label)](\(href))"
+        let next = UTF16Text.string(units[..<at]) + link + UTF16Text.string(units[bare.end...])
+        guard let titled = linkify(next).first(where: { $0.start == at }), UTF16Text.equal(titled.text, label),
+              titled.end == at + link.utf16.count else { return nil }
+        return next
+    }
 }

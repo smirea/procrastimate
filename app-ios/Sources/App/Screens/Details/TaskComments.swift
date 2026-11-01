@@ -64,7 +64,7 @@ struct TaskComments: View {
                 }
                 .font(.subheadline)
             } else {
-                Text(Links.attributed(comment.body))
+                Links.text(comment.body)
                     .font(.subheadline)
                     .foregroundStyle(.ink)
                     .frame(maxWidth: .infinity, alignment: .leading)
