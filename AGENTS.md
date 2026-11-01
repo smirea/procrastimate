@@ -37,6 +37,7 @@ Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
 - `bun test` runs unit tests. `bun run check` typechecks the root and `app-web`. `bun run test:e2e` builds the client and runs the Playwright suite against its own `vite preview` on `CLIENT_PORT + 5` (6125 in the main checkout), next to the Bun API. With `E2E_WORKER=1` it runs against `wrangler dev` serving an existing `bun run build`.
 - Production is one Cloudflare Worker configured by `wrangler.jsonc`. `bun run preview` builds and serves it locally with `wrangler dev`. CI in `.github/workflows/ci.yml` deploys every push to `master`; never deploy by hand.
 - A `monorepo-swift` scaffold also has `app-ios/` with native instructions and its own launcher. See that folder's docs.
+- `app-tinycast/` is a Raycast-format extension for the Tinycast launcher on the Mac: quick add and a task list over the agent API. `bun run --cwd app-tinycast build` writes `dist/` to add in Tinycast. See `docs/decisions/integrations.md`.
 
 # Environment
 
