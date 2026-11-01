@@ -515,6 +515,15 @@ export const contract = {
 		.meta(openapi({ method: 'GET', path: '/api/link-preview', inputStructure: 'detailed' }))
 		.input(z.object({ query: z.object({ url: z.string() }) }))
 		.output(linkPreviewSchema),
+	/**
+	 * The icon of the site at `host`, as image bytes, for the icon before a link. `api.ts` answers it before the router,
+	 * like image bytes. `NOT_FOUND`, cached for a day, when the site has none.
+	 */
+	favicon: allowed
+		.errors({ BAD_REQUEST: {}, NOT_FOUND: {} })
+		.meta(openapi({ method: 'GET', path: '/api/favicon', inputStructure: 'detailed' }))
+		.input(z.object({ query: z.object({ host: z.string() }) }))
+		.output(z.file()),
 	/** Smoke tests for Sentry: each throws, so a 500 and an event in `procrastimate-worker` prove the path. */
 	debug: {
 		error: signedIn.meta(openapi({ method: 'POST', path: '/api/debug/error' })).output(okSchema),

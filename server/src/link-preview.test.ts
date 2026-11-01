@@ -93,6 +93,11 @@ describe('GET /api/link-preview', () => {
 		expect(await (await preview('https://short.link/x')).json()).toEqual({ title: 'The page' });
 	});
 
+	test('reads a pasted www. address over https', async () => {
+		web({ 'https://www.site.com/page': html('<title>Bare</title>') });
+		expect(await (await preview('www.site.com/page')).json()).toEqual({ title: 'Bare' });
+	});
+
 	test('answers null for a private host, a redirect to one, and a page that is not HTML', async () => {
 		const asked = web({
 			'https://site.com/hop': () =>

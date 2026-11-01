@@ -200,7 +200,8 @@ export function iconLinks(html: string, base: URL): URL[] {
 
 /** The page's title, or null when it cannot be read: a refused host, no HTML, or no answer in time. */
 export async function linkTitle(url: string): Promise<string | null> {
-	const parsed = URL.parse(url);
+	// A pasted `www.` address has no scheme, which links read as `https://`.
+	const parsed = URL.parse(/^https?:\/\//i.test(url) ? url : `https://${url}`);
 	if (!parsed) return null;
 	const page = await fetchPage(parsed);
 	return page && pageTitle(page.html);

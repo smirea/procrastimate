@@ -222,6 +222,10 @@ export const router = os.router({
 			return ok;
 		}),
 	},
+	// `api.ts` answers icon requests before the router, so this never runs.
+	favicon: os.favicon.handler(() => {
+		throw new ORPCError('NOT_FOUND', { message: 'Icon requests never reach the router' });
+	}),
 	linkPreview: os.linkPreview.handler(async ({ input, context }) => {
 		await requireHuman(context.request, context.app);
 		return { title: await linkTitle(input.query.url) };
