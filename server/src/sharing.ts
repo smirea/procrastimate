@@ -228,7 +228,7 @@ export async function createToken(
 	name: string,
 	now: number,
 ): Promise<CreatedApiToken> {
-	await ownAi(db, owner, aiUserId);
+	if (aiUserId !== owner) await ownAi(db, owner, aiUserId);
 	const secret = randomSecret();
 	const id = newId();
 	await db.insert(apiTokens).values({

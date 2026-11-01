@@ -1,5 +1,5 @@
 import { ORPCError } from '@orpc/server';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { appClientSchema, CLIENT_HEADER, DEVICE_HEADER, DEVICE_PROTOCOL_PREFIX, type Actor } from '../../shared/auth';
 import { apiTokens } from '../../shared/db/schema';
 import { user } from './db/auth-schema';
@@ -9,8 +9,8 @@ import { readSession } from './better-auth';
 import { identify } from './sentry';
 
 /**
- * Who a request is from: a Better Auth session, or an AI account's `pm.<ownerId>.<secret>` bearer, which names the
- * owner whose `api_tokens` row holds the secret's hash. A session bearer, which iOS sends, is resolved once a minute
+ * Who a request is from: a Better Auth session, or a `pm.<ownerId>.<secret>` bearer, which names the owner whose
+ * `api_tokens` row holds the secret's hash and acts as that row's AI account, or as the owner for a personal token. A session bearer, which iOS sends, is resolved once a minute
  * per isolate, the same trust the web's signed cookie cache gives, so a revoked token works for at most a minute.
  */
 
@@ -47,7 +47,7 @@ function bearer(request: Request): string | null {
 async function tokenActor(token: string, app: App): Promise<Actor | null> {
 	const [ownerId, secret, ...rest] = token.slice(TOKEN_PREFIX.length).split('.');
 	if (!ownerId || !secret || rest.length) return null;
-	const [ai] = await app.db
+	const [actor] = await app.db
 		.select({ id: user.id, name: user.name, kind: user.kind, ownerId: user.ownerId })
 		.from(apiTokens)
 		.innerJoin(user, eq(user.id, apiTokens.aiUserId))
@@ -55,11 +55,10 @@ async function tokenActor(token: string, app: App): Promise<Actor | null> {
 			and(
 				eq(apiTokens.userId, ownerId),
 				eq(apiTokens.tokenHash, await sha256(secret)),
-				eq(user.kind, 'ai'),
-				eq(user.ownerId, ownerId),
+				or(eq(user.id, ownerId), and(eq(user.kind, 'ai'), eq(user.ownerId, ownerId))),
 			),
 		);
-	return ai ?? null;
+	return actor ?? null;
 }
 
 /** Also names the caller in Sentry, for the rest of the request. */

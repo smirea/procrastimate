@@ -544,7 +544,7 @@ export const contract = {
 		/** Human users only. */
 		token: signedIn.meta(openapi({ method: 'GET', path: '/api/sync/token' })).output(syncTokenSchema),
 	},
-	/** API tokens for the owner's AI accounts. Human owners only. */
+	/** API tokens for the owner's AI accounts, and personal ones that act as the owner. Human owners only. */
 	tokens: {
 		list: allowed.meta(openapi({ method: 'GET', path: '/api/ai-tokens' })).output(apiTokensSchema),
 		/** The only response that carries the secret. */

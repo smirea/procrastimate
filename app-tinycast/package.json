@@ -52,7 +52,7 @@
 		{
 			"name": "token",
 			"title": "API Token",
-			"description": "An AI account token from ProcrastiMate's Settings, starting with pm.",
+			"description": "A personal token from ProcrastiMate's Settings (or an AI account's), starting with pm.",
 			"type": "password",
 			"required": true,
 			"placeholder": "pm.…"
