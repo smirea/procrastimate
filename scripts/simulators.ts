@@ -5,13 +5,13 @@ import { run } from './lib';
 export type Device = { name: string; udid: string; state: string; dataPath: string };
 
 export function devices(): Device[] {
-	const { devices } = JSON.parse(run(['xcrun', 'simctl', 'list', 'devices', '--json'])) as {
+	const { devices: byRuntime } = JSON.parse(run(['xcrun', 'simctl', 'list', 'devices', '--json'])) as {
 		devices: Record<string, Device[]>;
 	};
-	return Object.values(devices).flat();
+	return Object.values(byRuntime).flat();
 }
 
-export function device(udid: string): Device {
+export function findDevice(udid: string): Device {
 	const found = devices().find(entry => entry.udid === udid);
 	if (!found) throw new Error(`simctl does not list ${udid}.`);
 	return found;

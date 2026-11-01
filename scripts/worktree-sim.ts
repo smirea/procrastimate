@@ -15,7 +15,7 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { agentCommand, agentOutput } from './agent-command';
-import { type Device, device as find, shutdown } from './simulators';
+import { type Device, findDevice, shutdown } from './simulators';
 import { runUITests } from './sim-uitest';
 
 const root = join(import.meta.dir, '..');
@@ -43,7 +43,7 @@ const extra = args[0] && /^\d+$/.test(args[0]) ? args.shift() : undefined;
 const alertsCleared = (device: Device) => join(device.dataPath, 'procrastimate-permission-alerts-cleared');
 
 function ensure(): Device {
-	const device = find(agentOutput('agent-simulator', ['udid', ...(extra ? [extra] : [])]));
+	const device = findDevice(agentOutput('agent-simulator', ['udid', ...(extra ? [extra] : [])]));
 	if (!existsSync(alertsCleared(device)) && device.state === 'Booted') {
 		console.log(
 			`Rebooting ${device.name} to clear any permission alert left from before the launcher granted permissions.`,
