@@ -13,7 +13,7 @@ extension Links {
                 piece.link = url
                 piece.foregroundColor = .accent
                 piece.underlineStyle = .single
-                if let host = linkHost(href), let image = Favicons.shared.icon(host, side: icon) {
+                if let image = Favicons.shared.icon(href, side: icon) {
                     let favicon = Text(Image(decorative: image, scale: UITraitCollection.current.displayScale))
                         .baselineOffset(-icon * 0.18)
                     out = Text("\(out)\(favicon)\u{2009}")

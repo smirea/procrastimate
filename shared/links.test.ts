@@ -4,7 +4,6 @@ import type { TextSegment } from './links.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
 const linkify = recorded('links', links.linkify);
-const linkHost = recorded('links', links.linkHost);
 const pastedUrl = recorded('links', links.pastedUrl);
 const titleLink = recorded('links', links.titleLink);
 
@@ -76,17 +75,6 @@ describe('linkify', () => {
 			{ text: 'https://a.com', href: 'https://a.com', start: 3, end: 16, marks: [] },
 			{ text: ' 🎉', href: null, start: 16, end: 19, marks: [] },
 		]);
-	});
-});
-
-describe('linkHost', () => {
-	test.each([
-		['https://Docs.Example.com/a?b', 'docs.example.com'],
-		['https://www.site.com', 'www.site.com'],
-		['http://x.dev:8080/p', 'x.dev'],
-		['not a url', null],
-	])('%p has host %p', (href, host) => {
-		expect(linkHost(href)).toBe(host);
 	});
 });
 

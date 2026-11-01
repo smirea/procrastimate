@@ -31,8 +31,11 @@ export function publicHost(host: string): boolean {
 	return !/(^|\.)(localhost|local|internal|lan|home|arpa)$/.test(name);
 }
 
-/** Follows redirects by hand, so each hop's host is checked. Null for a refused host, a timeout, or no answer. */
-async function fetchPublic(url: URL, accept: string): Promise<Response | null> {
+/**
+ * Follows redirects by hand, so each hop's host is checked, and answers where it landed. Null for a refused host, a
+ * timeout, or no answer.
+ */
+async function fetchPublic(url: URL, accept: string): Promise<{ response: Response; url: URL } | null> {
 	const signal = AbortSignal.timeout(TIMEOUT_MS);
 	let at = url;
 	for (let hop = 0; hop <= REDIRECTS; hop++) {
@@ -42,7 +45,7 @@ async function fetchPublic(url: URL, accept: string): Promise<Response | null> {
 		);
 		if (!response) return null;
 		const location = response.headers.get('location');
-		if (response.status < 300 || response.status >= 400 || !location) return response;
+		if (response.status < 300 || response.status >= 400 || !location) return { response, url: at };
 		await response.body?.cancel();
 		const next = URL.parse(location, at);
 		if (!next) return null;
@@ -83,9 +86,10 @@ async function readCapped(response: Response, limit: number): Promise<Uint8Array
  * `<title>` 770 KB in.
  */
 async function fetchPage(url: URL): Promise<{ html: string; url: URL } | null> {
-	const response = await fetchPublic(url, 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5');
+	const fetched = await fetchPublic(url, 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5');
+	const response = fetched?.response;
 	const type = response?.headers.get('content-type') ?? '';
-	if (!response?.ok || !response.body || !/html/i.test(type)) {
+	if (!fetched || !response?.ok || !response.body || !/html/i.test(type)) {
 		await response?.body?.cancel();
 		return null;
 	}
@@ -114,7 +118,7 @@ async function fetchPage(url: URL): Promise<{ html: string; url: URL } | null> {
 	} finally {
 		await reader.cancel().catch(() => {});
 	}
-	return { html, url: URL.parse(response.url) ?? url };
+	return { html, url: fetched.url };
 }
 
 const ENTITIES: Record<string, string> = {
@@ -167,15 +171,44 @@ const tidy = (title: string) => {
 	return text.slice(0, end);
 };
 
-/** The `<title>` the browser tab shows, else the page's Open Graph or Twitter title, which pages built by script often only set. */
-export function pageTitle(html: string): string | null {
+/** Each `<meta>` tag's `content` by its `property` or `name`, lowercased, the first of each kept. */
+function metaContent(head: string): Map<string, string> {
+	const found = new Map<string, string>();
+	for (const meta of tags(head, 'meta')) {
+		const key = (meta.property ?? meta.name)?.toLowerCase();
+		if (key && meta.content && !found.has(key)) found.set(key, meta.content);
+	}
+	return found;
+}
+
+/**
+ * Sites whose `<title>` names the site rather than the page, each with where its page's own name is. A rule that
+ * finds nothing falls back to the general one.
+ */
+const SITE_TITLES: { matches: (url: URL) => boolean; title: (meta: Map<string, string>) => string | undefined }[] = [
+	{
+		// A place reads `Google Maps` in its tab; `og:title` is `HEAT Bootcamp · 5.0★(190) · Fitness center`, and the
+		// rating and category after the name would go stale in a task title.
+		matches: url => /(^|\.)google\.[a-z.]+$/.test(url.hostname) && url.pathname.startsWith('/maps'),
+		title: meta => {
+			const name = meta.get('og:title')?.split(' · ')[0];
+			return name === 'Google Maps' ? undefined : name;
+		},
+	},
+];
+
+/**
+ * The page's own name: a site rule's, else the `<title>` the browser tab shows, else the Open Graph or Twitter title,
+ * which pages built by script often only set. `url` is where the page was read, after redirects.
+ */
+export function pageTitle(html: string, url: URL): string | null {
 	const head = html.split(/<body\b/i)[0]!;
+	const meta = metaContent(head);
+	const site = SITE_TITLES.find(rule => rule.matches(url))?.title(meta);
 	const title = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(head)?.[1];
-	if (title && tidy(title)) return tidy(title);
-	const meta = tags(head, 'meta');
-	for (const key of ['og:title', 'twitter:title']) {
-		const content = meta.find(m => (m.property ?? m.name)?.toLowerCase() === key)?.content;
-		if (content && tidy(content)) return tidy(content);
+	for (const candidate of [site, title, meta.get('og:title'), meta.get('twitter:title')]) {
+		const tidied = candidate && tidy(candidate);
+		if (tidied) return tidied;
 	}
 	return null;
 }
@@ -204,11 +237,11 @@ export async function linkTitle(url: string): Promise<string | null> {
 	const parsed = URL.parse(/^https?:\/\//i.test(url) ? url : `https://${url}`);
 	if (!parsed) return null;
 	const page = await fetchPage(parsed);
-	return page && pageTitle(page.html);
+	return page && pageTitle(page.html, page.url);
 }
 
 async function fetchIcon(url: URL): Promise<{ type: string; bytes: Uint8Array<ArrayBuffer> } | null> {
-	const response = await fetchPublic(url, 'image/*');
+	const response = (await fetchPublic(url, 'image/*'))?.response;
 	const type = response?.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() ?? '';
 	if (!response?.ok || !type.startsWith('image/') || type.includes('svg')) {
 		await response?.body?.cancel();
@@ -219,20 +252,22 @@ async function fetchIcon(url: URL): Promise<{ type: string; bytes: Uint8Array<Ar
 }
 
 /**
- * `GET /api/favicon?host=`: the icon of the site at `host`, from its home page's declared icons, else `/favicon.ico`.
- * Outside the contract since it answers image bytes. Browsers and `URLCache` keep it for a week, and keep a miss for a
- * day, so each device asks once per site.
+ * `GET /api/favicon?url=`: the icon of the page a link opens, from the icons it declares after redirects, else its
+ * site's `/favicon.ico`. By page, not by host: a short link such as `maps.app.goo.gl` lands on Google Maps, whose pin
+ * differs from both the shortener's icon and Google's. Browsers and `URLCache` keep it for a week, and keep a miss
+ * for a day, so each device asks once per link.
  */
 export async function faviconRoute(request: Request, app: App): Promise<Response> {
 	if (request.method !== 'GET') return errorResponse('NOT_FOUND', 'Not found');
 	const actor = await readActor(request, app);
 	if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
 	identify(actor);
-	const host = new URL(request.url).searchParams.get('host')?.toLowerCase() ?? '';
-	if (!publicHost(host)) return errorResponse('BAD_REQUEST', 'Needs the host name of a public site');
-	const home = new URL(`https://${host}/`);
-	const page = await fetchPage(home);
-	const candidates = [...(page ? iconLinks(page.html, page.url) : []), new URL('/favicon.ico', page?.url ?? home)];
+	const url = URL.parse(new URL(request.url).searchParams.get('url') ?? '');
+	if (!url || !/^https?:$/.test(url.protocol) || !publicHost(url.hostname)) {
+		return errorResponse('BAD_REQUEST', 'Needs the web address of a public site');
+	}
+	const page = await fetchPage(url);
+	const candidates = [...(page ? iconLinks(page.html, page.url) : []), new URL('/favicon.ico', page?.url ?? url)];
 	for (const candidate of candidates.slice(0, 4)) {
 		const icon = await fetchIcon(candidate);
 		if (icon) {

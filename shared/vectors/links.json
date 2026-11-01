@@ -555,38 +555,6 @@
 			]
 		},
 		{
-			"fn": "linkHost",
-			"test": "linkHost › \"https://Docs.Example.com/a?b\" has host \"docs.example.com\"",
-			"input": [
-				"https://Docs.Example.com/a?b"
-			],
-			"output": "docs.example.com"
-		},
-		{
-			"fn": "linkHost",
-			"test": "linkHost › \"https://www.site.com\" has host \"www.site.com\"",
-			"input": [
-				"https://www.site.com"
-			],
-			"output": "www.site.com"
-		},
-		{
-			"fn": "linkHost",
-			"test": "linkHost › \"http://x.dev:8080/p\" has host \"x.dev\"",
-			"input": [
-				"http://x.dev:8080/p"
-			],
-			"output": "x.dev"
-		},
-		{
-			"fn": "linkHost",
-			"test": "linkHost › \"not a url\" has host null",
-			"input": [
-				"not a url"
-			],
-			"output": null
-		},
-		{
 			"fn": "pastedUrl",
 			"test": "pastedUrl › \"https://example.com/a?b=1\" pastes as \"https://example.com/a?b=1\"",
 			"input": [

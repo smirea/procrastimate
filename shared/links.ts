@@ -70,13 +70,8 @@ export function linkify(text: string, ranges: readonly Range[] = []): TextSegmen
 	return segments;
 }
 
-/** A link's icon, fetched by the server from the link's host. See `docs/decisions/link-previews.md`. */
+/** A link's icon, fetched by the server from the page the link opens. See `docs/decisions/link-previews.md`. */
 export const FAVICON_PATH = '/api/favicon';
-
-/** The host whose icon a link shows, lowercased, or null for an href that does not parse. */
-export function linkHost(href: string): string | null {
-	return URL.parse(href)?.hostname.toLowerCase() || null;
-}
 
 /** The pasted text, trimmed, when it is one bare web URL and nothing else, the paste that becomes a titled link. */
 export function pastedUrl(pasted: string): string | null {

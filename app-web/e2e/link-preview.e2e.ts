@@ -45,7 +45,7 @@ test('a pasted URL becomes a link titled by its page, with the site’s icon bef
 		.getByRole('link', { name: 'The (Example) Page' });
 	await expect(link).toHaveAttribute('href', 'https://example.com/page');
 	const icon = link.locator('img');
-	await expect(icon).toHaveAttribute('src', '/api/favicon?host=example.com');
+	await expect(icon).toHaveAttribute('src', '/api/favicon?url=https%3A%2F%2Fexample.com%2Fpage');
 	await expect.poll(() => icon.evaluate(img => (img as HTMLImageElement).naturalWidth)).toBe(1);
 	await app.settle();
 	await page.screenshot({ path: 'test-results/link-preview/row.png' });
