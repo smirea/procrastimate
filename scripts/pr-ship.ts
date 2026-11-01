@@ -8,15 +8,12 @@
  *   1  something to fix: failing checks or unresolved review threads (printed)
  *   2  conflicts with master: rebase onto origin/master, push, rerun
  *   3  budget spent while checks or Codex still run, or during a slow `gh` call: rerun
- *   4  needs a human: Codex is overdue and only the repository owner's account can nudge it (printed)
  *
- * Codex reviews only when a PR opens, so after the first review it never waits for another. Codex answers `@codex review`
- * only from the owner's account, so after 15 minutes without a review the script posts it with that account's gh token.
+ * Codex reviews every PR on its own when it opens, so after the first review it never waits for another.
  */
 import { parseArgs } from 'node:util';
 import { run, TimeoutError } from './lib';
 
-const CODEX_NUDGE_MS = 15 * 60_000;
 const POLL_MS = 20_000;
 const EXIT_RESERVE_MS = 2_000;
 
@@ -34,20 +31,19 @@ export type Pr = {
 	number: number;
 	url: string;
 	state: string;
-	createdAt: string;
 	headRefOid: string;
 	mergeable: string;
 	statusCheckRollup: Check[];
-	comments: { author: { login: string }; body: string; createdAt: string }[];
+	comments: { body: string }[];
 };
 
 export type Io = {
 	now(): number;
 	sleep(ms: number): Promise<void>;
-	run(cmd: string[], options?: { timeoutMs?: number; env?: Record<string, string> }): string;
+	run(cmd: string[], options?: { timeoutMs?: number }): string;
 	log(line: string): void;
 };
-export type Verdict = { code: 0 | 1 | 2 | 3 | 4; message: string };
+export type Verdict = { code: 0 | 1 | 2 | 3; message: string };
 
 class Exit extends Error {
 	constructor(readonly verdict: Verdict) {
@@ -78,32 +74,23 @@ function codexRunning(pr: Pr): boolean {
 
 export async function ship(io: Io, { merge, budgetMs }: { merge: boolean; budgetMs: number }): Promise<Verdict> {
 	const deadline = io.now() + budgetMs;
-	function bounded(cmd: string[], env?: Record<string, string>): string {
+	function bounded(cmd: string[]): string {
 		const timeoutMs = deadline - EXIT_RESERVE_MS - io.now();
 		const name = `\`${cmd.slice(0, 3).join(' ')}\``;
 		if (timeoutMs <= 0) exit(3, `The budget ran out before ${name}. Rerun.`);
 		try {
-			return io.run(cmd, { timeoutMs, env });
+			return io.run(cmd, { timeoutMs });
 		} catch (error) {
 			if (error instanceof TimeoutError) exit(3, `The budget ran out during ${name}. Rerun.`);
 			throw error;
 		}
 	}
-	const gh = (args: string[], env?: Record<string, string>) => bounded(['gh', ...args], env);
-
-	function token(user: string): string | null {
-		try {
-			return gh(['auth', 'token', '--user', user]) || null;
-		} catch (error) {
-			if (error instanceof Exit) throw error;
-			return null;
-		}
-	}
+	const gh = (args: string[]) => bounded(['gh', ...args]);
 
 	function view(): Pr {
 		try {
 			return JSON.parse(
-				gh(['pr', 'view', '--json', 'number,url,state,createdAt,headRefOid,mergeable,statusCheckRollup,comments']),
+				gh(['pr', 'view', '--json', 'number,url,state,headRefOid,mergeable,statusCheckRollup,comments']),
 			);
 		} catch (error) {
 			if (error instanceof Error && error.message.includes('no pull requests found')) {
@@ -145,7 +132,6 @@ export async function ship(io: Io, { merge, budgetMs }: { merge: boolean; budget
 
 	try {
 		const head = bounded(['git', 'rev-parse', 'HEAD']);
-		let nudged = false;
 		const [owner, repo] = gh(['repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner']).split('/') as [
 			string,
 			string,
@@ -186,32 +172,7 @@ export async function ship(io: Io, { merge, budgetMs }: { merge: boolean; budget
 				continue;
 			}
 			if (!waiting.length) waiting.push('GitHub to compute mergeability');
-			if (waiting.includes('Codex review')) {
-				const nudge = pr.comments.find(
-					comment => comment.author.login === owner && comment.body.trim() === '@codex review',
-				);
-				if (nudge && io.now() - Date.parse(nudge.createdAt) > CODEX_NUDGE_MS) {
-					exit(
-						4,
-						`Codex has not reviewed ${pr.url} 15 minutes after ${owner} asked it to. Report needs_input: ask ${owner} to check the Codex integration.`,
-					);
-				}
-				if (!nudge && !nudged && io.now() - Date.parse(pr.createdAt) > CODEX_NUDGE_MS) {
-					const ownerToken = token(owner);
-					if (!ownerToken) {
-						exit(
-							4,
-							`Codex has not reviewed ${pr.url} after 15 minutes, and Codex answers only ${owner}, whose gh login is missing here. Report needs_input: ask ${owner} to comment \`@codex review\` on the PR.`,
-						);
-					}
-					gh(['pr', 'comment', String(pr.number), '--body', '@codex review'], { GH_TOKEN: ownerToken });
-					nudged = true;
-				}
-			}
-			if (io.now() + POLL_MS > deadline) {
-				const nudge = nudged ? ` Asked Codex to review as ${owner}.` : '';
-				exit(3, `Still waiting on ${waiting.join(', ')}.${nudge} Rerun.`);
-			}
+			if (io.now() + POLL_MS > deadline) exit(3, `Still waiting on ${waiting.join(', ')}. Rerun.`);
 			io.log(`Waiting on ${waiting.join(', ')}…`);
 			await io.sleep(POLL_MS);
 		}

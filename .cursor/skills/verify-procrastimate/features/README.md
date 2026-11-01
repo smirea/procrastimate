@@ -14,7 +14,7 @@ The iOS app works with Siri, Shortcuts, and Spotlight. Every new feature that so
 - Production answers at `https://procrastimate.stf.lol`, deployed from `master`. `GET /api/status` there returns `{"ok":true}`, and deep links such as `/inbox` serve the app.
 - Web data lives in the browser's sync-engine database, `procrastimate.sqlite` in OPFS, which belongs to the account that last signed in there. Device-local settings (theme, people, install id, reminder check) have their own `procrastimate-*` `localStorage` keys. A fresh browser profile is the baseline state with no tasks or projects.
 - The automated web suite is `bun run test:e2e` from the repo root. It runs every spec in `app-web/e2e/` in the `desktop` project, Chromium at 1280×800; some specs set a 393 px viewport themselves. The `mobile` project reruns the tests tagged `@webkit` in WebKit at 393×852. Install both browsers once with `bunx playwright install --with-deps chromium webkit` in `app-web/`. It starts its own client on port 6125 (`CLIENT_PORT + 5`) with a fresh profile per test and a clock pinned to Wednesday, October 14 2026, 10:00 UTC.
-- `swift test` in `app-ios/` runs the Core unit tests, including the TS-to-Swift vectors. For iOS UI, run throwaway XCUITests with `./sim test <file.swift>...`, written by `bun scripts/setup-worktree.ts`; `scripts/sim-uitest.ts` documents it.
+- `swift test` in `app-ios/` runs the Core unit tests, including the TS-to-Swift vectors. For iOS UI, run throwaway XCUITests with `./sim test <file.swift>...`, written by the `worktree:setup` script; `scripts/sim-uitest.ts` documents it.
 - Start the iOS client in a simulator with `bun run start:ios -t simulator`. It opens on an empty Inbox. The tab bar has Inbox, No date, and Browse, plus the accent `+` circle beside it that opens quick add. Search is the field at the top of Browse. It needs macOS with Xcode, so a Linux agent runs only `swift test` in `app-ios/` and leaves the app to the iOS workflow.
 - Debug builds can launch with `PROCRASTIMATE_NOW=2026-10-14T10:00:00Z`, `PROCRASTIMATE_TZ=UTC`, and `PROCRASTIMATE_RESET=1` for an empty store at the pinned moment. Release builds ignore those keys.
 - Seed fixtures through quick add, the real user path. Each worktree has its own SQLite file in `.data/`, so a new sign-up gives a disposable account.
@@ -25,7 +25,7 @@ The iOS app works with Siri, Shortcuts, and Spotlight. Every new feature that so
 ## Driving conventions
 
 - Start every recipe from the baseline state unless its preconditions say otherwise.
-- Drive the web client through a browser with the `control-ui` skill. Use `xcrun simctl` only for simulator lifecycle, screenshots, and recordings.
+- Drive the web client through a browser with the `control-ui` skill. Drive the simulator with the command T3's `device_open` returns (`press 'label=…' --settle`), and use `xcrun simctl` only for what it can't do, such as setting a location or opening a URL.
 - Prefer accessible roles and names over CSS selectors, coordinates, or tab order.
 - Below 768 px wide the web client is in its phone layout. The sidebar is hidden behind `Open navigation`, a floating `Quick add` button replaces the `q` shortcut, and quick add and task details open as bottom sheets. Drive phone steps with taps, not keyboard shortcuts.
 - Exercise the real user path. Do not call internal setters or test-only endpoints, and call the upload route only to seed fields the web cannot set.
