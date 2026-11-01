@@ -18,7 +18,9 @@
 
 	onMount(async () => {
 		const result = await api.tokens.list().catch(() => null);
-		if (result) ids = result.tokens.filter((token) => token.aiUserId === session.userId).map((token) => token.id);
+		if (!result) return;
+		const listed = result.tokens.filter((token) => token.aiUserId === session.userId).map((token) => token.id);
+		ids = [...new Set([...listed, ...ids])];
 	});
 
 	async function generate() {

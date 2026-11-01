@@ -207,7 +207,8 @@ struct PersonalTokenSection: View {
         guard let owner = Session.userID,
               let tokens = try? await APIClient.send(API.Endpoints.TokensList.self, NoInput()).tokens
         else { return }
-        ids = tokens.filter { $0.aiUserId == owner }.map(\.id)
+        let listed = tokens.filter { $0.aiUserId == owner }.map(\.id)
+        ids = listed + ids.filter { !listed.contains($0) }
     }
 
     private func generate() async {
@@ -245,6 +246,7 @@ struct PersonalTokenSection: View {
         let revoked = ids
         ids = []
         made = nil
+        copied = nil
         var kept: [String] = []
         for id in revoked {
             do {
