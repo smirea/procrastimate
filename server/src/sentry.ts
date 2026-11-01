@@ -113,7 +113,10 @@ const RATE_LIMIT_HEADERS = ['x-sentry-rate-limits', 'retry-after'];
 /** `POST /api/sentry`: the browser's only way to Sentry, since it talks to its own origin alone. */
 export const sentryTunnel: Handler = async (request, env) => {
 	if (!config(env).sentry) return new Response(null, { status: 204 });
-	const envelope = new Uint8Array(await request.arrayBuffer());
+	// Only the browser can break its own upload, as when it leaves the page mid-send, so that is not the server's error.
+	const body = await request.arrayBuffer().catch(() => null);
+	if (!body) return new Response(null, { status: 400 });
+	const envelope = new Uint8Array(body);
 	const destination = tunnelDestination(envelope, SENTRY_DSN.web);
 	if (!destination) return new Response(null, { status: 400 });
 	const upstream = await fetch(destination, {
