@@ -15,16 +15,28 @@ type RunOptions = {
 	stdio?: 'pipe' | 'inherit-stderr' | 'inherit';
 	env?: Values;
 	cwd?: string;
+	/** Kill the command after this many milliseconds and throw a `TimeoutError`, even with `allowFail`. */
+	timeoutMs?: number;
 };
 
+export class TimeoutError extends Error {}
+
 /** Runs a command to completion and answers its trimmed stdout. A failure names the command and shows its output. */
-export function run(cmd: string[], { allowFail = false, stdio = 'pipe', env, cwd }: RunOptions = {}): string {
+export function run(
+	cmd: string[],
+	{ allowFail = false, stdio = 'pipe', env, cwd, timeoutMs }: RunOptions = {},
+): string {
 	const result = spawnSync(cmd[0]!, cmd.slice(1), {
 		encoding: 'utf8',
 		cwd,
+		timeout: timeoutMs,
+		killSignal: 'SIGKILL',
 		env: env ? { ...process.env, ...env } : process.env,
 		stdio: stdio === 'pipe' ? 'pipe' : stdio === 'inherit' ? 'inherit' : ['ignore', 'pipe', 'inherit'],
 	});
+	if ((result.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT') {
+		throw new TimeoutError(`\`${cmd.join(' ')}\` ran past ${timeoutMs}ms`);
+	}
 	if (result.status !== 0) {
 		if (allowFail) return '';
 		throw new Error(`\`${cmd.join(' ')}\` failed\n${result.stderr ?? ''}${result.stdout ?? ''}`);
