@@ -28,6 +28,8 @@ function web(pages: Record<string, () => Response>): string[] {
 
 const html = (body: string) => () => new Response(body, { headers: { 'content-type': 'text/html; charset=utf-8' } });
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
+const SORRY = 'https://www.google.com/sorry/index?continue=x';
+const toSorry = () => new Response(null, { status: 302, headers: { location: SORRY } });
 const png = () => new Response(PNG, { headers: { 'content-type': 'image/png' } });
 
 describe('pageTitle', () => {
@@ -57,6 +59,13 @@ describe('pageTitle', () => {
 			'Google Maps',
 		],
 		['the same tags on another site keep the tab title', 'https://site.com/maps', MAPS_PLACE, 'Google Maps'],
+		[
+			'a place behind the captcha reads the name its address searches',
+			'https://maps.google.com/?q=HEAT+Bootcamp,+2210+S+1st+St+%23A,+Austin&ftid=0x1',
+			'',
+			'HEAT Bootcamp',
+		],
+		['a dropped pin behind the captcha has no title', 'https://maps.google.com/?q=30.25,-97.75', '', null],
 	])('%s', (_, url, page, title) => {
 		expect(pageTitle(page, new URL(url))).toBe(title);
 	});
@@ -125,6 +134,37 @@ describe('GET /api/link-preview', () => {
 		expect(asked).toEqual(['https://site.com/hop', 'https://site.com/file']);
 	});
 
+	const oembed = (url: string) => `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`;
+	const json = (body: unknown) => () => Response.json(body);
+
+	test('reads a YouTube video through its oEmbed, and its page when oEmbed has no title', async () => {
+		const asked = web({
+			[oembed('https://youtu.be/abc?si=x')]: json({ title: ' A &amp; B ', author_name: 'Someone' }),
+			'https://www.youtube.com/@someone': html('<title>Someone - YouTube</title>'),
+		});
+		expect(await (await preview('https://youtu.be/abc?si=x')).json()).toEqual({ title: 'A & B' });
+		expect(await (await preview('https://www.youtube.com/@someone')).json()).toEqual({
+			title: 'Someone - YouTube',
+		});
+		expect(asked).toEqual([
+			oembed('https://youtu.be/abc?si=x'),
+			oembed('https://www.youtube.com/@someone'),
+			'https://www.youtube.com/@someone',
+		]);
+	});
+
+	test("stops at Google's captcha, and a Maps short link still reads its place", async () => {
+		const place = 'https://maps.google.com/?q=HEAT+Bootcamp,+Austin';
+		const asked = web({
+			'https://www.google.com/search?q=x': toSorry,
+			'https://maps.app.goo.gl/x': () => new Response(null, { status: 302, headers: { location: place } }),
+			[place]: toSorry,
+		});
+		expect(await (await preview('https://www.google.com/search?q=x')).json()).toEqual({ title: null });
+		expect(await (await preview('https://maps.app.goo.gl/x')).json()).toEqual({ title: 'HEAT Bootcamp' });
+		expect(asked).not.toContain(SORRY);
+	});
+
 	test('needs a session', async () => {
 		expect((await preview('https://site.com', null)).status).toBe(401);
 	});
@@ -154,6 +194,24 @@ describe('GET /api/favicon', () => {
 		const miss = await favicon('https://none.com/page');
 		expect(miss.status).toBe(404);
 		expect(miss.headers.get('cache-control')).toBe('private, max-age=86400');
+	});
+
+	test("answers YouTube's icon for a YouTube link without reading the video's page", async () => {
+		const asked = web({ 'https://www.youtube.com/favicon.ico': png });
+		expect((await favicon('https://youtu.be/abc')).status).toBe(200);
+		expect(asked).toEqual(['https://www.youtube.com/favicon.ico']);
+	});
+
+	test('answers the Maps pin for a Maps short link behind the captcha', async () => {
+		const pin = 'https://www.google.com/images/branding/product/ico/web_maps_icon_32dp.ico';
+		const asked = web({
+			'https://maps.app.goo.gl/x': () =>
+				new Response(null, { status: 302, headers: { location: 'https://maps.google.com/?q=Place' } }),
+			'https://maps.google.com/?q=Place': toSorry,
+			[pin]: png,
+		});
+		expect((await favicon('https://maps.app.goo.gl/x')).status).toBe(200);
+		expect(asked).toEqual(['https://maps.app.goo.gl/x', 'https://maps.google.com/?q=Place', pin]);
 	});
 
 	test('refuses a private host and a caller without a session', async () => {
