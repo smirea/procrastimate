@@ -32,6 +32,9 @@ final class Navigator {
     @ObservationIgnored private let clock: AppClock
     @ObservationIgnored private var memory = TabMemory<AppTab>()
     @ObservationIgnored private var resetTimer: Task<Void, Never>?
+    /// A task link that came before sync brought its task, such as Feetback's for a task it just posted. It opens when
+    /// the task lands within a minute; later, it would pop up over whatever the user moved on to.
+    @ObservationIgnored private var awaitedTask: (id: String, until: Date)?
 
     static let pinsKey = "procrastimate-pins"
 
@@ -192,8 +195,9 @@ final class Navigator {
         focusSearch = true
     }
 
-    /// Follows a `procrastimate://` link from a widget, a control, or another app such as Notouroboros. A task that is
-    /// gone, or a list the catalog no longer has, opens nothing; quick add and Ramble then open with no context.
+    /// Follows a `procrastimate://` link from a widget, a control, or another app such as Notouroboros. A task this
+    /// device does not have yet waits for sync (`tasksChanged`). A list the catalog no longer has opens nothing; quick
+    /// add and Ramble then open with no context.
     func open(_ link: AppLink, in store: Store, today: DateKey) {
         func list(_ key: String?) -> WidgetList? {
             guard let key else { return nil }
@@ -202,7 +206,11 @@ final class Navigator {
         }
         switch link {
         case let .task(id):
-            guard store.task(id) != nil else { return }
+            guard store.task(id) != nil else {
+                awaitedTask = (id, clock.now.addingTimeInterval(60))
+                return
+            }
+            awaitedTask = nil
             openTask(id)
         case let .list(key):
             guard let list = list(key) else { return }
@@ -213,6 +221,12 @@ final class Navigator {
         case let .ramble(key):
             sheet = .ramble(store.quickAddDefaults(list(key)?.screen(today: today)))
         }
+    }
+
+    func tasksChanged(in store: Store) {
+        guard let awaited = awaitedTask, store.task(awaited.id) != nil else { return }
+        awaitedTask = nil
+        if clock.now < awaited.until { openTask(awaited.id) }
     }
 
     /// Opens what a share link points at in a space this user is already a member of, instead of the read-only

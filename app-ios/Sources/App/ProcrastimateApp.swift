@@ -104,7 +104,10 @@ struct ProcrastimateApp: App {
                 }
                 .onChange(of: store.people) { _, people in DeviceDefaults.people = people }
                 .onChange(of: store.tasks) { old, new in notifications.tasksChanged(from: old, to: new) }
-                .onChange(of: store.tasks) { _, _ in places.tasksChanged() }
+                .onChange(of: store.tasks) { _, _ in
+                    places.tasksChanged()
+                    navigator.tasksChanged(in: store)
+                }
                 .task {
                     calendar.sync()
                     for await _ in NotificationCenter.default.notifications(named: .EKEventStoreChanged) { calendar.sync() }
