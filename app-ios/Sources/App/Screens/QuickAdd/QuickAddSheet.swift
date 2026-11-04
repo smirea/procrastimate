@@ -10,7 +10,7 @@ struct QuickAddSheet: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.clock) private var clock
-    @Environment(TaskImages.self) private var images
+    @Environment(TaskAttachments.self) private var attachments
     @Environment(Toasts.self) private var toasts
 
     /// Quick add names every space's projects and labels a task may land on, and a picked one moves the task there.
@@ -29,10 +29,11 @@ struct QuickAddSheet: View {
     @State private var openTriggers: [QuickAddButton: Int] = [:]
     @State private var scrollTarget: QuickAddButton?
     @State private var fade = RowFade()
-    /// Images wait here until the task exists, then attach through task details' offline upload path.
+    /// Images and files wait here until the task exists, then attach through task details' offline upload path.
     @State private var drafted: [DraftImage] = []
+    @State private var draftedFiles: [PickedFile] = []
     @State private var imageSource: ImageSource?
-    /// Images still loading or making their thumbnail. Saving waits for them, so none is lost.
+    /// Images and files still loading, or images making their thumbnail. Saving waits for them, so none is lost.
     @State private var loadingImages = 0
     /// How far the finger has moved the grabber, up negative. Up grows the card toward the top of the screen, down
     /// lowers it, both 1:1.
@@ -49,6 +50,8 @@ struct QuickAddSheet: View {
     }
 
     private var showMic: Bool { draft.text.isEmpty }
+    private var hasDrafted: Bool { !drafted.isEmpty || !draftedFiles.isEmpty }
+    private var draftedCount: Int { drafted.count + draftedFiles.count }
     private var context: QuickAddDraft.Context {
         QuickAddDraft.Context(now: clock.now, projects: spaceProjects, sections: spaceSections, labels: spaceLabels, zone: clock.timeZone)
     }
@@ -78,7 +81,7 @@ struct QuickAddSheet: View {
                 if showMic { micButton.transition(.scale(scale: 0.6).combined(with: .opacity)) }
             }
             .animation(.snappy(duration: 0.16), value: showMic)
-            if !drafted.isEmpty || loadingImages > 0 {
+            if hasDrafted || loadingImages > 0 {
                 draftedImages.transition(.opacity.combined(with: .move(edge: .top)))
             }
             if subtasksOpen || !subtasks.isEmpty {
@@ -112,12 +115,13 @@ struct QuickAddSheet: View {
                 Button("Add task") { submit() }
                     .buttonStyle(.borderedProminent)
                     .buttonBorderShape(.capsule)
-                    .disabled((parsed.title.isEmpty && drafted.isEmpty) || loadingImages > 0)
+                    .disabled((parsed.title.isEmpty && !hasDrafted) || loadingImages > 0)
             }
         }
         .animation(.snappy(duration: 0.2), value: subtasksOpen)
         .animation(.snappy(duration: 0.2), value: drafted)
-        .imageSource($imageSource) { addImages($0) }
+        .animation(.snappy(duration: 0.2), value: draftedFiles)
+        .imageSource($imageSource) { addImages($0) } onFiles: { addFiles($0) }
         .padding(.horizontal, 16)
         .padding(.top, 20)
         .padding(.bottom, 8)
@@ -185,10 +189,10 @@ struct QuickAddSheet: View {
         Menu {
             ImageSourceButtons { imageSource = $0 }
         } label: {
-            Chip(systemImage: "photo", text: drafted.isEmpty ? "" : "\(drafted.count)", tone: drafted.isEmpty ? .muted : .ink)
+            Chip(systemImage: QuickAddButton.images.systemImage, text: hasDrafted ? "\(draftedCount)" : "", tone: hasDrafted ? .ink : .muted)
                 .contentShape(.rect.inset(by: -6))
         }
-        .accessibilityLabel(drafted.isEmpty ? "Add image" : "Add image, \(drafted.count) added")
+        .accessibilityLabel(hasDrafted ? "Add attachment, \(draftedCount) added" : "Add attachment")
     }
 
     private var draftedImages: some View {
@@ -224,12 +228,39 @@ struct QuickAddSheet: View {
                     }
                     .transition(.scale(scale: 0.85).combined(with: .opacity))
                 }
+                ForEach(Array(draftedFiles.enumerated()), id: \.element.id) { index, file in
+                    HStack(spacing: 6) {
+                        Image(systemName: file.kind.systemImage)
+                            .foregroundStyle(file.kind.color.tone)
+                        Text(file.name)
+                            .font(.footnote.weight(.medium))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .frame(maxWidth: 140, alignment: .leading)
+                        Button {
+                            draftedFiles.removeAll { $0.id == file.id }
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.muted)
+                                .frame(width: 32, height: 44)
+                                .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Remove attachment \(index + 1)")
+                    }
+                    .padding(.leading, 10)
+                    .frame(height: 56)
+                    .background(file.kind.color.fill.opacity(0.5), in: .rect(cornerRadius: 12))
+                    .accessibilityElement(children: .contain)
+                    .transition(.scale(scale: 0.85).combined(with: .opacity))
+                }
                 ForEach(0 ..< loadingImages, id: \.self) { _ in
                     RoundedRectangle(cornerRadius: 12)
                         .fill(.ink.opacity(0.06))
                         .frame(width: 56, height: 56)
                         .overlay { ProgressView() }
-                        .accessibilityLabel("Adding image")
+                        .accessibilityLabel("Adding attachment")
                 }
             }
             .padding(.vertical, 8)
@@ -238,7 +269,7 @@ struct QuickAddSheet: View {
         .scrollIndicators(.hidden)
         .scrollClipDisabled()
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Images to attach")
+        .accessibilityLabel("Attachments to attach")
     }
 
     private func addImages(_ load: @escaping ImageLoad) {
@@ -249,6 +280,24 @@ struct QuickAddSheet: View {
             for data in await load() {
                 let preview = await Task.detached(priority: .userInitiated) { DraftImage.preview(data) }.value
                 drafted.append(DraftImage(data: data, preview: preview.map(UIImage.init)))
+            }
+        }
+    }
+
+    /// A picked file the image path can read joins the drafted images; any other waits as a file.
+    private func addFiles(_ load: @escaping FileLoad) {
+        focused = true
+        loadingImages += 1
+        Task {
+            defer { loadingImages -= 1 }
+            for file in await load() {
+                let data = file.data
+                let preview = file.isImage ? await Task.detached(priority: .userInitiated) { DraftImage.preview(data) }.value : nil
+                if let preview {
+                    drafted.append(DraftImage(data: data, preview: UIImage(cgImage: preview)))
+                } else {
+                    draftedFiles.append(file)
+                }
             }
         }
     }
@@ -357,7 +406,7 @@ struct QuickAddSheet: View {
         if parsed.recurrence ?? draft.picked.recurrence != nil { buttons.append(.repeat) }
         if !resolved.labelIds.isEmpty { buttons.append(.labels) }
         if subtasksOpen || !subtasks.isEmpty { buttons.append(.subtasks) }
-        if !drafted.isEmpty { buttons.append(.images) }
+        if hasDrafted { buttons.append(.images) }
         if (parsed.location ?? draft.picked.location) != nil { buttons.append(.location) }
         if draft.picked.event != nil { buttons.append(.event) }
         return buttons
@@ -452,10 +501,10 @@ struct QuickAddSheet: View {
         focused = true
     }
 
-    /// Saves the task with its subtasks and images.
+    /// Saves the task with its subtasks and attachments.
     private func save(untitled: Bool = false) -> TaskItem? {
         guard loadingImages == 0 else { return nil }
-        guard let task = draft.resolve(draft.parse(context), untitled: untitled, images: drafted.count) else { return nil }
+        guard let task = draft.resolve(draft.parse(context), untitled: untitled, images: drafted.count, files: draftedFiles.map(\.name)) else { return nil }
         let typing = DraftSubtask(text: subtaskText, literal: subtaskLiteral)
             .parsed(now: clock.now, labels: spaceLabels, in: clock.timeZone, literal: subtaskLiteral)
         let children = subtasks.compactMap { $0.task(now: clock.now, labels: spaceLabels, in: clock.timeZone) } + (typing.map { [$0] } ?? [])
@@ -466,7 +515,13 @@ struct QuickAddSheet: View {
         }
         guard let added else { return nil }
         let sources = drafted.map(\.data)
-        if !sources.isEmpty { Task { [images] in await images.attach(added.id, sources) } }
+        let files = draftedFiles
+        if !sources.isEmpty || !files.isEmpty {
+            Task { [attachments] in
+                await attachments.attach(added.id, sources)
+                await attachments.attach(added.id, files: files)
+            }
+        }
         navigator.reuseAdded(added)
         return added
     }
@@ -486,6 +541,7 @@ struct QuickAddSheet: View {
             subtasksOpen = false
             opened = []
             drafted = []
+            draftedFiles = []
         }
     }
 

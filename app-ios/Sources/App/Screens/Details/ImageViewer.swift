@@ -21,21 +21,21 @@ extension View {
 /// A task's images full screen, swiped through like Photos, pinched to zoom, swiped down to close, with delete on an
 /// editable task.
 struct ImageViewer: View {
-    @Environment(TaskImages.self) private var images
+    @Environment(TaskAttachments.self) private var images
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
-    let start: TaskImages.Viewing
+    let start: TaskAttachments.Viewing
 
     @State private var current: String
 
-    init(start: TaskImages.Viewing) {
+    init(start: TaskAttachments.Viewing) {
         self.start = start
         _current = State(initialValue: start.imageID)
     }
 
     var body: some View {
         let task = store.task(start.taskID)
-        let list = task?.images ?? []
+        let list = task?.attachments.compactMap(\.image) ?? []
         let index = list.firstIndex { $0.id == current }
         ZStack(alignment: .top) {
             Color.black.ignoresSafeArea()

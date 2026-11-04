@@ -1,35 +1,36 @@
 import Core
+import QuickLook
 import SwiftUI
 
-/// A task's images in details: thumbnails that open full screen, and an add tile with the photo library, the camera,
-/// and the pasteboard. A read-only task shows only the thumbnails.
+/// A task's attachments in details: image thumbnails that open full screen, file tiles that open in Quick Look, and an
+/// add tile with the photo library, the camera, the pasteboard, and the file importer. A read-only task shows only the
+/// attachments.
 struct ImageStrip: View {
-    @Environment(TaskImages.self) private var images
+    @Environment(TaskAttachments.self) private var attachments
     @Environment(\.imageZoom) private var zoom
+    @Environment(\.space) private var space
     let task: TaskItem
     let locked: Bool
 
     @State private var source: ImageSource?
+    @State private var previewing: URL?
 
-    private var adding: Int { images.adding[task.id] ?? 0 }
+    private var adding: Int { attachments.adding[task.id] ?? 0 }
 
     var body: some View {
-        if !task.images.isEmpty || adding > 0 || !locked {
+        let images = task.attachments.compactMap(\.image)
+        if !task.attachments.isEmpty || adding > 0 || !locked {
             FlowLayout(spacing: 8) {
-                ForEach(Array(task.images.enumerated()), id: \.element.id) { index, image in
-                    Button {
-                        images.viewing = .init(taskID: task.id, imageID: image.id)
-                    } label: {
-                        ImageThumb(image: image, size: .thumb)
-                            .frame(width: 72, height: 72)
-                            .clipShape(.rect(cornerRadius: 16))
-                            .zoomSource(image.id, in: zoom)
+                ForEach(task.attachments) { attachment in
+                    Group {
+                        switch attachment {
+                        case let .image(image): imageTile(image, index: images.firstIndex(of: image) ?? 0, count: images.count)
+                        case let .file(file): fileTile(file)
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Open image \(index + 1) of \(task.images.count)")
                     .contextMenu {
                         if !locked {
-                            Button("Delete", systemImage: "trash", role: .destructive) { images.remove(task.id, image.id) }
+                            Button("Delete", systemImage: "trash", role: .destructive) { attachments.remove(task.id, attachment.id) }
                         }
                     }
                     .transition(.scale(scale: 0.85).combined(with: .opacity))
@@ -39,14 +40,71 @@ struct ImageStrip: View {
                         .fill(.ink.opacity(0.06))
                         .frame(width: 72, height: 72)
                         .overlay { ProgressView() }
-                        .accessibilityLabel("Adding image")
+                        .accessibilityLabel("Adding attachment")
                 }
                 if !locked { addTile }
             }
-            .animation(.snappy, value: task.images)
+            .animation(.snappy, value: task.attachments)
             .animation(.snappy, value: adding)
-            .imageSource($source) { load in Task { await images.attach(task.id, await load()) } }
+            .imageSource($source) { load in
+                Task { await attachments.attach(task.id, await load()) }
+            } onFiles: { load in
+                Task { await attachments.attach(task.id, files: await load()) }
+            }
+            .quickLookPreview($previewing)
         }
+    }
+
+    private func imageTile(_ image: ImageRef, index: Int, count: Int) -> some View {
+        Button {
+            attachments.viewing = .init(taskID: task.id, imageID: image.id)
+        } label: {
+            ImageThumb(image: image, size: .thumb)
+                .frame(width: 72, height: 72)
+                .clipShape(.rect(cornerRadius: 16))
+                .zoomSource(image.id, in: zoom)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Open image \(index + 1) of \(count)")
+    }
+
+    private func fileTile(_ file: FileRef) -> some View {
+        let kind = FileKinds.kind(name: file.name, type: file.type)
+        let size = Format.formatBytes(file.bytes)
+        return Button {
+            Task { previewing = await attachments.open(file, space: space) }
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline) {
+                    ZStack {
+                        if attachments.opening.contains(file.id) {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Image(systemName: kind.systemImage)
+                                .font(.title3)
+                                .foregroundStyle(kind.color.tone)
+                        }
+                    }
+                    .frame(height: 22)
+                    Spacer(minLength: 0)
+                    Text(size)
+                        .font(.caption2)
+                        .foregroundStyle(.muted)
+                }
+                Spacer(minLength: 0)
+                Text(file.name)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.ink)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(8)
+            .frame(width: 112, height: 72, alignment: .leading)
+            .background(kind.color.fill.opacity(0.5), in: .rect(cornerRadius: 16))
+            .contentShape(.rect(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Open \(file.name), \(size)")
     }
 
     private var addTile: some View {
@@ -57,22 +115,22 @@ struct ImageStrip: View {
                 .strokeBorder(.ink.opacity(0.16), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
                 .frame(width: 72, height: 72)
                 .overlay {
-                    Image(systemName: "photo.badge.plus")
+                    Image(systemName: "paperclip")
                         .font(.title3)
                         .foregroundStyle(.muted)
                 }
                 .contentShape(.rect(cornerRadius: 16))
         }
-        .accessibilityLabel("Add image")
+        .accessibilityLabel("Add attachment")
     }
 }
 
 /// One image's bytes, fetched once and cached, with a quiet placeholder until they arrive.
 struct ImageThumb: View {
-    @Environment(TaskImages.self) private var images
+    @Environment(TaskAttachments.self) private var images
     @Environment(\.space) private var space
     let image: ImageRef
-    let size: TaskImages.Size
+    let size: TaskAttachments.Size
 
     var body: some View {
         Group {
@@ -90,7 +148,7 @@ struct ImageThumb: View {
         .task(id: image.id) {
             if size == .full { await images.load(image.id, .thumb, space: space) }
             while !Task.isCancelled, await !images.load(image.id, size, space: space) {
-                try? await Task.sleep(for: TaskImages.retryMissing)
+                try? await Task.sleep(for: TaskAttachments.retryMissing)
             }
         }
     }
