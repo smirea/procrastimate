@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// Search results under Browse's search field. Arrow keys on a hardware keyboard move the selection and Return opens it.
@@ -48,6 +49,7 @@ struct SearchResults: View {
         .onKeyPress(.downArrow) { move(1, in: rows) }
         .onKeyPress(.upArrow) { move(-1, in: rows) }
         .sensoryFeedback(.selection, trigger: active)
+        .feedback(self)
     }
 
     private func move(_ step: Int, in rows: [SearchSections.Row]) -> KeyPress.Result {

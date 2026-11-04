@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 enum NameKind: CaseIterable {
@@ -144,6 +145,7 @@ struct NameSuggestionList: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel(match.kind.list)
         .accessibilityIdentifier(match.kind.list)
+        .feedback(self)
     }
 
     private func label(_ suggestion: NameMatch.Suggestion) -> String {

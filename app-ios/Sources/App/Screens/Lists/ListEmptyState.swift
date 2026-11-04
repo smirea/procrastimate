@@ -1,3 +1,4 @@
+import Feetback
 import SwiftUI
 
 struct ListEmptyState: View {
@@ -12,5 +13,6 @@ struct ListEmptyState: View {
         .multilineTextAlignment(.center)
         .padding(32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .feedback(self)
     }
 }

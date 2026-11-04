@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// Every task completed in the chosen range, under the day it was completed, newest first. The range is a preset
@@ -75,6 +76,7 @@ struct CompletedScreen: View {
             }
         }
         .sensoryFeedback(.selection, trigger: range)
+        .feedback(self)
     }
 }
 
@@ -115,5 +117,6 @@ private struct CustomRangeSheet: View {
             start = Dates.fromDateKey(initial.from ?? today, in: zone)
             end = Dates.fromDateKey(initial.to ?? today, in: zone)
         }
+        .feedback(self)
     }
 }

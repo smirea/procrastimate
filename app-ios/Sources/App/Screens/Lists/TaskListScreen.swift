@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// Every top-level list: its rows, the filter menu at the top left when the list has one, and the `…` menu at the top
@@ -185,6 +186,7 @@ struct ListHeading: View {
             if let addTo { GroupAddButton(group: text, addTo: addTo) }
         }
         .textCase(nil)
+        .feedback(self)
     }
 }
 
@@ -238,6 +240,7 @@ struct GroupAddRow: View {
         .buttonStyle(.plain)
         .accessibilityLabel("Add task to \(group)")
         .accessibilityIdentifier("add-task-\(group)")
+        .feedback(self)
     }
 }
 

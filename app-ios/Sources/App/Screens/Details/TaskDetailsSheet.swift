@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// Task details: a sheet with a `NavigationStack`, so opening a subtask pushes its details. A subtask opened directly,
@@ -46,6 +47,7 @@ struct TaskDetailsSheet: View {
         .environment(\.imageZoom, zoom)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Task details")
+        .feedback(self)
     }
 }
 

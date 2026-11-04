@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// Who made and finished the task, from the synced `createdBy` and `completedBy` and the people cache, so it shows
@@ -52,6 +53,7 @@ struct TaskPeople: View {
         .padding(.horizontal, 4)
         .padding(.bottom, shown ? 16 : 0)
         .task(id: task.id) { await load() }
+        .feedback(self)
     }
 
     /// Newest day first, each day's entries newest first, Todoist history style.
@@ -103,6 +105,7 @@ private struct ActivityRow: View {
         }
         .font(.subheadline)
         .accessibilityElement(children: .combine)
+        .feedback(self)
     }
 
     private var time: String {

@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -110,6 +111,7 @@ struct SettingsSheet: View {
         .sensoryFeedback(.selection, trigger: theme.choice)
         .sensoryFeedback(.selection, trigger: store.dictation)
         .sensoryFeedback(.selection, trigger: theme.accent.preset)
+        .feedback(self)
     }
 }
 
@@ -198,6 +200,7 @@ private struct ImportOutcome: View {
             .padding(.vertical, 4)
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Import summary")
+            .feedback(self)
             .transition(.opacity.combined(with: .offset(y: 6)))
             .id(summary)
         case let .failed(message):

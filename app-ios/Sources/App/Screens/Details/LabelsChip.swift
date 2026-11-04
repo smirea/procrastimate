@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// The labels chip and its popover, which stays open while labels are toggled or created, unlike a `Menu`.
@@ -63,6 +64,7 @@ private struct LabelsPopover: View {
         .sensoryFeedback(.selection, trigger: labelIds)
         .padding(8)
         .frame(width: 280)
+        .feedback(self)
     }
 
     @ViewBuilder private func row(_ option: NameSearch.Suggestion<Core.Label>) -> some View {

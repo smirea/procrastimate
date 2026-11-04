@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// A dated list by day, overdue first: Inbox lists everything due, This week through Sunday, and Tomorrow only
@@ -69,6 +70,7 @@ struct DueScreen: View {
             }
         }
         .animation(.snappy, value: filter)
+        .feedback(self)
     }
 
     private var empty: (title: String, hint: String) {
@@ -121,6 +123,7 @@ struct NoDateScreen: View {
         }
         .animation(.snappy, value: newestFirst)
         .animation(.snappy, value: filter)
+        .feedback(self)
     }
 
     private func row(_ task: TaskItem) -> some View {

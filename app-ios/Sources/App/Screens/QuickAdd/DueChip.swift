@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// The date chip of quick add and task details. Its popover holds the presets, a calendar, and the time,
@@ -64,6 +65,7 @@ private struct DuePopover: View {
         .frame(width: 340)
         .clipped()
         .animation(.snappy(duration: 0.25), value: timeEdit == nil)
+        .feedback(self)
     }
 
     private static let presetStyles: [(icon: String, tone: Color)] = [

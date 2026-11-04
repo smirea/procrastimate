@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// What a public share link shows: the shared project, label, or task with its open tasks, read only and without
@@ -38,6 +39,7 @@ struct SharedLinkSheet: View {
             }
         }
         .task { await load() }
+        .feedback(self)
     }
 
     private func load() async {
@@ -116,6 +118,7 @@ private struct SharedList: View {
                 ListEmptyState(title: "Nothing open here", hint: "Everything shared with this link is done.")
             }
         }
+        .feedback(self)
     }
 
     private var title: String {
@@ -197,5 +200,6 @@ private struct SharedTaskRow: View {
         }
         .padding(.leading, task.parentId == nil ? 0 : 24)
         .accessibilityElement(children: .combine)
+        .feedback(self)
     }
 }

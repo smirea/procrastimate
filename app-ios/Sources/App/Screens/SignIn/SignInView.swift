@@ -1,5 +1,6 @@
 import AuthenticationServices
 import CryptoKit
+import Feetback
 import SwiftUI
 
 struct SignInView: View {
@@ -35,6 +36,7 @@ struct SignInView: View {
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height = $0 }
         .animation(.snappy(duration: 0.2), value: height > 640)
         .task { await session.loadMethods() }
+        .feedback(self)
     }
 
     private var form: some View {

@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// On an event task the presets count back from the event's moment and stand alone.
@@ -86,6 +87,7 @@ private struct ReminderPopover: View {
         }
         .padding(8)
         .frame(width: 300)
+        .feedback(self)
     }
 
     @ViewBuilder private var custom: some View {

@@ -1,4 +1,5 @@
 import Foundation
+import Feetback
 import SwiftUI
 import Synchronization
 
@@ -38,6 +39,7 @@ struct RambleWaveform: View {
             }
         }
         .accessibilityHidden(true)
+        .feedback(self)
     }
 
     /// The smoothing state between frames. A plain class, so stepping it while drawing never invalidates the view.

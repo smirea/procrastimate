@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// Each value that changes on a tap (the tab, the open sheet, the store, the completion count) is read by the smallest
@@ -179,6 +180,7 @@ private struct TabBar: View {
             .animation(.snappy(duration: 0.2), value: hidden)
             .onMessage(of: UIScreen.self, for: .keyboardWillShow) { _ in keyboardShown = true }
             .onMessage(of: UIScreen.self, for: .keyboardWillHide) { _ in keyboardShown = false }
+        .feedback(self)
     }
 }
 

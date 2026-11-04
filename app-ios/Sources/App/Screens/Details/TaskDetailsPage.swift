@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 struct TaskDetailsPage: View {
@@ -218,6 +219,7 @@ private struct TaskDetailsForm: View {
             guard navigator.sheet != .details(taskID: task.id), store.task(task.id)?.title.isEmpty == true else { return }
             _ = store.deleteTask(task.id)
         }
+        .feedback(self)
     }
 
     /// Hidden while typing so they never cover the field above the keyboard.

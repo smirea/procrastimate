@@ -1,6 +1,15 @@
 {
-  "originHash" : "3abd8c4bfd30e4e4e1b181930ec51412a50252d38d7ac0ec357dc3db6ca7347c",
+  "originHash" : "c629aa50297278f95a29b42bf37434113fa75dfffa6beb62ee813ea6a05ec7b0",
   "pins" : [
+    {
+      "identity" : "feedback-engine",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/smirea/feedback-engine",
+      "state" : {
+        "branch" : "master",
+        "revision" : "4a4fd4ae2bc2e94eebd244b23ac1ffb594530d20"
+      }
+    },
     {
       "identity" : "grdb.swift",
       "kind" : "remoteSourceControl",

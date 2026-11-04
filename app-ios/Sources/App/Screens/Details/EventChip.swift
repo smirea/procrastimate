@@ -1,5 +1,6 @@
 import Core
 import EventKit
+import Feetback
 import SwiftUI
 
 /// The calendar event chip and its sheet: upcoming events, which moment of the event the task is on, and for a
@@ -135,6 +136,7 @@ private struct EventSheet: View {
             }
             loaded = true
         }
+        .feedback(self)
     }
 
     /// The event as Save would write it.
@@ -207,6 +209,7 @@ private struct OffsetRow: View {
             .disabled(timing.amount == 0)
             .accessibilityIdentifier("event-direction")
         }
+        .feedback(self)
     }
 
     private var amount: Binding<String> {
@@ -248,6 +251,7 @@ private struct EventRow: View {
         .buttonStyle(.plain)
         .accessibilityIdentifier("event-\(event.title ?? "")")
         .accessibilityAddTraits(selected ? .isSelected : [])
+        .feedback(self)
     }
 
     private var times: String {

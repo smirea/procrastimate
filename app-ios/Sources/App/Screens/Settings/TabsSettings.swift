@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 import UIKit
 
@@ -85,6 +86,7 @@ private struct TabsSettings: View {
         .sensoryFeedback(.selection, trigger: pinned)
         .navigationTitle("Tabs")
         .navigationBarTitleDisplayMode(.inline)
+        .feedback(self)
     }
 
     /// Keeps the pins this list can't show, such as a shared project not synced yet, in their slots.

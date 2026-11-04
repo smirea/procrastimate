@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 struct ProjectScreen: View {
@@ -78,6 +79,7 @@ struct ProjectScreen: View {
             .animation(.snappy, value: filter)
             .navigationSubtitle(store.owner(of: space).map { "Shared by \($0.name)" } ?? "")
             .environment(\.space, space)
+            .feedback(self)
         } else {
             Color.clear.task { navigator.drop(.project(id: projectID)) }
         }
@@ -133,6 +135,7 @@ private struct SectionHeading: View {
                 actions.toastDeleted(section.name, withAnimation(.snappy) { store.deleteSection(section.id) })
             }
         }
+        .feedback(self)
     }
 
     // A plain List never shows a header's `.contextMenu`, so the title is the menu's label.

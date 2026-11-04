@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// A task's subtasks in its details, as list rows placed as subtasks, each dragging into order by its handle.
@@ -92,6 +93,7 @@ struct SubtaskList: View {
         }
         .sensoryFeedback(.success, trigger: progress?.done ?? 0) { old, new in new > old }
         .sensoryFeedback(.impact(weight: .light), trigger: drag?.id)
+        .feedback(self)
     }
 
     nonisolated private static let space = "subtasks"

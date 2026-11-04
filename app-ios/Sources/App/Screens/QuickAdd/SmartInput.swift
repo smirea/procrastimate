@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 import UIKit
 
@@ -111,6 +112,7 @@ struct SmartInput: View {
             try? await Task.sleep(for: .milliseconds(150))
             if !Task.isCancelled, focused.wrappedValue { tintEditor() }
         }
+        .feedback(self)
     }
 
     private var caret: Int {

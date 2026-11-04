@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// A task's comments in its details: each with its author, time, and linked text, the user's own with edit and delete,
@@ -35,6 +36,7 @@ struct TaskComments: View {
             .animation(.snappy, value: comments)
             .onChange(of: comments, initial: true) { markRead() }
             .task(id: unknownAuthors(comments)) { await learnAuthors(comments) }
+            .feedback(self)
         }
     }
 

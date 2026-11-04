@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 struct LabelScreen: View {
@@ -66,6 +67,7 @@ struct LabelScreen: View {
             .sheet(isPresented: $editingPlace) { PlaceSheet(mode: .edit(label)) }
             .animation(.snappy, value: filter)
             .navigationSubtitle(store.owner(of: space).map { "Shared by \($0.name)" } ?? "")
+            .feedback(self)
         } else {
             Color.clear.task { navigator.drop(.label(id: labelID)) }
         }
