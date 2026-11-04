@@ -115,7 +115,7 @@ describe('agent docs', () => {
 			});
 			expect(uploaded.status).toBe(200);
 		}
-		await asAi('PATCH', `/api/tasks?id=${target.id}`, { images: [{ id: image, width: 4, height: 3 }] });
+		await asAi('PATCH', `/api/tasks?id=${target.id}`, { attachments: [{ id: image, width: 4, height: 3 }] });
 		const made = async (path: string, body: unknown) => (await json<{ id: string }>(asAi('POST', path, body))).id;
 		const projectId = await made('/api/projects', { name: 'Chores' });
 		const sectionId = await made('/api/sections', { projectId, name: 'Later' });

@@ -7,7 +7,7 @@ import { labelSchema, projectSchema, sectionSchema, snapshotSchema, taskSchema }
 import { DEFAULT_PRIORITY, type DateKey, type Label, type Project, type Section, type Task } from './task.ts';
 import { byCreation } from './snapshot.ts';
 import { placeKey } from './triggers.ts';
-import { imageRefSchema, type SavedPlace, type SectionCounter, type TaskLocation } from './values.ts';
+import { attachmentSchema, type SavedPlace, type SectionCounter, type TaskLocation } from './values.ts';
 
 /**
  * The store's commands as pure functions over its data, so the web store and the Swift store apply the same
@@ -57,7 +57,7 @@ export const taskEditSchema = taskSchema
 		reminders: true,
 		location: true,
 		event: true,
-		images: true,
+		attachments: true,
 	})
 	.partial()
 	.refine(patch => !(patch.event && (patch.due || patch.recurrence)), {
@@ -185,7 +185,7 @@ export function addTask(
 		reminders: input.reminders,
 		location: input.location ?? null,
 		event: input.event ?? null,
-		images: [],
+		attachments: [],
 		createdAt: Math.max(now, (data.tasks.at(-1)?.createdAt ?? -Infinity) + 1),
 		completedAt: null,
 		createdBy: null,
@@ -455,7 +455,12 @@ export const undoSchema = z
 		z.object({ kind: z.literal('reopen'), reopened: z.array(reopenedTaskSchema) }),
 		z.object({ kind: z.literal('explode'), previous: z.array(explodedStateSchema) }),
 		z.object({ kind: z.literal('postpone'), id: taskShape.id, due: taskShape.due }),
-		z.object({ kind: z.literal('image'), taskId: taskShape.id, image: imageRefSchema, index: z.number().int() }),
+		z.object({
+			kind: z.literal('attachment'),
+			taskId: taskShape.id,
+			attachment: attachmentSchema,
+			index: z.number().int(),
+		}),
 		z.object({ kind: z.literal('delete'), deleted: deletedSchema }),
 	])
 	.meta({
@@ -528,12 +533,12 @@ function applyUndo(data: StoreData, action: Undo): StoreData {
 			return restoreExploded(data, action.previous);
 		case 'postpone':
 			return { ...data, tasks: put(data.tasks, [{ id: action.id, due: action.due }]) };
-		case 'image': {
-			const { taskId, image, index } = action;
+		case 'attachment': {
+			const { taskId, attachment, index } = action;
 			const tasks = data.tasks.map(t =>
-				t.id !== taskId || t.images.some(other => other.id === image.id)
+				t.id !== taskId || t.attachments.some(other => other.id === attachment.id)
 					? t
-					: { ...t, images: t.images.toSpliced(index, 0, image) },
+					: { ...t, attachments: t.attachments.toSpliced(index, 0, attachment) },
 			);
 			return { ...data, tasks };
 		}
@@ -551,7 +556,7 @@ export function undoTargets(action: Undo): string[] {
 			return action.reopened.map(r => r.id);
 		case 'postpone':
 			return [action.id];
-		case 'image':
+		case 'attachment':
 			return [action.taskId];
 		case 'delete':
 			return heldLists.flatMap(list => action.deleted[list].map(e => e.id));

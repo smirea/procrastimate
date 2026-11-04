@@ -6,9 +6,9 @@ import { quickAddButtonSchema } from '../quick-add-buttons.ts';
 import { scheduledNotificationSchema } from '../notifications.ts';
 import { pushSubscriptionSchema } from '../push.ts';
 import {
+	attachmentSchema,
 	clientSchema,
 	dueSchema,
-	imageRefSchema,
 	prioritySchema,
 	recurrenceSchema,
 	reminderSchema,
@@ -35,7 +35,7 @@ export const COLUMN_VALUES = {
 		reminders: z.array(reminderSchema),
 		location: taskLocationSchema,
 		event: taskEventSchema,
-		images: z.array(imageRefSchema),
+		attachments: z.array(attachmentSchema),
 	},
 	projects: { icon: projectIconSchema },
 	sections: { counter: sectionCounterSchema },

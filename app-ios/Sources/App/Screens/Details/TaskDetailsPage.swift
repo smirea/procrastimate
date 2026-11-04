@@ -32,7 +32,7 @@ private struct TaskDetailsForm: View {
     @Environment(Navigator.self) private var navigator
     @Environment(SyncClient.self) private var sync
     @Environment(TaskActions.self) private var actions
-    @Environment(TaskImages.self) private var images
+    @Environment(TaskAttachments.self) private var attachments
     @Environment(\.clock) private var clock
     @Environment(\.space) private var space
 
@@ -89,7 +89,7 @@ private struct TaskDetailsForm: View {
                         suggestProjects: parent == nil,
                         projectId: draft.projectId,
                         focused: $titleFocused,
-                        onPasteImages: { load in Task { await images.attach(task.id, await load()) } },
+                        onPasteImages: { load in Task { await attachments.attach(task.id, await load()) } },
                         onSubmit: { commitTitle() }
                     )
                     .disabled(locked)

@@ -10,7 +10,7 @@ extension QuickAddButton {
         case .repeat: "Repeat"
         case .labels: "Labels"
         case .subtasks: "Subtasks"
-        case .images: "Images"
+        case .images: "Attachments"
         case .location: "Location"
         case .event: "Event"
         }
@@ -24,7 +24,7 @@ extension QuickAddButton {
         case .repeat: "repeat"
         case .labels: "tag"
         case .subtasks: "checklist"
-        case .images: "photo"
+        case .images: "paperclip"
         case .location: "mappin"
         case .event: "calendar.badge.plus"
         }

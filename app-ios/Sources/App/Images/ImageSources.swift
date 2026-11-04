@@ -3,9 +3,9 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-/// Where a new image comes from. Task details and quick add offer the same three.
+/// Where a new attachment comes from. Task details and quick add offer the same four.
 enum ImageSource: Equatable {
-    case library, camera
+    case library, camera, files
     /// The items of the user's paste, which come without the pasteboard prompt.
     case paste([NSItemProvider])
 }
@@ -38,15 +38,19 @@ struct ImageSourceButtons: View {
         // The system paste control: the user's tap grants access, so it shows no "Allow Paste" prompt. A plain button
         // reading `UIPasteboard` showed one on every paste. It also disables itself while the pasteboard has no image.
         PasteButton(supportedContentTypes: [.image]) { pick(.paste($0)) }
+        Button("Choose File", systemImage: "folder") { pick(.files) }
     }
 }
 
 extension View {
-    /// Presents the source `source` names, then hands over a load of the images it gave.
-    func imageSource(_ source: Binding<ImageSource?>, onImages: @escaping (@escaping ImageLoad) -> Void) -> some View {
-        modifier(ImageSourcePresenter(source: source, onImages: onImages))
+    /// Presents the source `source` names, then hands over a load of the images or files it gave.
+    func imageSource(
+        _ source: Binding<ImageSource?>,
+        onImages: @escaping (@escaping ImageLoad) -> Void,
+        onFiles: @escaping (@escaping FileLoad) -> Void
+    ) -> some View {
+        modifier(ImageSourcePresenter(source: source, onImages: onImages, onFiles: onFiles))
     }
-
 }
 
 /// Reads pasted images as the bytes they were copied as. Decoding and re-encoding them here, on the main actor, froze
@@ -70,11 +74,20 @@ private struct ImageSourcePresenter: ViewModifier {
     @Environment(Toasts.self) private var toasts
     @Binding var source: ImageSource?
     let onImages: (@escaping ImageLoad) -> Void
+    let onFiles: (@escaping FileLoad) -> Void
     @State private var picked: [PhotosPickerItem] = []
 
     func body(content: Content) -> some View {
         content
             .photosPicker(isPresented: presenting(.library), selection: $picked, maxSelectionCount: 10, matching: .images)
+            .fileImporter(isPresented: presenting(.files), allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
+                switch result {
+                case let .success(urls) where !urls.isEmpty:
+                    onFiles { [toasts] in await PickedFiles.load(urls, toasts: toasts) }
+                case .success: break
+                case let .failure(error): ErrorReport.log("Could not pick files", error: error)
+                }
+            }
             .fullScreenCover(isPresented: presenting(.camera)) {
                 CameraPicker { image in
                     onImages {

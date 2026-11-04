@@ -5,28 +5,30 @@
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 	import CaretRight from 'phosphor-svelte/lib/CaretRight';
-	import { images } from '../images/images.svelte.ts';
+	import { isImage } from 'shared/values.ts';
+	import { attachments } from '../attachments/attachments.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { motion } from '../ui.svelte.ts';
 
-	const viewing = $derived(images.viewing);
+	const viewing = $derived(attachments.viewing);
 	const task = $derived(viewing ? store.task(viewing.taskId) : undefined);
-	const index = $derived(task && viewing ? task.images.findIndex(image => image.id === viewing.id) : -1);
-	const image = $derived(task && index >= 0 ? task.images[index] : undefined);
+	const images = $derived(task?.attachments.filter(isImage) ?? []);
+	const index = $derived(viewing ? images.findIndex(image => image.id === viewing.id) : -1);
+	const image = $derived(index >= 0 ? images[index] : undefined);
 	const home = $derived(task ? store.homeOf(task.id) : null);
 	const editable = $derived(task ? store.canEdit(task.id) : false);
-	const url = $derived(image ? (images.url(image.id, 'full') ?? images.url(image.id, 'thumb')) : undefined);
+	const url = $derived(image ? (attachments.url(image.id, 'full') ?? attachments.url(image.id, 'thumb')) : undefined);
 
 	let dialog = $state<HTMLElement>();
 
 	$effect(() => {
-		if (viewing && !image) images.viewing = null;
+		if (viewing && !image) attachments.viewing = null;
 	});
 
 	$effect(() => {
 		if (!image) return;
-		void images.load(home, image.id, 'full');
-		void images.load(home, image.id, 'thumb');
+		void attachments.load(home, image.id, 'full');
+		void attachments.load(home, image.id, 'thumb');
 	});
 
 	$effect(() => {
@@ -35,11 +37,11 @@
 
 	function step(by: number) {
 		if (!task || index < 0) return;
-		const next = task.images[(index + by + task.images.length) % task.images.length];
-		if (next) images.viewing = { taskId: task.id, id: next.id };
+		const next = images[(index + by + images.length) % images.length];
+		if (next) attachments.viewing = { taskId: task.id, id: next.id };
 	}
 
-	const close = () => (images.viewing = null);
+	const close = () => (attachments.viewing = null);
 
 	function onkeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') close();
@@ -64,10 +66,10 @@
 		{onkeydown}
 	>
 		<div class="flex items-center justify-between gap-2 px-3 pt-3">
-			<span class="px-2 text-[13px] text-white/70">{task.images.length > 1 ? `${index + 1} of ${task.images.length}` : ''}</span>
+			<span class="px-2 text-[13px] text-white/70">{images.length > 1 ? `${index + 1} of ${images.length}` : ''}</span>
 			<div class="flex items-center gap-1">
 				{#if editable}
-					<button type="button" class="viewer-btn" aria-label="Delete image" onclick={() => images.remove(task.id, image.id)}>
+					<button type="button" class="viewer-btn" aria-label="Delete image" onclick={() => attachments.remove(task.id, image.id)}>
 						<Trash size={18} />
 					</button>
 				{/if}
@@ -88,7 +90,7 @@
 					/>
 				{/if}
 			{/key}
-			{#if task.images.length > 1}
+			{#if images.length > 1}
 				<button type="button" class="viewer-btn absolute left-3" aria-label="Previous image" onclick={() => step(-1)}><CaretLeft size={20} /></button>
 				<button type="button" class="viewer-btn absolute right-3" aria-label="Next image" onclick={() => step(1)}><CaretRight size={20} /></button>
 			{/if}

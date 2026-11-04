@@ -126,7 +126,7 @@ export async function putMemoTasks(command: Command, request: MemoTasksRequest):
 		reminders: [],
 		location: null,
 		event: input.event,
-		images: [],
+		attachments: [],
 		createdAt: createdAt++,
 		completedAt: null,
 		createdBy: null,

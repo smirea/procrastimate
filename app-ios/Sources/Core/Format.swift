@@ -23,8 +23,27 @@ public enum Format {
 
     public static func priorityLabel(_ priority: Priority) -> String { "Priority \(priority.rawValue)" }
 
-    /// The title quick add gives a draft holding only images.
-    public static func imagesTitle(_ count: Int) -> String { count == 1 ? "Photo" : "\(count) photos" }
+    /// The title quick add gives a draft holding only attachments: photos are counted, a lone file is its name.
+    public static func attachmentsTitle(_ images: Int, _ files: [String]) -> String {
+        if files.isEmpty { return images == 1 ? "Photo" : "\(images) photos" }
+        if files.count == 1, images == 0 { return files[0] }
+        return "\(images + files.count) attachments"
+    }
+
+    /// What a row's attachment count says: images by name while that is all there is.
+    public static func attachmentsLabel(_ images: Int, _ files: Int) -> String {
+        let count = images + files
+        if files == 0 { return count == 1 ? "1 image" : "\(count) images" }
+        return count == 1 ? "1 attachment" : "\(count) attachments"
+    }
+
+    /// A file's size in decimal units, as Finder and Files show it: `512 B`, `82 KB`, `3.4 MB`.
+    public static func formatBytes(_ bytes: Int) -> String {
+        if bytes < 1000 { return "\(bytes) B" }
+        if bytes < 999_500 { return "\(Int((Double(bytes) / 1000).rounded())) KB" }
+        let tenths = Int((Double(bytes) / 100_000).rounded())
+        return tenths % 10 == 0 ? "\(tenths / 10) MB" : "\(tenths / 10).\(tenths % 10) MB"
+    }
 
     /// `5pm`, `9:05am`.
     public static func formatTime(_ time: TimeOfDay) -> String {

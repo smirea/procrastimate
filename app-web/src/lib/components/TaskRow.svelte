@@ -11,6 +11,7 @@
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Waveform from 'phosphor-svelte/lib/Waveform';
 	import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
+	import Paperclip from 'phosphor-svelte/lib/Paperclip';
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus';
 	import CloudArrowUp from 'phosphor-svelte/lib/CloudArrowUp';
@@ -25,7 +26,8 @@
 	import { session } from '../session.svelte.ts';
 	import { clock, reveal, motion, sheets } from '../ui.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { addedAgo, dueTone, formatDue, formatTime, repeatLabel } from 'shared/format.ts';
+	import { addedAgo, attachmentsLabel, dueTone, formatDue, formatTime, repeatLabel } from 'shared/format.ts';
+	import { isImage } from 'shared/values.ts';
 	import { toDateKey } from 'shared/task.ts';
 	import { eventLabel, formatLocation, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
@@ -132,7 +134,7 @@
 					{/each}
 				</ul>
 			{/if}
-			{#if due || task.recurrence || task.reminders.length || task.images.length || task.location || progress || commentBadge || parent || fromMemo || other || showProject}
+			{#if due || task.recurrence || task.reminders.length || task.attachments.length || task.location || progress || commentBadge || parent || fromMemo || other || showProject}
 				<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
 					{#if task.event && event && due}
 						<span
@@ -174,9 +176,10 @@
 							<Bell size={12} />{task.reminders.length}
 						</span>
 					{/if}
-					{#if task.images.length}
-						<span class="flex items-center gap-1" role="img" aria-label={task.images.length === 1 ? '1 image' : `${task.images.length} images`}>
-							<ImageSquare size={12} />{task.images.length}
+					{#if task.attachments.length}
+						{@const files = task.attachments.filter((attachment) => !isImage(attachment)).length}
+						<span class="flex items-center gap-1" role="img" aria-label={attachmentsLabel(task.attachments.length - files, files)}>
+							{#if files}<Paperclip size={12} />{:else}<ImageSquare size={12} />{/if}{task.attachments.length}
 						</span>
 					{/if}
 					{#if commentBadge}

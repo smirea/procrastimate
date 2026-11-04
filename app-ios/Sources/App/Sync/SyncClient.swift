@@ -72,7 +72,7 @@ final class SyncClient {
             headers: [AppClient.header: AppClient.value],
             beforePush: {
                 guard let token = SessionToken.read() else { return }
-                try await TaskImages.uploadQueued(token: token)
+                try await TaskAttachments.uploadQueued(token: token)
             }
         )
         self.engine = engine
@@ -321,7 +321,7 @@ final class SyncClient {
         unreadable = false
         reload()
         askedForPeople = []
-        TaskImages.clearLocal()
+        TaskAttachments.clearLocal()
     }
 
     private func reject() {

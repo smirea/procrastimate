@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FILE_MAX_BYTES } from './images.ts';
 
 /**
  * The values a task stores inside its JSON columns. The tables in `db/schema.ts` hold every entity; these are the
@@ -199,6 +200,29 @@ export const imageRefSchema = z
 	.object({ id: z.string().min(1), width: z.number().int().positive(), height: z.number().int().positive() })
 	.meta({ id: 'ImageRef' });
 export type ImageRef = z.infer<typeof imageRefSchema>;
+
+/**
+ * Any other file attached to a task, kept as the bytes it was picked as, in `filePartCount(bytes)` parts on the
+ * server. `type` is the MIME type the client reported, empty when it knew none; clients pick an icon from it and
+ * the name, and never trust it to render the bytes in the page.
+ */
+export const fileRefSchema = z
+	.object({
+		id: z.string().min(1),
+		name: z.string().min(1).max(255),
+		type: z.string().max(255),
+		bytes: z.number().int().positive().max(FILE_MAX_BYTES),
+	})
+	.meta({ id: 'FileRef' });
+export type FileRef = z.infer<typeof fileRefSchema>;
+
+/** What a task lists in `attachments`. Image refs predate files and carry no tag, so the branches tell themselves apart by shape. */
+export const attachmentSchema = z
+	.union([imageRefSchema, fileRefSchema])
+	.meta({ id: 'Attachment', 'x-case-names': ['image', 'file'] });
+export type Attachment = z.infer<typeof attachmentSchema>;
+
+export const isImage = (attachment: Attachment): attachment is ImageRef => 'width' in attachment;
 
 /** A human signs in. An AI account belongs to a human and acts only through API tokens. */
 export const ACTOR_KINDS = ['human', 'ai'] as const;

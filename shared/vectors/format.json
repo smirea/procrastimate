@@ -1300,20 +1300,148 @@
 			]
 		},
 		{
-			"fn": "imagesTitle",
-			"test": "imagesTitle › names one photo, or counts several",
+			"fn": "attachmentsTitle",
+			"test": "attachmentsTitle › names one photo, or counts several",
 			"input": [
-				1
+				1,
+				[]
 			],
 			"output": "Photo"
 		},
 		{
-			"fn": "imagesTitle",
-			"test": "imagesTitle › names one photo, or counts several",
+			"fn": "attachmentsTitle",
+			"test": "attachmentsTitle › names one photo, or counts several",
 			"input": [
-				3
+				3,
+				[]
 			],
 			"output": "3 photos"
+		},
+		{
+			"fn": "attachmentsTitle",
+			"test": "attachmentsTitle › a lone file is its name, and a mix is counted",
+			"input": [
+				0,
+				[
+					"Lease.pdf"
+				]
+			],
+			"output": "Lease.pdf"
+		},
+		{
+			"fn": "attachmentsTitle",
+			"test": "attachmentsTitle › a lone file is its name, and a mix is counted",
+			"input": [
+				1,
+				[
+					"Lease.pdf"
+				]
+			],
+			"output": "2 attachments"
+		},
+		{
+			"fn": "attachmentsTitle",
+			"test": "attachmentsTitle › a lone file is its name, and a mix is counted",
+			"input": [
+				0,
+				[
+					"a.zip",
+					"b.txt"
+				]
+			],
+			"output": "2 attachments"
+		},
+		{
+			"fn": "attachmentsLabel",
+			"test": "attachmentsLabel › counts images as images, and anything with a file as attachments",
+			"input": [
+				1,
+				0
+			],
+			"output": "1 image"
+		},
+		{
+			"fn": "attachmentsLabel",
+			"test": "attachmentsLabel › counts images as images, and anything with a file as attachments",
+			"input": [
+				3,
+				0
+			],
+			"output": "3 images"
+		},
+		{
+			"fn": "attachmentsLabel",
+			"test": "attachmentsLabel › counts images as images, and anything with a file as attachments",
+			"input": [
+				0,
+				1
+			],
+			"output": "1 attachment"
+		},
+		{
+			"fn": "attachmentsLabel",
+			"test": "attachmentsLabel › counts images as images, and anything with a file as attachments",
+			"input": [
+				2,
+				1
+			],
+			"output": "3 attachments"
+		},
+		{
+			"fn": "formatBytes",
+			"test": "formatBytes › bytes, whole kilobytes, then megabytes to a tenth",
+			"input": [
+				512
+			],
+			"output": "512 B"
+		},
+		{
+			"fn": "formatBytes",
+			"test": "formatBytes › bytes, whole kilobytes, then megabytes to a tenth",
+			"input": [
+				1000
+			],
+			"output": "1 KB"
+		},
+		{
+			"fn": "formatBytes",
+			"test": "formatBytes › bytes, whole kilobytes, then megabytes to a tenth",
+			"input": [
+				82400
+			],
+			"output": "82 KB"
+		},
+		{
+			"fn": "formatBytes",
+			"test": "formatBytes › bytes, whole kilobytes, then megabytes to a tenth",
+			"input": [
+				999499
+			],
+			"output": "999 KB"
+		},
+		{
+			"fn": "formatBytes",
+			"test": "formatBytes › bytes, whole kilobytes, then megabytes to a tenth",
+			"input": [
+				999500
+			],
+			"output": "1 MB"
+		},
+		{
+			"fn": "formatBytes",
+			"test": "formatBytes › bytes, whole kilobytes, then megabytes to a tenth",
+			"input": [
+				3440000
+			],
+			"output": "3.4 MB"
+		},
+		{
+			"fn": "formatBytes",
+			"test": "formatBytes › bytes, whole kilobytes, then megabytes to a tenth",
+			"input": [
+				25000000
+			],
+			"output": "25 MB"
 		}
 	]
 }

@@ -124,6 +124,7 @@ let handlers: [String: Handler] = [
     "dictation": dictationVector,
     "quick-add-buttons": quickAddButtonsVector,
     "label-colors": labelColorsVector,
+    "images": imagesVector,
     "accents": accentsVector,
     "triggers": triggersVector,
     "ramble": rambleVector,
@@ -243,7 +244,9 @@ private struct Occurrence: Decodable {
     switch fn {
     case "calendarDay": return try json(Format.calendarDay(a(0), a(1)))
     case "clockTime": return try json(Format.clockTime(a(0)))
-    case "imagesTitle": return try json(Format.imagesTitle(a(0)))
+    case "attachmentsTitle": return try json(Format.attachmentsTitle(a(0), a(1)))
+    case "attachmentsLabel": return try json(Format.attachmentsLabel(a(0), a(1)))
+    case "formatBytes": return try json(Format.formatBytes(a(0)))
     case "completedToast": return try json(Format.completedToast(a(0), a(1), a(2)))
     case "dayHeading": return try json(Format.dayHeading(a(0), a(1)))
     case "dueTone": return try json(Format.dueTone(a(0), a(1)))
@@ -499,6 +502,21 @@ private struct ParseInput: Decodable {
     case "parseAccent": return .string(Accents.parseAccent(try a(0, as: String?.self)).rawValue)
     default: throw unknown(fn)
     }
+}
+
+@Sendable func imagesVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "fileKind":
+        let file = try a(0, as: FileKindInput.self)
+        return try json(FileKinds.kind(name: file.name, type: file.type).rawValue)
+    case "filePartCount": return try json(FileKinds.partCount(a(0)))
+    default: throw unknown(fn)
+    }
+}
+
+private struct FileKindInput: Decodable {
+    let name: String
+    let type: String
 }
 
 @Sendable func labelColorsVector(_ fn: String, _ a: Args) throws -> JSONValue {

@@ -34,7 +34,7 @@ import {
 	saveUnwritten,
 	type Unwritten,
 } from './device.ts';
-import { clearLocalImages } from './images/local.ts';
+import { clearLocalImages } from './attachments/local.ts';
 import { LocalRows } from 'shared/local-rows.ts';
 import { reportError } from './sentry.ts';
 import { emptyData, homes, merged, sharedSpace, type SharedSpace, type Spaces } from './spaces.ts';

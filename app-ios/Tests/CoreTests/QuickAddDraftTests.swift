@@ -101,6 +101,8 @@ import Testing
         #expect(try #require(draft.resolve(parse(draft), images: 1)).title == "Photo")
         #expect(try #require(draft.resolve(parse(draft), images: 3)).title == "3 photos")
         #expect(try #require(draft.resolve(parse(draft), untitled: true, images: 1)).title == "")
+        #expect(try #require(draft.resolve(parse(draft), files: ["Lease.pdf"])).title == "Lease.pdf")
+        #expect(try #require(draft.resolve(parse(draft), images: 1, files: ["Lease.pdf"])).title == "2 attachments")
         draft.setText("Receipt p1")
         let typed = try #require(draft.resolve(parse(draft), images: 1))
         #expect(typed.title == "Receipt")

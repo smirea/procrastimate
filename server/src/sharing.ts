@@ -171,7 +171,7 @@ export async function deleteLink(db: Db, owner: string, access: Access, id: stri
 
 /**
  * Read by anyone holding the link: the share is checked before anything else of the space is read, then only the rows
- * the link reaches are loaded. Who made or finished a task, its import key, its images, and every place stay with
+ * the link reaches are loaded. Who made or finished a task, its import key, its attachments, and every place stay with
  * the owner: a link shows what the task is, not where the owner goes.
  */
 export async function sharedView(app: App, ownerId: string, id: string): Promise<SharedView> {
@@ -189,7 +189,7 @@ export async function sharedView(app: App, ownerId: string, id: string): Promise
 			completedBy: null,
 			lastCompletedAt: null,
 			sourceKey: undefined,
-			images: [],
+			attachments: [],
 			location: null,
 		})),
 		projects,

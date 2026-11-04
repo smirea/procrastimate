@@ -81,7 +81,7 @@ const newTask = {
 	reminders: [],
 	location: null,
 	event: null,
-	images: [],
+	attachments: [],
 };
 const ids = (list: readonly Task[]) => list.map(t => t.id);
 const find = (d: StoreData, id: string) => d.tasks.find(t => t.id === id)!;
@@ -741,7 +741,7 @@ describe('stacked undos', () => {
 			'a postpone, a removed image, a label, and the task',
 			() =>
 				store.updateTask(data(), 'call', {
-					images: [
+					attachments: [
 						{ id: 'a', width: 1, height: 1 },
 						{ id: 'b', width: 1, height: 1 },
 					],
@@ -752,8 +752,8 @@ describe('stacked undos', () => {
 					undo: { kind: 'postpone', id: 'call', due: null },
 				}),
 				(d: StoreData) => ({
-					data: store.updateTask(d, 'call', { images: [{ id: 'b', width: 1, height: 1 }] }),
-					undo: { kind: 'image', taskId: 'call', image: { id: 'a', width: 1, height: 1 }, index: 0 },
+					data: store.updateTask(d, 'call', { attachments: [{ id: 'b', width: 1, height: 1 }] }),
+					undo: { kind: 'attachment', taskId: 'call', attachment: { id: 'a', width: 1, height: 1 }, index: 0 },
 				}),
 				deleting(d => store.deleteLabel(d, 'phone')),
 				deletingTask('call'),

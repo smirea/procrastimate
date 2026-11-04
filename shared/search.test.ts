@@ -50,7 +50,7 @@ const task = (
 	reminders: [],
 	location: null,
 	event: null,
-	images: [],
+	attachments: [],
 	createdAt,
 	completedAt,
 	createdBy: null,

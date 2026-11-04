@@ -1,6 +1,6 @@
 import { customType, index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
-import { IMAGE_SIZES, IMAGE_TYPES } from '../images.ts';
+import type { ByteKey } from '../images.ts';
 import { DICTATION_CHOICES, RAMBLE_MODES } from '../dictation.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 import { KINDS } from '../kinds.ts';
@@ -43,8 +43,11 @@ export const tasks = sqliteTable(
 		location: json('location').$type<ColumnValue<'tasks', 'location'>>(),
 		/** Set only on iOS. A task with an event has no due date or repeat; the event's times stand in for both. */
 		event: json('event').$type<ColumnValue<'tasks', 'event'>>(),
-		/** Attached images, as one last-writer-wins list like `labelIds`. The bytes are in `images`, never here. */
-		images: json('images').$type<ColumnValue<'tasks', 'images'>>().notNull().default([]),
+		/**
+		 * Attached images and files, as one last-writer-wins list like `labelIds`. The bytes are in `images`, never here.
+		 * The column keeps the name it had when it held only images.
+		 */
+		attachments: json('images').$type<ColumnValue<'tasks', 'attachments'>>().notNull().default([]),
 		createdAt: millis('created_at').notNull(),
 		completedAt: millis('completed_at'),
 		/** Who created the task and who completed it last. The server stamps both and overwrites what a client sends. */
@@ -317,8 +320,9 @@ const bytes = customType<{ data: Uint8Array<ArrayBuffer>; driverData: Uint8Array
 });
 
 /**
- * The bytes of task images, one row per size, never synced. A Durable Object row holds at most 2 MB, which
- * `IMAGE_LIMITS` stays under. A row is garbage once no task lists its id;
+ * The bytes of task attachments, never synced: one row per size of an image, one per part of a file (`ByteKey`). A
+ * Durable Object row holds at most 2 MB, which `IMAGE_LIMITS` and `FILE_PART_BYTES` stay under. A row is garbage
+ * once no task lists its id;
  * `orphanedAt` is when a sweep first saw that, and a later sweep deletes it after a grace period.
  */
 export const images = sqliteTable(
@@ -326,8 +330,9 @@ export const images = sqliteTable(
 	{
 		userId: text('user_id').notNull(),
 		id: text('id').notNull(),
-		size: text('size', { enum: IMAGE_SIZES }).notNull(),
-		type: text('type', { enum: IMAGE_TYPES }).notNull(),
+		size: text('size').$type<ByteKey>().notNull(),
+		/** An image's type, or `FILE_PART_TYPE` for a file part. */
+		type: text('type').notNull(),
 		bytes: bytes('bytes').$type<ColumnValue<'images', 'bytes'>>().notNull(),
 		createdAt: millis('created_at').notNull(),
 		orphanedAt: millis('orphaned_at'),

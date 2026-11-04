@@ -12,7 +12,7 @@ struct ProcrastimateApp: App {
     @State private var notifications: LocalNotifications
     @State private var importer: TodoistImport
     @State private var sync: SyncClient
-    @State private var images: TaskImages
+    @State private var attachments: TaskAttachments
     @State private var auth: Session
     @State private var router: IntentRouter
     @State private var places: PlaceMonitor
@@ -39,7 +39,7 @@ struct ProcrastimateApp: App {
         let auth = Session(sync: sync)
         sync.session = auth
         sync.toasts = toasts
-        let images = TaskImages(store: store, toasts: toasts)
+        let attachments = TaskAttachments(store: store, toasts: toasts)
         let session = IntentSession(
             store: store,
             navigator: navigator,
@@ -69,7 +69,7 @@ struct ProcrastimateApp: App {
         _importer = State(initialValue: TodoistImport(store: store, clock: clock))
         _auth = State(initialValue: auth)
         _sync = State(initialValue: sync)
-        _images = State(initialValue: images)
+        _attachments = State(initialValue: attachments)
     }
 
     var body: some Scene {
@@ -84,7 +84,7 @@ struct ProcrastimateApp: App {
                 .environment(importer)
                 .environment(auth)
                 .environment(sync)
-                .environment(images)
+                .environment(attachments)
                 .environment(router)
                 .environment(places)
                 .environment(calendar)

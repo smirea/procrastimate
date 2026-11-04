@@ -40,7 +40,7 @@ export default defineConfig({
 		// where the engine decides the outcome, also run on an iPhone-sized WebKit.
 		{
 			name: 'mobile',
-			testMatch: ['sync.e2e.ts', 'sharing.e2e.ts', 'images.e2e.ts', 'single-origin.e2e.ts'],
+			testMatch: ['sync.e2e.ts', 'sharing.e2e.ts', 'attachments.e2e.ts', 'single-origin.e2e.ts'],
 			grep: /@webkit/,
 			use: { ...devices['iPhone 15'], viewport: { width: 393, height: 852 } },
 			// Linux WebKit on CI's two cores runs these specs about five times slower than a Mac (10 to 20 s a test against
