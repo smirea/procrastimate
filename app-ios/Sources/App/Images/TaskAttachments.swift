@@ -109,7 +109,10 @@ final class TaskAttachments {
             }
         }.value
         guard let task = store.task(taskID) else { return }
-        let file = FileRef(id: id, name: picked.name, type: picked.type, bytes: data.count)
+        // The schema caps a name at 255 UTF-16 units, as JavaScript counts a string's length.
+        var name = picked.name.isEmpty ? "File" : picked.name
+        while name.utf16.count > 255 { name.removeLast() }
+        let file = FileRef(id: id, name: name, type: picked.type, bytes: data.count)
         store.updateTask(taskID, TaskPatch(attachments: task.attachments + [.file(file)]))
     }
 
