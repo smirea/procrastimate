@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// What a list's `…` menu runs. `ListHeader` decides which entries show and in what order; each entry it names needs
@@ -49,6 +50,11 @@ struct ListActions {
     var projectedValue: Binding<ListFilter> {
         Binding(get: { wrappedValue }, set: { wrappedValue = $0 })
     }
+}
+
+/// Shake-to-feedback reports the list's filter instead of skipping the wrapper.
+extension StoredFilter: FeedbackRepresentable {
+    var feedbackValue: Any { wrappedValue }
 }
 
 /// The filter at the top left of a list: who made a task and its priority, each choice with its count at its right.
@@ -138,6 +144,7 @@ private struct FilterPanel: View {
         .padding(.vertical, 8)
         .frame(width: 280)
         .sensoryFeedback(.selection, trigger: filter)
+        .feedback(self)
     }
 
     private func update(_ next: ListFilter) {

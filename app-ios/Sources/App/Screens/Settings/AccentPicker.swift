@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 import UIKit
 
@@ -24,6 +25,7 @@ struct AccentPicker: View {
             customSwatch
         }
         .padding(.vertical, 4)
+        .feedback(self)
     }
 
     /// The system well can't be restyled, so the swatch covers it and lets taps through. A transparent well stops

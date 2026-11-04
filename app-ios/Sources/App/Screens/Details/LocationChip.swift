@@ -1,5 +1,6 @@
 import Core
 import MapKit
+import Feetback
 import SwiftUI
 
 /// The place chip and its sheet: an Apple Maps search with the Arrive, Leave, or During menu beside the field.
@@ -142,6 +143,7 @@ private struct LocationSheet: View {
             onChange(location)
         }
         .sensoryFeedback(.selection, trigger: trigger)
+        .feedback(self)
     }
 
     private var searchBar: some View {

@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// Where a row sits. A list row leaves once checked, with an undo toast. A subtask row in its parent's details stays
@@ -34,6 +35,7 @@ struct TaskRow<Trailing: View>: View {
             trailing
         }
         .taskSwipes(task, offered, toggle: completeNow, pickDate: open)
+        .feedback(self)
     }
 
     private var row: some View {

@@ -1,5 +1,6 @@
 import Core
 import Observation
+import Feetback
 import SwiftUI
 
 @MainActor @Observable
@@ -139,6 +140,7 @@ private struct ToastView: View {
         .onChange(of: touched) { hold($1) }
         .onChange(of: hovered) { hold($1) }
         .onChange(of: voiceOverFocus != nil) { hold($1) }
+        .feedback(self)
     }
 
     private func hold(_ held: Bool) {

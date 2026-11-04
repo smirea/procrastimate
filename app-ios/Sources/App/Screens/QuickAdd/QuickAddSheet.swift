@@ -1,5 +1,6 @@
 import Core
 import ImageIO
+import Feetback
 import SwiftUI
 import UIKit
 
@@ -154,6 +155,7 @@ struct QuickAddSheet: View {
         .onChange(of: subtaskFocused) {
             if !subtaskFocused, subtaskText.isEmpty, subtasks.isEmpty { subtasksOpen = false }
         }
+        .feedback(self)
     }
 
     private var plainTextChip: some View {

@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// A subtask typed into quick add, held until the parent saves. It keeps its text, so its own plain text toggle can
@@ -82,6 +83,7 @@ struct QuickAddSubtasks: View {
         .animation(.snappy(duration: 0.2), value: subtasks)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("Subtasks")
+        .feedback(self)
     }
 
     private func add(_ parsed: QuickAdd.Parsed) {

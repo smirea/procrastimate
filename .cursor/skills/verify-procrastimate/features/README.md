@@ -77,4 +77,5 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Notouroboros tasks](./notouroboros-tasks.md) covers tasks Notouroboros sends: the waveform icon on rows, the `Notouroboros` line in details, `procrastimate://task/<id>` links, and the shared session.
 - [Tinycast](./tinycast.md) covers the Mac launcher extension: the `Add Task` command, the `Tasks` list with its lists, search, and add row, and completing, dating, prioritizing, opening, and deleting from it.
 - [Siri, Shortcuts, and Spotlight](./app-intents.md) covers the iOS App Intents: adding and completing tasks, opening lists and projects, search, today's and overdue tasks, and Spotlight. Web is excluded.
+- [Shake to give feedback](./shake-feedback.md) covers Feetback on iOS: the shake, picking a component, the image and JSON exports with their context, and posting the feedback to a ProcrastiMate project. Web is excluded.
 - [Widgets and controls](./widgets.md) covers the iOS Home Screen and Lock Screen widgets (Tasks, Progress, Quick Add), completing from a checkbox, opening tasks and lists, and the Control Center controls. Web is excluded.

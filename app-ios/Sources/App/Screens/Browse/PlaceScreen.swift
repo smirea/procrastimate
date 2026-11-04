@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// Every open task at one place, each naming its project, like a label screen. A saved place is its label's screen,
@@ -20,7 +21,7 @@ struct PlaceScreen: View {
         if let saved = Triggers.savedPlaceAt(store.labels, key) {
             LabelScreen(labelID: saved.id)
         } else {
-            unsaved
+            unsaved.feedback(self)
         }
     }
 
@@ -90,5 +91,6 @@ struct EventScreen: View {
             ForEach(tasks) { TaskRow(task: $0, showProject: true) }
         }
         .animation(.snappy, value: filter)
+        .feedback(self)
     }
 }

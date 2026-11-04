@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 extension EnvironmentValues {
@@ -69,6 +70,7 @@ struct ImageViewer: View {
         .onChange(of: list) {
             if list.isEmpty { dismiss() } else if !list.contains(where: { $0.id == current }) { current = list[0].id }
         }
+        .feedback(self)
     }
 }
 

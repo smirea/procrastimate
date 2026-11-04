@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 struct BrowseScreen: View {
@@ -29,6 +30,7 @@ struct BrowseScreen: View {
             navigator.focusSearch = false
             searchFocused = true
         }
+        .feedback(self)
     }
 }
 
@@ -222,6 +224,7 @@ private struct BrowseRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(name)
         .accessibilityValue(count > 0 ? "\(count)" : "")
+        .feedback(self)
     }
 }
 
@@ -248,15 +251,18 @@ private struct SharedRow: View {
     }
 
     var body: some View {
-        switch kind {
-        case .project:
-            NavigationLink(value: Route.project(id: id)) { label(store.project(id)?.systemImage ?? "number", .muted) }
-        case .label:
-            let shared = store.label(id)
-            NavigationLink(value: Route.label(id: id)) { label(shared?.systemImage() ?? "tag", shared?.color.tone ?? .toneLabel) }
-        case .task:
-            Button { navigator.sheet = .details(taskID: id) } label: { label("checkmark.circle", .muted) }
+        Group {
+            switch kind {
+            case .project:
+                NavigationLink(value: Route.project(id: id)) { label(store.project(id)?.systemImage ?? "number", .muted) }
+            case .label:
+                let shared = store.label(id)
+                NavigationLink(value: Route.label(id: id)) { label(shared?.systemImage() ?? "tag", shared?.color.tone ?? .toneLabel) }
+            case .task:
+                Button { navigator.sheet = .details(taskID: id) } label: { label("checkmark.circle", .muted) }
+            }
         }
+        .feedback(self)
     }
 
     private func label(_ systemImage: String, _ tone: Color) -> some View {

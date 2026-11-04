@@ -1,5 +1,6 @@
 import Core
 import QuickLook
+import Feetback
 import SwiftUI
 
 /// A task's attachments in details: image thumbnails that open full screen, file tiles that open in Quick Look, and an
@@ -52,6 +53,7 @@ struct ImageStrip: View {
                 Task { await attachments.attach(task.id, files: await load()) }
             }
             .quickLookPreview($previewing)
+            .feedback(self)
         }
     }
 
@@ -151,5 +153,6 @@ struct ImageThumb: View {
                 try? await Task.sleep(for: TaskAttachments.retryMissing)
             }
         }
+        .feedback(self)
     }
 }

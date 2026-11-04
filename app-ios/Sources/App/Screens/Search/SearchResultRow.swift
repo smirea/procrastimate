@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 struct SearchResultRow: View {
@@ -20,8 +21,9 @@ struct SearchResultRow: View {
             result
                 .taskSwipes(hit.task, offered, toggle: toggle, pickDate: open)
                 .contextMenu { TaskMenu(task: hit.task, offered: offered, toggle: toggle) }
+                .feedback(self)
         } else {
-            result
+            result.feedback(self)
         }
     }
 

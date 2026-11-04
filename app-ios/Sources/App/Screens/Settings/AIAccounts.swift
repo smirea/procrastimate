@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 import UIKit
 
@@ -312,5 +313,6 @@ private struct TokenReveal: View {
             .disabled(value == nil)
             .accessibilityHint("Copies the token with where to find the API docs")
         }
+        .feedback(self)
     }
 }

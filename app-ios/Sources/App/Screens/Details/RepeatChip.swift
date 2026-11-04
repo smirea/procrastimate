@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// The repeat chip and its popover: seven weekday toggles, Monday first, that keep it open, the presets, `Don’t
@@ -123,6 +124,7 @@ private struct RepeatPopover: View {
         }
         .padding(8)
         .frame(width: 340)
+        .feedback(self)
     }
 }
 

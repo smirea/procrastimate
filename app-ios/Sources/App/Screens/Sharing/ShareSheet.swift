@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 import UIKit
 
@@ -82,6 +83,7 @@ struct ShareSheet: View {
             .task(id: query) { await search() }
         }
         .overlay(alignment: .bottom) { ToastStack() }
+        .feedback(self)
     }
 
     private var linkSection: some View {

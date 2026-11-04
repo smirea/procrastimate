@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// A completed task: when it was completed, who did it when that was someone else, and a filled checkbox that reopens
@@ -39,6 +40,7 @@ struct CompletedRow: View {
         }
         .taskSwipes(task, offered, toggle: { actions.reopen(task) }, pickDate: {})
         .contextMenu { TaskMenu(task: task, offered: offered, toggle: { actions.reopen(task) }) }
+        .feedback(self)
     }
 
     private var rolled: Bool { task.completedAt == nil }

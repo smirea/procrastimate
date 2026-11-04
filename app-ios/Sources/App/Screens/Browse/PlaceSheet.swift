@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// Saves a place under a name with the radius it watches, or changes a saved place's radius. Either way the open tasks
@@ -73,6 +74,7 @@ struct PlaceSheet: View {
             }
         }
         .onAppear { nameFocused = isSaving }
+        .feedback(self)
     }
 
     private var isSaving: Bool {
