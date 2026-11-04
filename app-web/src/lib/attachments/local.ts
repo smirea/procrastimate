@@ -1,6 +1,6 @@
-import type { ImageSize } from 'shared/images.ts';
+import type { ByteKey } from 'shared/images.ts';
 
-export type Upload = { key: string; space: string | null; id: string; size: ImageSize };
+export type Upload = { key: string; space: string | null; id: string; size: ByteKey };
 /** An `ArrayBuffer` with its type, because WebKit refuses a `Blob` in IndexedDB in a private window. */
 type Stored = { type: string; bytes: ArrayBuffer };
 
@@ -10,7 +10,7 @@ const DB = 'procrastimate-images';
 const BYTES = 'bytes';
 const UPLOADS = 'uploads';
 
-export const imageKey = (id: string, size: ImageSize) => `${id}/${size}`;
+export const imageKey = (id: string, size: ByteKey) => `${id}/${size}`;
 
 let opened: Promise<IDBDatabase> | undefined;
 
@@ -45,25 +45,26 @@ function result<T>(request: IDBRequest<T>): Promise<T> {
 	});
 }
 
-export async function readBytes(id: string, size: ImageSize): Promise<Blob | undefined> {
+export async function readBytes(id: string, size: ByteKey): Promise<Blob | undefined> {
 	const db = await database();
 	const value = await result<Stored | undefined>(db.transaction(BYTES).objectStore(BYTES).get(imageKey(id, size)));
 	return value && new Blob([value.bytes], { type: value.type });
 }
 
-export async function writeBytes(id: string, size: ImageSize, blob: Blob): Promise<void> {
+export async function writeBytes(id: string, size: ByteKey, blob: Blob): Promise<void> {
 	const value = await stored(blob);
 	const transaction = (await database()).transaction(BYTES, 'readwrite');
 	transaction.objectStore(BYTES).put(value, imageKey(id, size));
 	await done(transaction);
 }
 
-/** Keeps a new image's sizes and queues their uploads in one transaction, so neither exists without the other. */
-export async function keepNew(space: string | null, id: string, sizes: Record<ImageSize, Blob>): Promise<void> {
+/**
+ * Keeps a new attachment's rows, an image's sizes or a file's parts, and queues their uploads in one transaction, so
+ * neither exists without the other.
+ */
+export async function keepNew(space: string | null, id: string, rows: [ByteKey, Blob][]): Promise<void> {
 	// Read before the transaction opens, which would commit on its own while it waited.
-	const values = await Promise.all(
-		(Object.entries(sizes) as [ImageSize, Blob][]).map(async ([size, blob]) => [size, await stored(blob)] as const),
-	);
+	const values = await Promise.all(rows.map(async ([size, blob]) => [size, await stored(blob)] as const));
 	const transaction = (await database()).transaction([BYTES, UPLOADS], 'readwrite');
 	for (const [size, value] of values) {
 		const key = imageKey(id, size);

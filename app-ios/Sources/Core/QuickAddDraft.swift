@@ -203,12 +203,12 @@ public struct QuickAddDraft: Hashable, Sendable {
     /// The task to save, or nil while the title is empty. An event stands in for the date and the repeat, as in
     /// task details.
     /// Nil while the title is empty, unless `untitled`: expanding into details saves even an untitled draft. A draft
-    /// holding only `images` saves too, named for them, so a snapped photo is one tap from a task.
-    public func resolve(_ parsed: QuickAdd.Parsed, untitled: Bool = false, images: Int = 0) -> NewTask? {
-        guard untitled || images > 0 || !parsed.title.isEmpty else { return nil }
+    /// holding only attachments saves too, named for them, so a snapped photo is one tap from a task.
+    public func resolve(_ parsed: QuickAdd.Parsed, untitled: Bool = false, images: Int = 0, files: [String] = []) -> NewTask? {
+        guard untitled || images > 0 || !files.isEmpty || !parsed.title.isEmpty else { return nil }
         let resolved = resolved(parsed)
         var task = NewTask(
-            title: parsed.title.isEmpty && !untitled ? Format.imagesTitle(images) : parsed.title,
+            title: parsed.title.isEmpty && !untitled ? Format.attachmentsTitle(images, files) : parsed.title,
             projectId: resolved.projectId,
             sectionId: resolved.sectionId,
             labelIds: resolved.labelIds,

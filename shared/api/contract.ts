@@ -414,7 +414,7 @@ export const agentContract = {
 					inputStructure: 'detailed',
 					summary: 'An image on a task',
 					description:
-						'`id` is an image id from a task’s `images`, and `size` is `full` (at most 2048 px on its long side) or `thumb` (320 px). Answers the JPEG or WebP bytes. An image is visible when a task you can see lists it.',
+						'`id` is an image id from a task’s `attachments`, and `size` is `full` (at most 2048 px on its long side) or `thumb` (320 px). Answers the JPEG or WebP bytes. An image is visible when a task you can see lists it. A file attachment’s parts are `size=part0`, `part1`, and so on, as opaque bytes.',
 				}),
 			)
 			.input(z.object({ query: spaceQuery.extend({ id: z.string(), size: imageSizeSchema }) }))

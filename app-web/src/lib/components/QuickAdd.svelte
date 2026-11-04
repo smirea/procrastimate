@@ -13,7 +13,7 @@
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import MapPin from 'phosphor-svelte/lib/MapPin';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
-	import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
+	import Paperclip from 'phosphor-svelte/lib/Paperclip';
 	import TextT from 'phosphor-svelte/lib/TextT';
 	import { unknownNames, type UnknownName } from 'shared/name-search.ts';
 	import { DEFAULT_PRIORITY } from 'shared/task.ts';
@@ -42,7 +42,8 @@
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { NAME_SOURCES } from '../names.ts';
 	import { confirmAdded, showAdded } from '../show-added.ts';
-	import { imageFiles, images } from '../images/images.svelte.ts';
+	import { attachments, droppedFiles } from '../attachments/attachments.svelte.ts';
+	import FileIcon from './FileIcon.svelte';
 	import { reuseAdded } from '../screen.ts';
 	import { page } from '$app/state';
 
@@ -65,10 +66,15 @@
 	let subtasksOpen = $state(false);
 	let subtaskKey = 0;
 	let listAt = $state<number | null>(null);
-	/** Images wait here until the task exists, then attach through task details' offline upload path. */
-	let drafted = $state<{ key: number; file: File; url: string }[]>([]);
-	let imageKey = 0;
-	let imagePicker = $state<HTMLInputElement>();
+	/**
+	 * Attachments wait here until the task exists, then attach through task details' offline upload path. Only an image
+	 * gets a preview `url`; anything else shows its icon and name.
+	 */
+	let drafted = $state<{ key: number; file: File; url: string | null }[]>([]);
+	let draftKey = 0;
+	const draftedImages = $derived(drafted.filter((d) => d.url));
+	const draftedFiles = $derived(drafted.filter((d) => !d.url).map((d) => d.file.name));
+	let filePicker = $state<HTMLInputElement>();
 	let cameraPicker = $state<HTMLInputElement>();
 
 	const showMic = $derived(!draft.text);
@@ -120,7 +126,7 @@
 	/** Runs a `+` menu action: the checklist opens its field, and every other button opens its picker in the row. */
 	async function run(button: WebButton) {
 		if (button === 'subtasks') return openSubtasks();
-		if (button === 'images') return imagePicker?.click();
+		if (button === 'images') return filePicker?.click();
 		if (!opened.includes(button)) opened.push(button);
 		await tick();
 		row?.querySelector(`[data-button="${button}"]`)?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
@@ -166,15 +172,15 @@
 		return () => observer.disconnect();
 	});
 
-	/** Saves the task with its subtasks and images. */
+	/** Saves the task with its subtasks and attachments. */
 	function save(options?: { untitled: boolean }) {
-		const next = draft.task({ ...options, images: drafted.length });
+		const next = draft.task({ ...options, images: draftedImages.length, files: draftedFiles });
 		if (!next) return null;
 		const task = store.addTask(next);
 		if (!task) return null;
 		const typing = subtaskTask(subtaskParsed);
 		for (const child of [...subtaskRows.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
-		if (drafted.length) void images.attach(task.id, drafted.map((d) => d.file));
+		if (drafted.length) void attachments.attach(task.id, drafted.map((d) => d.file));
 		reuseAdded(page.url.pathname, task);
 		return task;
 	}
@@ -191,7 +197,7 @@
 		subtaskText = '';
 		subtaskLiteral = false;
 		subtasksOpen = false;
-		for (const { url } of drafted) URL.revokeObjectURL(url);
+		for (const { url } of drafted) if (url) URL.revokeObjectURL(url);
 		drafted = [];
 		input.focus();
 	}
@@ -206,26 +212,27 @@
 		return true;
 	}
 
-	function addImages(files: File[]) {
-		drafted.push(...files.map((file) => ({ key: imageKey++, file, url: URL.createObjectURL(file) })));
+	function addFiles(files: File[]) {
+		const previewed = (file: File) => file.type.startsWith('image/') && file.type !== 'image/svg+xml';
+		drafted.push(...files.map((file) => ({ key: draftKey++, file, url: previewed(file) ? URL.createObjectURL(file) : null })));
 	}
 
-	function removeImage(key: number) {
+	function removeDrafted(key: number) {
 		const removed = drafted.find((d) => d.key === key);
-		if (removed) URL.revokeObjectURL(removed.url);
+		if (removed?.url) URL.revokeObjectURL(removed.url);
 		drafted = drafted.filter((d) => d.key !== key);
 		input.focus();
 	}
 
 	$effect(() => () => {
-		for (const { url } of untrack(() => drafted)) URL.revokeObjectURL(url);
+		for (const { url } of untrack(() => drafted)) if (url) URL.revokeObjectURL(url);
 	});
 
 	function onpaste(event: ClipboardEvent) {
-		const files = imageFiles(event.clipboardData);
+		const files = droppedFiles(event.clipboardData);
 		if (!files.length) return;
 		event.preventDefault();
-		addImages(files);
+		addFiles(files);
 	}
 
 	function ondragover(event: DragEvent) {
@@ -233,14 +240,14 @@
 	}
 
 	function ondrop(event: DragEvent) {
-		const files = imageFiles(event.dataTransfer);
+		const files = droppedFiles(event.dataTransfer);
 		if (!files.length) return;
 		event.preventDefault();
-		addImages(files);
+		addFiles(files);
 	}
 
-	function pickedImages(event: Event & { currentTarget: HTMLInputElement }) {
-		addImages([...(event.currentTarget.files ?? [])].filter((file) => file.type.startsWith('image/')));
+	function pickedFiles(event: Event & { currentTarget: HTMLInputElement }) {
+		addFiles([...(event.currentTarget.files ?? [])]);
 		event.currentTarget.value = '';
 		input.focus();
 	}
@@ -351,21 +358,33 @@
 		</div>
 	</div>
 	{#if drafted.length}
-		<ul class="flex gap-2 overflow-x-auto px-4 pt-1 pb-2" aria-label="Images to attach" transition:slide={motion({ duration: 180, easing: cubicOut })}>
-			{#each drafted as { key, url }, index (key)}
+		<ul class="flex gap-2 overflow-x-auto px-4 pt-1 pb-2" aria-label="Attachments to add" transition:slide={motion({ duration: 180, easing: cubicOut })}>
+			{#each drafted as { key, file, url }, index (key)}
 				<li
 					class="relative shrink-0"
 					animate:flip={motion({ duration: 200, easing: cubicOut })}
 					in:scale={motion({ start: 0.85, duration: 200, easing: cubicOut })}
 					out:scale={motion({ start: 0.85, duration: 160, easing: cubicOut })}
 				>
-					<img src={url} alt={`Image ${index + 1} of ${drafted.length}`} class="size-14 rounded-xl object-cover ring-1 ring-ink/10" draggable="false" />
+					{#if url}
+						<img src={url} alt={`Attachment ${index + 1} of ${drafted.length}`} class="size-14 rounded-xl object-cover ring-1 ring-ink/10" draggable="false" />
+					{:else}
+						<div
+							class="flex h-14 max-w-40 items-center gap-1.5 rounded-xl bg-ink/5 pr-3 pl-2 ring-1 ring-ink/10"
+							role="img"
+							aria-label={`Attachment ${index + 1} of ${drafted.length}, ${file.name}`}
+							title={file.name}
+						>
+							<FileIcon name={file.name} type={file.type} size={22} />
+							<span class="truncate text-[12.5px] font-medium">{file.name}</span>
+						</div>
+					{/if}
 					<button
 						type="button"
 						class="hit-area absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full bg-ink text-surface shadow-sm"
-						aria-label={`Remove image ${index + 1}`}
+						aria-label={`Remove attachment ${index + 1}`}
 						onmousedown={(e) => e.preventDefault()}
-						onclick={() => removeImage(key)}
+						onclick={() => removeDrafted(key)}
 					>
 						<X size={10} weight="bold" />
 					</button>
@@ -510,12 +529,12 @@
 							type="button"
 							class="chip"
 							data-active={drafted.length > 0}
-							aria-label={drafted.length ? `Add image, ${drafted.length} added` : 'Add image'}
-							title="Add images, or paste or drop them here"
+							aria-label={drafted.length ? `Add attachment, ${drafted.length} added` : 'Add attachment'}
+							title="Add images or files, or paste or drop them here"
 							onmousedown={(e) => e.preventDefault()}
-							onclick={() => imagePicker?.click()}
+							onclick={() => filePicker?.click()}
 						>
-							<ImageSquare size={16} weight={drafted.length ? 'fill' : 'regular'} />
+							<Paperclip size={16} weight={drafted.length ? 'bold' : 'regular'} />
 							{#if drafted.length}<span class="tabular-nums">{drafted.length}</span>{/if}
 						</button>
 					{/if}
@@ -554,8 +573,8 @@
 			<button type="button" class="btn btn-primary" disabled={!parsed.title && !drafted.length} onmousedown={(e) => e.preventDefault()} onclick={submit}>Add task</button>
 		</div>
 	</div>
-	<input bind:this={imagePicker} type="file" accept="image/*" multiple class="hidden" aria-hidden="true" tabindex="-1" onchange={pickedImages} />
-	<input bind:this={cameraPicker} type="file" accept="image/*" capture="environment" class="hidden" aria-hidden="true" tabindex="-1" onchange={pickedImages} />
+	<input bind:this={filePicker} type="file" multiple class="hidden" aria-hidden="true" tabindex="-1" onchange={pickedFiles} />
+	<input bind:this={cameraPicker} type="file" accept="image/*" capture="environment" class="hidden" aria-hidden="true" tabindex="-1" onchange={pickedFiles} />
 </Sheet>
 
 <style>

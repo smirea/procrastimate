@@ -46,6 +46,22 @@ describe('/api/images', () => {
 		expect((await app.fetch(`/api/images?id=${id}&size=full`)).status).toBe(401);
 	});
 
+	test('a file is stored as opaque parts of any type, each under the part cap, and answered as a download', async () => {
+		const id = crypto.randomUUID();
+		const html = new TextEncoder().encode('<script>alert(1)</script>');
+		expect((await put(owner, id, 'part0', html, 'text/html')).status).toBe(200);
+		expect((await put(owner, id, 'part1', JPEG, 'application/pdf')).status).toBe(200);
+		const first = await get(owner, id, 'part0');
+		expect(first.headers.get('content-type')).toBe('application/octet-stream');
+		expect(first.headers.get('content-disposition')).toBe('attachment');
+		expect(first.headers.get('x-content-type-options')).toBe('nosniff');
+		expect(new TextDecoder().decode(await first.arrayBuffer())).toBe('<script>alert(1)</script>');
+		expect(new Uint8Array(await (await get(owner, id, 'part1')).arrayBuffer())).toEqual(JPEG);
+		expect((await put(owner, id, 'part2', new Uint8Array(1_500_001), 'application/pdf')).status).toBe(413);
+		expect((await put(owner, id, 'part17', JPEG)).status).toBe(400);
+		expect((await put(owner, id, 'parts', JPEG)).status).toBe(400);
+	});
+
 	test('a guest reads the images of the tasks it may see, uploads with an edit share, and nothing else', async () => {
 		const guest = await signUp(app, 'Guest');
 		const seen = crypto.randomUUID();
@@ -60,7 +76,7 @@ describe('/api/images', () => {
 				table: 'tasks',
 				id: shared,
 				values: taskRow(shared, owner.person.id, 'Shared', {
-					images: JSON.stringify([{ id: seen, width: 4, height: 3 }]),
+					attachments: JSON.stringify([{ id: seen, width: 4, height: 3 }]),
 				}),
 			},
 			{
@@ -68,7 +84,7 @@ describe('/api/images', () => {
 				table: 'tasks',
 				id: privateTask,
 				values: taskRow(privateTask, owner.person.id, 'Private', {
-					images: JSON.stringify([{ id: hidden, width: 4, height: 3 }]),
+					attachments: JSON.stringify([{ id: hidden, width: 4, height: 3 }]),
 				}),
 			},
 		]);
@@ -95,7 +111,7 @@ describe('/api/images', () => {
 					table: 'tasks',
 					id: taskId,
 					values: taskRow(taskId, owner.person.id, 'Pictured', {
-						images: JSON.stringify(ids.map(id => ({ id, width: 4, height: 3 }))),
+						attachments: JSON.stringify(ids.map(id => ({ id, width: 4, height: 3 }))),
 					}),
 				},
 			]);

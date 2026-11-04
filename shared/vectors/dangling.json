@@ -37,6 +37,7 @@
 					],
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -44,7 +45,6 @@
 							"due": null,
 							"event": null,
 							"id": "a",
-							"images": [],
 							"labelIds": [
 								"l"
 							],
@@ -61,6 +61,7 @@
 							"title": "a"
 						},
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -68,7 +69,6 @@
 							"due": null,
 							"event": null,
 							"id": "b",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -116,6 +116,7 @@
 				],
 				"tasks": [
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -123,7 +124,6 @@
 						"due": null,
 						"event": null,
 						"id": "a",
-						"images": [],
 						"labelIds": [
 							"l"
 						],
@@ -140,6 +140,7 @@
 						"title": "a"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -147,7 +148,6 @@
 						"due": null,
 						"event": null,
 						"id": "b",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -174,6 +174,7 @@
 					"sections": [],
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -181,7 +182,6 @@
 							"due": null,
 							"event": null,
 							"id": "orphan",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -196,6 +196,7 @@
 							"title": "orphan"
 						},
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -203,7 +204,6 @@
 							"due": null,
 							"event": null,
 							"id": "x",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -218,6 +218,7 @@
 							"title": "x"
 						},
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -225,7 +226,6 @@
 							"due": null,
 							"event": null,
 							"id": "y",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -248,6 +248,7 @@
 				"sections": [],
 				"tasks": [
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -255,7 +256,6 @@
 						"due": null,
 						"event": null,
 						"id": "orphan",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -270,6 +270,7 @@
 						"title": "orphan"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -277,7 +278,6 @@
 						"due": null,
 						"event": null,
 						"id": "x",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -292,6 +292,7 @@
 						"title": "x"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -299,7 +300,6 @@
 						"due": null,
 						"event": null,
 						"id": "y",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -326,6 +326,7 @@
 					"sections": [],
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -333,7 +334,6 @@
 							"due": null,
 							"event": null,
 							"id": "a",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -356,6 +356,7 @@
 				"sections": [],
 				"tasks": [
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -363,7 +364,6 @@
 						"due": null,
 						"event": null,
 						"id": "a",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -405,6 +405,7 @@
 					"sections": [],
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -412,7 +413,6 @@
 							"due": null,
 							"event": null,
 							"id": "root",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -427,6 +427,7 @@
 							"title": "root"
 						},
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -434,7 +435,6 @@
 							"due": null,
 							"event": null,
 							"id": "child",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -449,6 +449,7 @@
 							"title": "child"
 						},
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -456,7 +457,6 @@
 							"due": null,
 							"event": null,
 							"id": "grandchild",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -494,6 +494,7 @@
 				"sections": [],
 				"tasks": [
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -501,7 +502,6 @@
 						"due": null,
 						"event": null,
 						"id": "root",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -516,6 +516,7 @@
 						"title": "root"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -523,7 +524,6 @@
 						"due": null,
 						"event": null,
 						"id": "child",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -538,6 +538,7 @@
 						"title": "child"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -545,7 +546,6 @@
 						"due": null,
 						"event": null,
 						"id": "grandchild",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -597,6 +597,7 @@
 					],
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -604,7 +605,6 @@
 							"due": null,
 							"event": null,
 							"id": "a",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -619,6 +619,7 @@
 							"title": "a"
 						},
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -626,7 +627,6 @@
 							"due": null,
 							"event": null,
 							"id": "b",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -666,6 +666,7 @@
 				],
 				"tasks": [
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -673,7 +674,6 @@
 						"due": null,
 						"event": null,
 						"id": "a",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -688,6 +688,7 @@
 						"title": "a"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -695,7 +696,6 @@
 						"due": null,
 						"event": null,
 						"id": "b",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -746,6 +746,7 @@
 					],
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -753,7 +754,6 @@
 							"due": null,
 							"event": null,
 							"id": "moved",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -768,6 +768,7 @@
 							"title": "moved"
 						},
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -775,7 +776,6 @@
 							"due": null,
 							"event": null,
 							"id": "parent",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -790,6 +790,7 @@
 							"title": "parent"
 						},
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -797,7 +798,6 @@
 							"due": null,
 							"event": null,
 							"id": "child",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -812,6 +812,7 @@
 							"title": "child"
 						},
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -819,7 +820,6 @@
 							"due": null,
 							"event": null,
 							"id": "missing",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -866,6 +866,7 @@
 				],
 				"tasks": [
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -873,7 +874,6 @@
 						"due": null,
 						"event": null,
 						"id": "moved",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -888,6 +888,7 @@
 						"title": "moved"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -895,7 +896,6 @@
 						"due": null,
 						"event": null,
 						"id": "parent",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -910,6 +910,7 @@
 						"title": "parent"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -917,7 +918,6 @@
 						"due": null,
 						"event": null,
 						"id": "child",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -932,6 +932,7 @@
 						"title": "child"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -939,7 +940,6 @@
 						"due": null,
 						"event": null,
 						"id": "missing",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -974,6 +974,7 @@
 					"sections": [],
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -981,7 +982,6 @@
 							"due": null,
 							"event": null,
 							"id": "a",
-							"images": [],
 							"labelIds": [
 								"gone",
 								"kept",
@@ -1016,6 +1016,7 @@
 				"sections": [],
 				"tasks": [
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -1023,7 +1024,6 @@
 						"due": null,
 						"event": null,
 						"id": "a",
-						"images": [],
 						"labelIds": [
 							"kept"
 						],

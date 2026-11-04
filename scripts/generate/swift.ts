@@ -16,6 +16,7 @@
  * - `x-enum-names`: the case names of an integer enum, which otherwise becomes an `Int` typealias.
  * - `x-flatten: { <tag>: <enum> }`: one struct for a union whose branches differ by `<tag>`, typed as `<enum>`.
  * - `x-inline`: a tagged union whose cases carry their fields as associated values.
+ * - `x-case-names`: the case names of an untagged union, in branch order.
  * - `x-table`: the Drizzle table whose column defaults become the initializer's defaults.
  * - `x-validate`: a Core function `(T) -> Bool` the decoded value must pass, for a Zod `refine`.
  * - `x-swift-type`: a Core type to use as is, where Core keeps its own representation on purpose.
@@ -56,6 +57,7 @@ const HANDLED = new Set([
 	'x-enum-names',
 	'x-flatten',
 	'x-inline',
+	'x-case-names',
 	'x-table',
 	'x-validate',
 	'x-swift-type',
@@ -90,6 +92,7 @@ export type Schema = {
 	'x-enum-names'?: string[];
 	'x-flatten'?: Record<string, string>;
 	'x-inline'?: boolean;
+	'x-case-names'?: string[];
 	'x-table'?: string;
 	'x-validate'?: string;
 	'x-swift-type'?: string;
@@ -402,7 +405,8 @@ class Generator {
 		}
 		const decl: Decl = { kind: 'untagged', name, variants: [], doc: input.description };
 		this.declare(input, decl);
-		const caseNames = this.caseNames(resolved);
+		const caseNames = input['x-case-names'] ?? this.caseNames(resolved);
+		if (caseNames.length !== resolved.length) throw new Error(`${name}: x-case-names must name every branch`);
 		resolved.forEach((branch, index) => {
 			const caseName = caseNames[index]!;
 			decl.variants.push({ name: caseName, type: this.type(branches[index]!, `${name}${pascal(caseName)}`) });

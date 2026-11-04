@@ -25,7 +25,7 @@ extension API.TaskEdit {
         if let reminders { task.reminders = reminders }
         if let location { task.location = location }
         if let event { task.event = event }
-        if let images { task.images = images }
+        if let attachments { task.attachments = attachments }
     }
 }
 
@@ -550,10 +550,10 @@ public enum StoreRules {
             return restoreExploded(data, undo.previous)
         case let .postpone(undo):
             return edit(undo.id) { $0.due = undo.due }
-        case let .image(undo):
+        case let .attachment(undo):
             return edit(undo.taskId) { t in
-                guard !t.images.contains(where: { $0.id == undo.image.id }) else { return }
-                t.images.insert(undo.image, at: min(undo.index, t.images.count))
+                guard !t.attachments.contains(where: { $0.id == undo.attachment.id }) else { return }
+                t.attachments.insert(undo.attachment, at: min(undo.index, t.attachments.count))
             }
         case .delete:
             return data
@@ -567,7 +567,7 @@ public enum StoreRules {
         case let .reopen(undo): undo.reopened.map(\.id)
         case let .explode(undo): undo.previous.map(\.id)
         case let .postpone(undo): [undo.id]
-        case let .image(undo): [undo.taskId]
+        case let .attachment(undo): [undo.taskId]
         case let .delete(undo):
             undo.deleted.projects.map(\.id) + undo.deleted.sections.map(\.id) + undo.deleted.labels.map(\.id)
                 + undo.deleted.tasks.map(\.id)

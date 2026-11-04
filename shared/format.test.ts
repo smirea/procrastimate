@@ -15,7 +15,9 @@ const formatReminder = recorded('format', format.formatReminder);
 const formatTime = recorded('format', format.formatTime);
 const postponeOptions = recorded('format', format.postponeOptions);
 const priorityLabel = recorded('format', format.priorityLabel);
-const imagesTitle = recorded('format', format.imagesTitle);
+const attachmentsTitle = recorded('format', format.attachmentsTitle);
+const formatBytes = recorded('format', format.formatBytes);
+const attachmentsLabel = recorded('format', format.attachmentsLabel);
 const relativeDay = recorded('format', format.relativeDay);
 const addedAgo = recorded('format', format.addedAgo);
 const repeatLabel = recorded('format', format.repeatLabel);
@@ -264,9 +266,36 @@ describe('postpone', () => {
 	});
 });
 
-describe('imagesTitle', () => {
+describe('attachmentsTitle', () => {
 	test('names one photo, or counts several', () => {
-		expect(imagesTitle(1)).toBe('Photo');
-		expect(imagesTitle(3)).toBe('3 photos');
+		expect(attachmentsTitle(1, [])).toBe('Photo');
+		expect(attachmentsTitle(3, [])).toBe('3 photos');
+	});
+
+	test('a lone file is its name, and a mix is counted', () => {
+		expect(attachmentsTitle(0, ['Lease.pdf'])).toBe('Lease.pdf');
+		expect(attachmentsTitle(1, ['Lease.pdf'])).toBe('2 attachments');
+		expect(attachmentsTitle(0, ['a.zip', 'b.txt'])).toBe('2 attachments');
+	});
+});
+
+describe('attachmentsLabel', () => {
+	test('counts images as images, and anything with a file as attachments', () => {
+		expect(attachmentsLabel(1, 0)).toBe('1 image');
+		expect(attachmentsLabel(3, 0)).toBe('3 images');
+		expect(attachmentsLabel(0, 1)).toBe('1 attachment');
+		expect(attachmentsLabel(2, 1)).toBe('3 attachments');
+	});
+});
+
+describe('formatBytes', () => {
+	test('bytes, whole kilobytes, then megabytes to a tenth', () => {
+		expect(formatBytes(512)).toBe('512 B');
+		expect(formatBytes(1000)).toBe('1 KB');
+		expect(formatBytes(82_400)).toBe('82 KB');
+		expect(formatBytes(999_499)).toBe('999 KB');
+		expect(formatBytes(999_500)).toBe('1 MB');
+		expect(formatBytes(3_440_000)).toBe('3.4 MB');
+		expect(formatBytes(25_000_000)).toBe('25 MB');
 	});
 });

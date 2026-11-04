@@ -44,6 +44,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -51,7 +52,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -75,13 +75,13 @@
 					"kind": "task",
 					"op": "put",
 					"values": {
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -188,6 +188,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -198,7 +199,6 @@
 							},
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -233,6 +233,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -243,7 +244,6 @@
 							},
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -298,6 +298,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -305,7 +306,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -347,6 +347,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -354,7 +355,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -411,6 +411,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -418,7 +419,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -490,6 +490,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": 5,
 							"completedBy": null,
 							"createdAt": 1,
@@ -497,7 +498,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -532,6 +532,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -539,7 +540,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -679,6 +679,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -686,7 +687,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [
 								"l"
 							],
@@ -734,13 +734,13 @@
 					"kind": "task",
 					"op": "put",
 					"values": {
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
 						"createdBy": null,
 						"due": null,
 						"event": null,
-						"images": [],
 						"labelIds": [
 							"l"
 						],
@@ -1003,6 +1003,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -1010,7 +1011,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1061,6 +1061,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -1068,7 +1069,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1124,6 +1124,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -1131,7 +1132,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1187,6 +1187,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -1194,7 +1195,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,
@@ -1254,6 +1254,7 @@
 					},
 					"tasks": [
 						{
+							"attachments": [],
 							"completedAt": null,
 							"completedBy": null,
 							"createdAt": 1,
@@ -1261,7 +1262,6 @@
 							"due": null,
 							"event": null,
 							"id": "t",
-							"images": [],
 							"labelIds": [],
 							"lastCompletedAt": null,
 							"location": null,

@@ -106,7 +106,7 @@ export class QuickAddDraft {
 		this.picked.location = null;
 	}
 
-	task(options?: { untitled?: boolean; images?: number }) {
+	task(options?: Parameters<typeof draftTask>[3]) {
 		return draftTask(this.parsed, this.picked, store.labels, options);
 	}
 

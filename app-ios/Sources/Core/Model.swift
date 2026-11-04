@@ -12,6 +12,9 @@ public typealias Due = API.Due
 public typealias Reminder = API.Reminder
 /// An image on a task. The bytes are on the server, fetched by `id`.
 public typealias ImageRef = API.ImageRef
+/// Any other file on a task, stored on the server in `FileKinds.partCount(bytes)` parts.
+public typealias FileRef = API.FileRef
+public typealias Attachment = API.Attachment
 public typealias RecurrenceUnit = API.RecurrenceUnit
 public typealias Recurrence = API.Recurrence
 public typealias NthWeekday = API.NthWeekday
@@ -23,3 +26,20 @@ public typealias ProjectSection = API.ProjectSection
 public typealias SectionCounter = API.SectionCounter
 public typealias Label = API.Label
 public typealias Person = API.Person
+
+extension API.Attachment: Identifiable {
+    public var id: String {
+        switch self {
+        case let .image(image): image.id
+        case let .file(file): file.id
+        }
+    }
+
+    public var image: ImageRef? {
+        if case let .image(image) = self { image } else { nil }
+    }
+
+    public var file: FileRef? {
+        if case let .file(file) = self { file } else { nil }
+    }
+}

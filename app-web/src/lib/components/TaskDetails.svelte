@@ -31,7 +31,7 @@
 	import ProjectPicker from './ProjectPicker.svelte';
 	import LabelPicker from './LabelPicker.svelte';
 	import Subtasks from './Subtasks.svelte';
-	import TaskImages from './TaskImages.svelte';
+	import TaskAttachments from './TaskAttachments.svelte';
 	import TaskActivity from './TaskActivity.svelte';
 	import TaskComments from './TaskComments.svelte';
 	import PersonName from './PersonName.svelte';
@@ -39,7 +39,7 @@
 	import { store, type TaskPatch } from '../store.svelte.ts';
 	import { clock, sheets, motion, type Arrival } from '../ui.svelte.ts';
 	import { completeTask, deleteTask } from '../completion.ts';
-	import { imageFiles, images } from '../images/images.svelte.ts';
+	import { attachments, droppedFiles } from '../attachments/attachments.svelte.ts';
 	import { unsynced } from '../unsynced.svelte.ts';
 
 	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
@@ -143,10 +143,10 @@
 	const carriesFiles = (event: DragEvent) => editable && !!event.dataTransfer?.types.includes('Files');
 
 	function onpaste(event: ClipboardEvent) {
-		const files = imageFiles(event.clipboardData);
+		const files = droppedFiles(event.clipboardData);
 		if (!editable || !files.length) return;
 		event.preventDefault();
-		void images.attach(id, files);
+		void attachments.attach(id, files);
 	}
 
 	let dropping = $state(false);
@@ -166,7 +166,7 @@
 		dropping = false;
 		if (!carriesFiles(event)) return;
 		event.preventDefault();
-		void images.attach(id, imageFiles(event.dataTransfer));
+		void attachments.attach(id, droppedFiles(event.dataTransfer));
 	}
 </script>
 
@@ -302,7 +302,7 @@
 				<Waveform size={14} />Notouroboros
 			</p>
 		{/if}
-		<TaskImages {task} {home} {editable} />
+		<TaskAttachments {task} {home} {editable} />
 		{#if editable || store.children(id).length}<Subtasks {task} />{/if}
 		<TaskComments {task} {home} />
 		<TaskActivity {task} {home} />

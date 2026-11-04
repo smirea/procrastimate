@@ -3,7 +3,7 @@ import wasm from '@sqlite.org/sqlite-wasm/sqlite3.wasm?url';
 import { CLIENT_HEADER } from 'shared/auth.ts';
 import { syncSchema } from 'shared/db/sync.ts';
 import { DATABASE_FILE, SYNC_ENDPOINT } from 'shared/local-database.ts';
-import { uploadQueuedImages } from '../images/upload.ts';
+import { uploadQueuedBytes } from '../attachments/upload.ts';
 
 /**
  * The database worker every tab starts. The engine elects one tab's worker to hold the SQLite database (OPFS) and run
@@ -23,6 +23,6 @@ startSyncWorker({
 	// PowerSync retried every 2 s here; the engine's default 15 s cap left an edit made offline waiting that long after
 	// the network came back. The same tick pings the live socket, which the object answers without waking.
 	maxBackoff: RETRY_CAP_MS,
-	beforePush: uploadQueuedImages,
+	beforePush: uploadQueuedBytes,
 	locateFile: file => (file.endsWith('.wasm') ? wasm : file),
 });

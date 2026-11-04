@@ -1,0 +1,148 @@
+{
+	"module": "images",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "fileKind",
+			"test": "fileKind › the extension decides, whatever its case",
+			"input": [
+				{
+					"name": "Lease.PDF",
+					"type": ""
+				}
+			],
+			"output": "pdf"
+		},
+		{
+			"fn": "fileKind",
+			"test": "fileKind › the extension decides, whatever its case",
+			"input": [
+				{
+					"name": "budget.xlsx",
+					"type": "application/octet-stream"
+				}
+			],
+			"output": "spreadsheet"
+		},
+		{
+			"fn": "fileKind",
+			"test": "fileKind › the extension decides, whatever its case",
+			"input": [
+				{
+					"name": "deck.key",
+					"type": ""
+				}
+			],
+			"output": "presentation"
+		},
+		{
+			"fn": "fileKind",
+			"test": "fileKind › the extension decides, whatever its case",
+			"input": [
+				{
+					"name": "photos.tar.gz",
+					"type": ""
+				}
+			],
+			"output": "archive"
+		},
+		{
+			"fn": "fileKind",
+			"test": "fileKind › the extension decides, whatever its case",
+			"input": [
+				{
+					"name": "main.swift",
+					"type": "text/plain"
+				}
+			],
+			"output": "code"
+		},
+		{
+			"fn": "fileKind",
+			"test": "fileKind › the type decides when the extension is unknown or missing",
+			"input": [
+				{
+					"name": "voice-memo",
+					"type": "audio/mpeg"
+				}
+			],
+			"output": "audio"
+		},
+		{
+			"fn": "fileKind",
+			"test": "fileKind › the type decides when the extension is unknown or missing",
+			"input": [
+				{
+					"name": "clip.bin",
+					"type": "video/mp4"
+				}
+			],
+			"output": "video"
+		},
+		{
+			"fn": "fileKind",
+			"test": "fileKind › the type decides when the extension is unknown or missing",
+			"input": [
+				{
+					"name": "notes",
+					"type": "text/plain"
+				}
+			],
+			"output": "text"
+		},
+		{
+			"fn": "fileKind",
+			"test": "fileKind › the type decides when the extension is unknown or missing",
+			"input": [
+				{
+					"name": ".env",
+					"type": ""
+				}
+			],
+			"output": "other"
+		},
+		{
+			"fn": "fileKind",
+			"test": "fileKind › the type decides when the extension is unknown or missing",
+			"input": [
+				{
+					"name": "mystery.xyz",
+					"type": "application/octet-stream"
+				}
+			],
+			"output": "other"
+		},
+		{
+			"fn": "filePartCount",
+			"test": "filePartCount › one part per 1.5 MB, and at least one",
+			"input": [
+				1
+			],
+			"output": 1
+		},
+		{
+			"fn": "filePartCount",
+			"test": "filePartCount › one part per 1.5 MB, and at least one",
+			"input": [
+				1500000
+			],
+			"output": 1
+		},
+		{
+			"fn": "filePartCount",
+			"test": "filePartCount › one part per 1.5 MB, and at least one",
+			"input": [
+				1500001
+			],
+			"output": 2
+		},
+		{
+			"fn": "filePartCount",
+			"test": "filePartCount › one part per 1.5 MB, and at least one",
+			"input": [
+				25000000
+			],
+			"output": 17
+		}
+	]
+}

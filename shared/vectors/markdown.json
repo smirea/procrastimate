@@ -12,6 +12,7 @@
 							"heading": null,
 							"tasks": [
 								{
+									"attachments": [],
 									"completedAt": null,
 									"completedBy": null,
 									"createdAt": 1,
@@ -22,7 +23,6 @@
 									},
 									"event": null,
 									"id": "Pay rent",
-									"images": [],
 									"labelIds": [
 										"home"
 									],
@@ -48,6 +48,7 @@
 				},
 				[
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 1,
@@ -58,7 +59,6 @@
 						},
 						"event": null,
 						"id": "Pay rent",
-						"images": [],
 						"labelIds": [
 							"home"
 						],
@@ -91,6 +91,7 @@
 							"heading": "Today",
 							"tasks": [
 								{
+									"attachments": [],
 									"completedAt": null,
 									"completedBy": null,
 									"createdAt": 2,
@@ -98,7 +99,6 @@
 									"due": null,
 									"event": null,
 									"id": "Plan trip",
-									"images": [],
 									"labelIds": [],
 									"lastCompletedAt": null,
 									"location": null,
@@ -118,6 +118,7 @@
 							"heading": "Friday",
 							"tasks": [
 								{
+									"attachments": [],
 									"completedAt": null,
 									"completedBy": null,
 									"createdAt": 3,
@@ -125,7 +126,6 @@
 									"due": null,
 									"event": null,
 									"id": "Book flights",
-									"images": [],
 									"labelIds": [],
 									"lastCompletedAt": null,
 									"location": null,
@@ -146,6 +146,7 @@
 				},
 				[
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 2,
@@ -153,7 +154,6 @@
 						"due": null,
 						"event": null,
 						"id": "Plan trip",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -168,6 +168,7 @@
 						"title": "Plan trip"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 3,
@@ -175,7 +176,6 @@
 						"due": null,
 						"event": null,
 						"id": "Book flights",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -190,6 +190,7 @@
 						"title": "Book flights"
 					},
 					{
+						"attachments": [],
 						"completedAt": 5,
 						"completedBy": null,
 						"createdAt": 4,
@@ -197,7 +198,6 @@
 						"due": null,
 						"event": null,
 						"id": "Pack",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -212,6 +212,7 @@
 						"title": "Pack"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 5,
@@ -219,7 +220,6 @@
 						"due": null,
 						"event": null,
 						"id": "Socks",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -247,6 +247,7 @@
 							"heading": "Tomorrow",
 							"tasks": [
 								{
+									"attachments": [],
 									"completedAt": null,
 									"completedBy": null,
 									"createdAt": 7,
@@ -254,7 +255,6 @@
 									"due": null,
 									"event": null,
 									"id": "Book flights",
-									"images": [],
 									"labelIds": [],
 									"lastCompletedAt": null,
 									"location": null,
@@ -275,6 +275,7 @@
 				},
 				[
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 6,
@@ -282,7 +283,6 @@
 						"due": null,
 						"event": null,
 						"id": "Plan trip",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -297,6 +297,7 @@
 						"title": "Plan trip"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 7,
@@ -304,7 +305,6 @@
 						"due": null,
 						"event": null,
 						"id": "Book flights",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -355,6 +355,7 @@
 						"section": null,
 						"tasks": [
 							{
+								"attachments": [],
 								"completedAt": null,
 								"completedBy": null,
 								"createdAt": 8,
@@ -362,7 +363,6 @@
 								"due": null,
 								"event": null,
 								"id": "Inbox zero",
-								"images": [],
 								"labelIds": [],
 								"lastCompletedAt": null,
 								"location": null,
@@ -389,6 +389,7 @@
 						},
 						"tasks": [
 							{
+								"attachments": [],
 								"completedAt": null,
 								"completedBy": null,
 								"createdAt": 9,
@@ -396,7 +397,6 @@
 								"due": null,
 								"event": null,
 								"id": "Ship it",
-								"images": [],
 								"labelIds": [],
 								"lastCompletedAt": null,
 								"location": null,
@@ -431,6 +431,7 @@
 						"heading": null,
 						"tasks": [
 							{
+								"attachments": [],
 								"completedAt": null,
 								"completedBy": null,
 								"createdAt": 8,
@@ -438,7 +439,6 @@
 								"due": null,
 								"event": null,
 								"id": "Inbox zero",
-								"images": [],
 								"labelIds": [],
 								"lastCompletedAt": null,
 								"location": null,
@@ -458,6 +458,7 @@
 						"heading": "Next up",
 						"tasks": [
 							{
+								"attachments": [],
 								"completedAt": null,
 								"completedBy": null,
 								"createdAt": 9,
@@ -465,7 +466,6 @@
 								"due": null,
 								"event": null,
 								"id": "Ship it",
-								"images": [],
 								"labelIds": [],
 								"lastCompletedAt": null,
 								"location": null,
@@ -499,6 +499,7 @@
 							"heading": null,
 							"tasks": [
 								{
+									"attachments": [],
 									"completedAt": null,
 									"completedBy": null,
 									"createdAt": 8,
@@ -506,7 +507,6 @@
 									"due": null,
 									"event": null,
 									"id": "Inbox zero",
-									"images": [],
 									"labelIds": [],
 									"lastCompletedAt": null,
 									"location": null,
@@ -526,6 +526,7 @@
 							"heading": "Next up",
 							"tasks": [
 								{
+									"attachments": [],
 									"completedAt": null,
 									"completedBy": null,
 									"createdAt": 9,
@@ -533,7 +534,6 @@
 									"due": null,
 									"event": null,
 									"id": "Ship it",
-									"images": [],
 									"labelIds": [],
 									"lastCompletedAt": null,
 									"location": null,
@@ -558,6 +558,7 @@
 				},
 				[
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 8,
@@ -565,7 +566,6 @@
 						"due": null,
 						"event": null,
 						"id": "Inbox zero",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,
@@ -580,6 +580,7 @@
 						"title": "Inbox zero"
 					},
 					{
+						"attachments": [],
 						"completedAt": null,
 						"completedBy": null,
 						"createdAt": 9,
@@ -587,7 +588,6 @@
 						"due": null,
 						"event": null,
 						"id": "Ship it",
-						"images": [],
 						"labelIds": [],
 						"lastCompletedAt": null,
 						"location": null,

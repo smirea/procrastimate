@@ -156,7 +156,7 @@ export function taskRow(id: string, userId: string, title: string, extra: Record
 		reminders: '[]',
 		location: null,
 		event: null,
-		images: '[]',
+		attachments: '[]',
 		createdAt: 1_700_000_000_000,
 		completedAt: null,
 		createdBy: null,

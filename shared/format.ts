@@ -20,8 +20,30 @@ export type DueTone = z.infer<typeof dueToneSchema>;
 
 export const priorityLabel = (priority: Priority) => `Priority ${priority}`;
 
-/** The title quick add gives a draft holding only images, so a snapped photo is one tap from a task. */
-export const imagesTitle = (count: number) => (count === 1 ? 'Photo' : `${count} photos`);
+/**
+ * The title quick add gives a draft holding only attachments, so a snapped photo or a dropped file is one tap from a
+ * task: photos are counted, a lone file is its name.
+ */
+export function attachmentsTitle(images: number, files: readonly string[]): string {
+	if (!files.length) return images === 1 ? 'Photo' : `${images} photos`;
+	if (files.length === 1 && !images) return files[0]!;
+	return `${images + files.length} attachments`;
+}
+
+/** What a row's attachment count says: images by name while that is all there is. */
+export function attachmentsLabel(images: number, files: number): string {
+	const count = images + files;
+	if (!files) return count === 1 ? '1 image' : `${count} images`;
+	return count === 1 ? '1 attachment' : `${count} attachments`;
+}
+
+/** A file's size in decimal units, as Finder and Files show it: `512 B`, `82 KB`, `3.4 MB`. */
+export function formatBytes(bytes: number): string {
+	if (bytes < 1000) return `${bytes} B`;
+	if (bytes < 999_500) return `${Math.round(bytes / 1000)} KB`;
+	const tenths = Math.round(bytes / 100_000);
+	return tenths % 10 === 0 ? `${tenths / 10} MB` : `${Math.floor(tenths / 10)}.${tenths % 10} MB`;
+}
 
 export function formatTime(time: TimeOfDay): string {
 	const [h, m] = time.split(':').map(Number) as [number, number];

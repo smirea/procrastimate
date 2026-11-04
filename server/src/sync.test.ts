@@ -69,7 +69,7 @@ describe('POST /api/sync', () => {
 			priority: 4,
 			labelIds: [],
 			reminders: [],
-			images: [],
+			attachments: [],
 			due: null,
 			parentId: null,
 			projectId: null,

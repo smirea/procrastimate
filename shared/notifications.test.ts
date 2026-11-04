@@ -26,7 +26,7 @@ const task = (id: string, patch: Partial<Task>): Task => ({
 	reminders: [],
 	location: null,
 	event: null,
-	images: [],
+	attachments: [],
 	createdAt: 0,
 	completedAt: null,
 	createdBy: null,
