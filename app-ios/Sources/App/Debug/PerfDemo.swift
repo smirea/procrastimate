@@ -31,7 +31,7 @@ enum PerfDemo {
         await pause(3000)
         let inbox = navigator.tab
         let today = Views.dueDays(store.tasks, clock.today, .inbox, in: store.timeZone)
-        let first = (today.overdue + today.today + today.days.flatMap(\.tasks)).first { !$0.images.isEmpty } ?? store.tasks[0]
+        let first = (today.overdue + today.today + today.days.flatMap(\.tasks)).first { !$0.attachments.isEmpty } ?? store.tasks[0]
         if PlacesDemo.has("visitall") {
             for tab in navigator.pins.map(AppTab.pin) + [.browse] {
                 navigator.tab = tab
@@ -101,7 +101,7 @@ enum PerfDemo {
                 task.due = Due(date: Dates.addDays(today, index % 30 - 5), time: index % 5 == 0 ? "09:30" : nil)
             }
             if !done, index % 12 == 1 {
-                task.images = (0 ..< 2).map { ImageRef(id: "perf-img-\(index)-\($0)", width: 2048, height: 1536) }
+                task.attachments = (0 ..< 2).map { .image(ImageRef(id: "perf-img-\(index)-\($0)", width: 2048, height: 1536)) }
             }
             if index % 25 == 0 {
                 comments += (0 ..< 3).map { Comment(id: "perf-c\(index)-\($0)", taskId: id, body: "Comment \($0)", createdAt: now) }
@@ -116,7 +116,7 @@ enum PerfDemo {
                 }
             }
         }
-        for (offset, image) in tasks.flatMap(\.images).enumerated() { TaskImages.seedCached(image.id, hue: Double(offset % 40) / 40) }
+        for (offset, image) in tasks.flatMap({ $0.attachments.compactMap(\.image) }).enumerated() { TaskAttachments.seedCached(image.id, hue: Double(offset % 40) / 40) }
         return StoreData(tasks: tasks, projects: projects, labels: labels, comments: comments)
     }
     #endif

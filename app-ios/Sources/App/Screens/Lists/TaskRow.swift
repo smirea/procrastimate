@@ -152,7 +152,7 @@ struct TaskRow<Trailing: View>: View {
     private var due: Due? { done ? nil : Triggers.scheduledDue(task, today, in: store.timeZone) }
 
     private var hasDetails: Bool {
-        due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || !task.images.isEmpty
+        due != nil || task.location != nil || task.recurrence != nil || !task.reminders.isEmpty || !task.attachments.isEmpty
             || progress != nil || parent != nil || showProject || task.memoSource != nil
             || commentBadge != nil || createdBy != nil
     }
@@ -189,10 +189,11 @@ struct TaskRow<Trailing: View>: View {
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel("\(task.reminders.count) reminders")
                 }
-                if !task.images.isEmpty {
-                    Detail(systemImage: "photo", text: "\(task.images.count)")
+                if !task.attachments.isEmpty {
+                    let files = task.attachments.count { $0.file != nil }
+                    Detail(systemImage: files > 0 ? "paperclip" : "photo", text: "\(task.attachments.count)")
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(task.images.count == 1 ? "1 image" : "\(task.images.count) images")
+                        .accessibilityLabel(Format.attachmentsLabel(task.attachments.count - files, files))
                 }
                 if let commentBadge {
                     CommentBadgeView(badge: commentBadge)
