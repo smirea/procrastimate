@@ -81,14 +81,17 @@ class Attachments {
 		}
 	}
 
-	/** The bytes of one row, from the device or else the server, cached once fetched. */
+	/**
+	 * The bytes of one row, from the device or else the server. A fetched image size is cached; a fetched file part is
+	 * not, since files run to 25 MB and are opened rarely, and the browser's HTTP cache keeps them anyway.
+	 */
 	async #bytes(space: string | null, id: string, key: ByteKey): Promise<Blob | null> {
 		const local = await readBytes(id, key).catch(() => undefined);
 		if (local) return local;
 		const response = await fetch(imageUrl(space, id, key), { credentials: 'include' });
 		if (!response.ok) return null;
 		const blob = await response.blob();
-		await writeBytes(id, key, blob).catch(() => undefined);
+		if (key === 'full' || key === 'thumb') await writeBytes(id, key, blob).catch(() => undefined);
 		return blob;
 	}
 

@@ -42,6 +42,8 @@ export type PartKey = `part${number}`;
 export type ByteKey = ImageSize | PartKey;
 export const partKey = (index: number): PartKey => `part${index}`;
 const PART_KEY = /^part(\d{1,2})$/;
+/** What a request's `size` names, before `parseByteKey` checks a part's number. */
+export const byteKeySchema = z.string().regex(/^(full|thumb|part\d{1,2})$/);
 
 /** The key a request names, or null for anything else. */
 export function parseByteKey(

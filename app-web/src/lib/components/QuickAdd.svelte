@@ -213,7 +213,7 @@
 	}
 
 	function addFiles(files: File[]) {
-		const previewed = (file: File) => file.type.startsWith('image/') && file.type !== 'image/svg+xml';
+		const previewed = (file: File) => /^image\/(png|jpeg|gif|webp|avif|bmp)$/.test(file.type);
 		drafted.push(...files.map((file) => ({ key: draftKey++, file, url: previewed(file) ? URL.createObjectURL(file) : null })));
 	}
 
