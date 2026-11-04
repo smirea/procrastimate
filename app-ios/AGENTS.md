@@ -22,7 +22,7 @@
 - Use `./scripts/run --targets` to list devices and iOS 27 simulators; `*` marks the effective default. Select with `-t simulator` or `-t "iPhone 17"` (also accepts a `--targets` index or an identifier). It opens Device Hub on Xcode 27 or Simulator.app on earlier Xcode versions; `--headless` skips that, and an agent worktree's `./sim` passes it unless given `--show`.
 - Selection precedence is `-t` / `--target`, then `SWIFT_RUN_DEFAULT_TARGET`, then a connected iOS device, booted simulator, or available simulator. Duplicate simulator names prefer a booted instance, then the newest runtime; use an identifier to select exactly.
 - Physical devices need Xcode pairing, Developer Mode, and an unlocked screen. Configure automatic signing in Xcode, pass `--team`, or set `SWIFT_RUN_DEVELOPMENT_TEAM`.
-- Open `App.xcodeproj` and use the shared `App` scheme to debug. Build output is in `DerivedData/device/build.log` or `DerivedData/simulator/build.log`. Use `xcrun simctl io <UDID> screenshot /tmp/app.png` to inspect the screen.
+- Open `App.xcodeproj` and use the shared `App` scheme to debug. Build output is in `DerivedData/device/build.log` or `DerivedData/simulator/build.log`. In an agent worktree, inspect the screen with T3's `device_screenshot` and drive it with the command `device_open` returns.
 
 # Testing
 
