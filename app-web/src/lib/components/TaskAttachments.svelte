@@ -60,7 +60,7 @@
 						>
 							<FileIcon name={attachment.name} type={attachment.type} size={26} />
 							<span class="flex min-w-0 flex-col items-start text-left">
-								<span class="line-clamp-2 text-[12.5px] leading-tight font-medium break-all text-ink">{attachment.name}</span>
+								<span class="line-clamp-2 text-[12.5px] leading-tight font-medium [overflow-wrap:anywhere] text-ink">{attachment.name}</span>
 								<span class="mt-0.5 text-[11px] text-faint tabular-nums">{formatBytes(attachment.bytes)}</span>
 							</span>
 							{#if attachments.opening[attachment.id]}

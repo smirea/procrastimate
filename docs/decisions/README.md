@@ -19,7 +19,7 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Recurring tasks](recurrence.md): completing, next occurrences, and editing repeats.
 - [Search](search.md): matching, ranking, grouping, and the search sheet.
 - [Sections](sections.md): Todoist-style headings inside a project, their order, delete rule, quick add `/name`, sharing, and import.
-- [Task images](images.md): images on tasks, their bytes in the server's database outside the synced data, the image routes, upload order, offline, and the sweep.
+- [Task attachments](images.md): images and any other file on tasks, their bytes in the server's database outside the synced data (files in parts), the routes, upload order, offline, and the sweep.
 - [Subtasks](subtasks.md): nested child tasks, where they show, completion, reorder, and delete rules.
 - [Push notifications](push-notifications.md): Web Push scheduling, delivery, keys, and permission.
 - [Stack](stack.md): tooling, client and server frameworks, and shared code.
