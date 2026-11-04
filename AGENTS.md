@@ -9,7 +9,6 @@ Full rules in [`docs/decisions/workflow.md`](docs/decisions/workflow.md).
 
 - One PR per thread, never stacked; doc-only changes push straight to `master`. Fold small same-area follow-ups into an open PR instead of starting a new thread.
 - Rebase only when GitHub reports a real conflict; PR CI already tests the merge with `master`.
-- Build features yourself; never hand the whole build to a helper sub-agent that can't receive messages.
 - Run only the relevant unit and e2e specs locally; CI runs the full suite.
 - Screenshots: 2 to 4, only for UI changes.
 - Build every feature for all clients at once (web and iOS today); each plan names its target clients and why any are excluded.
