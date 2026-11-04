@@ -23,7 +23,10 @@ final class Navigator {
     var paths: [AppTab: [Route]] = [:] {
         didSet { forgetAddedElsewhere() }
     }
-    var sheet: Sheet?
+    /// Any sheet, such as quick add, cancels a task link still waiting for sync, so the task cannot replace it later.
+    var sheet: Sheet? {
+        didSet { if sheet != nil { awaitedTask = nil } }
+    }
     /// Asks Browse to focus its search field, as Cmd-K does. Browse clears it once focused.
     var focusSearch = false
     /// Bumped when a tab goes back to its default state, so its screens rebuild at the top while it is out of sight.
@@ -33,7 +36,8 @@ final class Navigator {
     @ObservationIgnored private var memory = TabMemory<AppTab>()
     @ObservationIgnored private var resetTimer: Task<Void, Never>?
     /// A task link that came before sync brought its task, such as Feetback's for a task it just posted. It opens when
-    /// the task lands within a minute; later, it would pop up over whatever the user moved on to.
+    /// the task lands within a minute, unless a sheet or another link came first; later, it would pop up over whatever
+    /// the user moved on to.
     @ObservationIgnored private var awaitedTask: (id: String, until: Date)?
 
     static let pinsKey = "procrastimate-pins"
@@ -204,13 +208,13 @@ final class Navigator {
             if key == WidgetList.today.key { return .today }
             return store.listCatalog(today: today).lazy.flatMap(\.entries).map(Pin.init).first { $0.key == key }.map(WidgetList.pin)
         }
+        awaitedTask = nil
         switch link {
         case let .task(id):
             guard store.task(id) != nil else {
                 awaitedTask = (id, clock.now.addingTimeInterval(60))
                 return
             }
-            awaitedTask = nil
             openTask(id)
         case let .list(key):
             guard let list = list(key) else { return }
