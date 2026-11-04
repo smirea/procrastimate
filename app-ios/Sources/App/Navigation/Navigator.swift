@@ -35,7 +35,7 @@ final class Navigator {
     @ObservationIgnored private let clock: AppClock
     @ObservationIgnored private var memory = TabMemory<AppTab>()
     @ObservationIgnored private var resetTimer: Task<Void, Never>?
-    /// A task link that came before sync brought its task, such as Feetback's for a task it just posted. It opens when
+    /// A task link that came before sync brought its task, such as Feedback's for a task it just posted. It opens when
     /// the task lands within a minute, unless a sheet or another link came first; later, it would pop up over whatever
     /// the user moved on to.
     @ObservationIgnored private var awaitedTask: (id: String, until: Date)?
