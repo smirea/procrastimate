@@ -128,6 +128,7 @@ export async function putMemoTasks(command: Command, request: MemoTasksRequest):
 		location: null,
 		event: input.event,
 		attachments: [],
+		github: [],
 		createdAt: createdAt++,
 		completedAt: null,
 		createdBy: null,

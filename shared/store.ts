@@ -60,6 +60,7 @@ export const taskEditSchema = taskSchema
 		location: true,
 		event: true,
 		attachments: true,
+		github: true,
 	})
 	.partial()
 	.refine(patch => !(patch.event && (patch.due || patch.recurrence)), {
@@ -189,6 +190,7 @@ export function addTask(
 		location: input.location ?? null,
 		event: input.event ?? null,
 		attachments: [],
+		github: [],
 		createdAt: Math.max(now, (data.tasks.at(-1)?.createdAt ?? -Infinity) + 1),
 		completedAt: null,
 		createdBy: null,

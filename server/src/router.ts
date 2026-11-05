@@ -47,6 +47,8 @@ import {
 	sharedView,
 } from './sharing';
 import { linkTitle } from './link-preview';
+import { githubItem } from './github';
+import { parseGithubRef } from '../../shared/github';
 import { personById, searchPeople } from './people';
 import { OUTLINE_TIMEOUT_MS, outlineRamble, RAMBLE_GEMINI } from './ramble-outline';
 import { reportError } from './sentry';
@@ -228,7 +230,15 @@ export const router = os.router({
 	}),
 	linkPreview: os.linkPreview.handler(async ({ input, context }) => {
 		await requireHuman(context.request, context.app);
-		return { title: await linkTitle(input.query.url) };
+		const ref = parseGithubRef(input.query.url);
+		const token = context.app.config.githubToken;
+		return { title: ref ? (await githubItem(ref, token)).title : await linkTitle(input.query.url) };
+	}),
+	github: os.github.handler(async ({ input, context, errors }) => {
+		await requireHuman(context.request, context.app);
+		const ref = parseGithubRef(input.query.url);
+		if (!ref) throw errors.BAD_REQUEST({ message: 'Needs a GitHub issue or pull request' });
+		return githubItem(ref, context.app.config.githubToken);
 	}),
 	ramble: {
 		outline: os.ramble.outline.handler(async ({ input, context, errors }) => {

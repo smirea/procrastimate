@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { githubRefSchema } from '../github.ts';
 import { dictationChoiceSchema, rambleModeSchema } from '../dictation.ts';
 import { labelColorSchema } from '../label-colors.ts';
 import { projectIconSchema } from '../project-icons.ts';
@@ -38,6 +39,7 @@ export const COLUMN_VALUES = {
 		event: taskEventSchema,
 		attachments: z.array(attachmentSchema),
 		titleMode: titleModeSchema,
+		github: z.array(githubRefSchema),
 	},
 	projects: { icon: projectIconSchema },
 	sections: { counter: sectionCounterSchema },

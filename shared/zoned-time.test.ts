@@ -53,6 +53,7 @@ test('notifications resolve and word their times in the given zone', () => {
 		location: null,
 		event: null,
 		attachments: [],
+		github: [],
 		createdAt: 0,
 		completedAt: null,
 		createdBy: null,

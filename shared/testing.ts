@@ -19,6 +19,7 @@ export const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	location: null,
 	event: null,
 	attachments: [],
+	github: [],
 	createdAt: 1,
 	completedAt: null,
 	createdBy: null,

@@ -52,6 +52,8 @@ export const tasks = sqliteTable(
 		 * The column keeps the name it had when it held only images.
 		 */
 		attachments: json('images').$type<ColumnValue<'tasks', 'attachments'>>().notNull().default([]),
+		/** GitHub issues and pull requests shown with the task's metadata. Only which ones: their state is read live. */
+		github: json('github').$type<ColumnValue<'tasks', 'github'>>().notNull().default([]),
 		createdAt: millis('created_at').notNull(),
 		completedAt: millis('completed_at'),
 		/** Who created the task and who completed it last. The server stamps both and overwrites what a client sends. */

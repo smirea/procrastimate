@@ -26,6 +26,8 @@ export type Env = {
 	ELEVENLABS_API_KEY?: string;
 	/** Ramble's smart parse, a Worker secret. */
 	GEMINI_API_KEY?: string;
+	/** Reads GitHub issues and pull requests, private ones included. Optional: without it public ones are read signed out. */
+	GITHUB_TOKEN?: string;
 	/** `cassette` replays recorded transcripts instead of calling ElevenLabs, for `wrangler dev` in tests. */
 	RAMBLE_UPSTREAM?: string;
 	/** Plain vars `wrangler deploy --var` sets, never secrets. See `Config.sentry`. */

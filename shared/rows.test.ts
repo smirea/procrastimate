@@ -33,6 +33,7 @@ describe('rowWrites', () => {
 					location: null,
 					event: null,
 					attachments: [],
+					github: [],
 					createdAt: 1,
 					completedAt: null,
 					createdBy: null,
