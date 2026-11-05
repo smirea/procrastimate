@@ -83,7 +83,7 @@
 			: event.key === '/';
 
 	function onkeydown(event: KeyboardEvent) {
-		if (isTyping(event.target)) return;
+		if (isPublic || isTyping(event.target)) return;
 		if (isSearchShortcut(event) && sheets.current.kind !== 'search') {
 			event.preventDefault();
 			openSearch();

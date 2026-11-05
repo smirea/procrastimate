@@ -18,6 +18,7 @@ struct SharedLinkSheet: View {
             Group {
                 if let view {
                     SharedList(view: view)
+                        .navigationDestination(for: SharedTaskID.self) { SharedTaskDetails(view: view, taskID: $0.id) }
                 } else if let error {
                     ContentUnavailableView {
                         SwiftUI.Label("This link does not open", systemImage: "link.badge.plus")
@@ -69,9 +70,11 @@ private struct SharedList: View {
         List {
             Section {
                 ForEach(tasks) { task in
-                    SharedTaskRow(task: task, labels: task.labelIds.compactMap { id in view.labels.first { $0.id == id } }, pending: pending[task.id] ?? [])
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                    NavigationLink(value: SharedTaskID(id: task.id)) {
+                        SharedTaskRow(task: task, labels: task.labelIds.compactMap { id in view.labels.first { $0.id == id } }, pending: pending[task.id] ?? [])
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
             } header: {
                 VStack(alignment: .leading, spacing: 4) {
@@ -92,9 +95,11 @@ private struct SharedList: View {
             ForEach(sectionGroups, id: \.section.id) { group in
                 Section {
                     ForEach(group.tasks) { task in
-                        SharedTaskRow(task: task, labels: task.labelIds.compactMap { id in view.labels.first { $0.id == id } }, pending: pending[task.id] ?? [])
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
+                        NavigationLink(value: SharedTaskID(id: task.id)) {
+                            SharedTaskRow(task: task, labels: task.labelIds.compactMap { id in view.labels.first { $0.id == id } }, pending: pending[task.id] ?? [])
+                        }
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
                 } header: {
                     HStack {

@@ -29,7 +29,7 @@
 	let query = $state('');
 	let active = $state(0);
 
-	const chosen = $derived(store.labelsOf({ labelIds }));
+	const chosen = $derived(labels ? labelIds.flatMap((id) => labels.find((l) => l.id === id) ?? []) : store.labelsOf({ labelIds }));
 	const options = $derived(
 		suggest(labels ?? store.labels, lastUsed(store.tasks, labelIdsOf), query).filter((o) => canCreate || o.kind !== 'create'),
 	);
