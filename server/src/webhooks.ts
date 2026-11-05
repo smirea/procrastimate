@@ -30,6 +30,7 @@ const SEND_TIMEOUT_MS = 10_000;
 export const DISABLE_AFTER_MS = 24 * 60 * 60_000;
 /** Log rows read per hook per run; a longer backlog drains over the next runs. */
 const SCAN_LIMIT = 500;
+const MAX_PROJECTS = 50;
 
 type WebhookRow = typeof webhooks.$inferSelect;
 
@@ -41,7 +42,7 @@ function checkedUrl(raw: string): string {
 	throw new ORPCError('BAD_REQUEST', { message: 'A webhook URL must be HTTPS, or HTTP to a loopback address' });
 }
 
-const publicOf = ({ userId: _, secret: __, ...hook }: WebhookRow): Webhook => hook;
+const publicOf = ({ userId: _, secret: __, retryThrough: ___, ...hook }: WebhookRow): Webhook => hook;
 
 const head = (db: Db) =>
 	db
@@ -64,6 +65,9 @@ export function createWebhook(command: Command, input: NewWebhook): CreatedWebho
 	const { db, owner, actor, now } = command;
 	const url = checkedUrl(input.url);
 	const projectIds = [...new Set(input.projectIds ?? [])];
+	// Each id is a bound parameter, and a Durable Object binds at most 100 per statement.
+	if (projectIds.length > MAX_PROJECTS)
+		throw new ORPCError('BAD_REQUEST', { message: `A webhook watches at most ${MAX_PROJECTS} projects` });
 	if (projectIds.length) {
 		const found = db
 			.select({ id: projects.id })
@@ -88,6 +92,7 @@ export function createWebhook(command: Command, input: NewWebhook): CreatedWebho
 		createdBy: existing?.createdBy ?? actor.id,
 		createdAt: existing?.createdAt ?? now,
 		cursor: restart ? head(db) : existing.cursor,
+		retryThrough: restart ? null : existing.retryThrough,
 		deliveredAt: existing?.deliveredAt ?? null,
 		failingSince: restart ? null : existing.failingSince,
 		lastError: restart ? null : existing.lastError,
@@ -154,11 +159,13 @@ export function pendingEvents(db: Db, hook: WebhookRow, through: number): { even
 		if (!moved && !created) continue;
 		const taskId = row.kind === 'task' ? row.id : String(row.fields.taskId);
 		const task = db
-			.select({ projectId: tasks.projectId })
+			.select({ projectId: tasks.projectId, parentId: tasks.parentId })
 			.from(tasks)
 			.where(and(eq(tasks.userId, hook.userId), eq(tasks.id, taskId)))
 			.get();
 		if (!task || (watched.size && !watched.has(task.projectId ?? ''))) continue;
+		// Subtasks follow their root's project, so a moved tree is one addition, its root.
+		if (moved && !created && task.parentId !== null) continue;
 		if (row.kind === 'comment' && !db.select({ id: comments.id }).from(comments).where(eq(comments.id, row.id)).get())
 			continue;
 		const type = row.kind === 'task' ? 'task.added' : 'comment.added';
@@ -211,17 +218,19 @@ export const fetchWebhook: SendWebhook = async (url, body, headers) => {
 
 /**
  * The cron, every minute: each enabled hook with something new gets one POST. The sends await the network, so other
- * requests run meanwhile; each settle then writes only the hook's delivery columns, keyed by the cursor it read, so a
- * hook registered again or deleted while its POST was in flight keeps what that request stored.
+ * requests run meanwhile: each hook is read again just before its send, and its settle is keyed by the cursor it read,
+ * so a hook deleted, registered again, or refiltered while an earlier send was in flight is sent as it is now.
  */
 export async function deliverWebhooks(db: Db, now: number, send: SendWebhook): Promise<number> {
-	const hooks = db.select().from(webhooks).where(isNull(webhooks.disabledAt)).all();
-	if (!hooks.length) return 0;
-	const through = head(db);
+	const ids = db
+		.select({ userId: webhooks.userId, id: webhooks.id })
+		.from(webhooks)
+		.where(isNull(webhooks.disabledAt))
+		.all();
 	let delivered = 0;
-	for (const hook of hooks) {
+	for (const { userId, id } of ids) {
 		try {
-			delivered += await deliverTo(db, hook, through, now, send);
+			delivered += await deliverTo(db, userId, id, now, send);
 		} catch (error) {
 			reportError(error);
 		}
@@ -229,12 +238,21 @@ export async function deliverWebhooks(db: Db, now: number, send: SendWebhook): P
 	return delivered;
 }
 
-async function deliverTo(db: Db, hook: WebhookRow, through: number, now: number, send: SendWebhook): Promise<number> {
+async function deliverTo(db: Db, owner: string, id: string, now: number, send: SendWebhook): Promise<number> {
+	const hook = db
+		.select()
+		.from(webhooks)
+		.where(and(eq(webhooks.userId, owner), eq(webhooks.id, id), isNull(webhooks.disabledAt)))
+		.get();
+	if (!hook) return 0;
+	// A retry keeps the failed delivery's range, so a receiver that got it but failed to answer sees the same `id`.
+	const through = hook.retryThrough ?? head(db);
 	if (hook.cursor >= through) return 0;
 	const { events, next } = pendingEvents(db, hook, through);
-	const where = and(eq(webhooks.userId, hook.userId), eq(webhooks.id, hook.id), eq(webhooks.cursor, hook.cursor));
+	const where = and(eq(webhooks.userId, owner), eq(webhooks.id, id), eq(webhooks.cursor, hook.cursor));
+	const settled = { cursor: next, retryThrough: null, failingSince: null, lastError: null };
 	if (!events.length) {
-		db.update(webhooks).set({ cursor: next }).where(where).run();
+		db.update(webhooks).set(settled).where(where).run();
 		return 0;
 	}
 	const delivery: WebhookDelivery = {
@@ -248,13 +266,17 @@ async function deliverTo(db: Db, hook: WebhookRow, through: number, now: number,
 	const signature = `${WEBHOOK_SIGNATURE_PREFIX}${await hmacHex(hook.secret, body)}`;
 	const status = await send(hook.url, body, { [WEBHOOK_SIGNATURE_HEADER]: signature });
 	if (status !== null && status >= 200 && status < 300) {
-		db.update(webhooks).set({ cursor: next, deliveredAt: now, failingSince: null, lastError: null }).where(where).run();
+		db.update(webhooks)
+			.set({ ...settled, deliveredAt: now })
+			.where(where)
+			.run();
 		return 1;
 	}
 	const failingSince = hook.failingSince ?? now;
 	const gone = status === 404 || status === 410;
 	db.update(webhooks)
 		.set({
+			retryThrough: through,
 			failingSince,
 			lastError: status === null ? 'No answer' : `HTTP ${status}`,
 			disabledAt: gone || now - failingSince >= DISABLE_AFTER_MS ? now : null,

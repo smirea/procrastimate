@@ -128,8 +128,11 @@ describe('webhooks', () => {
 		status = 200;
 		await addTask(owner, 'Added during the outage', null);
 		await cron();
-		expect(sent.map(delivery => delivery.body.id)).toEqual([sent[0]!.body.id, sent[0]!.body.id, sent[2]!.body.id]);
-		expect(summaries()).toEqual(['1 task added', '1 task added', '2 tasks added']);
+		await cron();
+		const ids = sent.map(delivery => delivery.body.id);
+		expect(ids.slice(0, 3)).toEqual([ids[0]!, ids[0]!, ids[0]!]);
+		expect(ids[3]).not.toBe(ids[0]);
+		expect(summaries()).toEqual(['1 task added', '1 task added', '1 task added', '1 task added']);
 		const [healed] = (
 			await json<{ webhooks: { failingSince: number | null; lastError: string | null }[] }>(
 				app.fetch('/api/webhooks', { headers: bot.headers }),
@@ -137,6 +140,68 @@ describe('webhooks', () => {
 		).webhooks;
 		expect(healed).toMatchObject({ failingSince: null, lastError: null });
 		await json(app.fetch(`/api/webhooks?id=${hook.id}`, { method: 'DELETE', headers: bot.headers }));
+	});
+
+	test('a retry keeps its id and events while other writes land, and an empty run clears the failure', async () => {
+		const hook = await register({ url: RECEIVER });
+		await addTask(owner, 'First', null);
+		status = 500;
+		await cron();
+		const elsewhere = await signUp(app, 'Elsewhere');
+		await addTask(elsewhere, 'Another space moves the log head', null);
+		await addTask(owner, 'Arrives during the retry', null);
+		await cron();
+		expect(sent.map(delivery => delivery.body.id)).toEqual([sent[0]!.body.id, sent[0]!.body.id]);
+		expect(summaries()).toEqual(['1 task added', '1 task added']);
+
+		status = 202;
+		await cron();
+		await cron();
+		expect(summaries()).toEqual(['1 task added', '1 task added', '1 task added', '1 task added']);
+		expect(sent[3]!.body.id).not.toBe(sent[0]!.body.id);
+		expect(sent[3]!.body.events[0]!.taskId).not.toBe(sent[0]!.body.events[0]!.taskId);
+
+		status = 500;
+		const doomed = await addTask(owner, 'Deleted before it lands', null);
+		await cron();
+		await json(app.fetch(`/api/tasks?id=${doomed.id}`, { method: 'DELETE', headers: owner.headers }));
+		await cron();
+		const [cleared] = (
+			await json<{ webhooks: { failingSince: number | null; lastError: string | null }[] }>(
+				app.fetch('/api/webhooks', { headers: bot.headers }),
+			)
+		).webhooks;
+		expect(cleared).toMatchObject({ failingSince: null, lastError: null });
+		await json(app.fetch(`/api/webhooks?id=${hook.id}`, { method: 'DELETE', headers: bot.headers }));
+	});
+
+	test('moving a task with subtasks into the watched project is one addition', async () => {
+		const hook = await register({ url: RECEIVER, projectIds: [watched] });
+		const parent = await addTask(owner, 'Parent', other);
+		await post(owner, '/api/tasks', { title: 'Child', parentId: parent.id });
+		await cron();
+		expect(sent).toEqual([]);
+		await json(
+			app.fetch(`/api/tasks?id=${parent.id}`, {
+				method: 'PATCH',
+				headers: owner.headers,
+				body: JSON.stringify({ projectId: watched }),
+			}),
+		);
+		await cron();
+		expect(sent.map(delivery => delivery.body.events.map(event => event.taskId))).toEqual([[parent.id]]);
+		await json(app.fetch(`/api/webhooks?id=${hook.id}`, { method: 'DELETE', headers: bot.headers }));
+	});
+
+	test('deleting the AI account deletes the webhooks it registered', async () => {
+		const temp = await aiAccount(app, owner, 'Temporary');
+		await post(temp, '/api/webhooks', { url: 'https://hooks.example/temporary' });
+		const mine = await register({ url: RECEIVER });
+		const removed = await app.fetch(`/api/ai?id=${temp.person.id}`, { method: 'DELETE', headers: owner.headers });
+		expect(removed.status).toBe(200);
+		const left = await json<{ webhooks: { url: string }[] }>(app.fetch('/api/webhooks', { headers: bot.headers }));
+		expect(left.webhooks.map(hook => hook.url)).toEqual([RECEIVER]);
+		await json(app.fetch(`/api/webhooks?id=${mine.id}`, { method: 'DELETE', headers: bot.headers }));
 	});
 
 	test('a 410 or a day of failures disables the hook; registering again resumes from now with the same secret', async () => {
@@ -178,6 +243,7 @@ describe('webhooks', () => {
 			app.fetch('/api/webhooks', { method: 'POST', headers, body: JSON.stringify(body) }).then(r => r.status);
 		expect(await refused({ url: 'http://hooks.example/wake' })).toBe(400);
 		expect(await refused({ url: RECEIVER, projectIds: ['no-such-project'] })).toBe(404);
+		expect(await refused({ url: RECEIVER, projectIds: Array.from({ length: 51 }, (_, i) => `p${i}`) })).toBe(400);
 
 		const stranger = await signUp(app, 'Stranger');
 		expect(await refused({ url: RECEIVER }, stranger.headers)).toBe(200);

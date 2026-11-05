@@ -4,7 +4,7 @@ import { webhooksRowSchema } from './db/generated/zod.ts';
 export const WEBHOOK_SIGNATURE_HEADER = 'x-procrastimate-signature';
 export const WEBHOOK_SIGNATURE_PREFIX = 'sha256=';
 
-export const webhookSchema = webhooksRowSchema.omit({ userId: true, secret: true }).meta({
+export const webhookSchema = webhooksRowSchema.omit({ userId: true, secret: true, retryThrough: true }).meta({
 	id: 'Webhook',
 	description:
 		'A URL the server POSTs to, within a minute, when a human adds a task or comments in the space. `cursor` is the last change it was told about. `failingSince` and `lastError` describe a run of failed POSTs, which retry every minute; a day of failures, or a `404` or `410`, sets `disabledAt` and stops it until it is registered again.',
@@ -16,7 +16,7 @@ export const newWebhookSchema = z
 		url: z.url().meta({ description: 'HTTPS, or HTTP to a loopback address.' }),
 		projectIds: z.array(z.string()).optional().meta({
 			description:
-				'Only changes in these projects. Omitted or empty watches the whole space, where moving a task between projects is not an addition.',
+				'Only changes in these projects, at most 50. Omitted or empty watches the whole space, where moving a task between projects is not an addition.',
 		}),
 	})
 	.meta({

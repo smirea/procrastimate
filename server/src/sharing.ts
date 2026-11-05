@@ -1,6 +1,6 @@
 import { ORPCError } from '@orpc/server';
 import { and, eq, isNull, type SQL } from 'drizzle-orm';
-import { apiTokens, labels, projects, shares, tasks, type ShareRow } from '../../shared/db/schema';
+import { apiTokens, labels, projects, shares, tasks, webhooks, type ShareRow } from '../../shared/db/schema';
 import { newId } from '../../shared/id';
 import { scopeOf } from '../../shared/scope';
 import type { ApiToken, CreatedApiToken, Person, ShareTarget, ShareView, SharedView } from '../../shared/sharing';
@@ -260,6 +260,9 @@ export function revokeAi({ db, space }: Store, owner: string, aiUserId: string):
 			.run();
 		db.delete(shares)
 			.where(and(eq(shares.userId, owner), eq(shares.grantee, aiUserId)))
+			.run();
+		db.delete(webhooks)
+			.where(and(eq(webhooks.userId, owner), eq(webhooks.createdBy, aiUserId)))
 			.run();
 		syncAccess(db, server, owner, aiUserId);
 	});
