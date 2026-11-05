@@ -83,6 +83,10 @@ const HAND_WRITTEN: Record<Category, Row[]> = {
 	plain: [
 		['Buy milk. Call the plumber about the leak.', plain('Buy milk', 'Call the plumber about the leak')],
 		['Pick up the dry cleaning', plain('Pick up the dry cleaning')],
+		[
+			'you signed up for a walk and you need to set an alarm',
+			plain('You signed up for a walk and you need to set an alarm'),
+		],
 		['Renew my passport', plain('Renew my passport')],
 		['Clean out the fridge. Take the recycling out.', plain('Clean out the fridge', 'Take the recycling out')],
 		['Look into new running shoes', plain('Look into new running shoes')],
@@ -133,6 +137,10 @@ const HAND_WRITTEN: Record<Category, Row[]> = {
 	],
 	single: [
 		['Pay rent tomorrow', [t('Pay rent', { due: '2026-10-15' })]],
+		[
+			'You signed up for a walk tomorrow, and you need to set an alarm.',
+			[t('You signed up for a walk, and you need to set an alarm', { due: '2026-10-15' })],
+		],
 		['Buy milk. Make it priority one.', [t('Buy milk', { priority: 1 })]],
 		['Email Dana priority 2', [t('Email Dana', { priority: 2 })]],
 		['Water plants every Sunday', [t('Water plants', { due: '2026-10-18', recurrence: weekly })]],

@@ -43,15 +43,16 @@ Corrections come first. When the speaker changes their mind, keep only the final
 - Saying a task again with new details updates it. Never output the same task twice.
 
 Structure:
-- One task per separate action. Actions joined by "and", "also", "then", or "oh and" are separate tasks unless one is a step of the other.
+- One task per separate action. Actions joined by "and", "also", "then", or "oh and" are separate tasks unless one is a step of the other. A clause that only says what happened, what is going on, or why ("the sink is leaking") is not an action: it stays in the title of the task it was said with, never a task of its own.
 - Items or steps the speaker lists for one task become its subtasks: things to buy at a store, parts of a project, "the steps are", "with subtasks", "which means", or a colon. The task's title then leaves the items out ("Go to the store", not "Go to the store and get milk").
 - A subtask is the item as said, without the verb the list shares: "Milk", not "Get milk".
 - When the speaker groups items under a heading ("for food get pizza and soda", "in the kitchen wipe the counters"), the heading is a subtask ("Food", "Kitchen") and its items are its subtasks.
 - Spoken commands: "new task" or "next task" starts a task, "subtask" adds a subtask to the current task, "note" or "description" adds notes to the current task.
-- Ignore chatter that is not a task, and "that's all" or "that's it" at the end.
+- Ignore chatter that holds no task, and "that's all" or "that's it" at the end. Context said in the same breath as a task, such as what happened, why, or for whom, belongs to that task and is never chatter.
 
 Fields:
-- title: a short imperative in the speaker's words. Drop filler and intent words such as "I need to", "remind me to", "don't forget to", "I should". Keep names, places, and details that tell tasks apart. Leave out the date, time, reminder, priority, project, and labels.
+- said: the transcript's words for this task, copied exactly, including the context said with it, its date, and its corrections. Subtasks copy only their own item.
+- title: said, with words deleted and none added: delete only filler, the intent words at its start ("I need to", "remind me to", "don't forget to", "I should"), the phrases that set other fields, and the replaced words of a correction. Every other word stays, in order, from the first word on, including "you need to" in the middle. Never keep only the last action or summarize: "The sink is leaking, and you have to call the plumber." is one task titled "The sink is leaking, and you have to call the plumber", not "Call the plumber".
 - when: the due date, time, and repeat as a short English phrase, after corrections: "tomorrow", "tomorrow at 4pm", "friday", "next friday", "october 30", "in 3 days", "today at noon", "tonight", "every monday at 9am", "every other week", "every month on the 1st", "every weekday". Count spans in days ("in 75 days", not "in 2.5 months"). Leave out morning, afternoon, and evening when no clock time was said. Use "saturday" for "this weekend". Empty when the speaker gave none. A date belongs only to the task it was said for, unless the speaker says it applies to several.
 - reminder: only when the speaker asks to be reminded at a time other than the due time: "30 minutes before", "1 hour before", "1 day before", "at 9am", "tomorrow at 8am". "Remind me to call mom tomorrow" is a task due tomorrow with no reminder.
 - priority: 1 for priority one, p1, urgent, high priority, top priority, or "my number one priority"; 2 for priority two or p2; 3 for priority three, p3, or medium priority; 4 for priority four, p4, or low priority. 0 when the speaker set none; calling something important is not a priority.
@@ -66,6 +67,7 @@ type JsonSchema = Record<string, unknown>;
 
 function taskSchema(depth: number, projects: readonly string[], labels: readonly string[]): JsonSchema {
 	const properties: Record<string, JsonSchema> = {
+		said: { type: 'string' },
 		title: { type: 'string' },
 		when: { type: 'string' },
 		reminder: { type: 'string' },
@@ -82,7 +84,7 @@ function taskSchema(depth: number, projects: readonly string[], labels: readonly
 	return {
 		type: 'object',
 		properties,
-		required: ['title'],
+		required: ['said', 'title'],
 		propertyOrdering: Object.keys(properties),
 	};
 }

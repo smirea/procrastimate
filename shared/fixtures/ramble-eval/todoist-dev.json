@@ -56,7 +56,7 @@
 			{ "title": "Send invoice to acme", "date": "2026-10-14", "time": null },
 			{ "title": "Water plants", "date": null, "time": null },
 			{ "title": "Book haircut", "date": "2026-10-19", "time": null },
-			{ "title": "Clean out garage", "date": null, "time": null }
+			{ "title": "Clean out the garage at some point", "date": null, "time": null }
 		]
 	},
 	{
@@ -362,7 +362,7 @@
 		"tasks": [
 			{ "title": "Finish proposal for serena", "date": "2026-10-14", "time": null, "priority": 1 },
 			{ "title": "Iron shirts", "date": null, "time": null, "priority": null },
-			{ "title": "Wash car", "date": null, "time": null, "priority": null }
+			{ "title": "Maybe wash the car if I get time", "date": null, "time": null, "priority": null }
 		]
 	},
 	{
@@ -379,5 +379,13 @@
 				"subtasks": ["Flour", "Sugar", "Chocolate chips", "Eggs"]
 			}
 		]
+	},
+	{
+		"text": "you signed up for a walk and you need to set an alarm",
+		"tasks": [{ "title": "You signed up for a walk and you need to set an alarm", "date": null, "time": null }]
+	},
+	{
+		"text": "You signed up for a walk, and you need to set an alarm.",
+		"tasks": [{ "title": "You signed up for a walk and you need to set an alarm", "date": null, "time": null }]
 	}
 ]

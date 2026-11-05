@@ -24,6 +24,7 @@ export type RawSocket = { send(text: string): void; close(): void };
 export type OpenSocket = (url: string, events: UpstreamEvents) => Promise<RawSocket>;
 
 const FIELDS = {
+	said: { type: 'STRING', description: "The transcript's words for this task, copied exactly." },
 	title: { type: 'STRING' },
 	when: { type: 'STRING', description: 'Due date, time, and repeat as a short English phrase, or empty.' },
 	reminder: { type: 'STRING', description: 'A reminder phrase such as "30 minutes before", or empty.' },
