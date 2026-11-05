@@ -24,7 +24,7 @@
 	import PersonName from './PersonName.svelte';
 	import { useLookup } from '../lookup.ts';
 	import { session } from '../session.svelte.ts';
-	import { clock, reveal, motion, sheets } from '../ui.svelte.ts';
+	import { clock, reveal, motion } from '../ui.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { addedAgo, attachmentsLabel, dueTone, formatDue, formatTime, repeatLabel } from 'shared/format.ts';
 	import { isImage } from 'shared/values.ts';
@@ -103,7 +103,7 @@
 	class="group flex items-start gap-3 rounded-2xl px-2 transition-colors duration-500 hover:bg-surface/60"
 	class:revealed
 	data-task={subtask ? undefined : task.title}
-	{@attach lookup.open && taskMenu(() => ({ task, toggle: subtask || !done ? complete : undefined }))}
+	{@attach lookup.menus && taskMenu(() => ({ task, toggle: subtask || !done ? complete : undefined }))}
 >
 	{#if editable}
 		<Checkbox checked={checking || done} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
@@ -112,11 +112,7 @@
 	{/if}
 	<!-- The button sits under the text rather than around it, since HTML forbids a link inside a button. -->
 	<div class="relative min-w-0 flex-1 py-2.5 touch:min-h-11 touch:py-3">
-		{#if subtask}
-			<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => sheets.openTask(task.id, 'forward')}></button>
-		{:else if lookup.open}
-			<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => lookup.open?.(task.id)}></button>
-		{/if}
+		<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => lookup.open(task.id, subtask ? 'forward' : 'none')}></button>
 		<div class="pointer-events-none relative">
 			<TitleFlow
 				title={task.title}

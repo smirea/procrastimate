@@ -11,8 +11,9 @@
 		desktop,
 		class: classes,
 		children,
+		onclose = () => sheets.close(),
 		...rest
-	}: { label: string; desktop: 'scale' | 'slide' | 'fly'; class: string; children: Snippet } & Pick<
+	}: { label: string; desktop: 'scale' | 'slide' | 'fly'; class: string; children: Snippet; onclose?: () => void } & Pick<
 		HTMLAttributes<HTMLDivElement>,
 		'onpaste' | 'ondragover' | 'ondrop'
 	> = $props();
@@ -24,7 +25,7 @@
 	};
 </script>
 
-<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={motion({ duration: 160 })} onclick={() => sheets.close()} aria-hidden="true"></div>
+<div class="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]" transition:fade={motion({ duration: 160 })} onclick={onclose} aria-hidden="true"></div>
 <div role="dialog" aria-label={label} class={`glass-strong sheet fixed z-50 flex ${classes}`} transition:enter {...rest}>
 	{@render children()}
 </div>

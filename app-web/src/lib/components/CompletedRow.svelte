@@ -50,7 +50,7 @@
 <div
 	class="group flex items-start gap-3 rounded-2xl px-2 hover:bg-surface/60"
 	data-task={task.title}
-	{@attach lookup.open && taskMenu(() => ({ task, rolled, toggle: reopen }))}
+	{@attach lookup.menus && taskMenu(() => ({ task, rolled, toggle: reopen }))}
 >
 	{#if editable}
 		<Checkbox checked={!reopening} {tone} label={`Reopen ${task.title}`} class="mt-3 touch:mt-3.5" onclick={reopen} />
@@ -65,9 +65,7 @@
 		</span>
 	{/if}
 	<div class="relative min-w-0 flex-1 py-2.5 touch:min-h-11 touch:py-3">
-		{#if lookup.open}
-			<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => lookup.open?.(task.id)}></button>
-		{/if}
+		<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => lookup.open(task.id)}></button>
 		<div class="pointer-events-none relative">
 			<div class="truncate text-[14px] leading-5 text-muted line-through decoration-faint transition-colors" class:reopening>
 				<LinkedText text={task.title} />

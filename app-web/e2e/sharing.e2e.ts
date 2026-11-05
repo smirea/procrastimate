@@ -130,8 +130,22 @@ test('quick add on any screen files into a project shared to edit, and a project
 	await expect(owner.app.row('Pick up bread')).toBeVisible({ timeout: 15_000 });
 });
 
-test('a public link opens read only for someone who is not signed in', async ({ browser, devices }) => {
+test('a public link opens read only for someone who is not signed in, details included @webkit', async ({
+	browser,
+	devices,
+}) => {
 	const { owner, project, task } = await ownerWithProject(devices);
+	await owner.app
+		.row(task)
+		.getByRole('button', { name: new RegExp(`^${task}`) })
+		.click();
+	await owner.app.details().getByRole('textbox', { name: 'Notes' }).fill('Oat milk, see https://example.com/oat');
+	await owner.app.details().getByRole('button', { name: 'Priority 4' }).click();
+	await owner.page.getByRole('dialog', { name: 'Priority' }).getByRole('button', { name: 'Priority 1' }).click();
+	await owner.app.details().getByRole('textbox', { name: 'Add subtask' }).fill('Check the date');
+	await owner.app.details().getByRole('textbox', { name: 'Add subtask' }).press('Enter');
+	await expect(owner.app.details().locator('[data-subtask="Check the date"]')).toBeVisible();
+	await owner.app.closeDetails();
 
 	await (await owner.app.listMenu()).getByRole('button', { name: 'Share' }).click();
 	await shareSheet(owner.page).getByRole('button', { name: 'Copy link' }).click();
@@ -147,6 +161,24 @@ test('a public link opens read only for someone who is not signed in', async ({ 
 	await expect(page.locator(`[data-task="${task}"]`)).toBeVisible();
 	await expect(page.getByRole('checkbox')).toHaveCount(0);
 	await expect(page.getByRole('form', { name: 'Sign in' })).toHaveCount(0);
+
+	// The row's notes preview puts the link where a centered click lands, so the tap goes on the title.
+	await page.getByRole('button', { name: task }).click({ position: { x: 24, y: 12 } });
+	const details = page.getByRole('dialog', { name: 'Task details' });
+	await expect(details.getByRole('heading', { name: task })).toBeVisible();
+	await expect(details.getByText('View only')).toBeVisible();
+	await expect(details.getByRole('link', { name: 'https://example.com/oat' })).toBeVisible();
+	await expect(details.getByText(project)).toBeVisible();
+	await expect(details.getByText('P1', { exact: true })).toBeVisible();
+	await expect(details.getByText('Date', { exact: true })).toHaveCount(0);
+	await expect(details.getByRole('textbox')).toHaveCount(0);
+	await expect(details.getByRole('button', { name: /Complete|Delete/ })).toHaveCount(0);
+	await details.getByRole('button', { name: 'Check the date' }).click();
+	await expect(details.getByRole('heading', { name: 'Check the date' })).toBeVisible();
+	await details.getByRole('button', { name: `Back to ${task}` }).click();
+	await expect(details.getByRole('heading', { name: task })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(details).toBeHidden();
 
 	const revoked = owner.page.waitForResponse(r => r.url().includes('/api/shares') && r.request().method() === 'DELETE');
 	await shareSheet(owner.page).getByRole('button', { name: 'Stop sharing' }).click();

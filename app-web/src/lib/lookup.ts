@@ -6,7 +6,7 @@ import type { StoreData } from 'shared/store.ts';
 import type { Label, Project, Section, Task } from 'shared/task.ts';
 import { comments } from './comments.svelte.ts';
 import { store } from './store.svelte.ts';
-import { sheets } from './ui.svelte.ts';
+import { sheets, type Arrival } from './ui.svelte.ts';
 import { unsynced } from './unsynced.svelte.ts';
 
 /**
@@ -27,8 +27,9 @@ export type Lookup = {
 	commentBadge: (id: string) => CommentBadge | undefined;
 	/** A change to the task waits in this device's upload queue. */
 	unsynced: (id: string) => boolean;
-	/** Null where rows do not open details. */
-	open: ((id: string) => void) | null;
+	open: (id: string, arrival?: Arrival) => void;
+	/** Rows offer the long-press and right-click task menu, whose actions act on the store. */
+	menus: boolean;
 };
 
 const KEY = Symbol('lookup');
@@ -43,13 +44,17 @@ const storeLookup: Lookup = {
 	canEdit: id => store.canEdit(id),
 	commentBadge: id => comments.badge(id),
 	unsynced: id => unsynced.has(id),
-	open: id => sheets.openTask(id),
+	open: (id, arrival) => sheets.openTask(id, arrival),
+	menus: true,
 };
 
 export const useLookup = (): Lookup => getContext<Lookup | undefined>(KEY) ?? storeLookup;
 
-/** A public link carries no comments, so its rows show none. */
-export function provideReadOnlyLookup(data: () => Pick<StoreData, 'tasks' | 'projects' | 'sections' | 'labels'>) {
+/** A public link carries no comments, so its rows show none. `open` shows the page's own read-only details. */
+export function provideReadOnlyLookup(
+	data: () => Pick<StoreData, 'tasks' | 'projects' | 'sections' | 'labels'>,
+	open: Lookup['open'],
+) {
 	const byId = <T extends { id: string }>(list: readonly T[]) => new Map(list.map(item => [item.id, item]));
 	type Data = ReturnType<typeof data>;
 	// This module is not compiled with runes, so the index is memoized on the view's identity, which the page keeps.
@@ -86,6 +91,7 @@ export function provideReadOnlyLookup(data: () => Pick<StoreData, 'tasks' | 'pro
 		canEdit: () => false,
 		commentBadge: () => undefined,
 		unsynced: () => false,
-		open: null,
+		open,
+		menus: false,
 	});
 }

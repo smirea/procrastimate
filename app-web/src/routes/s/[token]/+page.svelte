@@ -9,19 +9,28 @@
 	import { openTasks } from 'shared/triggers.ts';
 	import { projectGroups } from 'shared/views.ts';
 	import TaskList from '#lib/components/TaskList.svelte';
+	import Sheet from '#lib/components/Sheet.svelte';
+	import SharedTaskDetails from '#lib/components/SharedTaskDetails.svelte';
 	import PersonName from '#lib/components/PersonName.svelte';
 	import PendingCount from '#lib/components/PendingCount.svelte';
 	import SectionBadge from '#lib/components/SectionBadge.svelte';
 	import { api, isNotFound } from '#lib/api.ts';
 	import { provideReadOnlyLookup } from '#lib/lookup.ts';
-	import { motion } from '#lib/ui.svelte.ts';
+	import { motion, type Arrival } from '#lib/ui.svelte.ts';
 
 	type State = { kind: 'loading' } | { kind: 'gone' } | { kind: 'failed' } | { kind: 'ready'; view: SharedView };
 
-	let state = $state<State>({ kind: 'loading' });
-	const view = $derived(state.kind === 'ready' ? state.view : null);
+	let status = $state<State>({ kind: 'loading' });
+	const view = $derived(status.kind === 'ready' ? status.view : null);
 
-	provideReadOnlyLookup(() => view ?? { tasks: [], projects: [], sections: [], labels: [] });
+	/** The page's own details sheet: the app's sheets read the signed-in store, which never holds a link's tasks. */
+	let opened = $state<{ id: string; arrival: Arrival } | null>(null);
+	const openedTask = $derived(opened && view ? view.tasks.find((t) => t.id === opened?.id) : undefined);
+
+	provideReadOnlyLookup(
+		() => view ?? { tasks: [], projects: [], sections: [], labels: [] },
+		(id, arrival = 'none') => (opened = { id, arrival }),
+	);
 
 	/** Open tasks whose parent is not shared with them, so subtasks show under their parent's progress instead. */
 	const tasks = $derived.by(() => {
@@ -47,11 +56,11 @@
 	});
 
 	async function load() {
-		state = { kind: 'loading' };
+		status = { kind: 'loading' };
 		try {
-			state = { kind: 'ready', view: await api.shared.view({ query: { token: page.params.token ?? '' } }) };
+			status = { kind: 'ready', view: await api.shared.view({ query: { token: page.params.token ?? '' } }) };
 		} catch (error) {
-			state = { kind: isNotFound(error) ? 'gone' : 'failed' };
+			status = { kind: isNotFound(error) ? 'gone' : 'failed' };
 		}
 	}
 
@@ -59,9 +68,10 @@
 </script>
 
 <svelte:head><title>{title} · ProcrastiMate</title></svelte:head>
+<svelte:window onkeydown={(e) => e.key === 'Escape' && (opened = null)} />
 
 <main class="mx-auto min-h-dvh max-w-3xl px-4 pt-10 pb-24 md:px-8">
-	{#if state.kind === 'ready' && view}
+	{#if status.kind === 'ready' && view}
 		<section in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>
 			<header class="mb-5">
 				<p class="mb-1 flex items-center gap-1 text-[12px] font-medium tracking-wide text-faint uppercase">
@@ -89,12 +99,12 @@
 				<p class="mt-16 text-center text-[15px] font-medium" in:fade={motion({ duration: 240, delay: 120 })}>Nothing open here</p>
 			{/if}
 		</section>
-	{:else if state.kind === 'gone'}
+	{:else if status.kind === 'gone'}
 		<div class="mt-24 text-center" in:fade={motion({ duration: 240 })}>
 			<p class="text-[15px] font-medium">This link no longer works</p>
 			<p class="mt-1 text-[13px] text-muted">Its owner stopped sharing it, or it was copied wrong.</p>
 		</div>
-	{:else if state.kind === 'failed'}
+	{:else if status.kind === 'failed'}
 		<div class="mt-24 text-center" in:fade={motion({ duration: 240 })}>
 			<p class="text-[15px] font-medium">Couldn’t load this link</p>
 			<p class="mt-1 text-[13px] text-muted">Check the connection and try again.</p>
@@ -102,3 +112,11 @@
 		</div>
 	{/if}
 </main>
+
+{#if openedTask && opened}
+	<Sheet label="Task details" desktop="slide" class="flex-col md:top-3 md:right-3 md:bottom-3 md:w-[min(440px,calc(100vw-1.5rem))] md:rounded-panel" onclose={() => (opened = null)}>
+		{#key openedTask.id}
+			<SharedTaskDetails task={openedTask} arrival={opened.arrival} onclose={() => (opened = null)} />
+		{/key}
+	</Sheet>
+{/if}
