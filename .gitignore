@@ -25,7 +25,7 @@ playwright-report
 # task-orchestrator session files
 .orchestrator
 
-# per-worktree files written by scripts/setup-worktree.ts
+# per-worktree files written by agent-t3-worktree setup
 .env.override
 /sim
 

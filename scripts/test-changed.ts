@@ -49,7 +49,8 @@ function resolveImport(from: string, specifier: string): string | null {
 }
 
 function source(file: string): string {
-	const text = readFileSync(file, 'utf8');
+	// scanImports rejects a shebang line, which executable scripts start with.
+	const text = readFileSync(file, 'utf8').replace(/^#!.*/, '');
 	if (!file.endsWith('.svelte')) return text;
 	return [...text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(match => match[1]).join('\n');
 }
