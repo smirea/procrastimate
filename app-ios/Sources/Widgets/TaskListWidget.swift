@@ -49,21 +49,29 @@ private struct HomeView: View {
             if listing.rows.isEmpty {
                 EmptyListView(listing: listing, accent: entry.accent)
             } else {
+                let slots = listing.slots(limit: limit)
+                let hidden = listing.rows.count - slots.count { $0.task != nil }
                 VStack(alignment: .leading, spacing: rowStyle == .stacked ? (entry.style.showsHeader ? 8 : 6) : 4) {
-                    ForEach(listing.rows.prefix(limit), id: \.id) { task in
-                        TaskRowView(
-                            task: task,
-                            checked: listing.checked.contains(task.id),
-                            today: entry.today,
-                            project: showsProject ? task.projectId.flatMap { entry.projects[$0] } : nil,
-                            style: rowStyle
-                        )
-                        .transition(.push(from: .bottom).combined(with: .opacity))
+                    ForEach(slots, id: \.id) { slot in
+                        switch slot {
+                        case let .task(task):
+                            TaskRowView(
+                                task: task,
+                                checked: listing.checked.contains(task.id),
+                                today: entry.today,
+                                project: showsProject ? task.projectId.flatMap { entry.projects[$0] } : nil,
+                                style: rowStyle
+                            )
+                            .transition(.push(from: .bottom).combined(with: .opacity))
+                        case let .later(label):
+                            LaterDivider(label: label, compact: compact)
+                                .transition(.opacity)
+                        }
                     }
                 }
                 Spacer(minLength: 0)
-                if family != .systemMedium, listing.rows.count > limit {
-                    Text("+\(listing.rows.count - limit) more")
+                if family != .systemMedium, hidden > 0 {
+                    Text("+\(hidden) more")
                         .font(.caption2.weight(.medium))
                         .foregroundStyle(.faint)
                 }
@@ -123,6 +131,39 @@ private struct HomeView: View {
 
     private var showsProject: Bool {
         if case .pin(.project) = list { false } else { !compact }
+    }
+}
+
+/// Where today's rows end: a hairline with the next row's day in the middle.
+private struct LaterDivider: View {
+    let label: String
+    let compact: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            line
+            Text(label)
+                .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                .foregroundStyle(.faint)
+                .lineLimit(1)
+                .fixedSize()
+            line
+        }
+        .padding(.vertical, compact ? 1 : 2)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var line: some View {
+        Rectangle().fill(.faint.opacity(0.35)).frame(height: 1)
+    }
+}
+
+private extension WidgetLists.Slot {
+    var id: String {
+        switch self {
+        case let .task(task): task.id
+        case .later: "later"
+        }
     }
 }
 

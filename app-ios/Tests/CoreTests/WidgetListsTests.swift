@@ -233,4 +233,34 @@ import Testing
         #expect(AppLink(try #require(URL(string: "procrastimate://task/abc"))) == .task(id: "abc"))
         #expect(AppLink(try #require(URL(string: "https://procrastimate.stf.lol/task/abc"))) == nil)
     }
+
+    @Test func aDividerHeadsTheFirstRowAfterToday() throws {
+        let inbox = try listing("inbox")
+        #expect(inbox.slots(limit: 4).map(\.task?.title) == ["Pay rent", "Fix sink", "Call mom", "Plan trip"])
+        #expect(inbox.slots(limit: 5) == [
+            .task(inbox.rows[0]), .task(inbox.rows[1]), .task(inbox.rows[2]), .later("Tomorrow"), .task(inbox.rows[3]),
+        ])
+        #expect(try listing("today").later == nil)
+        #expect(try listing("tomorrow").later == nil)
+    }
+
+    @Test func aDividerPastTomorrowNamesTheDay() throws {
+        var data = data
+        data.tasks += [task("Dentist", due: "2026-10-17"), task("Taxes", due: "2026-10-30")]
+        data.tasks.removeAll { $0.title == "Plan trip" }
+        let choice = try #require(WidgetLists.choice(key: "inbox", in: data, today: today, in: zone))
+        #expect(WidgetLists.listing(choice, data, now: pinned, today: today, in: zone).later.map { "\($0.index) \($0.label)" } == "3 " + "Saturday")
+        data.tasks.removeAll { $0.title == "Dentist" }
+        #expect(WidgetLists.listing(choice, data, now: pinned, today: today, in: zone).later.map { "\($0.index) \($0.label)" } == "3 " + "Fri, Oct 30")
+    }
+
+    @Test func noDividerWithoutTodayRowsFirstOrADatedRowAfter() throws {
+        #expect(try listing("noDate").later == nil)
+        // House holds only today's Fix sink; label calls only today's Call mom.
+        #expect(try listing("project:p-house").later == nil)
+        var data = data
+        data.tasks.append(task("Mow lawn", due: "2026-10-20", project: "p-house"))
+        let choice = try #require(WidgetLists.choice(key: "project:p-house", in: data, today: today, in: zone))
+        #expect(WidgetLists.listing(choice, data, now: pinned, today: today, in: zone).later.map { "\($0.index) \($0.label)" } == "1 " + "Tuesday")
+    }
 }
