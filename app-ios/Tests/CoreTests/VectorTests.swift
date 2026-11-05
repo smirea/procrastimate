@@ -252,7 +252,7 @@ private struct Occurrence: Decodable {
     case "dueTone": return try json(Format.dueTone(a(0), a(1)))
     case "formatDate": return try json(Format.formatDate(a(0), a(1)))
     case "formatDue": return try json(Format.formatDue(a(0), a(1)))
-    case "postponeOptions": return try json(Format.postponeOptions(a(0), a(1)))
+    case "postponeOptions": return try json(Format.postponeOptions(a(0), a(1), a(2)))
     case "formatMinutes": return try json(Format.formatMinutes(a(0)))
     case "formatRecurrence": return try json(Format.formatRecurrence(a(0), a(1)))
     case "formatReminder": return try json(Format.formatReminder(a(0), a(1)))
@@ -464,6 +464,7 @@ private struct ParseInput: Decodable {
         return object(["labelIds": try json(result.labelIds), "location": try json(result.location)])
     case "savedPlaceAt": return try json(Triggers.savedPlaceAt(a(0), a(1)))
     case "scheduledDue": return try json(Triggers.scheduledDue(a(0), a(1), in: a.zone))
+    case "scheduledDays": return try json(Triggers.scheduledDays(a(0), a(1), in: a.zone))
     case "taskNotificationTimes":
         return try json(Triggers.taskNotificationTimes(a(0), a(1), in: a.zone).map(\.epochMilliseconds))
     default: throw unknown(fn)

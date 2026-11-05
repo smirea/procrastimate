@@ -19,6 +19,7 @@ const savedPlaceAt = recorded('triggers', triggers.savedPlaceAt);
 const openTasks = recorded('triggers', triggers.openTasks);
 const completedAtIn = recorded('triggers', triggers.completedAtIn);
 const scheduledDue = recorded('triggers', triggers.scheduledDue);
+const scheduledDays = recorded('triggers', triggers.scheduledDays);
 const taskNotificationTimes = recorded('triggers', triggers.taskNotificationTimes);
 
 const local = (d: number, h: number, min = 0) => new Date(2026, 9, d, h, min).getTime();
@@ -72,6 +73,22 @@ describe('openTasks', () => {
 		];
 		const byId = new Map(tasks.map(t => [t.id, t]));
 		expect(tasks.map(t => completedAtIn(byId, t))).toEqual([5, 7, 7, 5, 3, null]);
+	});
+});
+
+describe('scheduledDays', () => {
+	test('lists each later day an open task sits on, once and in order', () => {
+		const tasks = [
+			task('rent', { due: { date: '2026-10-16', time: '09:00' } }),
+			task('milk', { due: { date: '2026-10-15', time: null } }),
+			task('call', { due: { date: '2026-10-16', time: null } }),
+			task('late', { due: { date: '2026-10-01', time: null } }),
+			task('now', { due: { date: today, time: null } }),
+			task('done', { due: { date: '2026-10-20', time: null }, completedAt: 5 }),
+			task('under', { parentId: 'done', due: { date: '2026-10-21', time: null } }),
+			task('nodate'),
+		];
+		expect(scheduledDays(tasks, today)).toEqual(['2026-10-15', '2026-10-16']);
 	});
 });
 

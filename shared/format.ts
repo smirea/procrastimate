@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
 	addDays,
+	addMonths,
 	fromDateKey,
 	toDateKey,
 	toTimeOfDay,
@@ -214,17 +215,27 @@ export const postponeOptionSchema = z.object({ label: z.string(), date: dateKeyS
 export type PostponeOption = z.infer<typeof postponeOptionSchema>;
 
 /**
- * The days a task can be pushed to, like Todoist's: `Today` for an overdue or undated task, `Tomorrow`, the coming
- * Saturday, and the coming Monday. A day the task is already on, or that an earlier option names, is left out.
+ * The days a task can be pushed to: `Today` for an overdue or undated task, `Tomorrow`, `In 2 days`, the coming
+ * Saturday, the coming Monday, the 1st of next month, and the first day after today that none of `scheduled` names. A
+ * day the task is already on, or that an earlier option names, is left out.
  */
-export function postponeOptions(due: Due | null, today: DateKey): PostponeOption[] {
+export function postponeOptions(due: Due | null, today: DateKey, scheduled: readonly DateKey[]): PostponeOption[] {
 	const weekday = weekdayOf(today);
 	const weekend = weekday === 0 || weekday === 6;
 	const options: PostponeOption[] = [
 		...(due === null || due.date < today ? [{ label: 'Today', date: today }] : []),
 		{ label: 'Tomorrow', date: addDays(today, 1) },
-		{ label: weekend ? 'Next weekend' : 'This weekend', date: addDays(today, (6 - weekday + 7) % 7 || 7) },
+		{ label: 'In 2 days', date: addDays(today, 2) },
+		{ label: weekend ? 'Next weekend' : 'Weekend', date: addDays(today, (6 - weekday + 7) % 7 || 7) },
 		{ label: 'Next week', date: addDays(today, (1 - weekday + 7) % 7 || 7) },
+		{ label: 'Next month', date: addMonths(today, 1, 1) },
+		{ label: 'Next empty day', date: emptyDay(today, due?.date ?? null, new Set(scheduled)) },
 	];
 	return options.filter((o, i) => o.date !== due?.date && options.findIndex(p => p.date === o.date) === i);
+}
+
+function emptyDay(today: DateKey, current: DateKey | null, scheduled: ReadonlySet<DateKey>): DateKey {
+	let date = addDays(today, 1);
+	while (date === current || scheduled.has(date)) date = addDays(date, 1);
+	return date;
 }

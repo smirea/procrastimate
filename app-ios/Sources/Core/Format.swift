@@ -197,17 +197,24 @@ public enum Format {
         return "\(weekdayNames[Dates.weekdayOf(date)]), \(shortDate(date, today))"
     }
 
-    /// Today for an overdue or undated task, tomorrow, the coming Saturday, and the coming Monday, without the day the
-    /// task is on or a day an earlier option names.
-    public static func postponeOptions(_ due: Due?, _ today: DateKey) -> [PostponeOption] {
+    /// Today for an overdue or undated task, tomorrow, in 2 days, the coming Saturday, the coming Monday, the 1st of
+    /// next month, and the first day after today that `scheduled` leaves free, without the day the task is on or a day
+    /// an earlier option names.
+    public static func postponeOptions(_ due: Due?, _ today: DateKey, _ scheduled: [DateKey]) -> [PostponeOption] {
         let weekday = Dates.weekdayOf(today)
         let weekend = weekday == 0 || weekday == 6
         let after = { (target: Int) in Dates.addDays(today, (target - weekday + 7) % 7 == 0 ? 7 : (target - weekday + 7) % 7) }
+        let taken = Set(scheduled)
+        var empty = Dates.addDays(today, 1)
+        while empty == due?.date || taken.contains(empty) { empty = Dates.addDays(empty, 1) }
         var options: [PostponeOption] = []
         if due == nil || due!.date < today { options.append(PostponeOption(label: "Today", date: today)) }
         options.append(PostponeOption(label: "Tomorrow", date: Dates.addDays(today, 1)))
-        options.append(PostponeOption(label: weekend ? "Next weekend" : "This weekend", date: after(6)))
+        options.append(PostponeOption(label: "In 2 days", date: Dates.addDays(today, 2)))
+        options.append(PostponeOption(label: weekend ? "Next weekend" : "Weekend", date: after(6)))
         options.append(PostponeOption(label: "Next week", date: after(1)))
+        options.append(PostponeOption(label: "Next month", date: Dates.addMonths(today, 1, day: 1)))
+        options.append(PostponeOption(label: "Next empty day", date: empty))
         var seen = Set<DateKey>()
         return options.filter { $0.date != due?.date && seen.insert($0.date).inserted }
     }

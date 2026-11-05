@@ -17,8 +17,10 @@ test('a right click or Shift+F10 opens a task row’s menu, which postpones, com
 	await expect(menu(page, 'Buy milk').getByRole('menuitem')).toHaveText([
 		'Complete',
 		/Tomorrow\s*Thu/,
-		/This weekend\s*Sat/,
+		/In 2 days\s*Fri/,
+		/Weekend\s*Sat/,
 		/Next week\s*Mon/,
+		/Next month\s*Sun/,
 		'Delete',
 		'Copy as Markdown',
 	]);
@@ -106,6 +108,37 @@ test('a right click or Shift+F10 opens a task row’s menu, which postpones, com
 	await page.keyboard.press('Escape');
 	await expect(menu(page, 'Oat milk')).toBeHidden();
 	await expect(app.details()).toBeVisible();
+});
+
+test('postponing keeps the time, and Next empty day skips every day that has a task', async ({ app, page }) => {
+	await app.add('Pay rent today 2pm', 'Call mom oct 16', 'Gym oct 17');
+	await app.setNow(new Date('2026-10-15T14:00:00Z'));
+	await app.reload();
+
+	await app.row('Pay rent').click({ button: 'right' });
+	await expect(menu(page, 'Pay rent').getByRole('menuitem')).toHaveText([
+		'Complete',
+		/Today\s*Thu/,
+		/Tomorrow\s*Fri/,
+		/In 2 days\s*Sat/,
+		/Next week\s*Mon/,
+		/Next month\s*Sun/,
+		/Next empty day\s*Sun/,
+		'Delete',
+		'Copy as Markdown',
+	]);
+	await menu(page, 'Pay rent')
+		.getByRole('menuitem', { name: /Tomorrow/ })
+		.click();
+	await expect(toast(page, 'Moved “Pay rent” to Tomorrow')).toBeVisible();
+	await expect(page.getByRole('region', { name: 'Tomorrow' }).locator('[data-task="Pay rent"]')).toContainText('2pm');
+
+	await app.row('Pay rent').click({ button: 'right' });
+	await menu(page, 'Pay rent')
+		.getByRole('menuitem', { name: /Next empty day/ })
+		.click();
+	await expect(toast(page, 'Moved “Pay rent” to Sunday')).toBeVisible();
+	await expect(page.getByRole('region', { name: 'Sunday' }).locator('[data-task="Pay rent"]')).toContainText('2pm');
 });
 
 test.describe('phone', () => {

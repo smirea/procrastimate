@@ -92,6 +92,16 @@ export function scheduledDue(task: Scheduled, today: DateKey, zone?: string): Du
 	return date === null ? due : { date, time: due.time };
 }
 
+/** The days after today that an open task sits on, as `scheduledDue` places it, so Postpone can find an empty one. */
+export function scheduledDays<T extends Scheduled & Pick<Task, 'id' | 'parentId' | 'completedAt'>>(
+	tasks: readonly T[],
+	today: DateKey,
+	zone?: string,
+): DateKey[] {
+	const days = openTasks(tasks).flatMap(task => scheduledDue(task, today, zone)?.date ?? []);
+	return [...new Set(days)].filter(day => day > today).sort();
+}
+
 /**
  * When a task notifies, each moment once. An event task notifies at each upcoming occurrence's moment, unless the
  * event lasts all day, like a date with no time, and relative reminders count back from that moment. A task with a
