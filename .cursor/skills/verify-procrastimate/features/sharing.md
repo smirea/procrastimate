@@ -18,6 +18,7 @@ The owner shares a project, a label, or a task with another account, to edit or 
 - `agent-api` lets an AI token read `GET /api/view` and add, edit, complete, reopen, and delete tasks through `/api/tasks`, credited to the AI. It also adds, renames, and deletes projects, sections, and labels through `/api/projects`, `/api/sections`, and `/api/labels`, and moves sections and recolors labels.
 - `agent-clients` gives every task the agent API returns `clients: { created, edited }`, the app (`web`, `ios`, or `api`), version, device, OS, and time zone behind its first and latest write, read from the task's first and latest `log` rows. The apps never show it.
 - `agent-links` lets an AI token publish a task, project, or label as a public read-only link with `POST /api/links`, list the space's links, and revoke one. The link is the same row the share sheet shows, so the owner sees and stops it there.
+- `agent-webhooks` lets an AI token register a URL with `POST /api/webhooks`. Within a minute of a human adding a task or a comment in the watched projects, the server POSTs the ids, signed with the hook's secret. The AI account's own writes send nothing. A failed POST is resent every minute, and a `410` or a day of failures disables the hook until it is registered again. Test: `a human’s task and comment in the watched project wake the hook once, signed; the bot’s own never do` in `server/src/webhooks.test.ts`.
 
 ## How to get to it (user POV)
 

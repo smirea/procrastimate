@@ -237,6 +237,8 @@ export const log = sqliteTable(
 		// unique across spaces, so it also finds which space last held a row that is gone.
 		index('log_entity').on(table.kind, table.id, table.seq),
 		uniqueIndex('log_op').on(table.userId, table.opId),
+		// A webhook reads its space's rows after its cursor.
+		index('log_user_seq').on(table.userId, table.seq),
 		// Every source key a task held, deleted tasks' included, so a memo's re-sent task is found without a scan.
 		index('log_source_key')
 			.on(table.userId, sql`(${bare('fields')} ->> '$.sourceKey')`)
@@ -313,6 +315,34 @@ export const apiTokens = sqliteTable(
 		createdAt: millis('created_at').notNull(),
 	},
 	table => [primaryKey({ columns: [table.userId, table.id] })],
+);
+
+/**
+ * A URL the minute cron POSTs to when a human adds a task or a comment in the space, such as a T3 Code webhook task
+ * that wakes an agent. `cursor` is the last `log.seq` the hook has been told about: the log is the outbox, so a failed
+ * POST leaves the cursor and the next run sends the same events again. Empty `projectIds` watches the whole space.
+ * `secret` signs each body, so it is stored as is. `retryThrough` freezes the end of a failed delivery's range, so its
+ * retries carry the same events and `id`. `failingSince` is when the current run of failures began, and a hook failing
+ * for a day, or answered 404 or 410, gets `disabledAt` and is skipped until it is registered again.
+ */
+export const webhooks = sqliteTable(
+	'webhooks',
+	{
+		userId: text('user_id').notNull(),
+		id: text('id').notNull(),
+		url: text('url').notNull(),
+		secret: text('secret').notNull(),
+		projectIds: json('project_ids').$type<ColumnValue<'webhooks', 'projectIds'>>().notNull().default([]),
+		createdBy: text('created_by').notNull(),
+		createdAt: millis('created_at').notNull(),
+		cursor: integer('cursor').notNull(),
+		retryThrough: integer('retry_through'),
+		deliveredAt: millis('delivered_at'),
+		failingSince: millis('failing_since'),
+		lastError: text('last_error'),
+		disabledAt: millis('disabled_at'),
+	},
+	table => [primaryKey({ columns: [table.userId, table.id] }), uniqueIndex('webhooks_url').on(table.userId, table.url)],
 );
 
 /** bun:sqlite reads a blob as a `Uint8Array` and a Durable Object as an `ArrayBuffer`. */

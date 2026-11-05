@@ -15,6 +15,7 @@ import { sweepImages } from './images';
 import { headMessage, liveProtocol, type Live } from './live';
 import { deliverDue, pushSender } from './push';
 import { dbRambleData } from './ramble';
+import { deliverWebhooks, fetchWebhook } from './webhooks';
 
 /** Paths only the Worker reaches: it forwards nothing but `/api/*` from the internet. */
 export const INTERNAL = {
@@ -107,7 +108,7 @@ export class AppObject extends DurableObject<Env> {
 		console.log(`Restored ${RESTORE_KEY}: ${JSON.stringify(counts)}`);
 	}
 
-	/** Every minute the due pushes go out; at 09:00 UTC the database is dumped to R2 and orphaned image bytes swept. */
+	/** Every minute the due pushes and webhooks go out; at 09:00 UTC the database is dumped to R2 and orphaned image bytes swept. */
 	private async cron(app: App, cron: string, at: number): Promise<string> {
 		if (cron === BACKUP_CRON) {
 			if (!this.env.BACKUPS) throw new Error('The BACKUPS R2 binding is missing');
@@ -115,8 +116,13 @@ export class AppObject extends DurableObject<Env> {
 			sweepImages(app.db, at);
 			return `Backed up the database to ${key}`;
 		}
-		const sent = await deliverDue(app.db, at, pushSender(this.env));
-		return sent ? `Delivered ${sent} push notifications` : '';
+		const [sent, hooks] = await Promise.all([
+			deliverDue(app.db, at, pushSender(this.env)),
+			deliverWebhooks(app.db, at, fetchWebhook),
+		]);
+		return [sent && `Delivered ${sent} push notifications`, hooks && `Delivered ${hooks} webhooks`]
+			.filter(Boolean)
+			.join('; ');
 	}
 
 	webSocketMessage(): void {}

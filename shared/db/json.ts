@@ -54,6 +54,7 @@ export const COLUMN_VALUES = {
 	push: { subscription: pushSubscriptionSchema, notifications: z.array(scheduledNotificationSchema) },
 	shares: { targetKind: shareTargetKindSchema, role: roleSchema },
 	images: { bytes: z.instanceof(Uint8Array) },
+	webhooks: { projectIds: z.array(z.string()) },
 } as const;
 
 type Values = typeof COLUMN_VALUES;
