@@ -53,6 +53,7 @@ import { personById, searchPeople } from './people';
 import { OUTLINE_TIMEOUT_MS, outlineRamble, RAMBLE_GEMINI } from './ramble-outline';
 import { reportError } from './sentry';
 import { seesTask, sightOf } from './space';
+import { createWebhook, deleteWebhook, listWebhooks } from './webhooks';
 
 type Ctx = { app: App; request: Request };
 
@@ -375,6 +376,18 @@ export const router = os.router({
 		delete: os.links.delete.handler(async ({ input, context }) => {
 			const { db, owner, access } = await shared(context, input.query.space);
 			await deleteLink(db, owner, access, input.query.id);
+			return ok;
+		}),
+	},
+	webhooks: {
+		list: os.webhooks.list.handler(async ({ input, context }) => ({
+			webhooks: listWebhooks(await command(context, input.query.space)),
+		})),
+		create: os.webhooks.create.handler(async ({ input, context }) =>
+			createWebhook(await command(context, input.query.space), input.body),
+		),
+		delete: os.webhooks.delete.handler(async ({ input, context }) => {
+			deleteWebhook(await command(context, input.query.space), input.query.id);
 			return ok;
 		}),
 	},

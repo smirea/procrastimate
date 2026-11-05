@@ -13,6 +13,7 @@ import {
 	PROJECT_ID,
 	SECTION_ID,
 	TASK_ID,
+	WEBHOOK_ID,
 } from './docs';
 import { json, ORIGIN, signUp, testApp, tokenHeaders, type Session, type TestApp } from './test-app';
 
@@ -74,6 +75,9 @@ describe('agent docs', () => {
 			'GET /api/links',
 			'POST /api/links',
 			'DELETE /api/links',
+			'GET /api/webhooks',
+			'POST /api/webhooks',
+			'DELETE /api/webhooks',
 			'GET /api/images',
 		];
 		expect(agentRoutes.map(route => `${route.method} ${route.path}`).toSorted()).toEqual(routes.toSorted());
@@ -123,6 +127,7 @@ describe('agent docs', () => {
 		const place = { address: null, latitude: 52.5, longitude: 13.4, radius: 80 };
 		const placeId = await made('/api/labels', { name: 'office', place });
 		const linkId = await made('/api/links', { target: { kind: 'project', id: projectId } });
+		const webhookId = await made('/api/webhooks', { url: 'https://hooks.example/other' });
 		const ids = (text: string) =>
 			text
 				.replaceAll(TASK_ID, target.id)
@@ -132,7 +137,8 @@ describe('agent docs', () => {
 				.replaceAll(SECTION_ID, sectionId)
 				.replaceAll(LABEL_ID, labelId)
 				.replaceAll(PLACE_ID, placeId)
-				.replaceAll(LINK_ID, linkId);
+				.replaceAll(LINK_ID, linkId)
+				.replaceAll(WEBHOOK_ID, webhookId);
 		const fill = (value: unknown) => JSON.parse(ids(JSON.stringify(value ?? null)));
 		const statuses = [];
 		for (const example of agentExamples) {

@@ -27,6 +27,7 @@ import {
 	taskCommentSchema,
 } from '../sharing.ts';
 import { taskEditSchema } from '../store.ts';
+import { createdWebhookSchema, newWebhookSchema, webhookSchema } from '../webhooks.ts';
 import { byteKeySchema } from '../images.ts';
 import { githubItemSchema } from '../github.ts';
 import { labelSchema, projectSchema, sectionSchema } from '../model.ts';
@@ -103,6 +104,7 @@ export const taskCommentsSchema = z.object({ comments: z.array(taskCommentSchema
 export const activitySchema = z.object({ entries: z.array(activityEntrySchema) }).meta({ id: 'Activity' });
 export const linkPreviewSchema = z.object({ title: z.string().nullable() }).meta({ id: 'LinkPreview' });
 export const linksSchema = z.object({ links: z.array(shareViewSchema) }).meta({ id: 'Links' });
+export const webhooksSchema = z.object({ webhooks: z.array(webhookSchema) }).meta({ id: 'Webhooks' });
 
 /**
  * What an AI account, or a guest of a space, may call: view, the task, project, section, label, and link commands,
@@ -400,6 +402,45 @@ export const agentContract = {
 					inputStructure: 'detailed',
 					summary: 'Delete a public link',
 					description: '`id` is the link’s. Its `url` stops working at once.',
+				}),
+			)
+			.input(z.object({ query: taskQuery }))
+			.output(okSchema),
+	},
+	webhooks: {
+		list: found
+			.meta(
+				openapi({
+					method: 'GET',
+					path: '/api/webhooks',
+					inputStructure: 'detailed',
+					summary: 'The space’s webhooks',
+					description: 'Each with its delivery state; the secret is shown only when it is registered.',
+				}),
+			)
+			.input(z.object({ query: spaceQuery }))
+			.output(webhooksSchema),
+		create: found
+			.meta(
+				openapi({
+					method: 'POST',
+					path: '/api/webhooks',
+					inputStructure: 'detailed',
+					summary: 'Get a POST when a human adds a task or comments',
+					description:
+						'The owner’s or a manager’s. Within a minute of a human adding tasks or comments in the watched projects, one POST carries a `WebhookDelivery` with their ids, never their text. A `2xx` answer moves the hook past them; anything else retries every minute. Changes before registering are never sent, nor are AI accounts’ own.',
+				}),
+			)
+			.input(z.object({ query: spaceQuery, body: newWebhookSchema }))
+			.output(createdWebhookSchema),
+		delete: found
+			.meta(
+				openapi({
+					method: 'DELETE',
+					path: '/api/webhooks',
+					inputStructure: 'detailed',
+					summary: 'Delete a webhook',
+					description: '`id` is the webhook’s.',
 				}),
 			)
 			.input(z.object({ query: taskQuery }))

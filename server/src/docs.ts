@@ -32,6 +32,7 @@ export const SECTION_ID = '<section-id>';
 export const LABEL_ID = '<label-id>';
 export const PLACE_ID = '<place-id>';
 export const LINK_ID = '<link-id>';
+export const WEBHOOK_ID = '<webhook-id>';
 
 /** One per agent route at least. The docs test runs every one against a real space with an AI token. */
 export const agentExamples: readonly Example[] = [
@@ -87,6 +88,14 @@ export const agentExamples: readonly Example[] = [
 	},
 	{ title: 'List the public links', method: 'GET', path: '/api/links' },
 	{ title: 'Delete a public link', method: 'DELETE', path: '/api/links', query: { id: LINK_ID } },
+	{
+		title: 'Get a POST when a human adds a task or comments in a project',
+		method: 'POST',
+		path: '/api/webhooks',
+		body: { url: 'https://hooks.example/wake', projectIds: [PROJECT_ID] },
+	},
+	{ title: 'List the webhooks and their delivery state', method: 'GET', path: '/api/webhooks' },
+	{ title: 'Delete a webhook', method: 'DELETE', path: '/api/webhooks', query: { id: WEBHOOK_ID } },
 	{ title: 'Add a project', method: 'POST', path: '/api/projects', body: { name: 'Garden' } },
 	{
 		title: 'Rename a project',
@@ -232,7 +241,7 @@ These are the only routes a token may call. Every other route answers \`403 FORB
 
 ${routeTable()}
 
-\`?id=\` names what a route acts on: a task on the task routes, a comment on the comment routes, and likewise an image, project, section, label, or link. Ids come from \`GET /api/view\`, \`GET /api/links\`, or what a route returns. \`?space=\` is optional and defaults to the owner's space, the only one an AI account can reach.
+\`?id=\` names what a route acts on: a task on the task routes, a comment on the comment routes, and likewise an image, project, section, label, link, or webhook. Ids come from \`GET /api/view\`, \`GET /api/links\`, or what a route returns. \`?space=\` is optional and defaults to the owner's space, the only one an AI account can reach.
 
 ## Tasks
 
@@ -264,6 +273,10 @@ Read them from \`GET /api/view\`. Put a task in one with \`#Project\`, \`/sectio
 ## Public links
 
 \`POST /api/links\` publishes a task, a project, or a label as a read-only page at its \`url\`. Anyone with the URL sees the target's open and completed tasks, their subtasks, and the projects and labels they use, without signing in. Nobody can edit through a link. Asking again for the same target returns the same link. \`DELETE /api/links?id=\` revokes it at once. The owner sees and revokes the same links in the app's share sheet. Publish only what the owner asked you to share.
+
+## Webhooks
+
+\`POST /api/webhooks\` registers a URL that gets a POST within a minute of the owner, or another human, adding a task or a comment in the watched \`projectIds\` (the whole space when empty). Moving a task into a watched project counts as adding it. Your own writes, and any AI account's, never trigger one, so a hook can wake you without waking you for what you did. The body is a \`WebhookDelivery\`: ids, types, and counts in \`summary\`, never titles or comment text, so read the tasks through this API. Each body is signed with the \`secret\` the route returns: \`x-procrastimate-signature: sha256=<hex HMAC-SHA256 of the raw body>\`. A \`2xx\` answer moves the hook past what it was sent. Anything else resends the same delivery, with the same \`id\`, every minute; a \`404\` or \`410\`, or a day of failures, disables it, and \`GET /api/webhooks\` shows why. Registering the same URL again turns it back on from that moment and keeps its secret. Changes from before a hook was registered or while it was disabled are never sent.
 
 ## Examples
 

@@ -29,5 +29,5 @@ Web and iOS build the same behavior.
 
 ## Not built yet
 
-- **Push for comments.** Web Push today is an alarm-driven reminder schedule for the owner's web devices, and iOS has no APNs, only local notifications from synced state. A comment push would need an immediate send path, a per-recipient fan-out to guests' own spaces, and APNs for iOS. That is not cheap, so comments notify nobody yet.
+- **Push for comments.** Web Push today is an alarm-driven reminder schedule for the owner's web devices, and iOS has no APNs, only local notifications from synced state. A comment push would need an immediate send path, a per-recipient fan-out to guests' own spaces, and APNs for iOS. That is not cheap, so comments notify no person yet. An agent can hear about them through a webhook (see [Integrations](integrations.md)).
 - Mentions, reactions, attachments, and owners moderating other people's comments.
