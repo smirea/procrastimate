@@ -31,6 +31,8 @@
 	import { toDateKey } from 'shared/task.ts';
 	import { eventLabel, formatLocation, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
+	import { githubLabel } from 'shared/github.ts';
+	import GithubLogo from 'phosphor-svelte/lib/GithubLogo';
 	import { PRIORITIES } from '../priorities.ts';
 	import { completeTask } from '../completion.ts';
 	import { progressOf } from 'shared/subtasks.ts';
@@ -130,7 +132,7 @@
 					{/each}
 				</ul>
 			{/if}
-			{#if due || task.recurrence || task.reminders.length || task.attachments.length || task.location || progress || commentBadge || parent || fromMemo || other || showProject}
+			{#if due || task.recurrence || task.reminders.length || task.attachments.length || task.github.length || task.location || progress || commentBadge || parent || fromMemo || other || showProject}
 				<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
 					{#if task.event && event && due}
 						<span
@@ -176,6 +178,11 @@
 						{@const files = task.attachments.filter((attachment) => !isImage(attachment)).length}
 						<span class="flex items-center gap-1" role="img" aria-label={attachmentsLabel(task.attachments.length - files, files)}>
 							{#if files}<Paperclip size={12} />{:else}<ImageSquare size={12} />{/if}{task.attachments.length}
+						</span>
+					{/if}
+					{#if task.github.length}
+						<span class="flex min-w-0 items-center gap-1" role="img" aria-label={`GitHub ${task.github.map(githubLabel).join(', ')}`}>
+							<GithubLogo size={12} class="shrink-0" /><span class="truncate">{task.github.map((ref) => `#${ref.number}`).join(' ')}</span>
 						</span>
 					{/if}
 					{#if commentBadge}
