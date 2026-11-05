@@ -170,6 +170,7 @@ test('a public link opens read only for someone who is not signed in, details in
 	await expect(details.getByRole('link', { name: 'https://example.com/oat' })).toBeVisible();
 	await expect(details.getByText(project)).toBeVisible();
 	await expect(details.getByText('P1', { exact: true })).toBeVisible();
+	await expect(details.getByRole('list', { name: 'Details' })).toHaveText(/Priority 1/);
 	await expect(details.getByText('Date', { exact: true })).toHaveCount(0);
 	await expect(details.getByRole('textbox')).toHaveCount(0);
 	await expect(details.getByRole('button', { name: /Complete|Delete/ })).toHaveCount(0);

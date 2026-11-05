@@ -5,7 +5,7 @@
 	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
 	import Tray from 'phosphor-svelte/lib/Tray';
-	import { formatDue } from 'shared/format.ts';
+	import { formatDue, repeatLabel } from 'shared/format.ts';
 	import { progressOf } from 'shared/subtasks.ts';
 	import { formatEvent, scheduledDue } from 'shared/triggers.ts';
 	import type { Task } from 'shared/task.ts';
@@ -19,6 +19,7 @@
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import TaskRow from './TaskRow.svelte';
 	import { useLookup } from '../lookup.ts';
+	import { PRIORITIES } from '../priorities.ts';
 	import { clock, motion, type Arrival } from '../ui.svelte.ts';
 
 	/**
@@ -36,6 +37,17 @@
 	const progress = $derived(progressOf(children, lookup.completedAt(task) !== null));
 	const eventDue = $derived(task.event ? scheduledDue(task, clock.today) : null);
 	const noop = () => {};
+	/** The chips are inert pickers, which screen readers skip, so the same facts are read from this list instead. */
+	const facts = $derived(
+		[
+			task.event ? `Event ${formatEvent(task.event)}${eventDue ? `, ${formatDue(eventDue, clock.today)}` : ''}` : null,
+			!task.event && task.due ? `Due ${formatDue(task.due, clock.today)}` : null,
+			!task.event && task.due && task.recurrence ? repeatLabel(task.recurrence, task.due) : null,
+			task.priority !== 4 ? PRIORITIES[task.priority].label : null,
+			task.reminders.length ? `${task.reminders.length} reminder${task.reminders.length > 1 ? 's' : ''}` : null,
+			labels.length ? `Labels ${labels.map((l) => l.name).join(', ')}` : null,
+		].filter((fact) => fact !== null),
+	);
 
 	const slideFrom = { forward: 28, back: -28, none: 0 } satisfies Record<Arrival, number>;
 </script>
@@ -68,6 +80,9 @@
 	</div>
 	<!-- Only what is set shows: an empty chip invites a pick this page cannot take. -->
 	{#if task.event || task.due || task.priority !== 4 || task.reminders.length || labels.length}
+		<ul class="sr-only" aria-label="Details">
+			{#each facts as fact (fact)}<li>{fact}</li>{/each}
+		</ul>
 		<div class="flex flex-wrap gap-1.5 px-4 pt-3" inert>
 			{#if task.event}
 				<span class="chip" data-active="true">
