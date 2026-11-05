@@ -100,7 +100,7 @@ struct SubtaskList: View {
 
     private func add() {
         let parsed = QuickAdd.parseSubtask(draft, now: clock.now, labels: store.labels(in: taskSpace), literal: literal, in: clock.timeZone)
-        guard let subtask = NewTask(subtask: parsed) else { return }
+        guard let subtask = NewTask(subtask: parsed, literal: literal) else { return }
         withAnimation(reduceMotion ? nil : .snappy) {
             _ = store.addTask(subtask, parentId: task.id)
         }
@@ -184,10 +184,11 @@ private struct SubtaskRow<Reorder: Gesture>: View {
 }
 
 extension NewTask {
-    init?(subtask parsed: QuickAdd.Parsed) {
+    init?(subtask parsed: QuickAdd.Parsed, literal: Bool = false) {
         guard !parsed.title.isEmpty else { return nil }
         self.init(
             title: parsed.title,
+            titleMode: literal ? .literal : .parse,
             labelIds: parsed.labelIds,
             due: parsed.due,
             recurrence: parsed.recurrence,

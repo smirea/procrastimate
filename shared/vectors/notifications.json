@@ -27,7 +27,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Trip"
+						"title": "Trip",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -52,7 +53,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Book flights"
+						"title": "Book flights",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -77,7 +79,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Call mom"
+						"title": "Call mom",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,
@@ -132,7 +135,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Gym"
+						"title": "Gym",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -157,7 +161,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Call mom"
+						"title": "Call mom",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -185,7 +190,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Passport"
+						"title": "Passport",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -216,7 +222,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Taxes"
+						"title": "Taxes",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -247,7 +254,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Rent"
+						"title": "Rent",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -278,7 +286,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Lunch"
+						"title": "Lunch",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,
@@ -407,7 +416,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Wear red"
+						"title": "Wear red",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -439,7 +449,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Milk"
+						"title": "Milk",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,
@@ -485,7 +496,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Done"
+						"title": "Done",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -510,7 +522,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Taxes"
+						"title": "Taxes",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -540,7 +553,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Standup"
+						"title": "Standup",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -565,7 +579,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Earlier"
+						"title": "Earlier",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,
@@ -621,7 +636,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Standup"
+						"title": "Standup",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,
@@ -675,7 +691,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Water plants"
+						"title": "Water plants",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,
@@ -719,7 +736,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Water plants"
+						"title": "Water plants",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,
@@ -777,7 +795,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "latest"
+						"title": "latest",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -805,7 +824,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "a"
+						"title": "a",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -833,7 +853,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "b"
+						"title": "b",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -861,7 +882,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "c"
+						"title": "c",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,
@@ -935,7 +957,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Gun courses"
+						"title": "Gun courses",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -970,7 +993,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Yoga maybe"
+						"title": "Yoga maybe",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1005,7 +1029,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Give timeleft another shot"
+						"title": "Give timeleft another shot",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1040,7 +1065,8 @@
 							}
 						],
 						"sectionId": null,
-						"title": "Setup arcade"
+						"title": "Setup arcade",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,
@@ -1097,7 +1123,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Wear red"
+						"title": "Wear red",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1133,7 +1160,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Bring cash"
+						"title": "Bring cash",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1158,7 +1186,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Draft"
+						"title": "Draft",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1183,7 +1212,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Review"
+						"title": "Review",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1208,7 +1238,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Call mom"
+						"title": "Call mom",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1233,7 +1264,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "Lunch"
+						"title": "Lunch",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,
@@ -1297,7 +1329,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+						"title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+						"titleMode": "parse"
 					}
 				],
 				1791986400000,

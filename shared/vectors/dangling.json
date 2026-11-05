@@ -58,7 +58,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": "s",
-							"title": "a"
+							"title": "a",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -80,7 +81,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": null,
-							"title": "b"
+							"title": "b",
+							"titleMode": "parse"
 						}
 					]
 				}
@@ -137,7 +139,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": "s",
-						"title": "a"
+						"title": "a",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -159,7 +162,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "b"
+						"title": "b",
+						"titleMode": "parse"
 					}
 				]
 			}
@@ -193,7 +197,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": null,
-							"title": "orphan"
+							"title": "orphan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -215,7 +220,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": null,
-							"title": "x"
+							"title": "x",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -237,7 +243,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": null,
-							"title": "y"
+							"title": "y",
+							"titleMode": "parse"
 						}
 					]
 				}
@@ -267,7 +274,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "orphan"
+						"title": "orphan",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -289,7 +297,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "x"
+						"title": "x",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -311,7 +320,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "y"
+						"title": "y",
+						"titleMode": "parse"
 					}
 				]
 			}
@@ -345,7 +355,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": null,
-							"title": "a"
+							"title": "a",
+							"titleMode": "parse"
 						}
 					]
 				}
@@ -375,7 +386,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "a"
+						"title": "a",
+						"titleMode": "parse"
 					}
 				]
 			}
@@ -424,7 +436,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": null,
-							"title": "root"
+							"title": "root",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -446,7 +459,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": null,
-							"title": "child"
+							"title": "child",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -468,7 +482,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": null,
-							"title": "grandchild"
+							"title": "grandchild",
+							"titleMode": "parse"
 						}
 					]
 				}
@@ -513,7 +528,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "root"
+						"title": "root",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -535,7 +551,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "child"
+						"title": "child",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -557,7 +574,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "grandchild"
+						"title": "grandchild",
+						"titleMode": "parse"
 					}
 				]
 			}
@@ -616,7 +634,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": "dead",
-							"title": "a"
+							"title": "a",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -638,7 +657,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": "live",
-							"title": "b"
+							"title": "b",
+							"titleMode": "parse"
 						}
 					]
 				}
@@ -685,7 +705,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "a"
+						"title": "a",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -707,7 +728,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": "live",
-						"title": "b"
+						"title": "b",
+						"titleMode": "parse"
 					}
 				]
 			}
@@ -765,7 +787,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": "s",
-							"title": "moved"
+							"title": "moved",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -787,7 +810,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": null,
-							"title": "parent"
+							"title": "parent",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -809,7 +833,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": "s",
-							"title": "child"
+							"title": "child",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -831,7 +856,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": "deleted",
-							"title": "missing"
+							"title": "missing",
+							"titleMode": "parse"
 						}
 					]
 				}
@@ -885,7 +911,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "moved"
+						"title": "moved",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -907,7 +934,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "parent"
+						"title": "parent",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -929,7 +957,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "child"
+						"title": "child",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -951,7 +980,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "missing"
+						"title": "missing",
+						"titleMode": "parse"
 					}
 				]
 			}
@@ -997,7 +1027,8 @@
 							"recurrence": null,
 							"reminders": [],
 							"sectionId": null,
-							"title": "a"
+							"title": "a",
+							"titleMode": "parse"
 						}
 					]
 				}
@@ -1037,7 +1068,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "a"
+						"title": "a",
+						"titleMode": "parse"
 					}
 				]
 			}

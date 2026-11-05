@@ -56,7 +56,8 @@ public enum TaskDetails {
                 sections: topLevel ? sections : [],
                 labels: labels,
                 projectId: task.projectId,
-                due: task.due
+                due: task.due,
+                literal: task.titleMode == .literal
             ),
             in: zone
         )

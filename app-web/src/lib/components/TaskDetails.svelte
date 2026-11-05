@@ -14,6 +14,7 @@
 	import ProjectGlyph from './ProjectGlyph.svelte';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import CloudArrowUp from 'phosphor-svelte/lib/CloudArrowUp';
+	import TextT from 'phosphor-svelte/lib/TextT';
 	import { projectsInOrder } from 'shared/store.ts';
 	import { formatDue } from 'shared/format.ts';
 	import { applyPickedLabels, formatEvent, formatLocation, formatRadius, pickedLabels, scheduledDue } from 'shared/triggers.ts';
@@ -59,8 +60,10 @@
 	const untitled = untrack(() => task.title === '');
 	let typed = $state<string | null>(null);
 	const title = $derived(typed ?? task.title);
+	const literal = $derived(task.titleMode === 'literal');
 	const parsed = $derived(
 		parseQuickAdd(title, {
+			literal,
 			now: new Date(clock.now),
 			projects: parent ? [] : space.projects,
 			sections: parent ? [] : space.sections,
@@ -230,7 +233,7 @@
 		{/if}
 		{#if editable}
 			<LinkedField text={title} class="px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre-wrap [overflow-wrap:anywhere]">
-				<SmartInput bind:value={() => title, (value) => (typed = value)} autofocus={untitled} placeholder="Task name" {tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+				<SmartInput bind:value={() => title, (value) => (typed = value)} autofocus={untitled} placeholder="Task name" {tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent && !literal} suggestNames={!literal} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
 			</LinkedField>
 		{:else}
 			<h2 class="text-[19px] font-semibold break-words"><LinkedText text={task.title} /></h2>
@@ -238,6 +241,19 @@
 	</div>
 	<!-- Outside the scroll area, which would clip the pickers' popovers. A read-only task keeps the chips as plain facts. -->
 	<div class="flex flex-wrap gap-1.5 px-4 pt-3" inert={!editable}>
+		<!-- Keeps the title focused, so turning it on mid-edit stops the typed phrases from applying instead of saving them. -->
+		<button
+			type="button"
+			class="chip data-[active=true]:bg-accent/15 data-[active=true]:text-accent"
+			data-active={literal}
+			aria-pressed={literal}
+			aria-label="Plain text"
+			title="Plain text: editing the title never applies its dates, times, or tags"
+			onmousedown={(e) => e.preventDefault()}
+			onclick={() => update({ titleMode: literal ? 'parse' : 'literal' })}
+		>
+			<TextT size={15} weight={literal ? 'bold' : 'regular'} />
+		</button>
 		{#if task.event}
 			<span class="chip" data-active="true" title="Set on iPhone">
 				<CalendarStar size={15} weight="fill" />

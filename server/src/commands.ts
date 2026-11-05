@@ -201,17 +201,19 @@ function taskAfter({ db, owner }: Command, id: string): AgentTask {
 export async function createTask(command: Command, input: AgentNewTask): Promise<AgentTask> {
 	const id = newId();
 	await run(command, (data, visible, zone) => {
-		const parsed = input.text
-			? parseQuickAdd(input.text, {
-					now: wallDate(command.now, zone),
-					projects: visible.projects,
-					sections: visible.sections,
-					labels: visible.labels,
-					projectId: input.projectId ?? null,
-				})
-			: null;
+		const read = (text: string) =>
+			parseQuickAdd(text, {
+				now: wallDate(command.now, zone),
+				projects: visible.projects,
+				sections: visible.sections,
+				labels: visible.labels,
+				projectId: input.projectId ?? null,
+			});
+		const parsed = input.text ? read(input.text) : null;
 		const title = (input.title ?? parsed?.title ?? '').trim();
 		if (!title) throw new ORPCError('BAD_REQUEST', { message: 'A task needs a title' });
+		// An explicit title is never parsed, so a phrase in it was kept on purpose and editing it later must not apply it.
+		const titleMode = input.titleMode ?? (input.title !== undefined && read(title).tokens.length ? 'literal' : 'parse');
 		if (input.parentId) visibleTask(visible, input.parentId);
 		const creation: Creation = { id, now: command.now };
 		const placed = applyPickedLabels(visible.labels, input.labelIds ?? parsed?.labelIds ?? [], null);
@@ -219,6 +221,7 @@ export async function createTask(command: Command, input: AgentNewTask): Promise
 			data,
 			{
 				title,
+				titleMode,
 				projectId: input.projectId ?? parsed?.projectId ?? null,
 				sectionId: input.sectionId ?? parsed?.sectionId ?? null,
 				labelIds: placed.labelIds,

@@ -40,6 +40,7 @@ const task = (
 	parentId: null,
 	order: 0,
 	title,
+	titleMode: 'parse',
 	notes,
 	projectId,
 	sectionId: null,

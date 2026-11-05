@@ -64,7 +64,8 @@
 								"recurrence": null,
 								"reminders": [],
 								"sectionId": null,
-								"title": "overdue"
+								"title": "overdue",
+								"titleMode": "parse"
 							},
 							{
 								"attachments": [],
@@ -91,7 +92,8 @@
 								"recurrence": null,
 								"reminders": [],
 								"sectionId": null,
-								"title": "today"
+								"title": "today",
+								"titleMode": "parse"
 							},
 							{
 								"attachments": [],
@@ -116,7 +118,8 @@
 								"recurrence": null,
 								"reminders": [],
 								"sectionId": null,
-								"title": "tomorrow"
+								"title": "tomorrow",
+								"titleMode": "parse"
 							},
 							{
 								"attachments": [],
@@ -141,7 +144,8 @@
 								"recurrence": null,
 								"reminders": [],
 								"sectionId": null,
-								"title": "sunday"
+								"title": "sunday",
+								"titleMode": "parse"
 							},
 							{
 								"attachments": [],
@@ -166,7 +170,8 @@
 								"recurrence": null,
 								"reminders": [],
 								"sectionId": null,
-								"title": "next week"
+								"title": "next week",
+								"titleMode": "parse"
 							},
 							{
 								"attachments": [],
@@ -188,7 +193,8 @@
 								"recurrence": null,
 								"reminders": [],
 								"sectionId": null,
-								"title": "undated"
+								"title": "undated",
+								"titleMode": "parse"
 							},
 							{
 								"attachments": [],
@@ -217,7 +223,8 @@
 								"recurrence": null,
 								"reminders": [],
 								"sectionId": null,
-								"title": "at the park"
+								"title": "at the park",
+								"titleMode": "parse"
 							},
 							{
 								"attachments": [],
@@ -253,7 +260,8 @@
 								"recurrence": null,
 								"reminders": [],
 								"sectionId": null,
-								"title": "at standup"
+								"title": "at standup",
+								"titleMode": "parse"
 							},
 							{
 								"attachments": [],
@@ -275,7 +283,8 @@
 								"recurrence": null,
 								"reminders": [],
 								"sectionId": null,
-								"title": "done"
+								"title": "done",
+								"titleMode": "parse"
 							}
 						]
 					},
@@ -321,7 +330,8 @@
 										"recurrence": null,
 										"reminders": [],
 										"sectionId": null,
-										"title": "Loose"
+										"title": "Loose",
+										"titleMode": "parse"
 									}
 								]
 							},

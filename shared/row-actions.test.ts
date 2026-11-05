@@ -11,6 +11,7 @@ const task = (fields: Partial<Task> = {}): Task => ({
 	parentId: null,
 	order: 0,
 	title: 'Buy milk',
+	titleMode: 'parse',
 	notes: '',
 	projectId: null,
 	sectionId: null,

@@ -29,6 +29,7 @@ const labels = [project('waiting', 'waiting'), project('calls', 'calls'), projec
 const task = (projectId: string | null, createdAt: number, labelIds: string[] = []): Task => ({
 	id: `${projectId}-${createdAt}`,
 	title: 't',
+	titleMode: 'parse',
 	notes: '',
 	parentId: null,
 	order: 0,

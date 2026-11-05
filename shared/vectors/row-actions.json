@@ -26,7 +26,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "Buy milk"
+					"title": "Buy milk",
+					"titleMode": "parse"
 				},
 				false
 			],
@@ -60,7 +61,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "Buy milk"
+					"title": "Buy milk",
+					"titleMode": "parse"
 				},
 				false
 			],
@@ -108,7 +110,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "Buy milk"
+					"title": "Buy milk",
+					"titleMode": "parse"
 				},
 				false
 			],
@@ -142,7 +145,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "Buy milk"
+					"title": "Buy milk",
+					"titleMode": "parse"
 				},
 				true
 			],
@@ -176,7 +180,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "Buy milk"
+					"title": "Buy milk",
+					"titleMode": "parse"
 				},
 				true
 			],
@@ -216,7 +221,8 @@
 					},
 					"reminders": [],
 					"sectionId": null,
-					"title": "Buy milk"
+					"title": "Buy milk",
+					"titleMode": "parse"
 				},
 				false,
 				true

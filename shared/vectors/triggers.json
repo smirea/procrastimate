@@ -27,7 +27,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "trip"
+						"title": "trip",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -49,7 +50,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "flights"
+						"title": "flights",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -71,7 +73,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "seats"
+						"title": "seats",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -93,7 +96,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "orphan"
+						"title": "orphan",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -115,7 +119,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "done"
+						"title": "done",
+						"titleMode": "parse"
 					}
 				]
 			],
@@ -140,7 +145,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "orphan"
+					"title": "orphan",
+					"titleMode": "parse"
 				}
 			]
 		},
@@ -169,7 +175,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "trip"
+						"title": "trip",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -191,7 +198,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "flights"
+						"title": "flights",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -213,7 +221,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "seats"
+						"title": "seats",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -235,7 +244,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "orphan"
+						"title": "orphan",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -257,7 +267,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "done"
+						"title": "done",
+						"titleMode": "parse"
 					}
 				]
 			],
@@ -282,7 +293,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "trip"
+					"title": "trip",
+					"titleMode": "parse"
 				},
 				{
 					"attachments": [],
@@ -304,7 +316,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "flights"
+					"title": "flights",
+					"titleMode": "parse"
 				},
 				{
 					"attachments": [],
@@ -326,7 +339,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "seats"
+					"title": "seats",
+					"titleMode": "parse"
 				},
 				{
 					"attachments": [],
@@ -348,7 +362,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "orphan"
+					"title": "orphan",
+					"titleMode": "parse"
 				}
 			]
 		},
@@ -377,7 +392,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "boxes"
+						"title": "boxes",
+						"titleMode": "parse"
 					},
 					"move": {
 						"attachments": [],
@@ -399,7 +415,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "move"
+						"title": "move",
+						"titleMode": "parse"
 					},
 					"movers": {
 						"attachments": [],
@@ -421,7 +438,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "movers"
+						"title": "movers",
+						"titleMode": "parse"
 					},
 					"orphan": {
 						"attachments": [],
@@ -443,7 +461,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "orphan"
+						"title": "orphan",
+						"titleMode": "parse"
 					},
 					"own": {
 						"attachments": [],
@@ -465,7 +484,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "own"
+						"title": "own",
+						"titleMode": "parse"
 					},
 					"pack": {
 						"attachments": [],
@@ -487,7 +507,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "pack"
+						"title": "pack",
+						"titleMode": "parse"
 					}
 				},
 				{
@@ -510,7 +531,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "move"
+					"title": "move",
+					"titleMode": "parse"
 				}
 			],
 			"output": 5
@@ -540,7 +562,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "boxes"
+						"title": "boxes",
+						"titleMode": "parse"
 					},
 					"move": {
 						"attachments": [],
@@ -562,7 +585,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "move"
+						"title": "move",
+						"titleMode": "parse"
 					},
 					"movers": {
 						"attachments": [],
@@ -584,7 +608,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "movers"
+						"title": "movers",
+						"titleMode": "parse"
 					},
 					"orphan": {
 						"attachments": [],
@@ -606,7 +631,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "orphan"
+						"title": "orphan",
+						"titleMode": "parse"
 					},
 					"own": {
 						"attachments": [],
@@ -628,7 +654,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "own"
+						"title": "own",
+						"titleMode": "parse"
 					},
 					"pack": {
 						"attachments": [],
@@ -650,7 +677,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "pack"
+						"title": "pack",
+						"titleMode": "parse"
 					}
 				},
 				{
@@ -673,7 +701,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "pack"
+					"title": "pack",
+					"titleMode": "parse"
 				}
 			],
 			"output": 7
@@ -703,7 +732,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "boxes"
+						"title": "boxes",
+						"titleMode": "parse"
 					},
 					"move": {
 						"attachments": [],
@@ -725,7 +755,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "move"
+						"title": "move",
+						"titleMode": "parse"
 					},
 					"movers": {
 						"attachments": [],
@@ -747,7 +778,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "movers"
+						"title": "movers",
+						"titleMode": "parse"
 					},
 					"orphan": {
 						"attachments": [],
@@ -769,7 +801,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "orphan"
+						"title": "orphan",
+						"titleMode": "parse"
 					},
 					"own": {
 						"attachments": [],
@@ -791,7 +824,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "own"
+						"title": "own",
+						"titleMode": "parse"
 					},
 					"pack": {
 						"attachments": [],
@@ -813,7 +847,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "pack"
+						"title": "pack",
+						"titleMode": "parse"
 					}
 				},
 				{
@@ -836,7 +871,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "boxes"
+					"title": "boxes",
+					"titleMode": "parse"
 				}
 			],
 			"output": 7
@@ -866,7 +902,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "boxes"
+						"title": "boxes",
+						"titleMode": "parse"
 					},
 					"move": {
 						"attachments": [],
@@ -888,7 +925,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "move"
+						"title": "move",
+						"titleMode": "parse"
 					},
 					"movers": {
 						"attachments": [],
@@ -910,7 +948,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "movers"
+						"title": "movers",
+						"titleMode": "parse"
 					},
 					"orphan": {
 						"attachments": [],
@@ -932,7 +971,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "orphan"
+						"title": "orphan",
+						"titleMode": "parse"
 					},
 					"own": {
 						"attachments": [],
@@ -954,7 +994,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "own"
+						"title": "own",
+						"titleMode": "parse"
 					},
 					"pack": {
 						"attachments": [],
@@ -976,7 +1017,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "pack"
+						"title": "pack",
+						"titleMode": "parse"
 					}
 				},
 				{
@@ -999,7 +1041,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "movers"
+					"title": "movers",
+					"titleMode": "parse"
 				}
 			],
 			"output": 5
@@ -1029,7 +1072,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "boxes"
+						"title": "boxes",
+						"titleMode": "parse"
 					},
 					"move": {
 						"attachments": [],
@@ -1051,7 +1095,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "move"
+						"title": "move",
+						"titleMode": "parse"
 					},
 					"movers": {
 						"attachments": [],
@@ -1073,7 +1118,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "movers"
+						"title": "movers",
+						"titleMode": "parse"
 					},
 					"orphan": {
 						"attachments": [],
@@ -1095,7 +1141,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "orphan"
+						"title": "orphan",
+						"titleMode": "parse"
 					},
 					"own": {
 						"attachments": [],
@@ -1117,7 +1164,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "own"
+						"title": "own",
+						"titleMode": "parse"
 					},
 					"pack": {
 						"attachments": [],
@@ -1139,7 +1187,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "pack"
+						"title": "pack",
+						"titleMode": "parse"
 					}
 				},
 				{
@@ -1162,7 +1211,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "own"
+					"title": "own",
+					"titleMode": "parse"
 				}
 			],
 			"output": 3
@@ -1192,7 +1242,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "boxes"
+						"title": "boxes",
+						"titleMode": "parse"
 					},
 					"move": {
 						"attachments": [],
@@ -1214,7 +1265,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "move"
+						"title": "move",
+						"titleMode": "parse"
 					},
 					"movers": {
 						"attachments": [],
@@ -1236,7 +1288,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "movers"
+						"title": "movers",
+						"titleMode": "parse"
 					},
 					"orphan": {
 						"attachments": [],
@@ -1258,7 +1311,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "orphan"
+						"title": "orphan",
+						"titleMode": "parse"
 					},
 					"own": {
 						"attachments": [],
@@ -1280,7 +1334,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "own"
+						"title": "own",
+						"titleMode": "parse"
 					},
 					"pack": {
 						"attachments": [],
@@ -1302,7 +1357,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "pack"
+						"title": "pack",
+						"titleMode": "parse"
 					}
 				},
 				{
@@ -1325,7 +1381,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "orphan"
+					"title": "orphan",
+					"titleMode": "parse"
 				}
 			],
 			"output": null
@@ -1358,7 +1415,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "rent"
+						"title": "rent",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1383,7 +1441,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "milk"
+						"title": "milk",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1408,7 +1467,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "call"
+						"title": "call",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1433,7 +1493,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "late"
+						"title": "late",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1458,7 +1519,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "now"
+						"title": "now",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1483,7 +1545,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "done"
+						"title": "done",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1508,7 +1571,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "under"
+						"title": "under",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -1530,7 +1594,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "nodate"
+						"title": "nodate",
+						"titleMode": "parse"
 					}
 				],
 				"2026-10-14"
@@ -1578,7 +1643,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "a"
+					"title": "a",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -1625,7 +1691,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "b"
+					"title": "b",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -1672,7 +1739,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "c"
+					"title": "c",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -1719,7 +1787,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "d"
+					"title": "d",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -1766,7 +1835,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "e"
+					"title": "e",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -1813,7 +1883,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "a"
+					"title": "a",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -1860,7 +1931,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "a"
+					"title": "a",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -1907,7 +1979,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "b"
+					"title": "b",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -1954,7 +2027,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "a"
+					"title": "a",
+					"titleMode": "parse"
 				},
 				"2026-10-14",
 				"America/New_York"
@@ -2002,7 +2076,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "b"
+					"title": "b",
+					"titleMode": "parse"
 				},
 				"2026-10-14",
 				"America/New_York"
@@ -2050,7 +2125,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "c"
+					"title": "c",
+					"titleMode": "parse"
 				},
 				"2026-10-14",
 				"America/New_York"
@@ -2098,7 +2174,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "a"
+					"title": "a",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -2218,7 +2295,8 @@
 					},
 					"reminders": [],
 					"sectionId": null,
-					"title": "weekly"
+					"title": "weekly",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -2261,7 +2339,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "once"
+					"title": "once",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -2300,7 +2379,8 @@
 					},
 					"reminders": [],
 					"sectionId": null,
-					"title": "no place"
+					"title": "no place",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -2352,7 +2432,8 @@
 						}
 					],
 					"sectionId": null,
-					"title": "a"
+					"title": "a",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -2399,7 +2480,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "a"
+					"title": "a",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -2450,7 +2532,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "a"
+					"title": "a",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -2503,7 +2586,8 @@
 						}
 					],
 					"sectionId": null,
-					"title": "b"
+					"title": "b",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -2545,7 +2629,8 @@
 					"recurrence": null,
 					"reminders": [],
 					"sectionId": null,
-					"title": "a"
+					"title": "a",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -2590,7 +2675,8 @@
 						}
 					],
 					"sectionId": null,
-					"title": "b"
+					"title": "b",
+					"titleMode": "parse"
 				},
 				"2026-10-14"
 			],
@@ -3691,7 +3777,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "milk"
+						"title": "milk",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -3720,7 +3807,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "eggs"
+						"title": "eggs",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -3749,7 +3837,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "jan"
+						"title": "jan",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -3778,7 +3867,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "done"
+						"title": "done",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -3800,7 +3890,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "plain"
+						"title": "plain",
+						"titleMode": "parse"
 					}
 				],
 				[]
@@ -3843,7 +3934,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "plain"
+						"title": "plain",
+						"titleMode": "parse"
 					}
 				],
 				[]
@@ -3882,7 +3974,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "milk"
+						"title": "milk",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -3911,7 +4004,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "eggs"
+						"title": "eggs",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -3940,7 +4034,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "jan"
+						"title": "jan",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -3969,7 +4064,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "done"
+						"title": "done",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -3991,7 +4087,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "plain"
+						"title": "plain",
+						"titleMode": "parse"
 					}
 				],
 				[
@@ -4056,7 +4153,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "red"
+						"title": "red",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -4092,7 +4190,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "jan"
+						"title": "jan",
+						"titleMode": "parse"
 					},
 					{
 						"attachments": [],
@@ -4128,7 +4227,8 @@
 						"recurrence": null,
 						"reminders": [],
 						"sectionId": null,
-						"title": "notes"
+						"title": "notes",
+						"titleMode": "parse"
 					}
 				],
 				"2026-10-14"

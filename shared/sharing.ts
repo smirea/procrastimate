@@ -124,6 +124,10 @@ export const agentNewTaskSchema = z
 		/** Read by the quick add parser, as the app's quick add reads it. */
 		text: z.string().optional(),
 		title: taskShape.title.optional(),
+		titleMode: taskShape.titleMode.optional().meta({
+			description:
+				'Defaults to `literal` when an explicit `title` holds a phrase quick add would read, such as `tomorrow` or `p1`, since that phrase was not applied; otherwise `parse`.',
+		}),
 		notes: taskShape.notes.optional(),
 		projectId: taskShape.projectId.optional(),
 		sectionId: taskShape.sectionId.optional(),

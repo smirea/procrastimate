@@ -7,6 +7,7 @@ export const task = (id: string, fields: Partial<Task> = {}): Task => ({
 	parentId: null,
 	order: 0,
 	title: id,
+	titleMode: 'parse',
 	notes: '',
 	projectId: null,
 	sectionId: null,

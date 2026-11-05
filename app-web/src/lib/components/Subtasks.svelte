@@ -33,7 +33,7 @@
 	const parsed = $derived(parseSubtask(draft, literal));
 
 	function add() {
-		const subtask = subtaskTask(parsed);
+		const subtask = subtaskTask(parsed, literal);
 		if (!subtask) return;
 		store.addTask(subtask, task.id);
 		draft = '';

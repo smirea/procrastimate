@@ -32,6 +32,7 @@ describe('rambleNewTask', () => {
 		const [spoken] = parseRamble('Call mom tomorrow at five p.m. priority one', { now }).tasks;
 		expect(rambleNewTask(spoken!, null, [])).toEqual({
 			title: 'Call mom',
+			titleMode: 'parse',
 			projectId: null,
 			sectionId: null,
 			labelIds: [],
@@ -76,6 +77,7 @@ describe('rambleNewTask', () => {
 		const saved = rambleNewTask(task('Milk'), null, []);
 		expect(saved).toEqual({
 			title: 'Milk',
+			titleMode: 'parse',
 			projectId: null,
 			sectionId: null,
 			labelIds: [],

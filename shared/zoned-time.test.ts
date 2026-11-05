@@ -39,6 +39,7 @@ test('notifications resolve and word their times in the given zone', () => {
 	const task: Task = {
 		id: 'gym',
 		title: 'Gym',
+		titleMode: 'parse',
 		notes: '',
 		projectId: null,
 		sectionId: null,

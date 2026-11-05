@@ -82,7 +82,9 @@
 	const subtaskRows = $derived(
 		subtasks.flatMap((subtask) => {
 			// A row re-reads its line on every change, so a label created since could leave it no title; it keeps its text then.
-			const task = subtaskTask(parseSubtask(subtask.text, subtask.literal)) ?? subtaskTask(parseSubtask(subtask.text, true));
+			const task =
+				subtaskTask(parseSubtask(subtask.text, subtask.literal), subtask.literal) ??
+				subtaskTask(parseSubtask(subtask.text, true), true);
 			return task ? [{ ...subtask, task }] : [];
 		}),
 	);
@@ -178,7 +180,7 @@
 		if (!next) return null;
 		const task = store.addTask(next);
 		if (!task) return null;
-		const typing = subtaskTask(subtaskParsed);
+		const typing = subtaskTask(subtaskParsed, subtaskLiteral);
 		for (const child of [...subtaskRows.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
 		if (drafted.length) void attachments.attach(task.id, drafted.map((d) => d.file));
 		reuseAdded(page.url.pathname, task);

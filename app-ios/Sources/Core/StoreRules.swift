@@ -15,6 +15,7 @@ public typealias Undo = API.Undo
 extension API.TaskEdit {
     func apply(to task: inout TaskItem) {
         if let title { task.title = title }
+        if let titleMode { task.titleMode = titleMode }
         if let notes { task.notes = notes }
         if let projectId { task.projectId = projectId }
         if let sectionId { task.sectionId = sectionId }
@@ -55,6 +56,7 @@ public enum StoreRules {
             parentId: parent?.id,
             order: parent.map { Subtasks.nextSiblingOrder(data.tasks, $0.id) } ?? 0,
             title: input.title,
+            titleMode: input.titleMode,
             projectId: parent.map(\.projectId) ?? section?.projectId ?? input.projectId,
             sectionId: section?.id,
             labelIds: input.labelIds,

@@ -392,7 +392,8 @@
 									"recurrence": null,
 									"reminders": [],
 									"sectionId": null,
-									"title": "Zed’s"
+									"title": "Zed’s",
+									"titleMode": "parse"
 								}
 							]
 						},
@@ -458,7 +459,8 @@
 									"recurrence": null,
 									"reminders": [],
 									"sectionId": null,
-									"title": "in-project"
+									"title": "in-project",
+									"titleMode": "parse"
 								},
 								{
 									"attachments": [],
@@ -482,7 +484,8 @@
 									"recurrence": null,
 									"reminders": [],
 									"sectionId": null,
-									"title": "labelled"
+									"title": "labelled",
+									"titleMode": "parse"
 								},
 								{
 									"attachments": [],
@@ -504,7 +507,8 @@
 									"recurrence": null,
 									"reminders": [],
 									"sectionId": null,
-									"title": "Call mum"
+									"title": "Call mum",
+									"titleMode": "parse"
 								},
 								{
 									"attachments": [],
@@ -526,7 +530,8 @@
 									"recurrence": null,
 									"reminders": [],
 									"sectionId": null,
-									"title": "sub"
+									"title": "sub",
+									"titleMode": "parse"
 								}
 							]
 						},
