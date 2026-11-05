@@ -190,6 +190,7 @@ export async function sharedView(app: App, ownerId: string, id: string): Promise
 			lastCompletedAt: null,
 			sourceKey: undefined,
 			attachments: [],
+			github: [],
 			location: null,
 		})),
 		projects,
