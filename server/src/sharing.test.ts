@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { and, eq, inArray } from 'drizzle-orm';
 import { access, comments, log, tasks } from '../../shared/db/schema';
-import type { Person, ShareView, SpaceView } from '../../shared/sharing';
+import type { Person, SharedView, ShareView, SpaceView } from '../../shared/sharing';
 import {
 	aiAccount,
 	json,
@@ -541,7 +541,41 @@ describe('sharing a list', () => {
 	});
 });
 
-describe('public links', () => {});
+describe('public links', () => {
+	test('a public link blanks what stays the owner’s: creators, the import key, attachments, GitHub, and places', async () => {
+		const id = await newTask('Ship the fix', {
+			createdBy: owner.person.id,
+			sourceKey: 'todoist:task:9',
+			attachments: JSON.stringify([{ id: 'img', width: 1, height: 1 }]),
+			github: JSON.stringify([{ repo: 'smirea/private-repo', number: 4, kind: 'pull' }]),
+			location: JSON.stringify({
+				name: 'Home',
+				address: null,
+				latitude: 1,
+				longitude: 2,
+				radius: 100,
+				trigger: 'arrive',
+			}),
+		});
+		const link = await json<ShareView>(
+			call(owner, 'POST', '/api/shares', { target: { kind: 'task', id }, audience: { kind: 'link' } }),
+		);
+		const token = new URL(link.url!).pathname.split('/').at(-1)!;
+		const view = await json<SharedView>(app.fetch(`/api/shared?token=${encodeURIComponent(token)}`));
+		expect(
+			view.tasks.map(({ title, createdBy, sourceKey, attachments, github, location }) => ({
+				title,
+				createdBy,
+				sourceKey,
+				attachments,
+				github,
+				location,
+			})),
+		).toEqual([
+			{ title: 'Ship the fix', createdBy: null, sourceKey: undefined, attachments: [], github: [], location: null },
+		]);
+	});
+});
 
 describe('AI accounts', () => {
 	test('an AI account acts in its owner’s whole space through a token and is gone with its account', async () => {
