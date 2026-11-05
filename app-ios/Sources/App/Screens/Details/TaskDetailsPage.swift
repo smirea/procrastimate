@@ -143,6 +143,10 @@ private struct TaskDetailsForm: View {
                 .animation(.snappy(duration: 0.16), value: draft)
                 .disabled(locked)
 
+                GithubChips(refs: task.github, locked: locked) { github in
+                    store.updateTask(task.id, TaskPatch(github: github))
+                }
+
                 LinkedField(text: task.notes, focused: $notesFocused) {
                     TextField(
                         "Notes",

@@ -17,6 +17,8 @@ export type Config = {
 	ramble: { kind: 'cassette' } | { kind: 'elevenlabs'; apiKey: string } | null;
 	/** Ramble's smart parse. Null answers 503, and clients keep the grammar's tasks. */
 	gemini: { apiKey: string } | null;
+	/** A token for GitHub's API. Null reads public repos signed out, and private ones not at all. */
+	githubToken: string | null;
 	/** Reporting to `procrastimate-worker`, on only where the deploy passes `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`. */
 	sentry: SentryTarget | null;
 };
@@ -112,6 +114,7 @@ export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Co
 					? { kind: 'elevenlabs', apiKey: elevenLabsKey }
 					: null,
 		gemini: geminiKey ? { apiKey: geminiKey } : null,
+		githubToken: read('GITHUB_TOKEN'),
 		sentry: sentry.target,
 	};
 }

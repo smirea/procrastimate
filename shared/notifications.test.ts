@@ -28,6 +28,7 @@ const task = (id: string, patch: Partial<Task>): Task => ({
 	location: null,
 	event: null,
 	attachments: [],
+	github: [],
 	createdAt: 0,
 	completedAt: null,
 	createdBy: null,

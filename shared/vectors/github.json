@@ -1,0 +1,209 @@
+{
+	"module": "github",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"https://github.com/smirea/procrastimate/pull/309\" reads as {\"repo\":\"smirea/procrastimate\",\"number\":309,\"kind\":\"pull\"}",
+			"input": [
+				"https://github.com/smirea/procrastimate/pull/309"
+			],
+			"output": {
+				"kind": "pull",
+				"number": 309,
+				"repo": "smirea/procrastimate"
+			}
+		},
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"  https://www.github.com/smirea/procrastimate/pull/309/files?w=1#diff  \" reads as {\"repo\":\"smirea/procrastimate\",\"number\":309,\"kind\":\"pull\"}",
+			"input": [
+				"  https://www.github.com/smirea/procrastimate/pull/309/files?w=1#diff  "
+			],
+			"output": {
+				"kind": "pull",
+				"number": 309,
+				"repo": "smirea/procrastimate"
+			}
+		},
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"github.com/smirea/procrastimate/pull/309\" reads as {\"repo\":\"smirea/procrastimate\",\"number\":309,\"kind\":\"pull\"}",
+			"input": [
+				"github.com/smirea/procrastimate/pull/309"
+			],
+			"output": {
+				"kind": "pull",
+				"number": 309,
+				"repo": "smirea/procrastimate"
+			}
+		},
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"https://github.com/oven-sh/bun/issues/1\" reads as {\"repo\":\"oven-sh/bun\",\"number\":1,\"kind\":\"issue\"}",
+			"input": [
+				"https://github.com/oven-sh/bun/issues/1"
+			],
+			"output": {
+				"kind": "issue",
+				"number": 1,
+				"repo": "oven-sh/bun"
+			}
+		},
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"oven-sh/bun#1\" reads as {\"repo\":\"oven-sh/bun\",\"number\":1,\"kind\":\"issue\"}",
+			"input": [
+				"oven-sh/bun#1"
+			],
+			"output": {
+				"kind": "issue",
+				"number": 1,
+				"repo": "oven-sh/bun"
+			}
+		},
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"HTTPS://GITHUB.COM/oven-sh/bun/ISSUES/1\" reads as {\"repo\":\"oven-sh/bun\",\"number\":1,\"kind\":\"issue\"}",
+			"input": [
+				"HTTPS://GITHUB.COM/oven-sh/bun/ISSUES/1"
+			],
+			"output": {
+				"kind": "issue",
+				"number": 1,
+				"repo": "oven-sh/bun"
+			}
+		},
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"https://github.com/oven-sh/bun\" reads as null",
+			"input": [
+				"https://github.com/oven-sh/bun"
+			],
+			"output": null
+		},
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"https://github.com/oven-sh/bun/pull/0\" reads as null",
+			"input": [
+				"https://github.com/oven-sh/bun/pull/0"
+			],
+			"output": null
+		},
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"https://gitlab.com/a/b/issues/1\" reads as null",
+			"input": [
+				"https://gitlab.com/a/b/issues/1"
+			],
+			"output": null
+		},
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"see https://github.com/oven-sh/bun/issues/1\" reads as null",
+			"input": [
+				"see https://github.com/oven-sh/bun/issues/1"
+			],
+			"output": null
+		},
+		{
+			"fn": "parseGithubRef",
+			"test": "parseGithubRef › \"bun#1\" reads as null",
+			"input": [
+				"bun#1"
+			],
+			"output": null
+		},
+		{
+			"fn": "githubUrl",
+			"test": "githubUrl and githubLabel › a pull request and an issue",
+			"input": [
+				{
+					"kind": "pull",
+					"number": 309,
+					"repo": "smirea/procrastimate"
+				}
+			],
+			"output": "https://github.com/smirea/procrastimate/pull/309"
+		},
+		{
+			"fn": "githubUrl",
+			"test": "githubUrl and githubLabel › a pull request and an issue",
+			"input": [
+				{
+					"kind": "issue",
+					"number": 1,
+					"repo": "oven-sh/bun"
+				}
+			],
+			"output": "https://github.com/oven-sh/bun/issues/1"
+		},
+		{
+			"fn": "githubLabel",
+			"test": "githubUrl and githubLabel › a pull request and an issue",
+			"input": [
+				{
+					"kind": "pull",
+					"number": 309,
+					"repo": "smirea/procrastimate"
+				}
+			],
+			"output": "procrastimate#309"
+		},
+		{
+			"fn": "withGithubRef",
+			"test": "withGithubRef › adds a new one last, and keeps a repeat once whatever its kind or case",
+			"input": [
+				[
+					{
+						"kind": "issue",
+						"number": 1,
+						"repo": "oven-sh/bun"
+					}
+				],
+				{
+					"kind": "pull",
+					"number": 309,
+					"repo": "smirea/procrastimate"
+				}
+			],
+			"output": [
+				{
+					"kind": "issue",
+					"number": 1,
+					"repo": "oven-sh/bun"
+				},
+				{
+					"kind": "pull",
+					"number": 309,
+					"repo": "smirea/procrastimate"
+				}
+			]
+		},
+		{
+			"fn": "withGithubRef",
+			"test": "withGithubRef › adds a new one last, and keeps a repeat once whatever its kind or case",
+			"input": [
+				[
+					{
+						"kind": "pull",
+						"number": 309,
+						"repo": "smirea/procrastimate"
+					}
+				],
+				{
+					"kind": "issue",
+					"number": 309,
+					"repo": "Smirea/Procrastimate"
+				}
+			],
+			"output": [
+				{
+					"kind": "pull",
+					"number": 309,
+					"repo": "smirea/procrastimate"
+				}
+			]
+		}
+	]
+}

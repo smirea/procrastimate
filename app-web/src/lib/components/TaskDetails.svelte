@@ -33,6 +33,7 @@
 	import LabelPicker from './LabelPicker.svelte';
 	import Subtasks from './Subtasks.svelte';
 	import TaskAttachments from './TaskAttachments.svelte';
+	import TaskGithub from './TaskGithub.svelte';
 	import TaskActivity from './TaskActivity.svelte';
 	import TaskComments from './TaskComments.svelte';
 	import PersonName from './PersonName.svelte';
@@ -284,6 +285,7 @@
 			</span>
 		{/if}
 	</div>
+	<TaskGithub {task} {editable} onchange={(github) => update({ github })} />
 	<div class="px-4 pt-3" inert={!editable}>
 		<LabelPicker
 			labelIds={pickedLabels(space.labels, draft)}

@@ -27,6 +27,7 @@ extension API.TaskEdit {
         if let location { task.location = location }
         if let event { task.event = event }
         if let attachments { task.attachments = attachments }
+        if let github { task.github = github }
     }
 }
 

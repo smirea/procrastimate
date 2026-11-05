@@ -132,6 +132,7 @@ let handlers: [String: Handler] = [
     "screens": screensVector,
     "lists": listsVector,
     "memo-tasks": memoTasksVector,
+    "github": githubVector,
     "links": linksVector,
     "rows": rowsVector,
     "comments": commentsVector,
@@ -728,6 +729,16 @@ extension JSONValue: ExpressibleByStringLiteral {
     switch fn {
     case "memoSourceKey": return try json(MemoTasks.memoSourceKey(a(0)))
     case "parseMemoSource": return try json(MemoTasks.parseMemoSource(a(0)))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func githubVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "parseGithubRef": return try json(Github.parseGithubRef(a(0)))
+    case "githubUrl": return try json(Github.githubUrl(a(0)).absoluteString)
+    case "githubLabel": return try json(Github.githubLabel(a(0)))
+    case "withGithubRef": return try json(Github.withGithubRef(a(0), a(1)))
     default: throw unknown(fn)
     }
 }

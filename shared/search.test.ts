@@ -52,6 +52,7 @@ const task = (
 	location: null,
 	event: null,
 	attachments: [],
+	github: [],
 	createdAt,
 	completedAt,
 	createdBy: null,

@@ -847,6 +847,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "work-5",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -870,6 +871,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "errands-9",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -893,6 +895,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "work-2",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1343,6 +1346,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "homework-1",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1584,6 +1588,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "home-3",
 						"labelIds": [
 							"calls"
@@ -1609,6 +1614,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "null-7",
 						"labelIds": [
 							"waiting",
@@ -1635,6 +1641,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "work-5",
 						"labelIds": [
 							"calls"
@@ -1740,6 +1747,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "null-1",
 						"labelIds": [
 							"calls"
@@ -1841,6 +1849,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "home-3",
 						"labelIds": [
 							"calls"
@@ -1866,6 +1875,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "null-7",
 						"labelIds": [
 							"waiting",
@@ -1892,6 +1902,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "work-5",
 						"labelIds": [
 							"calls"

@@ -209,7 +209,7 @@ function metaContent(head: string): Map<string, string> {
 type Site = {
 	matches: (url: URL) => boolean;
 	/** The page's own name, where its `<title>` names the site. Undefined falls back to the general rule. */
-	title?: (url: URL, meta: Map<string, string>) => string | undefined;
+	title?: (url: URL, meta: Map<string, string>, tab: string | undefined) => string | undefined;
 	/** Read for the title before the page, for sites whose pages datacenters cannot read. */
 	oembed?: string;
 	/** Its icon, for sites whose pages datacenters cannot read. */
@@ -240,6 +240,19 @@ const SITES: Site[] = [
 		},
 		icon: 'https://www.google.com/images/branding/product/ico/web_maps_icon_32dp.ico',
 	},
+	{
+		// `Fix sync by smirea · Pull Request #309 · smirea/procrastimate · GitHub` is `Fix sync`, as the API reads it.
+		// Other pages only lose the site's name.
+		matches: url => url.hostname === 'github.com',
+		title: (_url, _meta, tab) => {
+			const text = tab && decodeEntities(tab).replace(/\s+/g, ' ').trim();
+			if (!text) return undefined;
+			const item = /^(.+?)(?: by [\w-]+(?:\[bot\])?)? · (?:Pull Request|Issue) #\d+ · [\w.-]+\/[\w.-]+ · GitHub$/.exec(
+				text,
+			);
+			return item?.[1] ?? text.replace(/ · GitHub$/, '');
+		},
+	},
 ];
 
 const siteOf = (url: URL) => SITES.find(site => site.matches(url));
@@ -251,8 +264,8 @@ const siteOf = (url: URL) => SITES.find(site => site.matches(url));
 export function pageTitle(html: string, url: URL): string | null {
 	const head = html.split(/<body\b/i)[0]!;
 	const meta = metaContent(head);
-	const site = siteOf(url)?.title?.(url, meta);
 	const title = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(head)?.[1];
+	const site = siteOf(url)?.title?.(url, meta, title);
 	for (const candidate of [site, title, meta.get('og:title'), meta.get('twitter:title')]) {
 		const tidied = candidate && tidy(candidate);
 		if (tidied) return tidied;

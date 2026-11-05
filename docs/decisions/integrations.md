@@ -1,6 +1,6 @@
 # Integrations
 
-Other apps on Stefan's iPhone create and read ProcrastiMate tasks. The first one is Notouroboros, his voice memo app (`~/code/ios-voice-memo`, bundle id `com.stefan.notetorus`), which extracts tasks from each memo with Apple's on-device model and sends them here.
+Other apps on Stefan's iPhone create and read ProcrastiMate tasks, and tasks link out to GitHub. The first one is Notouroboros, his voice memo app (`~/code/ios-voice-memo`, bundle id `com.stefan.notetorus`), which extracts tasks from each memo with Apple's on-device model and sends them here.
 
 - **ProcrastiMate is the source of truth for tasks.** Notouroboros keeps audio, transcripts, summaries, and the calendar event a memo is attached to. It no longer has reminders of its own. Once a task arrives here it is an ordinary task: editing, completing, or deleting it happens in ProcrastiMate, and the memo app only reads it back.
 - **Through the server, not app to app.** iOS has no background channel between apps, and the memo app processes in the background. It calls the Worker with the same session ProcrastiMate uses, so the tasks reach every device through the usual sync nudge, whether or not ProcrastiMate is running.
@@ -42,3 +42,13 @@ Tinycast is the Mac launcher Stefan uses in place of Raycast. It runs Raycast ex
 - **Shared code is bundled, not ported.** The views, formatting, search, quick add parser, and the oRPC agent contract come from `shared/`, so the lists match the apps. The last view is cached in Tinycast, so the list opens filled and refreshes behind it.
 - **Clients.** Mac only, since Tinycast is a Mac launcher. iOS already has App Intents and Shortcuts for the same job, and the web app is the editor this opens.
 - **Installing.** `bun run --cwd app-tinycast build` writes `app-tinycast/dist`, which Tinycast adds from Settings → Extensions → Add from folder. Rebuild and re-add it after a change.
+
+## GitHub
+
+A task can carry GitHub issues and pull requests as metadata, for the work Stefan tracks in ProcrastiMate while it happens on GitHub.
+
+- **An explicit field, not links found in the text.** `tasks.github` holds a list of `{ repo, number, kind }` (`shared/github.ts`), set from details by pasting an issue or pull request link, or `owner/repo#123`. Detecting links in the title or notes was ruled out: a task often mentions a PR it is not about, and a pasted GitHub link in a title already becomes `[PR title](url)` (see [Link previews](link-previews.md)), which reads well on its own. Attaching is a deliberate act that puts the PR beside the date and priority.
+- **Only which ones are stored; GitHub's state is read live.** A PR's state changes after it is attached, so its title and state (`open`, `draft`, `merged`, `closed`) come from `GET /api/github?url=` each time details open, cached on the client for a minute. A stored snapshot would sync stale state and churn writes. Rows show the GitHub mark and each `#number` without asking GitHub, since a list would ask once per row.
+- **The server reads GitHub.** `server/src/github.ts` calls GitHub's issues API, which answers pull requests too and says one is a PR, so an issue link to a PR still reads as a PR. With `GITHUB_TOKEN`, a fine-grained read-only token for Stefan's repos and a Worker secret, private repos read too. Without it, public repos are read signed out, and past GitHub's rate limit the title comes from the page with no state. A private repo without the token shows only `repo#number`, still a link.
+- **Opening.** The web opens GitHub in a new tab; iOS opens the URL, which the GitHub app takes when installed.
+- **Clients.** Web and iOS. Shared public links carry the field in their payload but do not show it yet.

@@ -28,6 +28,7 @@ import {
 } from '../sharing.ts';
 import { taskEditSchema } from '../store.ts';
 import { byteKeySchema } from '../images.ts';
+import { githubItemSchema } from '../github.ts';
 import { labelSchema, projectSchema, sectionSchema } from '../model.ts';
 import { rambleOutlineInputSchema, rambleOutlineSchema } from '../ramble/outline.ts';
 
@@ -515,6 +516,16 @@ export const contract = {
 		.meta(openapi({ method: 'GET', path: '/api/link-preview', inputStructure: 'detailed' }))
 		.input(z.object({ query: z.object({ url: z.string() }) }))
 		.output(linkPreviewSchema),
+	/**
+	 * The title and state of the GitHub issue or pull request at `url`, as attached to a task: from GitHub's API, else
+	 * the title from its page with a null state, else both null. Private repos need the server's GitHub token. Human
+	 * users only.
+	 */
+	github: allowed
+		.errors({ BAD_REQUEST: {} })
+		.meta(openapi({ method: 'GET', path: '/api/github', inputStructure: 'detailed' }))
+		.input(z.object({ query: z.object({ url: z.string() }) }))
+		.output(githubItemSchema),
 	/**
 	 * The icon of the page at `url`, after redirects, as image bytes, for the icon before a link. `api.ts` answers it before the router,
 	 * like image bytes. `NOT_FOUND`, cached for a day, when the site has none.

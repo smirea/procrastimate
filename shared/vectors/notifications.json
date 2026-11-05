@@ -15,6 +15,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "Trip",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -41,6 +42,7 @@
 							"time": "11:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Book flights",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -67,6 +69,7 @@
 							"time": "12:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Call mom",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -114,6 +117,7 @@
 							"time": "17:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Gym",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -149,6 +153,7 @@
 							"time": "10:30"
 						},
 						"event": null,
+						"github": [],
 						"id": "Call mom",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -172,6 +177,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "Passport",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -204,6 +210,7 @@
 							"time": null
 						},
 						"event": null,
+						"github": [],
 						"id": "Taxes",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -236,6 +243,7 @@
 							"time": null
 						},
 						"event": null,
+						"github": [],
 						"id": "Rent",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -268,6 +276,7 @@
 							"time": "12:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Lunch",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -404,6 +413,7 @@
 							"series": false,
 							"title": "Night out"
 						},
+						"github": [],
 						"id": "Wear red",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -430,6 +440,7 @@
 							"time": "17:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Milk",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -484,6 +495,7 @@
 							"time": "11:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Done",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -510,6 +522,7 @@
 							"time": null
 						},
 						"event": null,
+						"github": [],
 						"id": "Taxes",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -536,6 +549,7 @@
 							"time": "10:15"
 						},
 						"event": null,
+						"github": [],
 						"id": "Standup",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -567,6 +581,7 @@
 							"time": "10:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Earlier",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -614,6 +629,7 @@
 							"time": "10:45"
 						},
 						"event": null,
+						"github": [],
 						"id": "Standup",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -671,6 +687,7 @@
 							"time": "09:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Water plants",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -716,6 +733,7 @@
 							"time": "09:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Water plants",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -777,6 +795,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "latest",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -806,6 +825,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "a",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -835,6 +855,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "b",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -864,6 +885,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "c",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -932,6 +954,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "Gun courses",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -968,6 +991,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "Yoga maybe",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1004,6 +1028,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "Give timeleft another shot",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1040,6 +1065,7 @@
 						"createdBy": null,
 						"due": null,
 						"event": null,
+						"github": [],
 						"id": "Setup arcade",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1111,6 +1137,7 @@
 							"series": false,
 							"title": "Night out"
 						},
+						"github": [],
 						"id": "Wear red",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1148,6 +1175,7 @@
 							"series": false,
 							"title": "Night out"
 						},
+						"github": [],
 						"id": "Bring cash",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1174,6 +1202,7 @@
 							"time": "09:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Draft",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1200,6 +1229,7 @@
 							"time": "09:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Review",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1226,6 +1256,7 @@
 							"time": "12:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Call mom",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1252,6 +1283,7 @@
 							"time": "12:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "Lunch",
 						"labelIds": [],
 						"lastCompletedAt": null,
@@ -1317,6 +1349,7 @@
 							"time": "11:00"
 						},
 						"event": null,
+						"github": [],
 						"id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 						"labelIds": [],
 						"lastCompletedAt": null,

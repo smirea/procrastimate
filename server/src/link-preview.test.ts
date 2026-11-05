@@ -66,6 +66,24 @@ describe('pageTitle', () => {
 			'HEAT Bootcamp',
 		],
 		['a dropped pin behind the captcha has no title', 'https://maps.google.com/?q=30.25,-97.75', '', null],
+		[
+			'a GitHub pull request reads its own title',
+			'https://github.com/smirea/procrastimate/pull/309',
+			'<title>fix(ramble): keep the speaker&#39;s words by smirea · Pull Request #309 · smirea/procrastimate · GitHub</title>',
+			"fix(ramble): keep the speaker's words",
+		],
+		[
+			'a GitHub issue reads its own title',
+			'https://github.com/oven-sh/bun/issues/1',
+			'<title>Fix ?? operator · Issue #1 · oven-sh/bun · GitHub</title>',
+			'Fix ?? operator',
+		],
+		[
+			'another GitHub page drops the site name',
+			'https://github.com/smirea',
+			'<title>smirea (Stefan Mirea) · GitHub</title>',
+			'smirea (Stefan Mirea)',
+		],
 	])('%s', (_, url, page, title) => {
 		expect(pageTitle(page, new URL(url))).toBe(title);
 	});

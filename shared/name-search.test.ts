@@ -43,6 +43,7 @@ const task = (projectId: string | null, createdAt: number, labelIds: string[] = 
 	location: null,
 	event: null,
 	attachments: [],
+	github: [],
 	createdAt,
 	completedAt: null,
 	createdBy: null,
