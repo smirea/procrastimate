@@ -6,7 +6,7 @@ import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 import { KINDS } from '../kinds.ts';
 import { LABEL_COLORS } from '../label-colors.ts';
 import { PROJECT_ICONS } from '../project-icons.ts';
-import { DEFAULT_PRIORITY, ROLES, SECTION_COUNTERS, SERVER_ACTOR, SHARE_TARGET_KINDS } from '../values.ts';
+import { DEFAULT_PRIORITY, ROLES, SECTION_COUNTERS, SERVER_ACTOR, SHARE_TARGET_KINDS, TITLE_MODES } from '../values.ts';
 import type { ColumnValue } from './json.ts';
 
 /**
@@ -30,6 +30,10 @@ export const tasks = sqliteTable(
 		parentId: text('parent_id'),
 		order: real('position').notNull().default(0),
 		title: text('title').notNull(),
+		titleMode: text('title_mode', { enum: TITLE_MODES })
+			.$type<ColumnValue<'tasks', 'titleMode'>>()
+			.notNull()
+			.default('parse'),
 		notes: text('notes').notNull().default(''),
 		projectId: text('project_id'),
 		/** A section of the task's project. Subtasks never have one. */

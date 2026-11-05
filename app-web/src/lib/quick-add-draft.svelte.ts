@@ -107,7 +107,8 @@ export class QuickAddDraft {
 	}
 
 	task(options?: Parameters<typeof draftTask>[3]) {
-		return draftTask(this.parsed, this.picked, store.labels, options);
+		const task = draftTask(this.parsed, this.picked, store.labels, options);
+		return task && { ...task, titleMode: this.literal ? ('literal' as const) : ('parse' as const) };
 	}
 
 	private tokenOf(kind: TokenKind) {

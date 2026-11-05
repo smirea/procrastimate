@@ -30,6 +30,7 @@ export function rambleNewTask(task: SpokenFields, defaults: ListDefaults | null,
 	};
 	return {
 		title: task.title.trim(),
+		titleMode: 'parse',
 		...typedOver(base, task, event),
 		labelIds: placed.labelIds,
 		reminders: task.reminders,

@@ -7,6 +7,20 @@ export function parseSubtask(text: string, literal = false): ParsedQuickAdd {
 	return parseLine(text, { now: new Date(clock.now), labels: store.labels, literal });
 }
 
-export function subtaskTask({ title, due, recurrence, priority, reminders, labelIds }: ParsedQuickAdd): NewTask | null {
-	return title ? { title, due, recurrence, priority, reminders, labelIds, projectId: null } : null;
+export function subtaskTask(
+	{ title, due, recurrence, priority, reminders, labelIds }: ParsedQuickAdd,
+	literal = false,
+): NewTask | null {
+	return title
+		? {
+				title,
+				titleMode: literal ? 'literal' : 'parse',
+				due,
+				recurrence,
+				priority,
+				reminders,
+				labelIds,
+				projectId: null,
+			}
+		: null;
 }

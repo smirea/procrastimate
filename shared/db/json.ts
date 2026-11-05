@@ -18,6 +18,7 @@ import {
 	shareTargetKindSchema,
 	taskEventSchema,
 	taskLocationSchema,
+	titleModeSchema,
 } from '../values.ts';
 
 /**
@@ -36,6 +37,7 @@ export const COLUMN_VALUES = {
 		location: taskLocationSchema,
 		event: taskEventSchema,
 		attachments: z.array(attachmentSchema),
+		titleMode: titleModeSchema,
 	},
 	projects: { icon: projectIconSchema },
 	sections: { counter: sectionCounterSchema },

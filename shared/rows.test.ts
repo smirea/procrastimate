@@ -21,6 +21,7 @@ describe('rowWrites', () => {
 					parentId: null,
 					order: 0,
 					title: 't',
+					titleMode: 'parse',
 					notes: '',
 					projectId: null,
 					sectionId: null,

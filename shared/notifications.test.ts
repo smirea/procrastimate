@@ -14,6 +14,7 @@ const NOW = local(2026, 10, 14, 10);
 const task = (id: string, patch: Partial<Task>): Task => ({
 	id,
 	title: id,
+	titleMode: 'parse',
 	notes: '',
 	projectId: null,
 	sectionId: null,

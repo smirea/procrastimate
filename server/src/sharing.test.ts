@@ -579,6 +579,24 @@ describe('AI accounts', () => {
 		expect((await app.fetch('/api/view', { headers })).status).toBe(401);
 	});
 
+	test('an explicit title that holds a phrase saves literal, so editing it in the apps never applies the phrase', async () => {
+		const { token } = await aiAccount(app, owner, 'Planner');
+		const headers = tokenHeaders(token);
+		const add = (body: unknown) =>
+			json<{ title: string; titleMode: string; due: unknown; priority: number }>(
+				app.fetch('/api/tasks', { method: 'POST', headers, body: JSON.stringify(body) }),
+			);
+		expect(await add({ title: 'Standup notes 9am tomorrow p1' })).toMatchObject({
+			title: 'Standup notes 9am tomorrow p1',
+			titleMode: 'literal',
+			due: null,
+			priority: 4,
+		});
+		expect((await add({ title: 'Standup notes' })).titleMode).toBe('parse');
+		expect((await add({ text: 'Standup notes p1' })).titleMode).toBe('parse');
+		expect((await add({ title: 'Standup p1', titleMode: 'parse' })).titleMode).toBe('parse');
+	});
+
 	test('the agent API refuses a date or a repeat beside an event, which stands in for both', async () => {
 		const { token } = await aiAccount(app, owner, 'Planner');
 		const headers = tokenHeaders(token);

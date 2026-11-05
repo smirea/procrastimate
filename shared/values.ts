@@ -275,3 +275,15 @@ export type ShareTargetKind = z.infer<typeof shareTargetKindSchema>;
 export const SECTION_COUNTERS = ['quiet', 'badge'] as const;
 export const sectionCounterSchema = z.enum(SECTION_COUNTERS).meta({ id: 'SectionCounter' });
 export type SectionCounter = z.infer<typeof sectionCounterSchema>;
+
+/**
+ * How task details reads an edit to a task's title. `parse` reads its phrases as quick add does. `literal` keeps the
+ * title as typed: quick add's `Plain text` saves it, and details never applies a phrase in it.
+ */
+export const TITLE_MODES = ['parse', 'literal'] as const;
+export const titleModeSchema = z.enum(TITLE_MODES).meta({
+	id: 'TitleMode',
+	description:
+		'`literal` keeps the title as typed: editing it in the apps never reads a date, priority, or name out of it. `parse` reads it like quick add.',
+});
+export type TitleMode = z.infer<typeof titleModeSchema>;

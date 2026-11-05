@@ -40,7 +40,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
-				"title": "Call mom"
+				"title": "Call mom",
+				"titleMode": "parse"
 			}
 		},
 		{
@@ -92,7 +93,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
-				"title": "Pay rent"
+				"title": "Pay rent",
+				"titleMode": "parse"
 			}
 		},
 		{
@@ -140,7 +142,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
-				"title": "Pay rent"
+				"title": "Pay rent",
+				"titleMode": "parse"
 			}
 		},
 		{
@@ -175,7 +178,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
-				"title": "Milk"
+				"title": "Milk",
+				"titleMode": "parse"
 			}
 		},
 		{
@@ -217,7 +221,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": "kitchen",
-				"title": "Fix tap"
+				"title": "Fix tap",
+				"titleMode": "parse"
 			}
 		},
 		{
@@ -259,7 +264,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": "kitchen",
-				"title": "Fix tap"
+				"title": "Fix tap",
+				"titleMode": "parse"
 			}
 		},
 		{
@@ -301,7 +307,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
-				"title": "Fix tap"
+				"title": "Fix tap",
+				"titleMode": "parse"
 			}
 		},
 		{
@@ -357,7 +364,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
-				"title": "Buy milk"
+				"title": "Buy milk",
+				"titleMode": "parse"
 			}
 		},
 		{
@@ -425,7 +433,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
-				"title": "Water plants"
+				"title": "Water plants",
+				"titleMode": "parse"
 			}
 		},
 		{
@@ -482,7 +491,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
-				"title": "Water plants"
+				"title": "Water plants",
+				"titleMode": "parse"
 			}
 		},
 		{
@@ -558,7 +568,8 @@
 				"recurrence": null,
 				"reminders": [],
 				"sectionId": null,
-				"title": "Share notes"
+				"title": "Share notes",
+				"titleMode": "parse"
 			}
 		}
 	]

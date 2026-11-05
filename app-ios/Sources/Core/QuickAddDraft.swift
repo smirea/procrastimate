@@ -209,6 +209,7 @@ public struct QuickAddDraft: Hashable, Sendable {
         let resolved = resolved(parsed)
         var task = NewTask(
             title: parsed.title.isEmpty && !untitled ? Format.attachmentsTitle(images, files) : parsed.title,
+            titleMode: literal ? .literal : .parse,
             projectId: resolved.projectId,
             sectionId: resolved.sectionId,
             labelIds: resolved.labelIds,

@@ -388,6 +388,7 @@ export function mergeBackup(
 			parentId: parent?.id ?? null,
 			order: parent ? nextSiblingOrder(tasks, parent.id) : 0,
 			title: source.title,
+			titleMode: 'parse',
 			notes: source.notes,
 			projectId,
 			sectionId: parent ? null : sectionOf(source, projectId),

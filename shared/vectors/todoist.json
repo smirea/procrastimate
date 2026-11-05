@@ -999,7 +999,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:42:A",
-							"title": "A"
+							"title": "A",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1022,7 +1023,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:42:B",
-							"title": "B"
+							"title": "B",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -1087,7 +1089,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:42:A",
-							"title": "A"
+							"title": "A",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1110,7 +1113,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:42:B",
-							"title": "B"
+							"title": "B",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -1216,7 +1220,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:42:A",
-							"title": "A"
+							"title": "A",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1239,7 +1244,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:42:B",
-							"title": "B"
+							"title": "B",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -1693,7 +1699,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
-							"title": "Call the dentist"
+							"title": "Call the dentist",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1719,7 +1726,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
-							"title": "cancel [meetup.com](https://meetup.com)"
+							"title": "cancel [meetup.com](https://meetup.com)",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1748,7 +1756,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
-							"title": "Renew passport #Travel"
+							"title": "Renew passport #Travel",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1779,7 +1788,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
-							"title": "Water plants"
+							"title": "Water plants",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1802,7 +1812,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
-							"title": "Fix bike"
+							"title": "Fix bike",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1828,7 +1839,8 @@
 							"reminders": [],
 							"sectionId": "id-3",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
-							"title": "Visit Japan"
+							"title": "Visit Japan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1860,7 +1872,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
-							"title": "Book flights"
+							"title": "Book flights",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1883,7 +1896,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
-							"title": "Pack bags"
+							"title": "Pack bags",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1906,7 +1920,8 @@
 							"reminders": [],
 							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1929,7 +1944,8 @@
 							"reminders": [],
 							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1955,7 +1971,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
-							"title": "Quarterly review"
+							"title": "Quarterly review",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -1978,7 +1995,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
-							"title": "Email Sam"
+							"title": "Email Sam",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -2339,7 +2357,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
-							"title": "Call the dentist"
+							"title": "Call the dentist",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2365,7 +2384,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
-							"title": "cancel [meetup.com](https://meetup.com)"
+							"title": "cancel [meetup.com](https://meetup.com)",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2394,7 +2414,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
-							"title": "Renew passport #Travel"
+							"title": "Renew passport #Travel",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2425,7 +2446,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
-							"title": "Water plants"
+							"title": "Water plants",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2448,7 +2470,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
-							"title": "Fix bike"
+							"title": "Fix bike",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2474,7 +2497,8 @@
 							"reminders": [],
 							"sectionId": "id-3",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
-							"title": "Visit Japan"
+							"title": "Visit Japan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2506,7 +2530,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
-							"title": "Book flights"
+							"title": "Book flights",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2529,7 +2554,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
-							"title": "Pack bags"
+							"title": "Pack bags",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2552,7 +2578,8 @@
 							"reminders": [],
 							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2575,7 +2602,8 @@
 							"reminders": [],
 							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2601,7 +2629,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
-							"title": "Quarterly review"
+							"title": "Quarterly review",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2624,7 +2653,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
-							"title": "Email Sam"
+							"title": "Email Sam",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -2739,7 +2769,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
-							"title": "Call the dentist"
+							"title": "Call the dentist",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2765,7 +2796,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
-							"title": "cancel [meetup.com](https://meetup.com)"
+							"title": "cancel [meetup.com](https://meetup.com)",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2794,7 +2826,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
-							"title": "Renew passport #Travel"
+							"title": "Renew passport #Travel",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2825,7 +2858,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
-							"title": "Water plants"
+							"title": "Water plants",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2848,7 +2882,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
-							"title": "Fix bike"
+							"title": "Fix bike",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2874,7 +2909,8 @@
 							"reminders": [],
 							"sectionId": "id-3",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
-							"title": "Visit Japan"
+							"title": "Visit Japan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2906,7 +2942,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
-							"title": "Book flights"
+							"title": "Book flights",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2929,7 +2966,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
-							"title": "Pack bags"
+							"title": "Pack bags",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2952,7 +2990,8 @@
 							"reminders": [],
 							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -2975,7 +3014,8 @@
 							"reminders": [],
 							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3001,7 +3041,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
-							"title": "Quarterly review"
+							"title": "Quarterly review",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3024,7 +3065,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
-							"title": "Email Sam"
+							"title": "Email Sam",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -3360,7 +3402,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
-							"title": "Call the dentist"
+							"title": "Call the dentist",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3386,7 +3429,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
-							"title": "cancel [meetup.com](https://meetup.com)"
+							"title": "cancel [meetup.com](https://meetup.com)",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3415,7 +3459,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
-							"title": "Renew passport #Travel"
+							"title": "Renew passport #Travel",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3446,7 +3491,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
-							"title": "Water plants"
+							"title": "Water plants",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3469,7 +3515,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
-							"title": "Fix bike"
+							"title": "Fix bike",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3495,7 +3542,8 @@
 							"reminders": [],
 							"sectionId": "id-3",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
-							"title": "Visit Japan"
+							"title": "Visit Japan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3527,7 +3575,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
-							"title": "Book flights"
+							"title": "Book flights",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3550,7 +3599,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
-							"title": "Pack bags"
+							"title": "Pack bags",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3573,7 +3623,8 @@
 							"reminders": [],
 							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3596,7 +3647,8 @@
 							"reminders": [],
 							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3622,7 +3674,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
-							"title": "Quarterly review"
+							"title": "Quarterly review",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -3645,7 +3698,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
-							"title": "Email Sam"
+							"title": "Email Sam",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -4006,7 +4060,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
-							"title": "Call the dentist"
+							"title": "Call the dentist",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4032,7 +4087,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
-							"title": "cancel [meetup.com](https://meetup.com)"
+							"title": "cancel [meetup.com](https://meetup.com)",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4061,7 +4117,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
-							"title": "Renew passport #Travel"
+							"title": "Renew passport #Travel",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4092,7 +4149,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
-							"title": "Water plants"
+							"title": "Water plants",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4115,7 +4173,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
-							"title": "Fix bike"
+							"title": "Fix bike",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4141,7 +4200,8 @@
 							"reminders": [],
 							"sectionId": "id-3",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
-							"title": "Visit Japan"
+							"title": "Visit Japan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4173,7 +4233,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
-							"title": "Book flights"
+							"title": "Book flights",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4196,7 +4257,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
-							"title": "Pack bags"
+							"title": "Pack bags",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4219,7 +4281,8 @@
 							"reminders": [],
 							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4242,7 +4305,8 @@
 							"reminders": [],
 							"sectionId": "id-4",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4268,7 +4332,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
-							"title": "Quarterly review"
+							"title": "Quarterly review",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4291,7 +4356,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
-							"title": "Email Sam"
+							"title": "Email Sam",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -4622,7 +4688,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
-							"title": "Call the dentist"
+							"title": "Call the dentist",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4648,7 +4715,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
-							"title": "cancel [meetup.com](https://meetup.com)"
+							"title": "cancel [meetup.com](https://meetup.com)",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4677,7 +4745,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
-							"title": "Renew passport #Travel"
+							"title": "Renew passport #Travel",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4708,7 +4777,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
-							"title": "Water plants"
+							"title": "Water plants",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4731,7 +4801,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
-							"title": "Fix bike"
+							"title": "Fix bike",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4757,7 +4828,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
-							"title": "Visit Japan"
+							"title": "Visit Japan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4789,7 +4861,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
-							"title": "Book flights"
+							"title": "Book flights",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4812,7 +4885,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
-							"title": "Pack bags"
+							"title": "Pack bags",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4835,7 +4909,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4858,7 +4933,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4884,7 +4960,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
-							"title": "Quarterly review"
+							"title": "Quarterly review",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -4907,7 +4984,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
-							"title": "Email Sam"
+							"title": "Email Sam",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -5003,7 +5081,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
-							"title": "Call the dentist"
+							"title": "Call the dentist",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5029,7 +5108,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
-							"title": "cancel [meetup.com](https://meetup.com)"
+							"title": "cancel [meetup.com](https://meetup.com)",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5058,7 +5138,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
-							"title": "Renew passport #Travel"
+							"title": "Renew passport #Travel",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5089,7 +5170,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
-							"title": "Water plants"
+							"title": "Water plants",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5112,7 +5194,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
-							"title": "Fix bike"
+							"title": "Fix bike",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5138,7 +5221,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
-							"title": "Visit Japan"
+							"title": "Visit Japan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5170,7 +5254,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
-							"title": "Book flights"
+							"title": "Book flights",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5193,7 +5278,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
-							"title": "Pack bags"
+							"title": "Pack bags",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5216,7 +5302,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5239,7 +5326,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5265,7 +5353,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
-							"title": "Quarterly review"
+							"title": "Quarterly review",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5288,7 +5377,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
-							"title": "Email Sam"
+							"title": "Email Sam",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -5624,7 +5714,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
-							"title": "Call the dentist"
+							"title": "Call the dentist",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5650,7 +5741,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
-							"title": "cancel [meetup.com](https://meetup.com)"
+							"title": "cancel [meetup.com](https://meetup.com)",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5679,7 +5771,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
-							"title": "Renew passport #Travel"
+							"title": "Renew passport #Travel",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5710,7 +5803,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
-							"title": "Water plants"
+							"title": "Water plants",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5733,7 +5827,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
-							"title": "Fix bike"
+							"title": "Fix bike",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5759,7 +5854,8 @@
 							"reminders": [],
 							"sectionId": "id-1",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
-							"title": "Visit Japan"
+							"title": "Visit Japan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5791,7 +5887,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
-							"title": "Book flights"
+							"title": "Book flights",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5814,7 +5911,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
-							"title": "Pack bags"
+							"title": "Pack bags",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5837,7 +5935,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5860,7 +5959,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5886,7 +5986,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
-							"title": "Quarterly review"
+							"title": "Quarterly review",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -5909,7 +6010,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
-							"title": "Email Sam"
+							"title": "Email Sam",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -6287,7 +6389,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
-							"title": "Call the dentist"
+							"title": "Call the dentist",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6313,7 +6416,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
-							"title": "cancel [meetup.com](https://meetup.com)"
+							"title": "cancel [meetup.com](https://meetup.com)",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6342,7 +6446,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
-							"title": "Renew passport #Travel"
+							"title": "Renew passport #Travel",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6373,7 +6478,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
-							"title": "Water plants"
+							"title": "Water plants",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6396,7 +6502,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
-							"title": "Fix bike"
+							"title": "Fix bike",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6422,7 +6529,8 @@
 							"reminders": [],
 							"sectionId": "s-mine",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
-							"title": "Visit Japan"
+							"title": "Visit Japan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6454,7 +6562,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
-							"title": "Book flights"
+							"title": "Book flights",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6477,7 +6586,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
-							"title": "Pack bags"
+							"title": "Pack bags",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6500,7 +6610,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6523,7 +6634,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6549,7 +6661,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
-							"title": "Quarterly review"
+							"title": "Quarterly review",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6572,7 +6685,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
-							"title": "Email Sam"
+							"title": "Email Sam",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -6812,7 +6926,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A",
-							"title": "A"
+							"title": "A",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6835,7 +6950,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › B",
-							"title": "B"
+							"title": "B",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6858,7 +6974,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › B › C",
-							"title": "C"
+							"title": "C",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6881,7 +6998,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › D",
-							"title": "D"
+							"title": "D",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -6904,7 +7022,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:E",
-							"title": "E"
+							"title": "E",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -7063,7 +7182,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A",
-							"title": "A"
+							"title": "A",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7086,7 +7206,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › B",
-							"title": "B"
+							"title": "B",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -7206,7 +7327,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A",
-							"title": "A"
+							"title": "A",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7229,7 +7351,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › B",
-							"title": "B"
+							"title": "B",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -7327,7 +7450,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A",
-							"title": "A"
+							"title": "A",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7350,7 +7474,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › B",
-							"title": "B"
+							"title": "B",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7373,7 +7498,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:42:A › C",
-							"title": "C"
+							"title": "C",
+							"titleMode": "parse"
 						}
 					]
 				},
@@ -7747,7 +7873,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Call the dentist",
-							"title": "Call the dentist"
+							"title": "Call the dentist",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7773,7 +7900,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:cancel [meetup.com](https://meetup.com)",
-							"title": "cancel [meetup.com](https://meetup.com)"
+							"title": "cancel [meetup.com](https://meetup.com)",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7802,7 +7930,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Renew passport #Travel",
-							"title": "Renew passport #Travel"
+							"title": "Renew passport #Travel",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7833,7 +7962,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Water plants @home",
-							"title": "Water plants"
+							"title": "Water plants",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7856,7 +7986,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:6Xmpl1Fq:Fix bike",
-							"title": "Fix bike"
+							"title": "Fix bike",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7882,7 +8013,8 @@
 							"reminders": [],
 							"sectionId": "id-2",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan",
-							"title": "Visit Japan"
+							"title": "Visit Japan",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7914,7 +8046,8 @@
 							],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights",
-							"title": "Book flights"
+							"title": "Book flights",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7937,7 +8070,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:8Xmpl2Wq:Visit Japan › Book flights › Pack bags",
-							"title": "Pack bags"
+							"title": "Pack bags",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7960,7 +8094,8 @@
 							"reminders": [],
 							"sectionId": "id-3",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -7983,7 +8118,8 @@
 							"reminders": [],
 							"sectionId": "id-3",
 							"sourceKey": "todoist:task:8Xmpl2Wq:Read Dune#2",
-							"title": "Read Dune"
+							"title": "Read Dune",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -8009,7 +8145,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Quarterly review @work @deep-work",
-							"title": "Quarterly review"
+							"title": "Quarterly review",
+							"titleMode": "parse"
 						},
 						{
 							"attachments": [],
@@ -8032,7 +8169,8 @@
 							"reminders": [],
 							"sectionId": null,
 							"sourceKey": "todoist:task:9Xmpl3Zr:Email Sam",
-							"title": "Email Sam"
+							"title": "Email Sam",
+							"titleMode": "parse"
 						}
 					]
 				},

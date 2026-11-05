@@ -88,6 +88,7 @@ private struct TaskDetailsForm: View {
                         tokens: TaskDetails.tokens(task, title: title, parsed),
                         label: "Title",
                         suggestProjects: parent == nil,
+                        suggestNames: task.titleMode == .parse,
                         projectId: draft.projectId,
                         focused: $titleFocused,
                         onPasteImages: { load in Task { await attachments.attach(task.id, await load()) } },
@@ -112,6 +113,7 @@ private struct TaskDetailsForm: View {
                 .animation(.easeOut(duration: 0.15), value: sync.isUnsynced(task.id))
 
                 FlowLayout(spacing: 6) {
+                    plainTextChip
                     if task.event != nil {
                         eventChip
                     } else {
@@ -295,6 +297,21 @@ private struct TaskDetailsForm: View {
             Button(role: .close) { navigation.close() }
                 .accessibilityLabel("Close")
         }
+    }
+
+    /// It leaves an edit in progress uncommitted, so turning it on stops the typed phrases from applying.
+    private var plainTextChip: some View {
+        let literal = task.titleMode == .literal
+        return Button {
+            store.updateTask(task.id, TaskPatch(titleMode: literal ? .parse : .literal))
+        } label: {
+            Chip(systemImage: "textformat", text: "", tone: literal ? .accent : .muted, fill: literal ? .accent : nil)
+                .contentShape(.rect.inset(by: -6))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Plain text")
+        .accessibilityValue(literal ? "On" : "Off")
+        .accessibilityAddTraits(literal ? .isSelected : [])
     }
 
     private func commitTitle() {

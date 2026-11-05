@@ -15,7 +15,7 @@ struct DraftSubtask: Identifiable, Hashable {
     }
 
     func parsed(now: Date, labels: [Core.Label], in zone: TimeZone, literal: Bool) -> NewTask? {
-        NewTask(subtask: QuickAdd.parseSubtask(text, now: now, labels: labels, literal: literal, in: zone))
+        NewTask(subtask: QuickAdd.parseSubtask(text, now: now, labels: labels, literal: literal, in: zone), literal: literal)
     }
 }
 

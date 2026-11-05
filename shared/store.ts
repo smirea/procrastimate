@@ -29,6 +29,7 @@ const taskShape = taskSchema.shape;
 export const newTaskSchema = z
 	.object({
 		title: taskShape.title,
+		titleMode: taskShape.titleMode.default('parse'),
 		projectId: taskShape.projectId,
 		sectionId: taskShape.sectionId
 			.default(null)
@@ -47,6 +48,7 @@ export type NewTask = z.input<typeof newTaskSchema>;
 export const taskEditSchema = taskSchema
 	.pick({
 		title: true,
+		titleMode: true,
 		notes: true,
 		projectId: true,
 		sectionId: true,
@@ -175,6 +177,7 @@ export function addTask(
 		parentId: parent?.id ?? null,
 		order: parent ? subtasks.nextSiblingOrder(data.tasks, parent.id) : 0,
 		title: input.title,
+		titleMode: input.titleMode ?? 'parse',
 		notes: '',
 		projectId: parent ? parent.projectId : (section?.projectId ?? input.projectId),
 		sectionId: section?.id ?? null,

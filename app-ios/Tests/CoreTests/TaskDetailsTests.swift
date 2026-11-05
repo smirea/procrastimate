@@ -36,6 +36,20 @@ import Testing
         #expect(TaskDetails.draft(task, title: edited, parse(edited, task)).due == Due(date: "2026-11-07", time: nil))
     }
 
+    @Test func aLiteralTitleSavesAnEditAsTyped() {
+        let task = TaskItem(id: "t", title: "Standup notse 9am tomorrow p1", titleMode: .literal, createdAt: 0)
+        let fixed = "Standup notes 9am tomorrow p1  #Home"
+        #expect(TaskDetails.tokens(task, title: fixed, parse(fixed, task)).isEmpty)
+        guard case let .update(patch, title) = TaskDetails.commitTitle(task, title: fixed, parse(fixed, task)) else {
+            Issue.record("Expected an update")
+            return
+        }
+        #expect(title == "Standup notes 9am tomorrow p1 #Home")
+        #expect(patch.due == .some(nil))
+        #expect(patch.priority == .p4)
+        #expect(patch.projectId == .some(nil))
+    }
+
     @Test func committingTheTitleSavesTheDraftOrReverts() {
         let task = TaskItem(id: "t", title: "Standup", priority: .p3, createdAt: 0)
         #expect(TaskDetails.commitTitle(task, title: "Standup", parse("Standup", task)) == .unchanged)

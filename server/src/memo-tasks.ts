@@ -117,6 +117,7 @@ export async function putMemoTasks(command: Command, request: MemoTasksRequest):
 		parentId: null,
 		order: 0,
 		title: input.title,
+		titleMode: 'parse',
 		notes: input.notes,
 		projectId: null,
 		sectionId: null,

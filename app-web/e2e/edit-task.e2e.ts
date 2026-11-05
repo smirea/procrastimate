@@ -98,3 +98,47 @@ test('a phrase left in a saved title stays text until the title is edited, so th
 	await expect(title).toHaveValue('Sign out of prime');
 	await expect(details.getByRole('button', { name: /^Due / })).toBeVisible();
 });
+
+test('a plain text title stays literal in details, and its Plain text chip turns parsing back on', async ({
+	app,
+	page,
+}) => {
+	await app.openQuickAdd();
+	await app.quickAdd().getByRole('button', { name: 'Plain text' }).click();
+	await app.taskInput().pressSequentially('Standup notse 9am tomorrow p1');
+	await app.taskInput().press('Enter');
+	await app.closeQuickAdd();
+	await app.go('No date');
+	await app
+		.row('Standup notse 9am tomorrow p1')
+		.getByRole('button', { name: 'Standup notse 9am tomorrow p1', exact: true })
+		.click();
+	const details = app.details();
+	const plain = details.getByRole('button', { name: 'Plain text', exact: true });
+	await expect(plain).toHaveAttribute('aria-pressed', 'true');
+	const title = details.getByRole('textbox', { name: 'Title' });
+	await title.fill('Standup notes 9am tomorrow p1');
+	await expect(details.locator('[data-token]')).toHaveCount(0);
+	await expect(details.getByRole('button', { name: 'Set due date' })).toBeVisible();
+	await app.settle();
+	await page.screenshot({ path: 'test-results/edit-task/literal-title.png' });
+	await title.press('Enter');
+	await expect(title).toHaveValue('Standup notes 9am tomorrow p1');
+	await expect(details.getByRole('button', { name: 'Set due date' })).toBeVisible();
+	await expect(details.getByRole('button', { name: 'Priority 4' })).toBeVisible();
+
+	await title.focus();
+	await plain.click();
+	await expect(plain).toHaveAttribute('aria-pressed', 'false');
+	await expect(title).toBeFocused();
+	await expect(details.locator('[data-token]')).toHaveCount(0);
+	await title.press('End');
+	await title.pressSequentially(' ');
+	await expect(details.locator('[data-token]')).toHaveText(['9am tomorrow', 'p1']);
+	await app.settle();
+	await page.screenshot({ path: 'test-results/edit-task/parse-title.png' });
+	await title.press('Enter');
+	await expect(title).toHaveValue('Standup notes');
+	await expect(details.getByRole('button', { name: 'Priority 1' })).toBeVisible();
+	await expect(details.getByRole('button', { name: /^Due Tomorrow 9am/ })).toBeVisible();
+});
