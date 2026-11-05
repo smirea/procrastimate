@@ -18,6 +18,7 @@ import { completedToast, dayHeading, postponeOptions, reopenedToast } from 'shar
 import { parseQuickAdd } from 'shared/quick-add.ts';
 import { search } from 'shared/search.ts';
 import { descendantsOf } from 'shared/subtasks.ts';
+import { scheduledDays } from 'shared/triggers.ts';
 import type { AgentTask, SpaceView } from 'shared/sharing.ts';
 import { projectsInOrder, type TaskPatch } from 'shared/store.ts';
 import { toDateKey, toTimeOfDay, type DateKey, type Due, type Priority, type Task } from 'shared/task.ts';
@@ -166,6 +167,7 @@ export default function Tasks() {
 	const projects = useMemo(() => (view ? projectsInOrder(view.projects) : []), [view]);
 	const projectName = useMemo(() => new Map(view?.projects.map(p => [p.id, p.name])), [view]);
 	const readOnly = useMemo(() => new Set(view?.readOnly), [view]);
+	const scheduled = useMemo(() => scheduledDays(view?.tasks ?? [], today), [view, today]);
 
 	const trimmed = query.trim();
 	const draft = useMemo(() => {
@@ -374,6 +376,7 @@ export default function Tasks() {
 							key={task.id}
 							task={task}
 							today={today}
+							scheduled={scheduled}
 							project={list.startsWith('project:') ? undefined : projectName.get(task.projectId ?? '')}
 							labels={view?.labels ?? []}
 							editable={!readOnly.has(task.id)}
@@ -415,6 +418,7 @@ export default function Tasks() {
 function TaskItem(props: {
 	task: Task;
 	today: DateKey;
+	scheduled: readonly DateKey[];
 	project: string | undefined;
 	labels: SpaceView['labels'];
 	editable: boolean;
@@ -451,7 +455,7 @@ function TaskItem(props: {
 						<>
 							{!task.event && (
 								<ActionPanel.Submenu title='Set Date' icon={Icon.Calendar} shortcut={{ modifiers: ['cmd'], key: 'd' }}>
-									{postponeOptions(task.due, today).map(option => (
+									{postponeOptions(task.due, today, props.scheduled).map(option => (
 										<Action key={option.date} title={option.label} onAction={() => props.onDate(option.date)} />
 									))}
 									<Action.PickDate

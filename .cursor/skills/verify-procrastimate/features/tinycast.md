@@ -9,7 +9,7 @@ The Tinycast launcher on the Mac adds and manages ProcrastiMate tasks through th
 - `search` filters every open task with the app's search while text is typed.
 - `add-from-list` shows the typed text as a `New task` row with its parsed title, project, priority, and date, and Return adds it. A project or label list puts the task there unless the text names another project, and Today or Tomorrow date an undated task to that day.
 - `complete` completes a task with Return, with an `Undo` toast unless a repeat rolled to its next date.
-- `set-date` moves a task to a postpone option, a picked date and time, or no date with `⌘D`, keeping its time.
+- `set-date` moves a task to a postpone option (the shared list, with `Next empty day` read from the loaded view), a picked date and time, or no date with `⌘D`, keeping its time.
 - `priority` sets priority 1 to 4 with `⌘P`.
 - `open` opens the task's details in the web app with `⌘O`, and the first link in its title with `⌘L`.
 - `delete` deletes a task and its subtasks with `⌃X` after a confirmation.

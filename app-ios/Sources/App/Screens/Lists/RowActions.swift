@@ -10,6 +10,17 @@ extension RowActions {
     }
 }
 
+extension Store {
+    /// The postpone options for `task`, whose `Next empty day` skips every day an open task of the user's own sits on.
+    @MainActor func postponeOptions(_ task: TaskItem, _ today: DateKey) -> [Format.PostponeOption] {
+        Format.postponeOptions(
+            Triggers.scheduledDue(task, today, in: timeZone),
+            today,
+            Triggers.scheduledDays(openTasks, today, in: timeZone)
+        )
+    }
+}
+
 extension RowActions.Toggle {
     var label: String { self == .complete ? "Complete" : "Reopen" }
     var swipeImage: String { self == .complete ? "checkmark" : "arrow.uturn.backward" }
@@ -32,7 +43,7 @@ struct TaskMenu: View {
         }
         if offered.postpone {
             Menu("Postpone", systemImage: "calendar.badge.clock") {
-                ForEach(Format.postponeOptions(Triggers.scheduledDue(task, today, in: store.timeZone), today), id: \.date) { option in
+                ForEach(store.postponeOptions(task, today), id: \.date) { option in
                     Button(option.label) { actions.postpone(task, to: option.date) }
                 }
             }
@@ -81,8 +92,8 @@ private struct TaskSwipes: ViewModifier {
                 Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
                     .tint(.toneWeek)
             }
-            .confirmationDialog("Postpone “\(task.title)”", isPresented: $postponing, titleVisibility: .visible) {
-                ForEach(Format.postponeOptions(Triggers.scheduledDue(task, today, in: store.timeZone), today), id: \.date) { option in
+            .confirmationDialog("Postpone", isPresented: $postponing, titleVisibility: .visible) {
+                ForEach(store.postponeOptions(task, today), id: \.date) { option in
                     Button("\(option.label) · \(Format.weekdayNames[Dates.weekdayOf(option.date)])") {
                         actions.postpone(task, to: option.date)
                     }

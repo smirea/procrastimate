@@ -10,7 +10,7 @@
 	import { WEEKDAY_NAMES, postponeOptions } from 'shared/format.ts';
 	import { rowActions } from 'shared/row-actions.ts';
 	import { weekdayOf, type Task } from 'shared/task.ts';
-	import { scheduledDue } from 'shared/triggers.ts';
+	import { scheduledDays, scheduledDue } from 'shared/triggers.ts';
 	import { completeTask, deleteTask, postponeTask, reopenTask } from '../completion.ts';
 	import { copyMarkdown } from '../copy.ts';
 	import { MARGIN, viewportHeight } from '../placement.ts';
@@ -25,7 +25,7 @@
 	const offered = $derived(
 		task && opened ? rowActions({ ...task, completedAt: store.completedAt(task) }, !store.canEdit(task.id), opened.rolled) : null,
 	);
-	const options = $derived(task && offered?.postpone ? postponeOptions(scheduledDue(task, clock.today), clock.today) : []);
+	const options = $derived(task && offered?.postpone ? postponeOptions(scheduledDue(task, clock.today), clock.today, scheduledDays(store.own.tasks, clock.today)) : []);
 
 	$effect(() => {
 		if (opened && !task) rowMenu.close();

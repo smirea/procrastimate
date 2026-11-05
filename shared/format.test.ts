@@ -235,34 +235,72 @@ describe('completed', () => {
 });
 
 describe('postpone', () => {
-	test('offers tomorrow, the coming weekend, and next week, keeping only new days', () => {
-		expect(postponeOptions({ date: today, time: '09:00' }, today)).toEqual([
+	test('offers tomorrow, in 2 days, the weekend, next week, next month, and the next empty day', () => {
+		expect(postponeOptions({ date: today, time: '09:00' }, today, ['2026-10-15', '2026-10-16', '2026-10-17'])).toEqual([
 			{ label: 'Tomorrow', date: '2026-10-15' },
-			{ label: 'This weekend', date: '2026-10-17' },
+			{ label: 'In 2 days', date: '2026-10-16' },
+			{ label: 'Weekend', date: '2026-10-17' },
 			{ label: 'Next week', date: '2026-10-19' },
+			{ label: 'Next month', date: '2026-11-01' },
+			{ label: 'Next empty day', date: '2026-10-18' },
 		]);
-		expect(postponeOptions({ date: '2026-10-15', time: null }, today).map(o => o.label)).toEqual([
-			'This weekend',
+	});
+
+	test('leaves out the day the task is on and a day an earlier option names', () => {
+		expect(postponeOptions({ date: '2026-10-15', time: null }, today, []).map(o => o.label)).toEqual([
+			'In 2 days',
+			'Weekend',
 			'Next week',
+			'Next month',
 		]);
+	});
+
+	test('the next empty day skips the day the task is on', () => {
+		expect(
+			postponeOptions({ date: '2026-10-21', time: null }, today, [
+				'2026-10-15',
+				'2026-10-16',
+				'2026-10-17',
+				'2026-10-18',
+				'2026-10-19',
+				'2026-10-20',
+			]).at(-1),
+		).toEqual({
+			label: 'Next empty day',
+			date: '2026-10-22',
+		});
 	});
 
 	test('an overdue or undated task can move to today', () => {
-		expect(postponeOptions(null, today)[0]).toEqual({ label: 'Today', date: today });
-		expect(postponeOptions({ date: '2026-10-01', time: null }, today)[0]).toEqual({ label: 'Today', date: today });
+		expect(postponeOptions(null, today, [])[0]).toEqual({ label: 'Today', date: today });
+		expect(postponeOptions({ date: '2026-10-01', time: null }, today, [])[0]).toEqual({ label: 'Today', date: today });
 	});
 
 	test('on a Friday the weekend is tomorrow, and on a weekend it is the next one', () => {
-		expect(postponeOptions(null, '2026-10-16')).toEqual([
+		expect(postponeOptions(null, '2026-10-16', ['2026-10-17', '2026-10-18', '2026-10-19'])).toEqual([
 			{ label: 'Today', date: '2026-10-16' },
 			{ label: 'Tomorrow', date: '2026-10-17' },
+			{ label: 'In 2 days', date: '2026-10-18' },
 			{ label: 'Next week', date: '2026-10-19' },
+			{ label: 'Next month', date: '2026-11-01' },
+			{ label: 'Next empty day', date: '2026-10-20' },
 		]);
-		expect(postponeOptions({ date: '2026-10-17', time: null }, '2026-10-17')).toEqual([
+		expect(
+			postponeOptions({ date: '2026-10-17', time: null }, '2026-10-17', ['2026-10-18', '2026-10-19', '2026-10-20']),
+		).toEqual([
 			{ label: 'Tomorrow', date: '2026-10-18' },
+			{ label: 'In 2 days', date: '2026-10-19' },
 			{ label: 'Next weekend', date: '2026-10-24' },
-			{ label: 'Next week', date: '2026-10-19' },
+			{ label: 'Next month', date: '2026-11-01' },
+			{ label: 'Next empty day', date: '2026-10-21' },
 		]);
+	});
+
+	test('next month is its 1st', () => {
+		expect(postponeOptions(null, '2026-10-28', []).find(o => o.label === 'Next month')).toEqual({
+			label: 'Next month',
+			date: '2026-11-01',
+		});
 	});
 });
 

@@ -78,6 +78,12 @@ public enum Triggers {
         return Due(date: date, time: due.time)
     }
 
+    /// The days after today that an open task sits on, as `scheduledDue` places it, so Postpone can find an empty one.
+    public static func scheduledDays(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> [DateKey] {
+        let days = Set(openTasks(tasks).compactMap { scheduledDue($0, today, in: zone)?.date })
+        return days.filter { $0 > today }.sorted()
+    }
+
     /// When a task notifies, each moment once. An event notifies at each listed moment unless it lasts all day, and a
     /// due time at a place never notifies on its own.
     public static func taskNotificationTimes(_ task: TaskItem, _ today: DateKey, in zone: TimeZone) -> [Date] {

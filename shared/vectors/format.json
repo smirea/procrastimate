@@ -1153,13 +1153,18 @@
 		},
 		{
 			"fn": "postponeOptions",
-			"test": "postpone › offers tomorrow, the coming weekend, and next week, keeping only new days",
+			"test": "postpone › offers tomorrow, in 2 days, the weekend, next week, next month, and the next empty day",
 			"input": [
 				{
 					"date": "2026-10-14",
 					"time": "09:00"
 				},
-				"2026-10-14"
+				"2026-10-14",
+				[
+					"2026-10-15",
+					"2026-10-16",
+					"2026-10-17"
+				]
 			],
 			"output": [
 				{
@@ -1167,33 +1172,99 @@
 					"label": "Tomorrow"
 				},
 				{
+					"date": "2026-10-16",
+					"label": "In 2 days"
+				},
+				{
 					"date": "2026-10-17",
-					"label": "This weekend"
+					"label": "Weekend"
 				},
 				{
 					"date": "2026-10-19",
 					"label": "Next week"
+				},
+				{
+					"date": "2026-11-01",
+					"label": "Next month"
+				},
+				{
+					"date": "2026-10-18",
+					"label": "Next empty day"
 				}
 			]
 		},
 		{
 			"fn": "postponeOptions",
-			"test": "postpone › offers tomorrow, the coming weekend, and next week, keeping only new days",
+			"test": "postpone › leaves out the day the task is on and a day an earlier option names",
 			"input": [
 				{
 					"date": "2026-10-15",
 					"time": null
 				},
-				"2026-10-14"
+				"2026-10-14",
+				[]
 			],
 			"output": [
 				{
+					"date": "2026-10-16",
+					"label": "In 2 days"
+				},
+				{
 					"date": "2026-10-17",
-					"label": "This weekend"
+					"label": "Weekend"
 				},
 				{
 					"date": "2026-10-19",
 					"label": "Next week"
+				},
+				{
+					"date": "2026-11-01",
+					"label": "Next month"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › the next empty day skips the day the task is on",
+			"input": [
+				{
+					"date": "2026-10-21",
+					"time": null
+				},
+				"2026-10-14",
+				[
+					"2026-10-15",
+					"2026-10-16",
+					"2026-10-17",
+					"2026-10-18",
+					"2026-10-19",
+					"2026-10-20"
+				]
+			],
+			"output": [
+				{
+					"date": "2026-10-15",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-16",
+					"label": "In 2 days"
+				},
+				{
+					"date": "2026-10-17",
+					"label": "Weekend"
+				},
+				{
+					"date": "2026-10-19",
+					"label": "Next week"
+				},
+				{
+					"date": "2026-11-01",
+					"label": "Next month"
+				},
+				{
+					"date": "2026-10-22",
+					"label": "Next empty day"
 				}
 			]
 		},
@@ -1202,7 +1273,8 @@
 			"test": "postpone › an overdue or undated task can move to today",
 			"input": [
 				null,
-				"2026-10-14"
+				"2026-10-14",
+				[]
 			],
 			"output": [
 				{
@@ -1214,12 +1286,20 @@
 					"label": "Tomorrow"
 				},
 				{
+					"date": "2026-10-16",
+					"label": "In 2 days"
+				},
+				{
 					"date": "2026-10-17",
-					"label": "This weekend"
+					"label": "Weekend"
 				},
 				{
 					"date": "2026-10-19",
 					"label": "Next week"
+				},
+				{
+					"date": "2026-11-01",
+					"label": "Next month"
 				}
 			]
 		},
@@ -1231,7 +1311,8 @@
 					"date": "2026-10-01",
 					"time": null
 				},
-				"2026-10-14"
+				"2026-10-14",
+				[]
 			],
 			"output": [
 				{
@@ -1243,12 +1324,20 @@
 					"label": "Tomorrow"
 				},
 				{
+					"date": "2026-10-16",
+					"label": "In 2 days"
+				},
+				{
 					"date": "2026-10-17",
-					"label": "This weekend"
+					"label": "Weekend"
 				},
 				{
 					"date": "2026-10-19",
 					"label": "Next week"
+				},
+				{
+					"date": "2026-11-01",
+					"label": "Next month"
 				}
 			]
 		},
@@ -1257,7 +1346,12 @@
 			"test": "postpone › on a Friday the weekend is tomorrow, and on a weekend it is the next one",
 			"input": [
 				null,
-				"2026-10-16"
+				"2026-10-16",
+				[
+					"2026-10-17",
+					"2026-10-18",
+					"2026-10-19"
+				]
 			],
 			"output": [
 				{
@@ -1269,8 +1363,20 @@
 					"label": "Tomorrow"
 				},
 				{
+					"date": "2026-10-18",
+					"label": "In 2 days"
+				},
+				{
 					"date": "2026-10-19",
 					"label": "Next week"
+				},
+				{
+					"date": "2026-11-01",
+					"label": "Next month"
+				},
+				{
+					"date": "2026-10-20",
+					"label": "Next empty day"
 				}
 			]
 		},
@@ -1282,7 +1388,12 @@
 					"date": "2026-10-17",
 					"time": null
 				},
-				"2026-10-17"
+				"2026-10-17",
+				[
+					"2026-10-18",
+					"2026-10-19",
+					"2026-10-20"
+				]
 			],
 			"output": [
 				{
@@ -1290,12 +1401,55 @@
 					"label": "Tomorrow"
 				},
 				{
+					"date": "2026-10-19",
+					"label": "In 2 days"
+				},
+				{
 					"date": "2026-10-24",
 					"label": "Next weekend"
 				},
 				{
-					"date": "2026-10-19",
+					"date": "2026-11-01",
+					"label": "Next month"
+				},
+				{
+					"date": "2026-10-21",
+					"label": "Next empty day"
+				}
+			]
+		},
+		{
+			"fn": "postponeOptions",
+			"test": "postpone › next month is its 1st",
+			"input": [
+				null,
+				"2026-10-28",
+				[]
+			],
+			"output": [
+				{
+					"date": "2026-10-28",
+					"label": "Today"
+				},
+				{
+					"date": "2026-10-29",
+					"label": "Tomorrow"
+				},
+				{
+					"date": "2026-10-30",
+					"label": "In 2 days"
+				},
+				{
+					"date": "2026-10-31",
+					"label": "Weekend"
+				},
+				{
+					"date": "2026-11-02",
 					"label": "Next week"
+				},
+				{
+					"date": "2026-11-01",
+					"label": "Next month"
 				}
 			]
 		},
