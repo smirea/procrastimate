@@ -134,21 +134,53 @@ public enum WidgetLists {
         public let overdue: Int
         /// Tasks on this list completed today.
         public let done: Int
+        /// Where the overdue and today rows end and later ones begin, when the list has both.
+        public let later: Later?
 
-        public init(name: String, tasks: [TaskItem], rows: [TaskItem]? = nil, checked: Set<String> = [], overdue: Int, done: Int) {
+        public init(
+            name: String,
+            tasks: [TaskItem],
+            rows: [TaskItem]? = nil,
+            checked: Set<String> = [],
+            overdue: Int,
+            done: Int,
+            later: Later? = nil
+        ) {
             self.name = name
             self.tasks = tasks
             self.rows = rows ?? tasks
             self.checked = checked
             self.overdue = overdue
             self.done = done
+            self.later = later
+        }
+
+        /// What a widget with room for `limit` rows draws. The divider takes one row's place, and only shows when a
+        /// later row fits under it.
+        public func slots(limit: Int) -> [Slot] {
+            guard let later, later.index < limit - 1 else { return rows.prefix(limit).map(Slot.task) }
+            return rows[..<later.index].map(Slot.task) + [.later(later.label)] + rows[later.index..<min(limit - 1, rows.count)].map(Slot.task)
         }
 
         /// How far through today's list Stefan is, from 0 to 1. An empty list with nothing done is not progress.
-
         public var progress: Double {
             let total = tasks.count + done
             return total == 0 ? 0 : Double(done) / Double(total)
+        }
+    }
+
+    /// The first later row's position in `rows`, and its day as Upcoming heads it: `Tomorrow`, `Saturday`, `Tue, Nov 17`.
+    public struct Later: Equatable, Sendable {
+        public let index: Int
+        public let label: String
+    }
+
+    public enum Slot: Equatable, Sendable {
+        case task(TaskItem)
+        case later(String)
+
+        public var task: TaskItem? {
+            if case let .task(task) = self { task } else { nil }
         }
     }
 
@@ -220,8 +252,18 @@ public enum WidgetLists {
             rows: rows,
             checked: checkedIds.intersection(rows.map(\.id)),
             overdue: overdue,
-            done: done
+            done: done,
+            later: later(rows, today: today, in: zone)
         )
+    }
+
+    /// Only a list that opens with overdue or today rows and goes on to a dated later one gets the divider.
+    static func later(_ rows: [TaskItem], today: DateKey, in zone: TimeZone) -> Later? {
+        let dates = rows.map { Triggers.scheduledDue($0, today, in: zone)?.date }
+        guard let index = dates.firstIndex(where: { $0.map { $0 > today } ?? true }), index > 0,
+              let date = dates[index]
+        else { return nil }
+        return Later(index: index, label: Format.dayHeading(date, today))
     }
 
     /// How long a checked row stays struck through, counted from the tap. The widget extension redraws within a moment
