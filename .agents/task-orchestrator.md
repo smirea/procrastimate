@@ -5,7 +5,7 @@ teardown: agent-t3-worktree teardown
 ship: pr-ship --merge
 ---
 
-Repo config for the global `task-orchestrator` skill (`~/code/ai-files/skills/task-orchestrator/`). Its `scripts/check-config.ts` validates this file, and `scripts/skill-references.test.ts` fails when it names a repo path that no longer exists.
+Repo config for the global `task-orchestrator` skill (`~/code/ai-files/skills/task-orchestrator/`). Its `~/code/ai-files/skills/task-orchestrator/scripts/check-config.ts` validates this file, and `scripts/skill-references.test.ts` fails when it names a repo path that no longer exists.
 
 # Orchestrator
 
