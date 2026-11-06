@@ -28,7 +28,7 @@ struct WidgetListQuery: EntityQuery {
 
     func defaultResult() async -> WidgetListEntity? { .today }
 
-    private static func all() -> [WidgetListEntity] {
+    static func all() -> [WidgetListEntity] {
         let data = WidgetStore.read() ?? WidgetData(signedIn: false)
         let now = WidgetNow()
         return WidgetLists.choices(data, today: now.today, in: now.zone).map { choice in

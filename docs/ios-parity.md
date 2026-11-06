@@ -266,14 +266,14 @@ iOS only. The web client has no App Intents. New features that can be done from 
 
 iOS only. Browsers have no widget surface. See [iOS app](decisions/ios.md#widgets-and-controls).
 
-| Feature                                                                                         | Web | iOS   | Slice   | XCUITest                                                      | Playwright | Screenshot |
-| ----------------------------------------------------------------------------------------------- | --- | ----- | ------- | ------------------------------------------------------------- | ---------- | ---------- |
-| `widget-tasks`, `widget-config`: Tasks lists Today or any own list, configurable                | n/a | Built | Widgets | throwaway SpringBoard test; `swift test` (`WidgetListsTests`) | n/a        | —          |
-| `widget-complete`: the checkbox completes the task in the app and every widget updates          | n/a | Built | Widgets | throwaway SpringBoard test                                    | n/a        | —          |
-| `widget-open`, `widget-add`: rows, header, and `+` open the task, the list, or quick add        | n/a | Built | Widgets | throwaway SpringBoard test; `swift test` (`linksRoundTrip`)   | n/a        | —          |
-| `widget-progress`, `widget-quick-add`: the done-today ring and the quick add and Ramble buttons | n/a | Built | Widgets | throwaway SpringBoard test                                    | n/a        | —          |
-| `widget-shortcuts`: up to four projects in a 2×2 grid with due or pending counts, opening each  | n/a | Built | Widgets | throwaway SpringBoard test; `swift test` (`WidgetListsTests`) | n/a        | —          |
-| `widget-lock-screen`, `widget-controls`: Lock Screen families and Control Center controls       | n/a | Built | Widgets | —                                                             | n/a        | —          |
+| Feature                                                                                                                      | Web | iOS   | Slice   | XCUITest                                                      | Playwright | Screenshot |
+| ---------------------------------------------------------------------------------------------------------------------------- | --- | ----- | ------- | ------------------------------------------------------------- | ---------- | ---------- |
+| `widget-tasks`, `widget-config`: Tasks lists Today or any own list, configurable                                             | n/a | Built | Widgets | throwaway SpringBoard test; `swift test` (`WidgetListsTests`) | n/a        | —          |
+| `widget-complete`: the checkbox completes the task in the app and every widget updates                                       | n/a | Built | Widgets | throwaway SpringBoard test                                    | n/a        | —          |
+| `widget-open`, `widget-add`: rows, header, and `+` open the task, the list, or quick add                                     | n/a | Built | Widgets | throwaway SpringBoard test; `swift test` (`linksRoundTrip`)   | n/a        | —          |
+| `widget-progress`, `widget-quick-add`: the done-today ring and the quick add and Ramble buttons                              | n/a | Built | Widgets | throwaway SpringBoard test                                    | n/a        | —          |
+| `widget-shortcuts`: up to four lists of any kind in a 2×2 grid with due or pending counts, opening each, empty slots allowed | n/a | Built | Widgets | throwaway SpringBoard test; `swift test` (`WidgetListsTests`) | n/a        | —          |
+| `widget-lock-screen`, `widget-controls`: Lock Screen families and Control Center controls                                    | n/a | Built | Widgets | —                                                             | n/a        | —          |
 
 ## Thread split
 

@@ -9,37 +9,40 @@ struct ProjectShortcutsWidget: Widget {
             ShortcutsView(entry: entry)
                 .containerBackground(for: .widget) { WidgetCanvas(accent: entry.accent) }
         }
-        .configurationDisplayName("Project Shortcuts")
-        .description("Up to four projects, one tap away, each with its count.")
+        .configurationDisplayName("List Shortcuts")
+        .description("Up to four lists, one tap away, each with its count.")
         .supportedFamilies([.systemMedium])
         .promptsForUserConfiguration()
     }
 }
 
-/// A project a shortcut opens, picked from the projects in the app group file.
-struct WidgetProjectEntity: AppEntity {
-    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Project")
-    static let defaultQuery = WidgetProjectQuery()
+/// What a shortcut slot holds: any list the Tasks widget can show, or Empty, which keeps the slot's place blank. Its own
+/// type, since `WidgetListEntity`'s query defaults to Today and a slot starts empty.
+struct ShortcutListEntity: AppEntity {
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "List")
+    static let defaultQuery = ShortcutListQuery()
+    static let empty = ShortcutListEntity(id: "empty", name: "Empty", group: "Leaves the slot blank", symbol: "square.dashed")
 
     let id: String
     let name: String
+    let group: String
     let symbol: String
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(name)", image: DisplayRepresentation.Image(systemName: symbol))
+        DisplayRepresentation(title: "\(name)", subtitle: "\(group)", image: DisplayRepresentation.Image(systemName: symbol))
     }
 }
 
-struct WidgetProjectQuery: EntityQuery {
-    func entities(for identifiers: [String]) async throws -> [WidgetProjectEntity] {
+struct ShortcutListQuery: EntityQuery {
+    func entities(for identifiers: [String]) async throws -> [ShortcutListEntity] {
         let all = Self.all()
         return identifiers.compactMap { id in all.first { $0.id == id } }
     }
 
-    func suggestedEntities() async throws -> [WidgetProjectEntity] { Self.all() }
+    func suggestedEntities() async throws -> [ShortcutListEntity] { Self.all() }
 
-    private static func all() -> [WidgetProjectEntity] {
-        (WidgetStore.read()?.projects ?? []).map { WidgetProjectEntity(id: $0.id, name: $0.name, symbol: $0.systemImage) }
+    private static func all() -> [ShortcutListEntity] {
+        [.empty] + WidgetListQuery.all().map { ShortcutListEntity(id: $0.id, name: $0.name, group: $0.group, symbol: $0.symbol) }
     }
 }
 
@@ -56,33 +59,40 @@ enum ShortcutCounter: String, AppEnum {
     var counter: WidgetLists.Counter { WidgetLists.Counter(rawValue: rawValue)! }
 }
 
-/// App intents take no arrays of structs, so each of the four cells is a project and a counter of its own.
+/// App intents take no arrays of structs, so each of the four slots is a list and a counter of its own. A list array
+/// would get reordering in Edit Widget, but its counters could not follow a list as it moves.
 struct ProjectShortcutsConfiguration: WidgetConfigurationIntent {
-    static let title: LocalizedStringResource = "Project Shortcuts"
-    static let description = IntentDescription("Opens a project from a 2×2 grid, with its due or pending count.")
+    static let title: LocalizedStringResource = "List Shortcuts"
+    static let description = IntentDescription("Opens a list from a 2×2 grid, with its due or pending count.")
 
-    @Parameter(title: "Project 1") var project1: WidgetProjectEntity?
+    @Parameter(title: "List 1") var list1: ShortcutListEntity?
     @Parameter(title: "Counter 1", default: .due) var counter1: ShortcutCounter
-    @Parameter(title: "Project 2") var project2: WidgetProjectEntity?
+    @Parameter(title: "List 2") var list2: ShortcutListEntity?
     @Parameter(title: "Counter 2", default: .due) var counter2: ShortcutCounter
-    @Parameter(title: "Project 3") var project3: WidgetProjectEntity?
+    @Parameter(title: "List 3") var list3: ShortcutListEntity?
     @Parameter(title: "Counter 3", default: .due) var counter3: ShortcutCounter
-    @Parameter(title: "Project 4") var project4: WidgetProjectEntity?
+    @Parameter(title: "List 4") var list4: ShortcutListEntity?
     @Parameter(title: "Counter 4", default: .due) var counter4: ShortcutCounter
 
-    var slots: [(project: WidgetProjectEntity?, counter: ShortcutCounter)] {
-        [(project1, counter1), (project2, counter2), (project3, counter3), (project4, counter4)]
+    var slots: [(list: ShortcutListEntity?, counter: ShortcutCounter)] {
+        [(list1, counter1), (list2, counter2), (list3, counter3), (list4, counter4)]
     }
 
     init() {}
 }
 
 struct ShortcutsEntry: TimelineEntry {
+    struct Cell {
+        let shortcut: WidgetLists.Shortcut
+        let symbol: String
+    }
+
     enum State {
         case signedOut
-        /// No project picked, or every picked one is gone.
+        /// Every slot is empty, or its list is gone.
         case empty
-        case ready([WidgetLists.Shortcut])
+        /// The four slots in reading order, nil where one is empty.
+        case ready([Cell?])
     }
 
     let date: Date
@@ -92,24 +102,25 @@ struct ShortcutsEntry: TimelineEntry {
     static func make(_ configuration: ProjectShortcutsConfiguration, at now: WidgetNow, data: WidgetData?) -> ShortcutsEntry {
         let accent = AccentColors(Accents.parseAccent(data?.accent))
         guard let data, data.signedIn else { return ShortcutsEntry(date: now.date, state: .signedOut, accent: accent) }
-        let shortcuts = configuration.slots.compactMap { slot in
-            slot.project.flatMap { WidgetLists.shortcut(project: $0.id, counter: slot.counter.counter, data, today: now.today, in: now.zone) }
+        let choices = WidgetLists.choices(data, today: now.today, in: now.zone)
+        let cells = configuration.slots.map { slot -> Cell? in
+            guard let key = slot.list?.id, let choice = choices.first(where: { $0.list.key == key }) else { return nil }
+            let shortcut = WidgetLists.shortcut(choice, counter: slot.counter.counter, data, now: now.date, today: now.today, in: now.zone)
+            return Cell(shortcut: shortcut, symbol: choice.symbol(in: data))
         }
-        return ShortcutsEntry(date: now.date, state: shortcuts.isEmpty ? .empty : .ready(shortcuts), accent: accent)
+        return ShortcutsEntry(date: now.date, state: cells.allSatisfy { $0 == nil } ? .empty : .ready(cells), accent: accent)
     }
 
     static var sample: ShortcutsEntry {
-        let projects: [(String, ProjectIcon, Int?, Bool)] = [
-            ("Home", .home, 3, true), ("Work", .work, 5, false), ("Groceries", .groceries, 12, false), ("Someday", .someday, nil, false),
+        let lists: [(WidgetList, String, String, Int?, Bool)] = [
+            (.pin(.inbox), "Inbox", "tray", 3, true), (.today, "Today", "sun.max", 5, false),
+            (.pin(.project(id: "work")), "Work", ProjectIcon.work.systemImage, 12, false),
+            (.pin(.label(id: "gym")), "Gym", "mappin.and.ellipse", nil, false),
         ]
-        let shortcuts = projects.enumerated().map { index, project in
-            WidgetLists.Shortcut(
-                project: Project(id: "\(index)", name: project.0, icon: project.1, createdAt: 0),
-                count: project.2,
-                overdue: project.3
-            )
+        let cells = lists.map { list, name, symbol, count, overdue in
+            Cell(shortcut: WidgetLists.Shortcut(choice: .init(list: list, name: name, group: ""), count: count, overdue: overdue), symbol: symbol)
         }
-        return ShortcutsEntry(date: Date(), state: .ready(shortcuts), accent: AccentColors(.preset(Accents.defaultAccent)))
+        return ShortcutsEntry(date: Date(), state: .ready(cells), accent: AccentColors(.preset(Accents.defaultAccent)))
     }
 }
 
@@ -147,17 +158,24 @@ private struct ShortcutsView: View {
                     .font(.title2)
                     .foregroundStyle(entry.accent.tint)
                     .widgetAccentable()
-                Text("Pick up to four projects").font(.subheadline.weight(.semibold)).foregroundStyle(.ink)
+                Text("Pick up to four lists").font(.subheadline.weight(.semibold)).foregroundStyle(.ink)
                 Text("Touch and hold, then Edit Widget.").font(.caption).foregroundStyle(.muted)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        case let .ready(shortcuts):
+        case let .ready(cells):
+            // An empty slot keeps its place in its row; a row with nothing in it gives its height to the other.
+            let rows = [Array(cells[0..<2]), Array(cells[2..<4])].filter { $0.contains { $0 != nil } }
             Grid(horizontalSpacing: 8, verticalSpacing: 8) {
-                ForEach(Array(stride(from: 0, to: shortcuts.count, by: 2)), id: \.self) { start in
+                ForEach(rows.indices, id: \.self) { row in
                     GridRow {
-                        ForEach(shortcuts[start..<min(start + 2, shortcuts.count)], id: \.project.id) { shortcut in
-                            ShortcutCell(shortcut: shortcut, accent: entry.accent)
-                                .gridCellColumns(shortcuts.count - start == 1 ? 2 : 1)
+                        ForEach(rows[row].indices, id: \.self) { column in
+                            if let cell = rows[row][column] {
+                                ShortcutCell(cell: cell, accent: entry.accent)
+                            } else {
+                                RoundedRectangle(cornerRadius: 14)
+                                    .strokeBorder(.glassEdge, style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                                    .accessibilityHidden(true)
+                            }
                         }
                     }
                 }
@@ -167,14 +185,16 @@ private struct ShortcutsView: View {
 }
 
 private struct ShortcutCell: View {
-    let shortcut: WidgetLists.Shortcut
+    let cell: ShortcutsEntry.Cell
     let accent: AccentColors
 
+    private var shortcut: WidgetLists.Shortcut { cell.shortcut }
+
     var body: some View {
-        Link(destination: AppLink.list(key: Pin.project(id: shortcut.project.id).key).url) {
+        Link(destination: AppLink.list(key: shortcut.choice.list.key).url) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top) {
-                    Image(systemName: shortcut.project.systemImage)
+                    Image(systemName: cell.symbol)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(accent.tint)
                         .widgetAccentable()
@@ -188,7 +208,7 @@ private struct ShortcutCell: View {
                     }
                 }
                 Spacer(minLength: 2)
-                Text(shortcut.project.name)
+                Text(shortcut.choice.name)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.ink)
                     .lineLimit(1)
@@ -203,7 +223,7 @@ private struct ShortcutCell: View {
     }
 
     private var label: String {
-        guard let count = shortcut.count else { return shortcut.project.name }
-        return "\(shortcut.project.name), \(count)"
+        guard let count = shortcut.count else { return shortcut.choice.name }
+        return "\(shortcut.choice.name), \(count)"
     }
 }

@@ -265,6 +265,11 @@ import Testing
         #expect(WidgetLists.listing(choice, data, now: pinned, today: today, in: zone).later.map { "\($0.index) \($0.label)" } == "1 " + "Tuesday")
     }
 
+    func shortcut(_ key: String, _ counter: WidgetLists.Counter, in data: WidgetData) throws -> WidgetLists.Shortcut {
+        let choice = try #require(WidgetLists.choice(key: key, in: data, today: today, in: zone))
+        return WidgetLists.shortcut(choice, counter: counter, data, now: pinned, today: today, in: zone)
+    }
+
     @Test func shortcutsCountAProjectsDueOrPendingTasks() throws {
         var data = data
         data.tasks += [
@@ -276,14 +281,37 @@ import Testing
         var hinge = task("Oil hinge", due: today, project: "p-house")
         hinge.parentId = "Clean gutters"
         data.tasks.append(hinge)
-        let due = try #require(WidgetLists.shortcut(project: "p-house", counter: .due, data, today: today, in: zone))
-        #expect(due.project.name == "House")
+        let due = try shortcut("project:p-house", .due, in: data)
+        #expect(due.choice.name == "House")
         #expect(due.count == 3)
         #expect(due.overdue)
-        #expect(WidgetLists.shortcut(project: "p-house", counter: .pending, data, today: today, in: zone)?.count == 4)
-        let none = try #require(WidgetLists.shortcut(project: "p-house", counter: .none, data, today: today, in: zone))
+        #expect(try shortcut("project:p-house", .pending, in: data).count == 4)
+        let none = try shortcut("project:p-house", .none, in: data)
         #expect(none.count == nil)
         #expect(!none.overdue)
-        #expect(WidgetLists.shortcut(project: "p-gone", counter: .due, data, today: today, in: zone) == nil)
+    }
+
+    @Test func shortcutsCountEveryKindOfList() throws {
+        #expect(try shortcut("today", .due, in: data).count == 3)
+        #expect(try shortcut("today", .pending, in: data).count == 3)
+        #expect(try shortcut("inbox", .due, in: data).count == 3)
+        #expect(try shortcut("inbox", .pending, in: data).count == 4)
+        #expect(try shortcut("inbox", .due, in: data).overdue)
+        #expect(try shortcut("tomorrow", .due, in: data).count == 0)
+        #expect(try shortcut("tomorrow", .pending, in: data).count == 1)
+        #expect(try shortcut("noDate", .pending, in: data).count == 2)
+        let calls = try shortcut("label:l-calls", .due, in: data)
+        #expect(calls.count == 1)
+        #expect(!calls.overdue)
+    }
+
+    @Test func aPlacedLabelsShortcutCountsThePlacesTasks() throws {
+        var data = data
+        data.labels.append(Label(id: "l-gym", name: "Gym", place: SavedPlace(latitude: 52.5, longitude: 13.4, radius: 200), createdAt: 1))
+        var lift = task("Lift", due: today)
+        lift.location = TaskLocation(name: "Gym", latitude: 52.5, longitude: 13.4, radius: 200, trigger: .arrive)
+        data.tasks.append(lift)
+        #expect(try shortcut("label:l-gym", .due, in: data).count == 1)
+        #expect(try shortcut("label:l-gym", .pending, in: data).count == 1)
     }
 }
