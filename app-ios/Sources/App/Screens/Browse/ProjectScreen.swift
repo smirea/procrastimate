@@ -77,12 +77,17 @@ struct ProjectScreen: View {
             .animation(.snappy, value: showCompleted)
             .animation(.snappy, value: sections.map(\.section))
             .animation(.snappy, value: filter)
-            .navigationSubtitle(store.owner(of: space).map { "Shared by \($0.name)" } ?? "")
+            .navigationSubtitle(subtitle(project, in: space))
             .environment(\.space, space)
             .feedback(self)
         } else {
             Color.clear.task { navigator.drop(.project(id: projectID)) }
         }
+    }
+
+    private func subtitle(_ project: Project, in space: SpaceKey) -> String {
+        if let owner = store.owner(of: space) { return "Shared by \(owner.name)" }
+        return space == .own && WebhookWatch.shared.watches(project.id) ? "Watched by a webhook" : ""
     }
 }
 

@@ -26,6 +26,7 @@
 	import CompletedList from '#lib/components/CompletedList.svelte';
 	import { filterKey, filterTasks } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
+	import { watchedByWebhook } from '#lib/webhooks.svelte.ts';
 
 	const project = $derived(store.project(page.params.id ?? null));
 	const list = $derived(filterKey({ kind: 'project', id: page.params.id ?? '' }));
@@ -43,6 +44,7 @@
 	const anyDone = $derived(!!done && (gone.length > 0 || done.groups.some((g) => g.tasks.length > 0)));
 	const home = $derived(project ? store.homeOf(project.id) : null);
 	const owner = $derived(home ? store.ownerOf(home) : undefined);
+	const subtitle = $derived(owner ? `Shared by ${owner.name}` : project && !home && watchedByWebhook(project.id) ? 'Watched by a webhook' : undefined);
 
 	let renaming = $state(false);
 	let addingSection = $state(false);
@@ -71,7 +73,7 @@
 		empty={total === 0 && sections.length === 0 && !anyDone}
 		emptyTitle="No tasks yet"
 		emptyHint={`Add one here, or type #${project.name} in quick add.`}
-		subtitle={owner ? `Shared by ${owner.name}` : undefined}
+		{subtitle}
 		canAdd={false}
 		filter={{ list, tasks: allGroups.flatMap((g) => g.tasks) }}
 	>
