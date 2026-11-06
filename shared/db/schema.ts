@@ -239,6 +239,8 @@ export const log = sqliteTable(
 		uniqueIndex('log_op').on(table.userId, table.opId),
 		// A webhook reads its space's rows after its cursor.
 		index('log_user_seq').on(table.userId, table.seq),
+		// Covers each task's first and latest rows for the agent API's view, which otherwise walked every space's task log.
+		index('log_user_task').on(table.userId, table.kind, table.id, table.seq),
 		// Every source key a task held, deleted tasks' included, so a memo's re-sent task is found without a scan.
 		index('log_source_key')
 			.on(table.userId, sql`(${bare('fields')} ->> '$.sourceKey')`)

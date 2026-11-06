@@ -54,6 +54,12 @@ test('task details edit the title, notes, date, priority, and labels, and keep t
 	await expect(details.getByRole('button', { name: 'Due Friday 6pm' })).toBeVisible();
 	await expect(details.getByRole('button', { name: 'Priority 1' })).toBeVisible();
 	await expect(details.getByRole('button', { name: 'Labels errands' })).toBeVisible();
+
+	// Notes save once typing pauses, and a reload before the pause still keeps what was typed.
+	await details.getByRole('textbox', { name: 'Notes' }).pressSequentially(', oat');
+	await app.reload();
+	await row.getByRole('button', { name: 'Buy oat milk', exact: true }).click();
+	await expect(details.getByRole('textbox', { name: 'Notes' })).toHaveValue('2 cartons, oat');
 });
 
 test('a rename from another device reaches an open, untouched title field, and closing writes nothing back', async ({

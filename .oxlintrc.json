@@ -28,6 +28,7 @@
 				"**/playwright.config.ts",
 				"**/*.test.ts",
 				"app-web/e2e/**",
+				"app-web/perf/**",
 				"shared/vectors/record.ts",
 				"server/src/index.ts"
 			],

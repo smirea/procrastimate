@@ -696,14 +696,17 @@ export function parseQuickAdd(input: string, options: ParseOptions): ParsedQuick
 		),
 		namedRule('place', '@', labels.filter(isSavedPlace), labelId => ({ kind: 'place', labelId })),
 	].filter(rule => rule !== null);
-	const rules = options.literal ? [] : [...RULES.slice(0, 2), ...named, ...RULES.slice(2)];
+	// Blank text matches no rule, and empty fields parse on every render: Chromium spent 15 ms a parse on a Mac running
+	// the 12 KB patterns over nothing when a task's details opened with its empty subtask field.
+	const blank = !input.trim();
+	const rules = options.literal || blank ? [] : [...RULES.slice(0, 2), ...named, ...RULES.slice(2)];
 	// Every phrase a rule recognizes is masked out of both views, including kept-as-text and
 	// superseded ones, so a later rule never reads part of it as something else.
 	const claim = (text: string, start: number, end: number) =>
 		text.slice(0, start) + '_'.repeat(end - start) + text.slice(end);
 	// A link is never a phrase, so `5m`, `#top`, or `@user` inside a URL stays part of it.
 	let raw = linkify(input).reduce((text, s) => (s.href ? claim(text, s.start, s.end) : text), input);
-	let guarded = maskGuarded(raw, spoken);
+	let guarded = blank ? raw : maskGuarded(raw, spoken);
 
 	const tokens: QuickAddToken[] = [];
 	const matches: Match[] = [];

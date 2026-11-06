@@ -1,6 +1,6 @@
 # Edit a task
 
-Edit a task lets Stefan open a task and change its title, notes, due date, priority, reminders, or project, postpone it, or delete it, with each change saved as he makes it. The title field parses natural language the same way quick add does.
+Edit a task lets Stefan open a task and change its title, notes, due date, priority, reminders, or project, postpone it, or delete it, with each change saved as he makes it; notes save once typing pauses for 400 ms, or when he leaves the field. The title field parses natural language the same way quick add does.
 
 ## Sub-features
 

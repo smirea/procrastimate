@@ -60,6 +60,8 @@
 
 	const lookup = useLookup();
 	let checking = $state(false);
+	// The row shows one truncated line, so linking and favicons for the rest of a long note only cost DOM and requests.
+	const notesPreview = $derived(task.notes.trimStart().split('\n', 1)[0]!.slice(0, 280));
 	const editable = $derived(lookup.canEdit(task.id));
 	const project = $derived(lookup.project(task.projectId));
 	const section = $derived(lookup.section(task.sectionId));
@@ -123,7 +125,7 @@
 				class="text-[14px] leading-5 transition-colors {checking || done ? 'text-faint line-through' : 'text-ink'}"
 			/>
 			{#if task.notes}
-				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={task.notes} /></div>
+				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={notesPreview} /></div>
 			{/if}
 			{#if pending.length}
 				<ul class="truncate text-[12px] leading-4 text-muted" aria-label="Open subtasks">
