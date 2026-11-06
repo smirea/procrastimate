@@ -10,12 +10,14 @@ import { identify } from './sentry';
 
 /**
  * Who a request is from: a Better Auth session, or a `pm.<ownerId>.<secret>` bearer, which names the owner whose
- * `api_tokens` row holds the secret's hash and acts as that row's AI account, or as the owner for a personal token. A session bearer, which iOS sends, is resolved once a minute
- * per isolate, the same trust the web's signed cookie cache gives, so a revoked token works for at most a minute.
+ * `api_tokens` row holds the secret's hash and acts as that row's AI account, or as the owner for a personal token. A session bearer, which
+ * iOS and both clients' sync send, is resolved once every five minutes per isolate, the trust the web's signed cookie cache gives, so a revoked
+ * token works for at most five minutes. A minute matched the sync engine's periodic pull, so every pull read the session again: about 100 ms of
+ * the object's CPU each in production.
  */
 
 const TOKEN_PREFIX = 'pm.';
-const SESSION_CACHE_MS = 60_000;
+const SESSION_CACHE_MS = 5 * 60_000;
 const SESSION_CACHE_ROWS = 1000;
 
 const sessions = new Map<string, { actor: Actor; until: number }>();

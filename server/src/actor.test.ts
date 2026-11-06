@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, setSystemTime, test } from 'bun:test';
 import { sql } from 'drizzle-orm';
 import { signUp, testApp, type TestApp } from './test-app';
 
@@ -21,6 +21,24 @@ describe('the bearer session cache', () => {
 
 		await app.fetch('/api/auth/sign-out', { method: 'POST', headers: me.headers, body: '{}' });
 		expect((await app.fetch('/api/me', { headers: me.headers })).status).toBe(401);
+	});
+
+	test("a bearer stays trusted across the sync engine's one-minute pulls, and is read again after five minutes", async () => {
+		const me = await signUp(app, 'Puller');
+		const start = Date.now();
+		try {
+			expect((await app.fetch('/api/me', { headers: me.headers })).status).toBe(200);
+			setSystemTime(start + 61_000);
+			app.statements.length = 0;
+			expect((await app.fetch('/api/me', { headers: me.headers })).status).toBe(200);
+			expect(app.statements.filter(statement => statement.includes('"session"'))).toEqual([]);
+			setSystemTime(start + 5 * 60_000 + 1_000);
+			app.statements.length = 0;
+			expect((await app.fetch('/api/me', { headers: me.headers })).status).toBe(200);
+			expect(app.statements.some(statement => statement.includes('"session"'))).toBe(true);
+		} finally {
+			setSystemTime();
+		}
 	});
 });
 
