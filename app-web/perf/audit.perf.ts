@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs';
 import type { CDPSession, Page, Request } from '@playwright/test';
 import { label, project, section, task } from '../../shared/testing';
 import type { Task } from '../../shared/model';
-import { App, expect, NOW, syncWrites, test } from '../e2e/fixtures';
+import { App, deviceContext, expect, NOW, syncWrites, test } from '../e2e/fixtures';
 import { rowIdOf } from '../../shared/rows';
 
 /**
@@ -129,6 +129,26 @@ function dataset(me: string) {
 			}),
 		);
 	}
+	const place = {
+		name: 'Parkweg 1',
+		address: 'Berlin',
+		latitude: 52.52,
+		longitude: 13.405,
+		radius: 500,
+		trigger: 'arrive' as const,
+	};
+	const start = NOW.getTime() + 86_400_000;
+	const event = {
+		id: 'standup',
+		title: 'Team standup',
+		allDay: false,
+		series: true,
+		edge: 'during' as const,
+		minutes: 0,
+		occurrences: [{ start, end: start + 1_800_000, original: start }],
+	};
+	for (let i = 1; i < 6; i++) tasks[i * 5]!.location = place;
+	for (let i = 1; i < 4; i++) tasks[i * 7]!.event = event as never;
 	for (let i = 0; i < OPEN; i += 17)
 		tasks.push(
 			task(crypto.randomUUID(), {
@@ -188,7 +208,7 @@ const OBSERVE = () => {
 	(window as unknown as { __perf: typeof state }).__perf = state;
 };
 
-async function measure(page: Page, app: App, action: string, run: () => Promise<unknown>) {
+async function measure(page: Page, app: App, action: string, run: () => Promise<unknown>, { settle = true } = {}) {
 	const requests: string[] = [];
 	const onRequest = (r: Request) => {
 		const { pathname } = new URL(r.url());
@@ -209,7 +229,8 @@ async function measure(page: Page, app: App, action: string, run: () => Promise<
 	}
 	const started = Date.now();
 	await run();
-	await app.settle();
+	// Listening animates until Ramble stops, so that step cannot wait for every animation to end.
+	if (settle) await app.settle();
 	await page.waitForTimeout(400);
 	const wall = Date.now() - started;
 	if (profiling) {
@@ -258,9 +279,26 @@ async function measure(page: Page, app: App, action: string, run: () => Promise<
 	};
 	samples.push(sample);
 	console.log(
-		`${action.padEnd(38)} inp ${String(sample.inp).padStart(4)}  block ${String(sample.blocking).padStart(5)}  frames ${String(sample.frames).padStart(2)}  rows ${String(sample.rows).padStart(5)}/${sample.readMs}ms  api ${requests.length}  ${sample.worst ?? ''}`,
+		`${action.padEnd(38)} inp ${String(sample.inp).padStart(4)}  block ${String(sample.blocking).padStart(5)}  frames ${String(sample.frames).padStart(2)}  rows ${String(sample.rows).padStart(5)}/${sample.readMs}ms  api ${requests.length}  wall ${wall}ms  ${sample.worst ?? ''}`,
 	);
 }
+
+test.use({
+	permissions: ['microphone', 'clipboard-read', 'clipboard-write'],
+	launchOptions: { args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] },
+});
+
+/** Ramble's socket answers from a recorded session instead of ElevenLabs. */
+const CASSETTE = () => {
+	const Native = window.WebSocket;
+	window.WebSocket = class extends Native {
+		constructor(url: string | URL, protocols?: string | string[]) {
+			const next = new URL(url, location.href);
+			if (next.pathname === '/api/ramble/socket') next.searchParams.set('cassette', 'party');
+			super(next, protocols);
+		}
+	};
+};
 
 async function throttle(page: Page) {
 	cdp = await page.context().newCDPSession(page);
@@ -271,6 +309,7 @@ test('every screen, input, and action', async ({ app, page }) => {
 	test.setTimeout(900_000);
 	page.setDefaultTimeout(15_000);
 	await page.addInitScript(OBSERVE);
+	await page.addInitScript(CASSETTE);
 	await page.evaluate(OBSERVE);
 	const { data } = await seed(app, page);
 	await app.reload();
@@ -422,6 +461,76 @@ test('every screen, input, and action', async ({ app, page }) => {
 		]);
 		console.log('remote edit visible after', Math.round(await seen), 'ms');
 	});
+
+	await measure(page, app, 'open place view', () => app.go('Parkweg 1'));
+	await measure(page, app, 'open event view', async () => {
+		await page
+			.getByRole('navigation', { name: 'Main' })
+			.getByRole('link', { name: /Team standup/ })
+			.click();
+		await expect(page.getByRole('heading', { level: 1, name: /Team standup/ })).toBeVisible();
+	});
+	await app.go('Inbox');
+
+	await app.openSettings();
+	await app.dictationOption('ElevenLabs').click();
+	await page.keyboard.press('Escape');
+	await app.openQuickAdd();
+	const drawer = page.getByRole('dialog', { name: 'Ramble' });
+	await measure(
+		page,
+		app,
+		'ramble: open and stream tasks',
+		async () => {
+			await app.quickAdd().getByRole('button', { name: 'Ramble' }).click();
+			await expect(drawer.getByRole('list', { name: 'Spoken tasks' }).getByText('Bread')).toBeVisible({
+				timeout: 30_000,
+			});
+		},
+		{ settle: false },
+	);
+	await measure(page, app, 'ramble: stop listening', async () => {
+		const stop = drawer.getByRole('button', { name: 'Stop listening' });
+		if (await stop.isVisible()) await stop.click();
+		await expect(drawer.getByRole('button', { name: /^Add \d+ tasks?$/ })).toBeVisible();
+	});
+	await measure(page, app, 'ramble: save all', async () => {
+		await drawer.getByRole('button', { name: /^Add \d+ tasks?$/ }).click();
+		await expect(drawer).toBeHidden();
+	});
+	if (await app.quickAdd().isVisible()) await app.closeQuickAdd();
+
+	await app.openSettings();
+	await measure(page, app, 'import a Todoist backup', async () => {
+		await app.importBackup();
+		await expect(app.importSummary()).toBeVisible({ timeout: 30_000 });
+	});
+	await page.keyboard.press('Escape');
+
+	await app.go(data.projects[1]!.name);
+	const sheet = page.getByRole('dialog', { name: 'Share' });
+	await measure(page, app, 'open share sheet', async () => {
+		await (await app.listMenu()).getByRole('button', { name: 'Share' }).click();
+		await expect(sheet).toBeVisible();
+	});
+	await measure(page, app, 'type a person to share with', () =>
+		sheet.getByRole('textbox', { name: 'Email or name' }).pressSequentially('someone', { delay: 40 }),
+	);
+	await measure(page, app, 'create a public link', async () => {
+		await sheet.getByRole('button', { name: 'Copy link' }).click();
+		await expect(sheet.getByLabel('Link')).toHaveText(/\/s\/.+/);
+	});
+	const link = new URL((await sheet.getByLabel('Link').textContent())!);
+	const visitor = await deviceContext(page.context().browser()!);
+	const guest = await visitor.newPage();
+	const visitorCdp = await visitor.newCDPSession(guest);
+	await visitorCdp.send('Emulation.setCPUThrottlingRate', { rate: CPU });
+	const opened = Date.now();
+	await guest.goto(link.pathname);
+	await expect(guest.getByRole('heading', { level: 1, name: data.projects[1]!.name })).toBeVisible({ timeout: 30_000 });
+	await expect(guest.locator('[data-task]').first()).toBeVisible();
+	console.log('public link first row after', Date.now() - opened, 'ms');
+	await visitor.close();
 
 	const heap = await page.evaluate(
 		() => (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize ?? 0,

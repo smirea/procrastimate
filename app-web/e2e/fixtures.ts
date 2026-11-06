@@ -97,8 +97,8 @@ async function freshContext(browser: Browser, options: BrowserContextOptions): P
 }
 
 /**
- * Writes as another device of the session would: one sync request under a client id of its own, with a cursor past
- * any head so it pulls nothing back. Answers what the server refused.
+ * Writes as another device of the session would: one sync request under a client id of its own. Its cursor is past
+ * any head, which the engine answers with a snapshot, ignored here. Answers what the server refused.
  */
 export async function syncWrites(request: APIRequestContext, writes: unknown[]): Promise<unknown[]> {
 	const response = await request.post('/api/sync', {
