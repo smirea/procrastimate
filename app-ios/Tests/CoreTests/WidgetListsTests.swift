@@ -236,10 +236,11 @@ import Testing
 
     @Test func aDividerHeadsTheFirstRowAfterToday() throws {
         let inbox = try listing("inbox")
-        #expect(inbox.slots(limit: 4).map(\.task?.title) == ["Pay rent", "Fix sink", "Call mom", "Plan trip"])
-        #expect(inbox.slots(limit: 5) == [
+        #expect(inbox.slots(limit: 3).map(\.task?.title) == ["Pay rent", "Fix sink", "Call mom"])
+        #expect(inbox.slots(limit: 4) == [
             .task(inbox.rows[0]), .task(inbox.rows[1]), .task(inbox.rows[2]), .later("Tomorrow"), .task(inbox.rows[3]),
         ])
+        #expect(inbox.slots(limit: 9).count == 5)
         #expect(try listing("today").later == nil)
         #expect(try listing("tomorrow").later == nil)
     }
@@ -262,5 +263,27 @@ import Testing
         data.tasks.append(task("Mow lawn", due: "2026-10-20", project: "p-house"))
         let choice = try #require(WidgetLists.choice(key: "project:p-house", in: data, today: today, in: zone))
         #expect(WidgetLists.listing(choice, data, now: pinned, today: today, in: zone).later.map { "\($0.index) \($0.label)" } == "1 " + "Tuesday")
+    }
+
+    @Test func shortcutsCountAProjectsDueOrPendingTasks() throws {
+        var data = data
+        data.tasks += [
+            task("Paint door", due: "2026-10-13", project: "p-house"),
+            task("Mow lawn", due: "2026-10-20", project: "p-house"),
+            task("Clean gutters", project: "p-house"),
+            task("Swept porch", due: today, project: "p-house", completedAt: thisMorning),
+        ]
+        var hinge = task("Oil hinge", due: today, project: "p-house")
+        hinge.parentId = "Clean gutters"
+        data.tasks.append(hinge)
+        let due = try #require(WidgetLists.shortcut(project: "p-house", counter: .due, data, today: today, in: zone))
+        #expect(due.project.name == "House")
+        #expect(due.count == 3)
+        #expect(due.overdue)
+        #expect(WidgetLists.shortcut(project: "p-house", counter: .pending, data, today: today, in: zone)?.count == 4)
+        let none = try #require(WidgetLists.shortcut(project: "p-house", counter: .none, data, today: today, in: zone))
+        #expect(none.count == nil)
+        #expect(!none.overdue)
+        #expect(WidgetLists.shortcut(project: "p-gone", counter: .due, data, today: today, in: zone) == nil)
     }
 }
