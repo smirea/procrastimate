@@ -7,6 +7,7 @@ struct ProcrastimateWidgets: WidgetBundle {
         TaskListWidget()
         ProgressWidget()
         QuickAddWidget()
+        ProjectShortcutsWidget()
         AddTaskControl()
         RambleControl()
         PlaceActivityWidget()

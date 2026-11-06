@@ -134,7 +134,8 @@ private struct HomeView: View {
     }
 }
 
-/// Where today's rows end: a hairline with the next row's day in the middle.
+/// Where today's rows end: a hairline with the next row's day in the middle. It costs no row: the negative padding
+/// tucks it into the air the checkboxes' tap targets leave above and below each row, so it adds only a few points.
 private struct LaterDivider: View {
     let label: String
     let compact: Bool
@@ -143,13 +144,13 @@ private struct LaterDivider: View {
         HStack(spacing: 6) {
             line
             Text(label)
-                .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                .font(.system(size: compact ? 9 : 10, weight: .semibold))
                 .foregroundStyle(.faint)
                 .lineLimit(1)
                 .fixedSize()
             line
         }
-        .padding(.vertical, compact ? 1 : 2)
+        .padding(.vertical, compact ? -2 : -3)
         .accessibilityElement(children: .combine)
     }
 

@@ -272,6 +272,7 @@ iOS only. Browsers have no widget surface. See [iOS app](decisions/ios.md#widget
 | `widget-complete`: the checkbox completes the task in the app and every widget updates          | n/a | Built | Widgets | throwaway SpringBoard test                                    | n/a        | —          |
 | `widget-open`, `widget-add`: rows, header, and `+` open the task, the list, or quick add        | n/a | Built | Widgets | throwaway SpringBoard test; `swift test` (`linksRoundTrip`)   | n/a        | —          |
 | `widget-progress`, `widget-quick-add`: the done-today ring and the quick add and Ramble buttons | n/a | Built | Widgets | throwaway SpringBoard test                                    | n/a        | —          |
+| `widget-shortcuts`: up to four projects in a 2×2 grid with due or pending counts, opening each  | n/a | Built | Widgets | throwaway SpringBoard test; `swift test` (`WidgetListsTests`) | n/a        | —          |
 | `widget-lock-screen`, `widget-controls`: Lock Screen families and Control Center controls       | n/a | Built | Widgets | —                                                             | n/a        | —          |
 
 ## Thread split
