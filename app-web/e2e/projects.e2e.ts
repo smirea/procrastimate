@@ -254,3 +254,22 @@ test('Show completed is per project and per section, and a completed task delete
 	await page.keyboard.press('Escape');
 	await expect(done).toBeVisible();
 });
+
+test('a project a live webhook watches says so under its title', async ({ app, page }) => {
+	await app.createProject('Work');
+	const work = page.url().replace(/.*\/projects\//, '');
+	await app.createProject('Home');
+	await expect.poll(() => app.pending()).toBe(0);
+
+	const hook = await page.request.post('/api/webhooks', {
+		data: { url: 'https://hooks.example/wake', projectIds: [work] },
+	});
+	expect(hook.status()).toBe(200);
+	await page.reload();
+	await app.go('Work');
+	await expect(page.getByText('Watched by a webhook')).toBeVisible();
+	await page.screenshot({ path: 'test-results/projects/webhook-notice.png' });
+
+	await app.go('Home');
+	await expect(page.getByText('Watched by a webhook')).toHaveCount(0);
+});
