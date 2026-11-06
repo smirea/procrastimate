@@ -1,8 +1,8 @@
 import Core
 import Foundation
 
-/// DEBUG-only. `PROCRASTIMATE_DEMO=widgets` seeds overdue, enough of today's to overflow a large widget, tomorrow's, and project tasks around the real
-/// clock's today, with Work going from today to later days so its widget shows the divider, and completes one, so the home and lock screen widgets have something to show in the simulator.
+/// DEBUG-only. `PROCRASTIMATE_DEMO=widgets` seeds overdue, enough of today's to overflow a large widget, tomorrow's, project tasks, and a place's task around
+/// the real clock's today, with Work going from today to later days so its widget shows the divider, and completes one, so the home and lock screen widgets have something to show in the simulator.
 /// The widget extension reads the real clock, so the seed is relative to it. Release builds omit it.
 enum WidgetsDemo {
     @MainActor
@@ -29,6 +29,12 @@ enum WidgetsDemo {
             NewTask(title: "Fix the fence", projectId: home.id),
         ]
         for seed in seeds { store.addTask(seed) }
+        if let parcel = store.addTask(NewTask(title: "Pick up the parcel")) {
+            store.updateTask(parcel.id, TaskPatch(location: .some(TaskLocation(
+                name: "Post Office", address: "21701 Stevens Creek Blvd, Cupertino",
+                latitude: 37.3225, longitude: -122.0467, radius: 150, trigger: .arrive
+            ))))
+        }
         if let done = store.addTask(NewTask(title: "Morning run", due: Due(date: today))) {
             _ = store.completeTask(done.id)
         }

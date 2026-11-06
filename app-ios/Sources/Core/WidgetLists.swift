@@ -120,6 +120,12 @@ public enum WidgetLists {
         public let name: String
         /// The catalog group it comes from, such as `Projects`, for the configuration picker's subtitle.
         public let group: String
+
+        public init(list: WidgetList, name: String, group: String) {
+            self.list = list
+            self.name = name
+            self.group = group
+        }
     }
 
     /// What a widget draws for one list at one moment.
@@ -239,14 +245,9 @@ public enum WidgetLists {
             rows = Views.eventTasks(open, id, today, in: zone)
         }
         let completed = Views.completedTasks(data.tasks, Views.CompletedRange(from: today, to: today), in: zone)
-        // A saved place's label lives on its tasks as a location, never in `labelIds`, so its done tasks are the place's.
-        var screen = choice.list.screen(today: today)
-        if case let .pin(.label(id)) = choice.list, let place = data.labels.first(where: { $0.id == id })?.place {
-            screen = .place(key: Triggers.placeKey(place))
-        }
         let done = choice.list == .today
             ? completed.count
-            : completed.filter { Screens.holds(screen, $0, today, in: zone) }.count
+            : completed.filter { holds(choice.list, $0, data, today: today, in: zone) }.count
         return Listing(
             name: choice.name,
             tasks: rows.filter { !checkedIds.contains($0.id) },
@@ -267,43 +268,51 @@ public enum WidgetLists {
         return Later(index: index, label: Format.dayHeading(date, today))
     }
 
-    /// The number a Project Shortcuts cell shows next to its project.
+    /// The number a Shortcuts cell shows next to its list.
     public enum Counter: String, Sendable, CaseIterable {
         case none
-        /// Overdue and today's tasks, as Today counts them.
+        /// The list's overdue and today's tasks, as Today counts them.
         case due
-        /// Every open task the project's screen lists.
+        /// Every open task the list's screen shows.
         case pending
     }
 
-    /// One Project Shortcuts cell.
+    /// One Shortcuts cell.
     public struct Shortcut: Equatable, Sendable {
-        public let project: Project
+        public let choice: Choice
         /// Nil when the counter is off.
         public let count: Int?
         /// Whether any of the counted tasks is overdue, which tones the count.
         public let overdue: Bool
 
-        public init(project: Project, count: Int?, overdue: Bool) {
-            self.project = project
+        public init(choice: Choice, count: Int?, overdue: Bool) {
+            self.choice = choice
             self.count = count
             self.overdue = overdue
         }
     }
 
-    /// The cell for a project, nil once the project is gone.
-    public static func shortcut(project id: String, counter: Counter, _ data: WidgetData, today: DateKey, in zone: TimeZone) -> Shortcut? {
-        guard let project = data.projects.first(where: { $0.id == id }) else { return nil }
-        let all = Triggers.openTasks(data.tasks)
-        let open = Views.projectTasks(all, id, in: zone)
-        // Today lists a dated subtask under an undated parent, so Due counts it though the project's own rows do not.
-        let due = Views.todayTasks(all.filter { $0.projectId == id }, today, in: zone)
+    /// The cell for a list.
+    public static func shortcut(_ choice: Choice, counter: Counter, _ data: WidgetData, now: Date, today: DateKey, in zone: TimeZone) -> Shortcut {
+        let open = Triggers.openTasks(data.tasks)
+        // Today lists a dated subtask under an undated parent, so Due counts it though a project's own rows do not.
+        let due = Views.todayTasks(open.filter { holds(choice.list, $0, data, today: today, in: zone) }, today, in: zone)
         let count: Int? = switch counter {
         case .none: nil
         case .due: due.overdue.count + due.today.count
-        case .pending: open.count
+        case .pending: listing(choice, data, now: now, today: today, in: zone).tasks.count
         }
-        return Shortcut(project: project, count: count, overdue: counter != .none && !due.overdue.isEmpty)
+        return Shortcut(choice: choice, count: count, overdue: counter != .none && !due.overdue.isEmpty)
+    }
+
+    /// Whether a task belongs to a list, open or done. A saved place's label lives on its tasks as a location, never in
+    /// `labelIds`, so a placed label holds the place's tasks.
+    static func holds(_ list: WidgetList, _ task: TaskItem, _ data: WidgetData, today: DateKey, in zone: TimeZone) -> Bool {
+        var screen = list.screen(today: today)
+        if case let .pin(.label(id)) = list, let place = data.labels.first(where: { $0.id == id })?.place {
+            screen = .place(key: Triggers.placeKey(place))
+        }
+        return Screens.holds(screen, task, today, in: zone)
     }
 
     /// How long a checked row stays struck through, counted from the tap. The widget extension redraws within a moment
