@@ -273,9 +273,12 @@ import Testing
             task("Clean gutters", project: "p-house"),
             task("Swept porch", due: today, project: "p-house", completedAt: thisMorning),
         ]
+        var hinge = task("Oil hinge", due: today, project: "p-house")
+        hinge.parentId = "Clean gutters"
+        data.tasks.append(hinge)
         let due = try #require(WidgetLists.shortcut(project: "p-house", counter: .due, data, today: today, in: zone))
         #expect(due.project.name == "House")
-        #expect(due.count == 2)
+        #expect(due.count == 3)
         #expect(due.overdue)
         #expect(WidgetLists.shortcut(project: "p-house", counter: .pending, data, today: today, in: zone)?.count == 4)
         let none = try #require(WidgetLists.shortcut(project: "p-house", counter: .none, data, today: today, in: zone))

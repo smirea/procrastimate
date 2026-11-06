@@ -294,8 +294,10 @@ public enum WidgetLists {
     /// The cell for a project, nil once the project is gone.
     public static func shortcut(project id: String, counter: Counter, _ data: WidgetData, today: DateKey, in zone: TimeZone) -> Shortcut? {
         guard let project = data.projects.first(where: { $0.id == id }) else { return nil }
-        let open = Views.projectTasks(Triggers.openTasks(data.tasks), id, in: zone)
-        let due = Views.todayTasks(open, today, in: zone)
+        let all = Triggers.openTasks(data.tasks)
+        let open = Views.projectTasks(all, id, in: zone)
+        // Today lists a dated subtask under an undated parent, so Due counts it though the project's own rows do not.
+        let due = Views.todayTasks(all.filter { $0.projectId == id }, today, in: zone)
         let count: Int? = switch counter {
         case .none: nil
         case .due: due.overdue.count + due.today.count
