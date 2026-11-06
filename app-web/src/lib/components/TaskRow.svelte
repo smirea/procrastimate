@@ -2,6 +2,7 @@
 	import Bell from 'phosphor-svelte/lib/Bell';
 	import ChatCircle from 'phosphor-svelte/lib/ChatCircle';
 	import { scale } from 'svelte/transition';
+	import { notesPreview } from 'shared/links.ts';
 	import { cubicOut } from 'svelte/easing';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import CalendarStar from 'phosphor-svelte/lib/CalendarStar';
@@ -61,7 +62,7 @@
 	const lookup = useLookup();
 	let checking = $state(false);
 	// The row shows one truncated line, so linking and favicons for the rest of a long note only cost DOM and requests.
-	const notesPreview = $derived(task.notes.trimStart().split('\n', 1)[0]!.slice(0, 280));
+	const preview = $derived(notesPreview(task.notes));
 	const editable = $derived(lookup.canEdit(task.id));
 	const project = $derived(lookup.project(task.projectId));
 	const section = $derived(lookup.section(task.sectionId));
@@ -125,7 +126,7 @@
 				class="text-[14px] leading-5 transition-colors {checking || done ? 'text-faint line-through' : 'text-ink'}"
 			/>
 			{#if task.notes}
-				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={notesPreview} /></div>
+				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={preview} /></div>
 			{/if}
 			{#if pending.length}
 				<ul class="truncate text-[12px] leading-4 text-muted" aria-label="Open subtasks">

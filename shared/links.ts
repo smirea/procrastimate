@@ -95,3 +95,17 @@ export function titleLink(text: string, at: number, url: string, title: string):
 	const titled = linkify(next).find(s => s.start === at);
 	return titled?.text === label && titled.end === at + link.length ? next : null;
 }
+
+/** Past this many characters a row's one truncated line of notes is never seen. */
+const PREVIEW_LENGTH = 280;
+
+/**
+ * The part of a note a row shows: its first non-blank line, cut after `PREVIEW_LENGTH` characters, or at the end of a
+ * link that runs past the cut, so a link is never shortened into one to another address.
+ */
+export function notesPreview(notes: string): string {
+	const line = notes.trimStart().split('\n', 1)[0]!;
+	if (line.length <= PREVIEW_LENGTH) return line;
+	const crossing = linkify(line).find(s => s.href && s.start < PREVIEW_LENGTH && s.end > PREVIEW_LENGTH);
+	return line.slice(0, crossing?.end ?? PREVIEW_LENGTH);
+}
