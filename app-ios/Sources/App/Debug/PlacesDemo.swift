@@ -67,11 +67,23 @@ enum PlacesDemo {
             NSLog("PlacesDemo type: no focused field")
             return
         }
+        // Main-thread CPU time, not wall time, so a comparison holds on a loaded Mac, where the stall log's wall-clock
+        // passes swung by a factor of ten between identical runs.
+        func mainCPU() -> Double {
+            var info = thread_basic_info()
+            var count = mach_msg_type_number_t(MemoryLayout<thread_basic_info>.size / MemoryLayout<integer_t>.size)
+            _ = withUnsafeMutablePointer(to: &info) { $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { thread_info(pthread_mach_thread_np(pthread_self()), thread_flavor_t(THREAD_BASIC_INFO), $0, &count) } }
+            return Double(info.user_time.seconds + info.system_time.seconds) * 1000 + Double(info.user_time.microseconds + info.system_time.microseconds) / 1000
+        }
+        let cpuStart = mainCPU()
         for character in text {
             field.insertText(String(character))
             try? await Task.sleep(for: .milliseconds(25))
         }
         try? await Task.sleep(for: .milliseconds(500))
+        if let out = ProcessInfo.processInfo.environment["PROCRASTIMATE_TYPE_CPU"] {
+            try? String(format: "%.1f\n", mainCPU() - cpuStart).write(toFile: out, atomically: true, encoding: .utf8)
+        }
         let typed = (field as? UITextView)?.text ?? (field as? UITextField)?.text ?? "?"
         NSLog("PlacesDemo typed: %@", typed)
     }
