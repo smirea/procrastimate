@@ -18,9 +18,8 @@ export function initSentry() {
 		// A 5xx from the API becomes a browser event in the same trace as the server's own.
 		// The tunnel is left out: a 5xx it forwards from Sentry would send another event through it.
 		integrations: [Sentry.httpClientIntegration({ failedRequestTargets: [/\/api\/(?!sentry$)/] })],
-		// Whole transactions named by route, like the Worker's.
-		traceLifecycle: 'static',
-		tracesSampleRate: 1,
+		// No transactions, only errors; the rate still sends `sentry-trace`, so the Worker's errors share the trace id.
+		tracesSampleRate: 0,
 		beforeSend: event => (reloadingForNewBuild() ? null : event),
 	});
 }

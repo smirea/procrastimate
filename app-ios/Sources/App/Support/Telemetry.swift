@@ -13,7 +13,8 @@ enum Telemetry {
             options.dsn = target.dsn
             options.environment = target.environment
             options.sendDefaultPii = true
-            options.tracesSampleRate = 1
+            // Errors only. Unsampled, the SDK still sends `sentry-trace`, so the Worker's errors share the app's trace id.
+            options.tracesSampleRate = 0
             // Only API requests carry `sentry-trace` and `baggage`, so the Worker continues the app's traces and no
             // other host receives them.
             options.tracePropagationTargets = [AppEnvironment.apiURL.host() ?? ""]
