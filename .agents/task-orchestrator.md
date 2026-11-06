@@ -14,7 +14,6 @@ Repo config for the global `task-orchestrator` skill (`~/code/ai-files/skills/ta
 - Every task that restructures the same screen or component goes in one job: one run had four jobs reshaping the list screens, and the last of them rebased six times.
 - iOS jobs run in parallel too: `./sim` holds a headless boot while the Mac's total CPU is above 70% or 4 simulators are booted, telling the child it waits. Schema changes don't need sequencing: they are additive.
 - The `app` project files bugs and features in its `Bugs` and `Features` sections.
-- Post-merge check: a merge that touched `app-ios/` also needs master's TestFlight run (`gh run list --workflow testflight.yml --branch master -L 1`) to succeed.
 - Known shared failures: a simulator runtime that stopped booting.
 
 # Worker
@@ -49,5 +48,6 @@ The Mac runs many jobs at once, and each booted simulator slows all of them. Cli
 
 ## After the merge
 
+- Post-merge run: a merge that touched `app-ios/` also waits on master's TestFlight run (`testflight.yml`) for your merge.
 - A Worker secret goes on the Worker with `bun run secrets:push` after its `env-manager up`. If master's deploy already failed for lack of it, `gh run rerun --failed <run>` then check `gh run view <run> --json status,conclusion` in foreground calls until `status` is `completed`. Report `merged` only once its `conclusion` is `success`; a failed deploy is `blocked` with the run link.
 - `./sim stop` your simulators as part of cleanup.
