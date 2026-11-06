@@ -16,13 +16,11 @@ struct SearchResults: View {
             Search.search(query, store.tasks, projects: store.projects, labels: store.labels)
         )
         let rows = sections.flatMap(\.rows)
-        // By id, since finding each row's place with `firstIndex(of:)` compared whole hits, O(rows²) per keystroke.
-        let positions = Dictionary(rows.enumerated().map { ($1.id, $0) }, uniquingKeysWith: { first, _ in first })
         List {
             ForEach(sections) { section in
                 Section {
                     ForEach(section.rows) { row in
-                        SearchResultRow(row: row, selected: positions[row.id] == active) { open(row) }
+                        SearchResultRow(row: row, selected: rows.firstIndex(of: row) == active) { open(row) }
                     }
                 } header: {
                     HStack {
