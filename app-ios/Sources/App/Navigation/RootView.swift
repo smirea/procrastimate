@@ -114,8 +114,9 @@ enum TabBarMetrics {
     static let maxWidth: CGFloat = 520
     static let contentGap: CGFloat = 12
     static let inset: CGFloat = 4
-    /// The narrowest a tab gets, which still reads a short project name.
-    static let tabMinWidth: CGFloat = 70
+    /// The narrowest a tab gets, which still reads a short project name. 68 rather than 70 fits five tabs (four pins and
+    /// Browse) across a 393 pt iPhone, whose bar is 351 pt wide.
+    static let tabMinWidth: CGFloat = 68
 
     static func barWidth(screen: CGFloat) -> CGFloat { min(screen - 2 * sideMargin, maxWidth) }
 
@@ -324,7 +325,7 @@ private struct TabBarItems: View {
             Text(title)
                 .font(.caption2.weight(.medium))
                 .lineLimit(1)
-                .padding(.horizontal, 6)
+                .padding(.horizontal, 2)
         }
         .foregroundStyle(selected ? Color.accent : Color.primary)
         .frame(maxWidth: .infinity, minHeight: 54)
