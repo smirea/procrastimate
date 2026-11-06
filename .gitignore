@@ -41,3 +41,6 @@ shared/db/generated
 
 # The Bun dev server's SQLite database
 .data/
+
+# Written by app-web/perf/audit.perf.ts
+app-web/perf-results-*.json

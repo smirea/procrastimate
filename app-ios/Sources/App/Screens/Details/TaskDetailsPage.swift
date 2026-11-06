@@ -46,6 +46,12 @@ private struct TaskDetailsForm: View {
     @FocusState private var titleFocused: Bool
     @State private var keyboardShown = false
     @FocusState private var notesFocused: Bool
+    @Environment(\.scenePhase) private var scenePhase
+    /// Notes typed but not saved yet. Saving each keystroke ran a whole store commit, a database write and reload, a
+    /// widget refresh, and a sync that made every other device pull, so typing saves once it pauses, and on blur,
+    /// leaving, or the app going inactive.
+    @State private var notesTyped: String?
+    @State private var notesSave: Task<Void, Never>?
 
     init(task: TaskItem, navigation: DetailsNavigation, leave: @escaping (_ parentID: String?) -> Void) {
         self.task = task
@@ -147,10 +153,10 @@ private struct TaskDetailsForm: View {
                     store.updateTask(task.id, TaskPatch(github: github))
                 }
 
-                LinkedField(text: task.notes, focused: $notesFocused) {
+                LinkedField(text: notesTyped ?? task.notes, focused: $notesFocused) {
                     TextField(
                         "Notes",
-                        text: Binding(get: { task.notes }, set: { store.updateTask(task.id, TaskPatch(notes: $0)) }),
+                        text: Binding(get: { notesTyped ?? task.notes }, set: typeNotes),
                         axis: .vertical
                     )
                     .lineLimit(3...)
@@ -211,6 +217,8 @@ private struct TaskDetailsForm: View {
         .toolbar { toolbar(draft) }
         .sensoryFeedback(.selection, trigger: Picks(task))
         .onChange(of: titleFocused) { if !titleFocused { commitTitle() } }
+        .onChange(of: notesFocused) { if !notesFocused { commitNotes() } }
+        .onChange(of: scenePhase) { if scenePhase != .active { commitNotes() } }
         .onChange(of: task.title) {
             guard title == base else { return }
             title = task.title
@@ -220,6 +228,7 @@ private struct TaskDetailsForm: View {
         .onAppear { if task.title.isEmpty { titleFocused = true } }
         .onDisappear {
             commitTitle()
+            commitNotes()
             // Left untitled, quick add's expanded draft was never a task, so it goes without an undo. A pushed subtask
             // or the image viewer keeps the sheet on this task, so only closing or replacing the sheet discards it.
             guard navigator.sheet != .details(taskID: task.id), store.task(task.id)?.title.isEmpty == true else { return }
@@ -316,6 +325,23 @@ private struct TaskDetailsForm: View {
         .accessibilityLabel("Plain text")
         .accessibilityValue(literal ? "On" : "Off")
         .accessibilityAddTraits(literal ? .isSelected : [])
+    }
+
+    private func typeNotes(_ value: String) {
+        notesTyped = value
+        notesSave?.cancel()
+        notesSave = Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            if !Task.isCancelled { commitNotes() }
+        }
+    }
+
+    private func commitNotes() {
+        notesSave?.cancel()
+        notesSave = nil
+        guard let next = notesTyped else { return }
+        notesTyped = nil
+        if let current = store.task(task.id), current.notes != next { store.updateTask(task.id, TaskPatch(notes: next)) }
     }
 
     private func commitTitle() {

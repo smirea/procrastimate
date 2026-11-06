@@ -121,3 +121,19 @@ describe('titleLink', () => {
 		expect(titleLink(text, at, url, title)).toBeNull();
 	});
 });
+
+describe('notesPreview', () => {
+	const pad = 'a'.repeat(270);
+	test('a row shows the first non-blank line of a note', () => {
+		expect(links.notesPreview('\n  Buy oat milk\nand bread')).toBe('Buy oat milk');
+	});
+	test('a long line is cut, but never inside a link that crosses the cut', () => {
+		expect(links.notesPreview(`${pad} ${'b'.repeat(40)}`)).toBe(`${pad} ${'b'.repeat(9)}`);
+		expect(links.notesPreview(`${pad} https://example.com/a/long/path more text`)).toBe(
+			`${pad} https://example.com/a/long/path`,
+		);
+		expect(links.notesPreview(`${pad} [the post](https://example.com/p1) after`)).toBe(
+			`${pad} [the post](https://example.com/p1)`,
+		);
+	});
+});

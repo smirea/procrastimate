@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import X from 'phosphor-svelte/lib/X';
@@ -44,6 +44,8 @@
 	import { attachments, droppedFiles } from '../attachments/attachments.svelte.ts';
 	import { unsynced } from '../unsynced.svelte.ts';
 
+	const NOTES_PAUSE_MS = 400;
+
 	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
 	// TaskSheet keys details by task id, so it never changes. While the sheet animates out after closing, `task` already
 	// reads undefined, yet the body still gets scroll events.
@@ -62,23 +64,27 @@
 	let typed = $state<string | null>(null);
 	const title = $derived(typed ?? task.title);
 	const literal = $derived(task.titleMode === 'literal');
-	const parsed = $derived(
-		parseQuickAdd(title, {
-			literal,
-			now: new Date(clock.now),
-			projects: parent ? [] : space.projects,
-			sections: parent ? [] : space.sections,
-			labels: space.labels,
-			projectId: task.projectId,
-			due: task.due,
-		}),
-	);
 	const edited = $derived(title !== task.title);
+	// Only an edited title is parsed: every command replaces the space, and parsing on each would rerun the parser on
+	// every change made anywhere while the sheet is open.
+	const parsed = $derived(
+		edited
+			? parseQuickAdd(title, {
+					literal,
+					now: new Date(clock.now),
+					projects: parent ? [] : space.projects,
+					sections: parent ? [] : space.sections,
+					labels: space.labels,
+					projectId: task.projectId,
+					due: task.due,
+				})
+			: null,
+	);
 	// A phrase left in the saved title stays text, so only an edit's phrases highlight, matching what the chips apply.
-	const tokens = $derived(edited ? parsed.tokens : []);
+	const tokens = $derived(parsed?.tokens ?? []);
 	// The chips below show what the title will apply, so the edit can be checked before Enter or blur commits it.
 	const draft = $derived(
-		edited && parsed.title
+		parsed?.title
 			? {
 					title: parsed.title,
 					...typedOver(task, parsed, task.event),
@@ -90,6 +96,27 @@
 	);
 
 	const update = (patch: TaskPatch) => store.updateTask(id, patch);
+
+	/**
+	 * Notes typed but not saved yet. Saving each keystroke ran a whole command, a local write and read back, and a sync
+	 * that made every other device pull, so typing saves once it pauses, and on blur, close, or the page hiding.
+	 */
+	let notesTyped = $state<string | null>(null);
+	const notes = $derived(notesTyped ?? task.notes);
+	let notesTimer: ReturnType<typeof setTimeout> | undefined;
+	function commitNotes() {
+		clearTimeout(notesTimer);
+		if (notesTyped === null) return;
+		const next = notesTyped;
+		notesTyped = null;
+		if (store.task(id) && next !== store.task(id)!.notes) update({ notes: next });
+	}
+	function typeNotes(value: string) {
+		notesTyped = value;
+		clearTimeout(notesTimer);
+		notesTimer = setTimeout(commitNotes, NOTES_PAUSE_MS);
+	}
+	onDestroy(commitNotes);
 	const eventDue = $derived(task.event ? scheduledDue(task, clock.today) : null);
 
 	function commitTitle() {
@@ -97,7 +124,7 @@
 			typed = null;
 			return;
 		}
-		if (!parsed.title) {
+		if (!parsed?.title) {
 			typed = null;
 			return;
 		}
@@ -174,6 +201,8 @@
 	}
 </script>
 
+<svelte:window onpagehide={commitNotes} />
+<svelte:document onvisibilitychange={() => document.visibilityState === 'hidden' && commitNotes()} />
 <div
 	class="relative flex min-h-0 flex-1 flex-col"
 	in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}
@@ -302,13 +331,14 @@
 		onscroll={(e) => sheets.scrollTops.set(id, e.currentTarget.scrollTop)}
 	>
 		{#if editable}
-			<LinkedField text={task.notes} class="border border-transparent px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base">
+			<LinkedField text={notes} class="border border-transparent px-3.5 py-2.5 text-[14px] whitespace-pre-wrap [overflow-wrap:anywhere] touch:text-base">
 				<textarea
 					aria-label="Notes"
 					placeholder="Notes"
 					class="block min-h-[6.5rem] w-full resize-none [field-sizing:content] rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 py-2.5 text-[14px] outline-none touch:text-base transition-colors placeholder:text-faint focus:border-ink/15 focus:bg-surface/60"
-					value={task.notes}
-					oninput={(e) => update({ notes: e.currentTarget.value })}
+					value={notes}
+					oninput={(e) => typeNotes(e.currentTarget.value)}
+					onblur={commitNotes}
 				></textarea>
 			</LinkedField>
 		{:else if task.notes}

@@ -19,7 +19,7 @@
 	import ImageViewer from '#lib/components/ImageViewer.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { forgetAdded, quickAddDefaults } from '#lib/screen.ts';
-	import { clock, sheets, trackKeyboardInset, motion } from '#lib/ui.svelte.ts';
+	import { clock, sheets, trackKeyboardInset, motion, mobile } from '#lib/ui.svelte.ts';
 	import { keepCaretInView } from '#lib/caret.ts';
 	import { notifyDueReminders } from '#lib/reminders.ts';
 	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';
@@ -29,6 +29,7 @@
 	import { startSync } from '#lib/sync.svelte.ts';
 	import { keepStorage } from '#lib/device.ts';
 	import { applyTheme, theme } from '#lib/theme.svelte.ts';
+	import { parseQuickAdd } from 'shared/quick-add.ts';
 
 	let { children }: { children: Snippet } = $props();
 	let menuOpen = $state(false);
@@ -132,6 +133,19 @@
 		menuOpen = false;
 	});
 
+	// The quick add parser's patterns run to 12 KB each. Chromium compiles them on the first parse and again, to native
+	// code, on the second: 65 ms and 34 ms on a Mac, several times that on a phone, which landed on whatever tap parsed
+	// first, such as opening a task's details with its empty subtask field. Two idle parses take both.
+	$effect(() => {
+		if (!store.loaded) return;
+		const idle = (run: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(run, { timeout: 3000 }) : setTimeout(run, 500));
+		const warm = () => void parseQuickAdd('warm up tomorrow 5pm p1', { now: new Date() });
+		idle(() => {
+			warm();
+			idle(warm);
+		});
+	});
+
 </script>
 
 <svelte:window {onkeydown} />
@@ -150,9 +164,12 @@
 </main>
 {:else if session.state === 'in' && store.loaded}
 <div class="app flex min-h-dvh gap-3">
-	<div class="sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-64 shrink-0 md:block">
-		<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onsettings={openSettings} />
-	</div>
+	<!-- Not mounted on a phone, where CSS hid it and it still recomputed every list's count on each command. -->
+	{#if !mobile.current}
+		<div class="sticky top-3 hidden h-[calc(100dvh-1.5rem)] w-64 shrink-0 md:block">
+			<Sidebar onquickadd={openQuickAdd} onsearch={openSearch} onsettings={openSettings} />
+		</div>
+	{/if}
 	{#if menuOpen}
 		<div class="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] md:hidden" transition:fade={motion({ duration: 180 })} onclick={() => (menuOpen = false)} aria-hidden="true"></div>
 		<div class="drawer fixed z-30 md:hidden" transition:fly={motion({ x: -320, duration: 280, easing: cubicOut, opacity: 1 })}>
