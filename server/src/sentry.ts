@@ -4,7 +4,6 @@ import {
 	cronTriggersIntegration,
 	httpServerIntegration,
 	setUser,
-	startSpan,
 	type CloudflareOptions,
 	type ErrorEvent,
 	type SeverityLevel,
@@ -17,7 +16,7 @@ import { BACKUP_CRON } from './crons';
 
 /**
  * The server's one Sentry module. `worker.ts` wraps the handler and the `Ramble` object with `sentryOptions`, and
- * `index.ts` starts `@sentry/bun` with `serverOptions` for the dev server. Feature code calls `span`, `identify`, and
+ * `index.ts` starts `@sentry/bun` with `serverOptions` for the dev server. Feature code calls `identify` and
  * `reportError`, which go through `@sentry/core`'s global client, so they work under either SDK and do nothing where
  * no client is set up: tests and any run without `SENTRY_ENVIRONMENT`.
  */
@@ -36,11 +35,10 @@ export function serverOptions({ dsn, environment, release }: SentryTarget) {
 		dsn,
 		environment,
 		release,
-		// Whole transactions named by method and path; streamed spans are named only by method.
-		traceLifecycle: 'static' as const,
-		// The tunnel's own requests would add a transaction for every envelope the browser sends.
-		tracesSampler: ({ name, inheritOrSampleWith }: { name: string; inheritOrSampleWith: (rate: number) => number }) =>
-			name === `POST ${SENTRY_TUNNEL_PATH}` ? 0 : inheritOrSampleWith(1),
+		// Errors only: no transactions or spans, from here or continued from a client, which never samples one either.
+		// Recording every request cost most of a sync's Worker CPU and about 33 KB of envelopes. Errors still carry the
+		// trace id the client sent, so one action's errors in every project stay linked.
+		tracesSampleRate: 0,
 		// An error while forwarding an envelope must not carry the envelope as its request body.
 		beforeSend: (event: ErrorEvent) => {
 			if (event.request && isTunnel(event.request.url)) delete event.request.data;
@@ -62,8 +60,6 @@ export function sentryOptions(env: Env): CloudflareOptions {
 		],
 	};
 }
-
-export const span = <T>(name: string, op: string, run: () => T): T => startSpan({ name, op }, run);
 
 export const identify = ({ id, name, email }: Actor) => setUser({ id, username: name, ...(email ? { email } : {}) });
 
