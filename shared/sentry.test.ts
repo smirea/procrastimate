@@ -48,8 +48,10 @@ test('production keeps reporting and requires a valid DSN and release', () => {
 		target: { dsn, environment: 'production', release: 'deployed-commit' },
 		problem: null,
 	});
-	expect(parseSentryTarget(dsn, { environment: 'production', release: '' }).problem).not.toBeNull();
-	expect(
-		parseSentryTarget('invalid', { environment: 'production', release: 'deployed-commit' }).problem,
-	).not.toBeNull();
+	expect(parseSentryTarget(dsn, { environment: 'production', release: '' }).problem).toBe(
+		'Set both SENTRY_ENVIRONMENT and SENTRY_RELEASE or neither',
+	);
+	expect(parseSentryTarget('invalid', { environment: 'production', release: 'deployed-commit' }).problem).toBe(
+		'SENTRY_ENVIRONMENT is set, but the Sentry DSN is not provisioned',
+	);
 });

@@ -33,6 +33,5 @@ public enum MemoTasks {
 }
 
 extension TaskItem {
-    /// The memo this task came from, when Notouroboros sent it.
     public var memoSource: MemoSource? { MemoTasks.parseMemoSource(sourceKey) }
 }

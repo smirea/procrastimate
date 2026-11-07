@@ -20,6 +20,21 @@ private struct SearchNames: Decodable {
     case "search":
         let names: SearchNames = try a(2)
         return try json(Search.search(a(0), a(1), projects: names.projects, labels: names.labels))
+    case "searchSections":
+        return .array(try SearchSections.sections(a(0)).map { section in
+            object([
+                "title": .string(section.title),
+                "total": try json(section.total),
+                "rows": .array(try section.rows.map { row in
+                    let (kind, hit): (String, JSONValue) = switch row {
+                    case let .project(hit): ("project", try json(hit))
+                    case let .label(hit): ("label", try json(hit))
+                    case let .task(hit): ("task", try json(hit))
+                    }
+                    return object(["key": .string(row.id), "kind": .string(kind), "hit": hit])
+                }),
+            ])
+        })
     default: throw unknown(fn)
     }
 }

@@ -121,7 +121,6 @@
 		input.focus();
 	}
 
-	/** A pick lands in the draft and the focus goes back to the text. */
 	function pick(apply: () => void) {
 		apply();
 		input.focus();
@@ -176,7 +175,6 @@
 		return () => observer.disconnect();
 	});
 
-	/** Saves the task with its subtasks and attachments. */
 	function save(options?: { untitled: boolean }) {
 		const next = draft.task({ ...options, images: draftedImages.length, files: draftedFiles });
 		if (!next) return null;

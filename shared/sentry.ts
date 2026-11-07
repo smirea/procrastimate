@@ -26,7 +26,6 @@ export function parseDsn(dsn: string): Dsn | null {
 	return { protocol: protocol as Dsn['protocol'], publicKey, host, projectId };
 }
 
-/** Where Sentry ingests a project's envelopes. */
 export const envelopeUrl = ({ protocol, host, projectId }: Dsn) => `${protocol}://${host}/api/${projectId}/envelope/`;
 
 /**

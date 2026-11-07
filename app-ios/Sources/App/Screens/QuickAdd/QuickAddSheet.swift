@@ -503,7 +503,6 @@ struct QuickAddSheet: View {
         focused = true
     }
 
-    /// Saves the task with its subtasks and attachments.
     private func save(untitled: Bool = false) -> TaskItem? {
         guard loadingImages == 0 else { return nil }
         guard let task = draft.resolve(draft.parse(context), untitled: untitled, images: drafted.count, files: draftedFiles.map(\.name)) else { return nil }

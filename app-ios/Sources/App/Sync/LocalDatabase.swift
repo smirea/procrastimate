@@ -54,7 +54,6 @@ final class LocalDatabase: Sendable {
         let logged: Int64
         let changes: RowsRead
 
-        /// Whether the log is long enough for `trim`.
         var long: Bool { logged > LocalDatabase.trimAbove }
     }
 

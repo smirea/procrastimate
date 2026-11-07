@@ -139,7 +139,6 @@ final class SyncClient {
         await reload().value
     }
 
-    /// Reads the local database again, after it could not be read.
     func retryRead() {
         reload()
     }

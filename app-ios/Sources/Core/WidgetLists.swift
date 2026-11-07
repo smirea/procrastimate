@@ -292,7 +292,6 @@ public enum WidgetLists {
         }
     }
 
-    /// The cell for a list.
     public static func shortcut(_ choice: Choice, counter: Counter, _ data: WidgetData, now: Date, today: DateKey, in zone: TimeZone) -> Shortcut {
         let open = Triggers.openTasks(data.tasks)
         // Today lists a dated subtask under an undated parent, so Due counts it though a project's own rows do not.

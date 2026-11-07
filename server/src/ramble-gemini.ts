@@ -17,7 +17,7 @@ const LIVE_URL =
  * After the end of the audio, how long Gemini may stay silent before the tasks are taken as they are, when every word
  * heard was already answered. Words still unanswered wait for their turn to complete, up to the session's cap.
  */
-const QUIET_AFTER_END_MS = 800;
+export const QUIET_AFTER_END_MS = 800;
 
 type RawSocket = { send(text: string): void; close(): void };
 /** Opens a WebSocket to `url`; resolves once it is open, and calls `close` when it closes after that. */

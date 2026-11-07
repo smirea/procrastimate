@@ -217,3 +217,48 @@ export function excerpt({ text, ranges }: Highlight, lead = 24): Highlight {
 	const start = text.lastIndexOf(' ', first - lead) + 1 || first - lead;
 	return { text: `…${text.slice(start)}`, ranges: ranges.map(([s, e]) => [s - start + 1, e - start + 1] as const) };
 }
+
+/** Rendering is the cost that grows with matches, so each section of the search sheet shows only its best rows. */
+export const SEARCH_LIMITS = { projects: 5, labels: 5, open: 30, completed: 15 } as const;
+
+export type SearchRow = { key: string } & (
+	| { kind: 'project'; hit: NameHit<Project> }
+	| { kind: 'label'; hit: NameHit<Label> }
+	| { kind: 'task'; hit: TaskHit }
+);
+
+export type SearchSection = { title: string; total: number; rows: SearchRow[] };
+
+/** The search sheet's sections in order, each with its best rows and how many matched; empty ones are left out. */
+export function searchSections(results: SearchResults): SearchSection[] {
+	return [
+		{
+			title: 'Projects',
+			total: results.projects.length,
+			rows: results.projects
+				.slice(0, SEARCH_LIMITS.projects)
+				.map((hit): SearchRow => ({ key: `p-${hit.item.id}`, kind: 'project', hit })),
+		},
+		{
+			title: 'Labels',
+			total: results.labels.length,
+			rows: results.labels
+				.slice(0, SEARCH_LIMITS.labels)
+				.map((hit): SearchRow => ({ key: `l-${hit.item.id}`, kind: 'label', hit })),
+		},
+		{
+			title: 'Tasks',
+			total: results.open.length,
+			rows: results.open
+				.slice(0, SEARCH_LIMITS.open)
+				.map((hit): SearchRow => ({ key: `t-${hit.task.id}`, kind: 'task', hit })),
+		},
+		{
+			title: 'Completed',
+			total: results.completed.length,
+			rows: results.completed
+				.slice(0, SEARCH_LIMITS.completed)
+				.map((hit): SearchRow => ({ key: `t-${hit.task.id}`, kind: 'task', hit })),
+		},
+	].filter(section => section.rows.length);
+}

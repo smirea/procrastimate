@@ -30,7 +30,6 @@ export class QuickAddDraft {
 		this.restart(defaults);
 	}
 
-	/** Clears the draft for the next task in the same sheet, starting from `next`. */
 	restart(next: ListDefaults) {
 		this.defaults = next;
 		this.text = '';

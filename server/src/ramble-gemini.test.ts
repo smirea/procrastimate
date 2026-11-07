@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test';
-import { geminiUpstream, LiveTasks, type OpenSocket } from './ramble-gemini';
+import { afterEach, describe, expect, jest, test } from 'bun:test';
+import { geminiUpstream, LiveTasks, QUIET_AFTER_END_MS, type OpenSocket } from './ramble-gemini';
 import type { RambleOutlineInput } from '../../shared/ramble/outline';
 import type { UpstreamEvents } from './ramble';
 
@@ -53,6 +53,13 @@ async function connect(live: ReturnType<typeof fakeLive>) {
 	);
 	return { upstream, heard };
 }
+
+/** Lets the quiet window after the end of the audio pass, on fake timers from here on. */
+function quietPasses() {
+	jest.advanceTimersByTime(QUIET_AFTER_END_MS + 1);
+}
+
+afterEach(() => jest.useRealTimers());
 
 const chunk = (bytes: number, commit = false) =>
 	JSON.stringify({ message_type: 'input_audio_chunk', audio_base_64: 'A'.repeat(bytes), commit, sample_rate: 16000 });
@@ -128,18 +135,20 @@ describe('geminiUpstream', () => {
 	test('words heard before a completed turn need no wait after the audio ends', async () => {
 		const live = fakeLive();
 		const { upstream, heard } = await connect(live);
+		jest.useFakeTimers();
 		live.say({ setupComplete: {} });
 		live.say({ serverContent: { inputTranscription: { text: 'Buy milk.' } } });
 		live.say({ serverContent: { turnComplete: true } });
 		upstream.send(chunk(0, true));
 		expect(heard.at(-1)).toEqual({ message_type: 'partial_transcript', text: 'Buy milk.' });
-		await Bun.sleep(900);
+		quietPasses();
 		expect(heard.at(-1)).toEqual({ message_type: 'committed_transcript', text: 'Buy milk.' });
 	});
 
 	test('speech after a completed turn waits for its own turn', async () => {
 		const live = fakeLive();
 		const { upstream, heard } = await connect(live);
+		jest.useFakeTimers();
 		live.say({ setupComplete: {} });
 		live.say({ serverContent: { inputTranscription: { text: 'Buy milk.' } } });
 		live.say({ serverContent: { turnComplete: true } });
@@ -148,7 +157,7 @@ describe('geminiUpstream', () => {
 			JSON.stringify({ audio_base_64: Buffer.from(loud.buffer).toString('base64'), commit: false, sample_rate: 16000 }),
 		);
 		upstream.send(chunk(0, true));
-		await Bun.sleep(900);
+		quietPasses();
 		expect(heard.at(-1)).toEqual({ message_type: 'partial_transcript', text: 'Buy milk.' });
 		live.say({ serverContent: { inputTranscription: { text: 'Call mom.' } } });
 		live.say({ serverContent: { turnComplete: true } });
@@ -158,9 +167,10 @@ describe('geminiUpstream', () => {
 	test('words never answered wait for their turn instead of the quiet window', async () => {
 		const live = fakeLive();
 		const { upstream, heard } = await connect(live);
+		jest.useFakeTimers();
 		live.say({ setupComplete: {} });
 		upstream.send(chunk(0, true));
-		await Bun.sleep(900);
+		quietPasses();
 		expect(heard.at(-1)).toEqual({ message_type: 'session_started' });
 		live.say({ serverContent: { inputTranscription: { text: 'Call mom.' } } });
 		live.say({ serverContent: { turnComplete: true } });

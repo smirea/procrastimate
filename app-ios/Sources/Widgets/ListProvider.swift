@@ -2,7 +2,6 @@ import AppIntents
 import Core
 import WidgetKit
 
-/// A configuration that names one list.
 protocol ListConfiguration: WidgetConfigurationIntent {
     var list: WidgetListEntity? { get }
 }

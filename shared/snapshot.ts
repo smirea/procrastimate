@@ -8,11 +8,9 @@ export type Entity = { id: string } & Fields;
 
 export const emptySnapshot = (): Snapshot => ({ ...emptyLists(), settings: { ...DEFAULT_SETTINGS } });
 
-/** Every list of a snapshot, empty. */
 export const emptyLists = () =>
 	Object.fromEntries(LIST_NAMES.map(name => [name, []])) as unknown as Omit<Snapshot, 'settings'>;
 
-/** Oldest first, then by id. */
 export const byCreation = (a: { createdAt: number; id: string }, b: { createdAt: number; id: string }) =>
 	a.createdAt - b.createdAt || compareIds(a.id, b.id);
 

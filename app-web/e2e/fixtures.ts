@@ -150,18 +150,18 @@ export async function signInAccount(context: BrowserContext) {
 }
 
 /**
- * Collects every uncaught error in the context's pages. The pinned clock runs timer callbacks itself and logs what
- * they throw with `console.error(error)` instead of letting it escape, so a console error whose first argument is an
- * Error counts too. The app never logs an Error itself, and the browser's own lines, such as `Failed to load
- * resource`, carry no arguments.
- */
-/**
  * WebKit's words for a request it cancelled because the page navigated, such as the token fetch during a reload. The
  * app tries again after the reload, so it is not a crash. The single-origin spec still fails
  * on any request that really leaves the origin.
  */
 const NAVIGATION_ABORT = /due to access control checks\.$/;
 
+/**
+ * Collects every uncaught error in the context's pages. The pinned clock runs timer callbacks itself and logs what
+ * they throw with `console.error(error)` instead of letting it escape, so a console error whose first argument is an
+ * Error counts too. The app never logs an Error itself, and the browser's own lines, such as `Failed to load
+ * resource`, carry no arguments.
+ */
 export function watchPageErrors(context: BrowserContext) {
 	const errors: string[] = [];
 	const record = (error: string) => {
@@ -419,7 +419,6 @@ export class App {
 		await expect(this.page.getByRole('heading', { level: 1, name: view })).toBeVisible();
 	}
 
-	/** Opens the open list's `…` menu and returns it. */
 	async listMenu(page = this.page) {
 		const name = /^(Inbox|Tomorrow|This week|No date|Completed|Project|Label|Place|Event) actions$/;
 		await page.getByRole('button', { name }).click();

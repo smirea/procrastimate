@@ -161,7 +161,6 @@ public enum Triggers {
         "\(fixed4(place.latitude)),\(fixed4(place.longitude))"
     }
 
-    /// The saved place at a spot, if one is.
     public static func savedPlaceAt(_ labels: [Label], _ key: String) -> Label? {
         labels.first { $0.place.map(placeKey) == key }
     }

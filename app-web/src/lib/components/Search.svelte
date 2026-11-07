@@ -11,7 +11,7 @@
 	import X from 'phosphor-svelte/lib/X';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
-	import { excerpt, search, type NameHit, type TaskHit } from 'shared/search.ts';
+	import { excerpt, search, searchSections, type SearchRow as Row, type TaskHit } from 'shared/search.ts';
 	import { toDateKey, type Label, type Project } from 'shared/task.ts';
 	import Highlighted from './Highlighted.svelte';
 	import LinkedText from './LinkedText.svelte';
@@ -27,15 +27,6 @@
 	import { PRIORITIES } from '../priorities.ts';
 	import { isMenuKey, rowMenu, taskMenu } from '../row-menu.svelte.ts';
 
-	/** Rendering is the cost that grows with matches, so each section shows only its best rows. */
-	const LIMIT = { projects: 5, labels: 5, open: 30, completed: 15 };
-
-	type Row = { key: string } & (
-		| { kind: 'project'; hit: NameHit<Project> }
-		| { kind: 'label'; hit: NameHit<Label> }
-		| { kind: 'task'; hit: TaskHit }
-	);
-
 	const uid = $props.id();
 	let query = $state('');
 	let active = $state(0);
@@ -43,30 +34,7 @@
 	let list = $state<HTMLDivElement>();
 
 	const results = $derived(search(query, store.own.tasks, { projects: store.ownProjects, labels: store.own.labels }));
-	const sections = $derived(
-		[
-			{
-				label: 'Projects',
-				total: results.projects.length,
-				rows: results.projects.slice(0, LIMIT.projects).map((hit): Row => ({ key: `p-${hit.item.id}`, kind: 'project', hit })),
-			},
-			{
-				label: 'Labels',
-				total: results.labels.length,
-				rows: results.labels.slice(0, LIMIT.labels).map((hit): Row => ({ key: `l-${hit.item.id}`, kind: 'label', hit })),
-			},
-			{
-				label: 'Tasks',
-				total: results.open.length,
-				rows: results.open.slice(0, LIMIT.open).map((hit): Row => ({ key: `t-${hit.task.id}`, kind: 'task', hit })),
-			},
-			{
-				label: 'Completed',
-				total: results.completed.length,
-				rows: results.completed.slice(0, LIMIT.completed).map((hit): Row => ({ key: `t-${hit.task.id}`, kind: 'task', hit })),
-			},
-		].filter((section) => section.rows.length),
-	);
+	const sections = $derived(searchSections(results));
 	const rows = $derived(sections.flatMap((section) => section.rows));
 	const index = $derived(new Map(rows.map((row, i) => [row.key, i])));
 	const optionId = (row: Row) => `${uid}-${row.key}`;
@@ -176,10 +144,10 @@
 			class="min-h-0 overflow-y-auto overscroll-contain border-ink/5 p-1.5 max-md:border-b md:border-t"
 			ontouchmove={() => input.blur()}
 		>
-			{#each sections as section (section.label)}
-				<div role="group" aria-labelledby="{uid}-{section.label}" class="pb-1">
-					<div id="{uid}-{section.label}" class="flex items-center justify-between px-2.5 pt-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">
-						{section.label}
+			{#each sections as section (section.title)}
+				<div role="group" aria-labelledby="{uid}-{section.title}" class="pb-1">
+					<div id="{uid}-{section.title}" class="flex items-center justify-between px-2.5 pt-2 pb-1 text-[12px] font-medium tracking-wide text-faint uppercase">
+						{section.title}
 						<span class="font-normal normal-case tabular-nums">{section.total}</span>
 					</div>
 					{#each section.rows as row (row.key)}

@@ -45,7 +45,6 @@ const PART_KEY = /^part(\d{1,2})$/;
 /** What a request's `size` names, before `parseByteKey` checks a part's number. */
 export const byteKeySchema = z.string().regex(/^(full|thumb|part\d{1,2})$/);
 
-/** The key a request names, or null for anything else. */
 export function parseByteKey(
 	value: string | null,
 ): { key: ImageSize; part: null } | { key: PartKey; part: number } | null {
@@ -76,7 +75,7 @@ export const imageUrl = (space: string | null, id: string, key: ByteKey) => {
 	return `${IMAGES_PATH}?${query}`;
 };
 
-/** What a file is, for its icon. iOS mirrors this table in `Core/FileKind.swift`. */
+/** What a file is, for its icon. iOS mirrors this table in `Core/FileKinds.swift`. */
 export const FILE_KINDS = [
 	'pdf',
 	'document',

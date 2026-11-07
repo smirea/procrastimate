@@ -28,7 +28,6 @@ public enum Pin: Hashable, Codable, Sendable {
 }
 
 extension Pin {
-    /// The pin for a list from the catalog.
     public init(_ entry: Lists.Entry) {
         self = switch entry.kind {
         case .inbox: .inbox

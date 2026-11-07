@@ -5551,6 +5551,3100 @@
 				],
 				"text": "…can and then water the ferns by the window"
 			}
+		},
+		{
+			"fn": "searchSections",
+			"test": "search sections › sections keep their order, show their best rows, and count every match",
+			"input": [
+				{
+					"completed": [
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home done"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": 5,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t79",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home done",
+								"titleMode": "parse"
+							}
+						}
+					],
+					"labels": [],
+					"open": [
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 0"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t39",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 0",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 1"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t40",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 1",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 2"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t41",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 2",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 3"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t42",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 3",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 4"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t43",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 4",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 5"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t44",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 5",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 6"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t45",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 6",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 7"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t46",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 7",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 8"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t47",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 8",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 9"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t48",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 9",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 10"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t49",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 10",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 11"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t50",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 11",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 12"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t51",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 12",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 13"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t52",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 13",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 14"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t53",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 14",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 15"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t54",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 15",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 16"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t55",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 16",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 17"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t56",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 17",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 18"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t57",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 18",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 19"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t58",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 19",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 20"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t59",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 20",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 21"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t60",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 21",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 22"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t61",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 22",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 23"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t62",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 23",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 24"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t63",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 24",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 25"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t64",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 25",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 26"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t65",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 26",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 27"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t66",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 27",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 28"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t67",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 28",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 29"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t68",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 29",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 30"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t69",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 30",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 31"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t70",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 31",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 32"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t71",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 32",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 33"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t72",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 33",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 34"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t73",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 34",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 35"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t74",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 35",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 36"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t75",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 36",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 37"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t76",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 37",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 38"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t77",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 38",
+								"titleMode": "parse"
+							}
+						},
+						{
+							"matches": {
+								"title": [
+									{
+										"ranges": [
+											[
+												0,
+												4
+											]
+										],
+										"text": "Home task 39"
+									}
+								]
+							},
+							"score": 12,
+							"task": {
+								"attachments": [],
+								"completedAt": null,
+								"completedBy": null,
+								"createdAt": 0,
+								"createdBy": null,
+								"due": null,
+								"event": null,
+								"github": [],
+								"id": "t78",
+								"labelIds": [],
+								"lastCompletedAt": null,
+								"location": null,
+								"notes": "",
+								"order": 0,
+								"parentId": null,
+								"priority": 4,
+								"projectId": null,
+								"recurrence": null,
+								"reminders": [],
+								"sectionId": null,
+								"title": "Home task 39",
+								"titleMode": "parse"
+							}
+						}
+					],
+					"projects": [
+						{
+							"item": {
+								"createdAt": 0,
+								"icon": null,
+								"id": "home",
+								"name": "Home",
+								"order": 0
+							},
+							"name": {
+								"ranges": [
+									[
+										0,
+										4
+									]
+								],
+								"text": "Home"
+							},
+							"score": 3
+						}
+					]
+				}
+			],
+			"output": [
+				{
+					"rows": [
+						{
+							"hit": {
+								"item": {
+									"createdAt": 0,
+									"icon": null,
+									"id": "home",
+									"name": "Home",
+									"order": 0
+								},
+								"name": {
+									"ranges": [
+										[
+											0,
+											4
+										]
+									],
+									"text": "Home"
+								},
+								"score": 3
+							},
+							"key": "p-home",
+							"kind": "project"
+						}
+					],
+					"title": "Projects",
+					"total": 1
+				},
+				{
+					"rows": [
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 0"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t39",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 0",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t39",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 1"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t40",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 1",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t40",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 2"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t41",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 2",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t41",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 3"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t42",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 3",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t42",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 4"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t43",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 4",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t43",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 5"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t44",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 5",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t44",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 6"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t45",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 6",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t45",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 7"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t46",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 7",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t46",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 8"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t47",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 8",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t47",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 9"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t48",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 9",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t48",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 10"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t49",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 10",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t49",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 11"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t50",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 11",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t50",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 12"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t51",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 12",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t51",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 13"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t52",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 13",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t52",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 14"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t53",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 14",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t53",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 15"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t54",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 15",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t54",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 16"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t55",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 16",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t55",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 17"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t56",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 17",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t56",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 18"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t57",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 18",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t57",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 19"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t58",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 19",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t58",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 20"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t59",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 20",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t59",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 21"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t60",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 21",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t60",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 22"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t61",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 22",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t61",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 23"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t62",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 23",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t62",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 24"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t63",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 24",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t63",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 25"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t64",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 25",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t64",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 26"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t65",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 26",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t65",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 27"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t66",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 27",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t66",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 28"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t67",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 28",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t67",
+							"kind": "task"
+						},
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home task 29"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": null,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t68",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home task 29",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t68",
+							"kind": "task"
+						}
+					],
+					"title": "Tasks",
+					"total": 40
+				},
+				{
+					"rows": [
+						{
+							"hit": {
+								"matches": {
+									"title": [
+										{
+											"ranges": [
+												[
+													0,
+													4
+												]
+											],
+											"text": "Home done"
+										}
+									]
+								},
+								"score": 12,
+								"task": {
+									"attachments": [],
+									"completedAt": 5,
+									"completedBy": null,
+									"createdAt": 0,
+									"createdBy": null,
+									"due": null,
+									"event": null,
+									"github": [],
+									"id": "t79",
+									"labelIds": [],
+									"lastCompletedAt": null,
+									"location": null,
+									"notes": "",
+									"order": 0,
+									"parentId": null,
+									"priority": 4,
+									"projectId": null,
+									"recurrence": null,
+									"reminders": [],
+									"sectionId": null,
+									"title": "Home done",
+									"titleMode": "parse"
+								}
+							},
+							"key": "t-t79",
+							"kind": "task"
+						}
+					],
+					"title": "Completed",
+					"total": 1
+				}
+			]
+		},
+		{
+			"fn": "searchSections",
+			"test": "search sections › no match leaves no section",
+			"input": [
+				{
+					"completed": [],
+					"labels": [],
+					"open": [],
+					"projects": []
+				}
+			],
+			"output": []
 		}
 	]
 }

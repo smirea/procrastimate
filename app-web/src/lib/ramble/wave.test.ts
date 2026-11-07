@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test';
-import { DOT, waveHeights } from './wave.ts';
+import { waveHeights } from './wave.ts';
 
 describe('waveHeights', () => {
 	test('silence is a row of dots', () => {
 		const sizes = waveHeights(new Float32Array(48), { bars: 5, height: 80, presence: 1 }).map(bar => bar.size);
-		expect(sizes).toEqual([DOT, DOT, DOT, DOT, DOT]);
+		expect(sizes).toEqual([4, 4, 4, 4, 4]);
 	});
 
 	test('the newest level is the tallest bar, in the middle, and older ones ripple outward', () => {
@@ -15,6 +15,6 @@ describe('waveHeights', () => {
 
 	test('at rest every bar settles to a dot, even with sound', () => {
 		const sizes = waveHeights([1, 1, 1], { bars: 3, height: 80, presence: 0 }).map(bar => bar.size);
-		expect(sizes).toEqual([DOT, DOT, DOT]);
+		expect(sizes).toEqual([4, 4, 4]);
 	});
 });

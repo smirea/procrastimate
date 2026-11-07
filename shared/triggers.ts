@@ -274,12 +274,10 @@ export type SavedPlaceLabel = Label & { place: SavedPlace };
 
 export const isSavedPlace = (label: Label): label is SavedPlaceLabel => label.place !== null;
 
-/** The saved place at a spot, if one is. */
 export function savedPlaceAt(labels: readonly Label[], key: string): SavedPlaceLabel | null {
 	return labels.filter(isSavedPlace).find(l => placeKey(l.place) === key) ?? null;
 }
 
-/** A saved place as a task's place, under its saved name and radius. */
 export function placeLocation(label: SavedPlaceLabel, trigger: LocationTrigger): TaskLocation {
 	return { name: label.name, ...label.place, trigger };
 }

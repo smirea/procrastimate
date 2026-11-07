@@ -14,12 +14,10 @@ function resolveCommand(name: Command): string {
 	return path;
 }
 
-/** Runs it with the terminal attached and answers its exit status. */
 export function agentCommand(name: Command, args: string[]): number {
 	return spawnSync(resolveCommand(name), args, { stdio: 'inherit' }).status ?? 1;
 }
 
-/** Runs it with stdout captured, exiting with its status on a failure. */
 export function agentOutput(name: Command, args: string[]): string {
 	const result = spawnSync(resolveCommand(name), args, { stdio: ['inherit', 'pipe', 'inherit'], encoding: 'utf8' });
 	if (result.status !== 0) process.exit(result.status ?? 1);

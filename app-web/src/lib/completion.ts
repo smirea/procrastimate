@@ -5,10 +5,10 @@ import { store } from './store.svelte.ts';
 import { clock } from './clock.svelte.ts';
 import { toasts } from './toasts.svelte.ts';
 
-/** The store holds the undo while the toast shows, so stacked undos give the same result in any order. */
 /** How long a checkbox plays its check before the row completes and moves. */
 export const CHECK_PLAY_MS = 260;
 
+/** The store holds the undo while the toast shows, so stacked undos give the same result in any order. */
 export function toastUndo(message: string, undo: Undo) {
 	const id = store.offerUndo(undo);
 	toasts.show(message, { label: 'Undo', run: () => store.undo(id), dismissed: () => store.dropUndo(id) });
