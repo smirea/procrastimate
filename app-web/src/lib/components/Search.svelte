@@ -12,7 +12,7 @@
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import { excerpt, search, searchSections, type SearchRow as Row, type TaskHit } from 'shared/search.ts';
-	import { toDateKey, type Label, type Project } from 'shared/task.ts';
+	import { toDateKey } from 'shared/task.ts';
 	import Highlighted from './Highlighted.svelte';
 	import LinkedText from './LinkedText.svelte';
 	import Sheet from './Sheet.svelte';

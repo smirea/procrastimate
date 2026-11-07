@@ -4,6 +4,7 @@
 	"exclude": ["src/service-worker"],
 	"compilerOptions": {
 		"allowImportingTsExtensions": true,
+		"noUnusedLocals": true,
 		"types": ["$app/types", "bun"],
 		"paths": {
 			"shared/*": ["../shared/*"]
