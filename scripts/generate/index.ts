@@ -4,7 +4,6 @@ import { dirname, join, relative } from 'node:path';
 import indexCss from '../../app-web/src/index.css' with { type: 'text' };
 import { generate } from 'sync-engine/schema';
 import { syncSchema } from '../../shared/db/sync';
-import { swiftConstants } from './constants';
 import { handWrittenModels } from './models';
 import { tokenFiles } from './tokens';
 import { swiftRowsModule, type SwiftModel } from './tables';
@@ -76,6 +75,7 @@ write(
 	),
 );
 
+const { swiftConstants } = await import('./constants');
 write('app-ios/Sources/Core/Generated/SharedConstants.swift', swiftConstants());
 for (const [path, contents] of Object.entries(tokenFiles(indexCss))) write(path, contents);
 
