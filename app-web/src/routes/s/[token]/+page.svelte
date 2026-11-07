@@ -16,7 +16,8 @@
 	import SectionBadge from '#lib/components/SectionBadge.svelte';
 	import { api, isNotFound } from '#lib/api.ts';
 	import { provideReadOnlyLookup } from '#lib/lookup.ts';
-	import { motion, type Arrival } from '#lib/ui.svelte.ts';
+	import { motion } from '#lib/motion.ts';
+	import { type Arrival } from '#lib/sheets.svelte.ts';
 
 	type State = { kind: 'loading' } | { kind: 'gone' } | { kind: 'failed' } | { kind: 'ready'; view: SharedView };
 

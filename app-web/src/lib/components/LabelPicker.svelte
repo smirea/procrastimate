@@ -9,7 +9,7 @@
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
 	import { labelIcon } from '../label-icon.ts';
-	import { mobile, motion } from '../ui.svelte.ts';
+	import { mobile, motion } from '../motion.ts';
 
 	/** A shared task passes its space's labels, and cannot create one: labels made here are always the user's own. */
 	let {

@@ -13,7 +13,8 @@
 	import { OptimisticList, type Row } from '../optimistic.svelte.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { motion, toasts } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
+	import { toasts } from '../toasts.svelte.ts';
 
 	const accounts = new OptimisticList<Person>((account) => account.id);
 	let loaded = $state(false);

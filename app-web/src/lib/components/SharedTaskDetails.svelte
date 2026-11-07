@@ -21,7 +21,9 @@
 	import { useLookup } from '../lookup.ts';
 	import { reminderChipLabel } from 'shared/task-menus.ts';
 	import { PRIORITIES } from '../priorities.ts';
-	import { clock, motion, type Arrival } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { motion } from '../motion.ts';
+	import { type Arrival } from '../sheets.svelte.ts';
 
 	/**
 	 * A task reached through a public link, read only: what TaskDetails shows a view-only guest, from the link's own rows.

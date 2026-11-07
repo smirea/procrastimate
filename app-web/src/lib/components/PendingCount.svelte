@@ -2,7 +2,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { pendingCount } from 'shared/views.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	/** `open` is the number of rows the list shows. */
 	let { open, class: className = '' }: { open: number; class?: string } = $props();

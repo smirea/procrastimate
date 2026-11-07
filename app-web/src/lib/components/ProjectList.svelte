@@ -8,7 +8,7 @@
 	import ProjectGlyph from './ProjectGlyph.svelte';
 	import type { ListEntry } from 'shared/lists.ts';
 	import { store } from '../store.svelte.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 	import { Reorder } from '../reorder.svelte.ts';
 
 	let { projects, children }: { projects: readonly ListEntry[]; children?: Snippet } = $props();

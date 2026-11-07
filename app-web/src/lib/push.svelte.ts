@@ -10,7 +10,7 @@ import { refusalOver, refusedRecently, subscribe } from './push-refusal.ts';
 import { reportError } from './sentry.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
-import { sheets } from './ui.svelte.ts';
+import { sheets } from './sheets.svelte.ts';
 
 type PushState =
 	| { kind: 'checking' }

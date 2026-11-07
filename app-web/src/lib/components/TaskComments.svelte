@@ -14,7 +14,9 @@
 	import type { Home } from 'shared/space-routing.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { clock, motion, toasts } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { motion } from '../motion.ts';
+	import { toasts } from '../toasts.svelte.ts';
 
 	let { task, home }: { task: Task; home: Home } = $props();
 
@@ -28,8 +30,7 @@
 	// Reading the task reads its comments, including ones that arrive while it stays open.
 	$effect(() => {
 		void list;
-		const user = me;
-		if (user) untrack(() => store.markCommentsRead(task.id, user));
+		untrack(() => store.markCommentsRead(task.id));
 	});
 
 	/** The people cache names authors offline; an author this device never met asks the server, also mid-visit. */
@@ -46,19 +47,18 @@
 	});
 
 	function send() {
-		if (!me || !draft.trim()) return;
-		store.addComment(task.id, draft, me);
+		if (!draft.trim()) return;
+		store.addComment(task.id, draft);
 		draft = '';
 	}
 
 	function save() {
-		if (me && editing) store.editComment(editing.id, editing.body, me);
+		if (editing) store.editComment(editing.id, editing.body);
 		editing = null;
 	}
 
 	function remove(id: string) {
-		if (!me) return;
-		const removed = store.deleteComment(id, me);
+		const removed = store.deleteComment(id);
 		if (removed) toasts.show('Deleted comment', { label: 'Undo', run: () => store.undeleteComment(removed) });
 	}
 

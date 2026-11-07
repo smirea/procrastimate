@@ -19,7 +19,6 @@
 		projectId,
 		sectionId = null,
 		onchange,
-		align = 'start',
 		projects,
 		sections,
 		canCreate = true,
@@ -27,7 +26,6 @@
 		projectId: string | null;
 		sectionId?: string | null;
 		onchange: (place: Place) => void;
-		align?: 'start' | 'end';
 		projects?: readonly Project[];
 		sections?: readonly Section[];
 		canCreate?: boolean;
@@ -59,7 +57,7 @@
 </script>
 
 <div class="flex min-w-0 items-center">
-	<Popover label="Project" {align}>
+	<Popover label="Project">
 		{#snippet trigger({ toggle })}
 			<button type="button" class="chip max-w-full" data-active={!!project} aria-label={`Project ${label}`} onclick={toggle}>
 				{#if project}<ProjectGlyph {project} size={15} class="shrink-0" />{:else}<Tray size={15} class="shrink-0" />{/if}

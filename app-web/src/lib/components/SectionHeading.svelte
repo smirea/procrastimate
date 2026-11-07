@@ -4,7 +4,7 @@
 	import type { Screen } from 'shared/screens.ts';
 	import type { Task } from 'shared/task.ts';
 	import { quickAddDefaults } from '../screen.ts';
-	import { sheets } from '../ui.svelte.ts';
+	import { sheets } from '../sheets.svelte.ts';
 	import CopyButton from './CopyButton.svelte';
 	import PendingCount from './PendingCount.svelte';
 	import SectionBadge from './SectionBadge.svelte';

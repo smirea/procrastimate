@@ -19,7 +19,9 @@
 	import ImageViewer from '#lib/components/ImageViewer.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { forgetAdded, quickAddDefaults } from '#lib/screen.ts';
-	import { clock, sheets, trackKeyboardInset, motion, mobile } from '#lib/ui.svelte.ts';
+	import { clock } from '#lib/clock.svelte.ts';
+	import { sheets } from '#lib/sheets.svelte.ts';
+	import { trackKeyboardInset, motion, mobile } from '#lib/motion.ts';
 	import { keepCaretInView } from '#lib/caret.ts';
 	import { notifyDueReminders } from '#lib/reminders.ts';
 	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';

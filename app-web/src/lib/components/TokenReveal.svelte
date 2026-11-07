@@ -4,7 +4,8 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import Copy from 'phosphor-svelte/lib/Copy';
 	import Robot from 'phosphor-svelte/lib/Robot';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
+	import { toasts } from '../toasts.svelte.ts';
 
 	/** Null while the server makes it. */
 	let { made }: { made: { value: string; prompt: string } | null } = $props();
@@ -15,8 +16,12 @@
 	async function copy(what: 'token' | 'prompt') {
 		const of = made;
 		if (!of) return;
-		await navigator.clipboard?.writeText(what === 'token' ? of.value : of.prompt).catch(() => undefined);
-		last = { of, what };
+		try {
+			await navigator.clipboard.writeText(what === 'token' ? of.value : of.prompt);
+			last = { of, what };
+		} catch {
+			toasts.show('Couldn’t copy');
+		}
 	}
 </script>
 

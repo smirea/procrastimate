@@ -6,7 +6,7 @@ import type { StoreData } from 'shared/store.ts';
 import type { Label, Project, Section, Task } from 'shared/task.ts';
 import { comments } from './comments.svelte.ts';
 import { store } from './store.svelte.ts';
-import { sheets, type Arrival } from './ui.svelte.ts';
+import { sheets, type Arrival } from './sheets.svelte.ts';
 import { unsynced } from './unsynced.svelte.ts';
 
 /**

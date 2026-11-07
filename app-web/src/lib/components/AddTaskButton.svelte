@@ -2,7 +2,7 @@
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import type { Screen } from 'shared/screens.ts';
 	import { quickAddDefaults } from '../screen.ts';
-	import { sheets } from '../ui.svelte.ts';
+	import { sheets } from '../sheets.svelte.ts';
 
 	/** A group's row, such as a section or an Inbox day, adds to `to` and is named for `group`; any other row adds to the screen it sits on. */
 	let { to, group }: { to?: Screen; group?: string } = $props();

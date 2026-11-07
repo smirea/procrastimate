@@ -4,7 +4,9 @@ import { addedName, addedScreen, screenPath } from 'shared/screens.ts';
 import { store } from './store.svelte.ts';
 import type { Task } from 'shared/task.ts';
 import { currentScreen } from './screen.ts';
-import { clock, reveal, sheets, toasts } from './ui.svelte.ts';
+import { clock } from './clock.svelte.ts';
+import { reveal, sheets } from './sheets.svelte.ts';
+import { toasts } from './toasts.svelte.ts';
 
 /**
  * Shows a task just added from quick add or Ramble: the open list when it already shows the task, else its project,

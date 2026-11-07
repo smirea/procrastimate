@@ -11,7 +11,8 @@
 	import type { Home } from 'shared/space-routing.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { clock, motion } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	let { task, home }: { task: Task; home: Home } = $props();
 

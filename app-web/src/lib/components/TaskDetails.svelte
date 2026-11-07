@@ -38,7 +38,9 @@
 	import PersonName from './PersonName.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
-	import { clock, sheets, motion, type Arrival } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { sheets, type Arrival } from '../sheets.svelte.ts';
+	import { motion } from '../motion.ts';
 	import { completeTask, deleteTask } from '../completion.ts';
 	import { attachments, droppedFiles } from '../attachments/attachments.svelte.ts';
 	import { unsynced } from '../unsynced.svelte.ts';

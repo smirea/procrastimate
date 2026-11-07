@@ -3,7 +3,8 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { mobile, motion, sheets } from '../ui.svelte.ts';
+	import { mobile, motion } from '../motion.ts';
+	import { sheets } from '../sheets.svelte.ts';
 
 	/** On a phone every sheet rises from the bottom; on a desktop each keeps its own entrance. */
 	let {

@@ -10,13 +10,13 @@
 	import { listFilters } from '#lib/list-filters.svelte.ts';
 	import { session } from '#lib/session.svelte.ts';
 	import { toastDeleted } from '#lib/completion.ts';
-	import { sheets } from '#lib/ui.svelte.ts';
+	import { sheets } from '#lib/sheets.svelte.ts';
 	import { completed } from '#lib/completed.svelte.ts';
 	import { canAddHere } from '#lib/screen.ts';
 	import { completedTasks, labelViewTasks } from 'shared/views.ts';
 	import { formatRadius, placeKey } from 'shared/triggers.ts';
 	import type { Task } from 'shared/task.ts';
-	import { filterKey, filterTasks } from 'shared/list-filters.ts';
+	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
 	import { labelStyle } from '#lib/label-colors.ts';
 	import { labelIcon } from '#lib/label-icon.ts';
@@ -26,7 +26,7 @@
 	const place = $derived(label?.place ?? null);
 	const atPlace = (task: Task) => !!place && !!task.location && placeKey(task.location) === placeKey(place);
 	const list = $derived(filterKey({ kind: 'label', id: page.params.id ?? '' }));
-	const shown = (tasks: Task[]) => filterTasks(tasks, listFilters.get(list), session.userId ?? '');
+	const shown = (tasks: Task[]) => listFilters.apply(list, tasks);
 	const all = $derived(label ? labelViewTasks(store.tasks, label) : []);
 	const tasks = $derived(shown(all));
 	const noun = $derived(place ? 'place' : 'label');

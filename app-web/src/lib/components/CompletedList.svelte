@@ -4,7 +4,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import type { Task } from 'shared/task.ts';
 	import CompletedRow from './CompletedRow.svelte';
-	import { leaving, motion } from '../ui.svelte.ts';
+	import { leaving, motion } from '../motion.ts';
 
 	let { tasks, showProject = false, label }: { tasks: Task[]; showProject?: boolean; label: string } = $props();
 </script>

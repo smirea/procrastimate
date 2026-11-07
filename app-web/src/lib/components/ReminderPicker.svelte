@@ -5,7 +5,7 @@
 	import Popover from './Popover.svelte';
 	import { addReminder, REMINDER_PRESETS, reminderAt, reminderChipLabel, reminderSectionTitle } from 'shared/task-menus.ts';
 	import { formatReminder } from 'shared/format.ts';
-	import { clock } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
 
 	let {
 		reminders,

@@ -1,6 +1,6 @@
 import { toMarkdown, type MarkdownDocument } from 'shared/markdown.ts';
 import { store } from './store.svelte.ts';
-import { toasts } from './ui.svelte.ts';
+import { toasts } from './toasts.svelte.ts';
 
 export async function copyMarkdown(document: MarkdownDocument): Promise<boolean> {
 	const text = toMarkdown(document, store.tasks);

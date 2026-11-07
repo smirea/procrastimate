@@ -11,7 +11,7 @@ import {
 import type { ListEntry } from 'shared/lists.ts';
 import type { Task } from 'shared/task.ts';
 import { store } from './store.svelte.ts';
-import { clock } from './ui.svelte.ts';
+import { clock } from './clock.svelte.ts';
 
 /** The list screen the route shows. Nil on a page that lists no tasks, such as a public link. */
 export const currentScreen = (): Screen | null => screenOfPath(page.url.pathname);

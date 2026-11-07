@@ -17,21 +17,21 @@
 	import { listFilters } from '#lib/list-filters.svelte.ts';
 	import { session } from '#lib/session.svelte.ts';
 	import { toastDeleted } from '#lib/completion.ts';
-	import { leaving, motion, sheets } from '#lib/ui.svelte.ts';
+	import { leaving, motion } from '#lib/motion.ts';
+	import { sheets } from '#lib/sheets.svelte.ts';
 	import { projectDocument } from 'shared/markdown.ts';
 	import { completed } from '#lib/completed.svelte.ts';
 	import { canAddHere } from '#lib/screen.ts';
 	import { projectCompleted, projectGroups } from 'shared/views.ts';
 	import type { Task } from 'shared/task.ts';
 	import CompletedList from '#lib/components/CompletedList.svelte';
-	import { filterKey, filterTasks } from 'shared/list-filters.ts';
+	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
 	import { watchedByWebhook } from '#lib/webhooks.svelte.ts';
 
 	const project = $derived(store.project(page.params.id ?? null));
 	const list = $derived(filterKey({ kind: 'project', id: page.params.id ?? '' }));
-	const filter = $derived(listFilters.get(list));
-	const shown = (tasks: Task[]) => filterTasks(tasks, filter, session.userId ?? '');
+	const shown = (tasks: Task[]) => listFilters.apply(list, tasks);
 	const allGroups = $derived(project ? projectGroups(store.tasks, store.sections, project.id) : []);
 	const groups = $derived(allGroups.map((g) => ({ ...g, tasks: shown(g.tasks) })));
 	const loose = $derived(groups[0]?.tasks ?? []);

@@ -14,7 +14,7 @@ import {
 } from './quick-add-draft.ts';
 import { addableLabels, addableProjects } from './screen.ts';
 import { store } from './store.svelte.ts';
-import { clock } from './ui.svelte.ts';
+import { clock } from './clock.svelte.ts';
 
 /** The quick add sheet's state: the typed text and the picked values, with the rules in `quick-add-draft.ts`. */
 export class QuickAddDraft {

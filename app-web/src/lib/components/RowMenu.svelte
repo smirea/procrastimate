@@ -16,7 +16,9 @@
 	import { MARGIN, viewportHeight } from '../placement.ts';
 	import { rowMenu } from '../row-menu.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { clock, motion, sheets } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { motion } from '../motion.ts';
+	import { sheets } from '../sheets.svelte.ts';
 
 
 	const opened = $derived(rowMenu.current);

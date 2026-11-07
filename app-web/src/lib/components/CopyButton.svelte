@@ -5,7 +5,7 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import type { MarkdownDocument } from 'shared/markdown.ts';
 	import { copyMarkdown } from '../copy.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	let {
 		label,

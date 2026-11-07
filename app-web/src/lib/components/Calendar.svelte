@@ -5,7 +5,7 @@
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { addDays, addMonths, fromDateKey, mondayIndex, weekdayOf, type DateKey } from 'shared/task.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	let {
 		selected,

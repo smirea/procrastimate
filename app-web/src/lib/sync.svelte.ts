@@ -9,7 +9,7 @@ import { localDatabase } from './database.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 import { reportError, reportWarning } from './sentry.ts';
-import { toasts } from './ui.svelte.ts';
+import { toasts } from './toasts.svelte.ts';
 import { unsynced } from './unsynced.svelte.ts';
 
 /**

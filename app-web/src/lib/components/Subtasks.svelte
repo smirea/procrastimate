@@ -18,7 +18,8 @@
 	import TaskRow from './TaskRow.svelte';
 	import { store } from '../store.svelte.ts';
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
-	import { leaving, sheets, motion } from '../ui.svelte.ts';
+	import { leaving, motion } from '../motion.ts';
+	import { sheets } from '../sheets.svelte.ts';
 	import { toastUndo } from '../completion.ts';
 	import { Reorder } from '../reorder.svelte.ts';
 	let { task }: { task: Task } = $props();

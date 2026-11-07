@@ -18,7 +18,7 @@
 		toggleWeekday,
 	} from 'shared/task-menus.ts';
 	import { WEEKDAY_NAMES, formatRecurrence, repeatLabel } from 'shared/format.ts';
-	import { clock } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
 
 	let {
 		recurrence,

@@ -21,7 +21,9 @@
 	import { labelStyle } from '../label-colors.ts';
 	import { labelIcon } from '../label-icon.ts';
 	import { projectIcon } from '../project-icon.ts';
-	import { clock, mobile, motion, sheets } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { mobile, motion } from '../motion.ts';
+	import { sheets } from '../sheets.svelte.ts';
 	import SunHorizon from 'phosphor-svelte/lib/SunHorizon';
 	import CalendarDots from 'phosphor-svelte/lib/CalendarDots';
 	import { sharedEntries } from 'shared/space-routing.ts';

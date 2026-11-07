@@ -8,7 +8,7 @@
 	import { isImage } from 'shared/values.ts';
 	import { attachments } from '../attachments/attachments.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	const viewing = $derived(attachments.viewing);
 	const task = $derived(viewing ? store.task(viewing.taskId) : undefined);

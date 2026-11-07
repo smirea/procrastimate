@@ -1,7 +1,5 @@
-import type { DictationChoice, RambleMode } from 'shared/dictation.ts';
 import type { LabelColor } from 'shared/label-colors.ts';
 import type { ProjectIcon } from 'shared/project-icons.ts';
-import type { QuickAddButton } from 'shared/quick-add-buttons.ts';
 import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
 import type { SavedPlace, SectionCounter } from 'shared/values.ts';
 import { DEFAULT_SETTINGS, type Comment, type Settings, type Snapshot } from 'shared/model.ts';
@@ -300,7 +298,8 @@ class Store {
 		this.readStats.ms += performance.now() - started;
 		this.unreadable = false;
 		// In the same step as `loaded`, so nothing that waits for the store to load can see it before the zone is noted.
-		if (!this.loaded) this.noteTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		// The zone push notifications are planned in.
+		if (!this.loaded) this.setSettings({ timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone });
 		this.loaded = true;
 		trimChanges(read).catch(reportError);
 	}
@@ -349,37 +348,7 @@ class Store {
 		this.#apply({ ...emptyLists(), comments: theirs });
 	}
 
-	get dictation(): DictationChoice {
-		return this.settings.dictation;
-	}
-
-	/** Offline voice still uses native. */
-	setDictation(dictation: DictationChoice) {
-		this.#setSettings({ dictation });
-	}
-
-	get rambleMode(): RambleMode {
-		return this.settings.rambleMode;
-	}
-
-	setRambleMode(rambleMode: RambleMode) {
-		this.#setSettings({ rambleMode });
-	}
-
-	get quickAddButtons(): QuickAddButton[] {
-		return this.settings.quickAddButtons;
-	}
-
-	setQuickAddButtons(quickAddButtons: QuickAddButton[]) {
-		this.#setSettings({ quickAddButtons });
-	}
-
-	/** The zone push notifications are planned in. */
-	noteTimeZone(timeZone: string) {
-		this.#setSettings({ timeZone });
-	}
-
-	#setSettings(patch: Partial<Settings>) {
+	setSettings(patch: Partial<Settings>) {
 		if (!this.#owner) return;
 		const before = this.settings;
 		const after = { ...before, ...patch };
@@ -645,7 +614,9 @@ class Store {
 	}
 
 	/** Comments are written in the task's space, so only someone who may edit the task can comment on it. */
-	addComment(taskId: string, body: string, me: string): Comment | undefined {
+	addComment(taskId: string, body: string): Comment | undefined {
+		const me = this.#owner;
+		if (!me) return undefined;
 		let comment: Comment | null = null;
 		this.#onTask(taskId, data => {
 			const result = comments.addComment(data, taskId, body, me, this.#creation());
@@ -655,15 +626,17 @@ class Store {
 		return comment ?? undefined;
 	}
 
-	editComment(id: string, body: string, me: string) {
+	editComment(id: string, body: string) {
 		const comment = this.#commentById.get(id);
-		if (comment) this.#onTask(comment.taskId, data => comments.editComment(data, id, body, me, Date.now()));
+		const me = this.#owner;
+		if (comment && me) this.#onTask(comment.taskId, data => comments.editComment(data, id, body, me, Date.now()));
 	}
 
-	/** Deletes `me`'s own comment and returns it for undo. */
-	deleteComment(id: string, me: string): Comment | undefined {
+	/** Deletes the user's own comment and returns it for undo. */
+	deleteComment(id: string): Comment | undefined {
 		const comment = this.#commentById.get(id);
-		if (comment?.authorId !== me) return undefined;
+		const me = this.#owner;
+		if (!me || comment?.authorId !== me) return undefined;
 		this.#onTask(comment.taskId, data => comments.deleteComment(data, id, me));
 		return comment;
 	}
@@ -675,8 +648,9 @@ class Store {
 	}
 
 	/** The marker goes into the user's own space, whichever space holds the task. */
-	markCommentsRead(taskId: string, me: string) {
-		const next = comments.markRead(this.own, taskId, this.comments, me, Date.now());
+	markCommentsRead(taskId: string) {
+		if (!this.#owner) return;
+		const next = comments.markRead(this.own, taskId, this.comments, this.#owner, Date.now());
 		if (next !== this.own) this.#apply(next);
 	}
 

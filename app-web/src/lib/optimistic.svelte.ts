@@ -1,4 +1,4 @@
-import { toasts } from './ui.svelte.ts';
+import { toasts } from './toasts.svelte.ts';
 
 /**
  * A row of a server-backed list. `key` stays the same from the optimistic placeholder to the server's copy, so the

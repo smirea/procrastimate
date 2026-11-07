@@ -29,7 +29,10 @@
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
 	import { labelIcon } from '../label-icon.ts';
-	import { clock, mobile, motion, sheets, toasts } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { mobile, motion } from '../motion.ts';
+	import { sheets } from '../sheets.svelte.ts';
+	import { toasts } from '../toasts.svelte.ts';
 	import type { ListDefaults } from 'shared/screens.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { showAdded } from '../show-added.ts';
@@ -93,7 +96,7 @@
 	const subtaskCount = $derived(saving.reduce((sum, entry) => sum + entry.subtasks.length, 0));
 	const captionParts = $derived(caption(transcript, tokens));
 	const listening = $derived(phase !== 'review');
-	const mode = $derived(store.rambleMode);
+	const mode = $derived(store.settings.rambleMode);
 
 	/** Ramble names every space's projects and labels a task may land on, as quick add does. */
 	const names = $derived({ projects: addableProjects(), labels: addableLabels() });
@@ -150,7 +153,7 @@
 	/** Switching reads the capture in progress, or the last one, again; edits to its tasks give way to the new read. */
 	async function setMode(next: RambleMode) {
 		if (next === mode || phase === 'structuring') return;
-		store.setRambleMode(next);
+		store.setSettings({ rambleMode: next });
 		if (phase === 'listening' || phase === 'finishing') {
 			if (next === 'smart') {
 				outliner ??= newOutliner(generation);
@@ -195,9 +198,9 @@
 		let ended = false;
 		const timer = setInterval(() => (elapsed = Math.floor((performance.now() - began) / 1000)), 250);
 		// Gemini Live reads the tasks in the audio stream itself, so its outlines replace the reads made from the text.
-		const geminiLive = store.dictation === 'gemini';
+		const geminiLive = store.settings.dictation === 'gemini';
 		const next = listenRamble({
-			choice: store.dictation,
+			choice: store.settings.dictation,
 			online: navigator.onLine,
 			onOutline: (outline) => {
 				if (token !== generation || phase === 'review') return;

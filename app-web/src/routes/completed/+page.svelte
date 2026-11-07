@@ -7,7 +7,7 @@
 	import ListMenu from '#lib/components/ListMenu.svelte';
 	import { completed } from '#lib/completed.svelte.ts';
 	import { store } from '#lib/store.svelte.ts';
-	import { clock } from '#lib/ui.svelte.ts';
+	import { clock } from '#lib/clock.svelte.ts';
 	import { completedHeading } from 'shared/format.ts';
 	import { completedDays } from 'shared/views.ts';
 	import { listHeader } from 'shared/list-header.ts';

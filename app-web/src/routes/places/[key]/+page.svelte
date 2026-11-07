@@ -11,14 +11,14 @@
 	import { session } from '#lib/session.svelte.ts';
 	import { formatRadius, placeGroups, savedPlaceAt } from 'shared/triggers.ts';
 	import { placeTasks } from 'shared/views.ts';
-	import { filterKey, filterTasks } from 'shared/list-filters.ts';
+	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
 
 	const key = $derived(page.params.key ?? '');
 	const place = $derived(placeGroups(store.own.tasks, []).find((g) => g.key === key));
 	const all = $derived(placeTasks(store.own.tasks, key));
 	const list = $derived(filterKey({ kind: 'place', key }));
-	const tasks = $derived(filterTasks(all, listFilters.get(list), session.userId ?? ''));
+	const tasks = $derived(listFilters.apply(list, all));
 	const title = $derived(place?.name ?? 'Place');
 	const saved = $derived(savedPlaceAt(store.own.labels, key));
 	/** The earliest task names the place, so its spot and radius are what gets saved. */

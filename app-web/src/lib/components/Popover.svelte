@@ -3,7 +3,7 @@
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { fitVertical, GAP, MARGIN, viewportHeight } from '../placement.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	let {
 		trigger,

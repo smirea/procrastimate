@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fitVertical, GAP, MARGIN, viewportHeight } from '../placement.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 	import { tick } from 'svelte';
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -26,7 +26,6 @@
 		class: className = '',
 		reserve = false,
 		lines = 8,
-		oninput,
 		onkeydown,
 		onblur,
 	}: {
@@ -46,7 +45,6 @@
 		reserve?: boolean;
 		/** How many lines the field grows to before it scrolls, if the screen above the keyboard has room for them. */
 		lines?: number;
-		oninput?: () => void;
 		onkeydown?: (event: KeyboardEvent) => void;
 		onblur?: () => void;
 	} = $props();
@@ -140,7 +138,6 @@
 		await tick();
 		input.setSelectionRange(start, end);
 		caret = end;
-		oninput?.();
 	}
 
 	const syncCaret = () => {
@@ -260,7 +257,6 @@
 			dropLineBreaks();
 			syncScroll();
 			syncCaret();
-			oninput?.();
 		}}
 		onkeyup={syncCaret}
 		onclick={syncCaret}

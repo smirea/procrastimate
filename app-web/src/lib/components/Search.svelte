@@ -20,7 +20,9 @@
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
 	import { labelIcon } from '../label-icon.ts';
-	import { clock, sheets, motion } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { sheets } from '../sheets.svelte.ts';
+	import { motion } from '../motion.ts';
 	import { dueTone, formatDate, formatDue } from 'shared/format.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { isMenuKey, rowMenu, taskMenu } from '../row-menu.svelte.ts';

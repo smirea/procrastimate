@@ -15,7 +15,8 @@
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { settled } from '../sync.svelte.ts';
-	import { sheets, motion } from '../ui.svelte.ts';
+	import { sheets } from '../sheets.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	let { target, name }: { target: ShareTarget; name: string } = $props();
 

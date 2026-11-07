@@ -67,7 +67,7 @@
 								onclick={() => set(toggleOption(filter, 'people', option.value))}
 							>
 								{@render check(option.selected)}
-								<PersonName person={store.person(option.value) ?? { id: option.value, name: 'Someone', kind: 'human', ownerId: null }} you class="flex-1" />
+								<PersonName person={store.person(option.value)} you class="flex-1" />
 								<span class="text-[12px] text-muted tabular-nums">{option.count}</span>
 							</button>
 						{/each}

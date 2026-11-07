@@ -5,7 +5,7 @@
 	import Tag from 'phosphor-svelte/lib/Tag';
 	import type { LabelColor } from 'shared/label-colors.ts';
 	import { labelStyle } from '../label-colors.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	let { name, color, children }: { name: string; color: LabelColor; children?: Snippet } = $props();
 </script>

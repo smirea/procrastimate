@@ -517,7 +517,7 @@
 	}
 }
 
-/* CSS motion collapses under reduced motion. Svelte transitions read `motion()` in `ui.svelte.ts` instead. */
+/* CSS motion collapses under reduced motion. Svelte transitions read `motion()` in `motion.ts` instead. */
 @media (prefers-reduced-motion: reduce) {
 	*,
 	::before,

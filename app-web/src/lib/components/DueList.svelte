@@ -10,7 +10,8 @@
 	import ListMenu from './ListMenu.svelte';
 	import { listFilters } from '../list-filters.svelte.ts';
 	import { session } from '../session.svelte.ts';
-	import { clock, leaving, motion } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { leaving, motion } from '../motion.ts';
 	import type { DateKey } from 'shared/task.ts';
 	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
