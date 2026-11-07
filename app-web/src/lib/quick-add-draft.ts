@@ -46,11 +46,11 @@ export function cutTokens(text: string, tokens: readonly QuickAddToken[]): strin
 	return next.replaceAll(/\s{2,}/g, ' ');
 }
 
-export const labelIdOf = (token: QuickAddToken, labels: readonly Label[]) =>
+const labelIdOf = (token: QuickAddToken, labels: readonly Label[]) =>
 	labels.find(l => `@${l.name}`.toLowerCase() === token.text.toLowerCase())?.id;
 
 /** A typed `@place` wins over a picked one, as typed attributes do. */
-export const typedPlaceId = (parsed: ParsedQuickAdd, labels: readonly Label[]) =>
+const typedPlaceId = (parsed: ParsedQuickAdd, labels: readonly Label[]) =>
 	parsed.tokens
 		.filter(t => t.kind === 'place')
 		.map(token => labelIdOf(token, labels))

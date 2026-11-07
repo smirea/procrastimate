@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
+import { afterEach, beforeAll, describe, expect, test } from 'bun:test';
 import { iconLinks, pageTitle, publicHost } from './link-preview';
 import { type Session, signUp, testApp, type TestApp } from './test-app';
 
@@ -8,7 +8,6 @@ beforeAll(async () => {
 	app = await testApp();
 	owner = await signUp(app, 'Owner');
 });
-afterAll(() => app.close());
 
 const realFetch = globalThis.fetch;
 afterEach(() => {

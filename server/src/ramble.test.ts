@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, jest, setSystemTime, test } from 'bun:test';
+import { afterEach, beforeAll, describe, expect, jest, setSystemTime, test } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import { rambleUsage } from '../../shared/db/schema';
 import { RAMBLE_BYTES_PER_SECOND, RAMBLE_DAILY_SECONDS, RAMBLE_SESSION_SECONDS } from '../../shared/ramble/protocol';
@@ -42,7 +42,6 @@ beforeAll(async () => {
 		upstream,
 	);
 });
-afterAll(() => app.close());
 
 /** Resolves once the session has sent its first message: `started`, or the refusal of a used-up day. */
 async function open(person = me.person, query = ''): Promise<Opened> {

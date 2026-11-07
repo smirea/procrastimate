@@ -9,7 +9,7 @@ export const VAPID_SUBJECT = 'https://procrastimate.stf.lol';
 const RECORD_SIZE = 4096;
 const JWT_LIFETIME_SECONDS = 12 * 60 * 60;
 /** A push service that hangs would otherwise hold the cron past its next minute and send everything twice. */
-export const PUSH_TIMEOUT_MS = 10_000;
+const PUSH_TIMEOUT_MS = 10_000;
 
 type Bytes = Uint8Array<ArrayBuffer>;
 

@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
+import { afterEach, beforeAll, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
 import type { Person } from '../../shared/sharing';
 import type { Task } from '../../shared/model';
 import {
@@ -41,7 +41,6 @@ describe('agent docs', () => {
 			call('POST', '/api/ai-tokens', owner.headers, { aiUserId: ai.id, name: 'laptop' }),
 		));
 	});
-	afterAll(() => app.close());
 
 	test('the reference needs a valid token', async () => {
 		expect((await call('GET', '/api/docs/agent')).status).toBe(401);

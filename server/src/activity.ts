@@ -96,7 +96,7 @@ async function rowsOn(db: Db, owner: string, taskId: string): Promise<LogRow[]> 
 	return rows.filter(row => row.kind !== 'comment' || kept.has(row.id));
 }
 
-export function foldActivity(rows: readonly LogRow[]): Draft[] {
+function foldActivity(rows: readonly LogRow[]): Draft[] {
 	const drafts: Draft[] = [];
 	const commented = new Set<string>();
 	let data: Fields = {};

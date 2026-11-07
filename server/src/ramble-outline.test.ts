@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, spyOn, test } from 'bun:test';
+import { afterEach, beforeAll, describe, expect, spyOn, test } from 'bun:test';
 import { spokenOnly } from './ramble-outline';
 import { aiAccount, signUp, testApp, type Session, type TestApp } from './test-app';
 
@@ -30,10 +30,6 @@ beforeAll(async () => {
 	withoutKey = await testApp();
 	owner = await signUp(withKey, 'Owner');
 	other = await signUp(withoutKey, 'Other');
-});
-afterAll(async () => {
-	await withKey.close();
-	await withoutKey.close();
 });
 
 let upstream: ReturnType<typeof spyOn<typeof globalThis, 'fetch'>> | null = null;

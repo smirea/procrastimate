@@ -70,7 +70,7 @@ export function syncContext(
 	};
 }
 
-export const OTHER_SPACE = 'Belongs to another space';
+const OTHER_SPACE = 'Belongs to another space';
 const NOT_SHARED = 'Not shared with you';
 
 /** One write of a request: a device's carries its sequence, and the server's own write one per row. */

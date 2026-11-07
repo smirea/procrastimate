@@ -1,9 +1,8 @@
 import type { DurableObjectState } from '@cloudflare/workers-types';
-import type { Env } from './bindings';
+import type { Env } from './config';
 import { config } from './config';
 import { errorResponse } from './errors';
 import { rambleRoute, upstreamOf, workerSocket, workerUpstream, type RambleData, type RambleRoute } from './ramble';
-import { INTERNAL } from './app-object';
 import { appFetch } from './app-stub';
 import { workerStream } from './sockets';
 
@@ -43,11 +42,11 @@ const answer = async <T>(response: Promise<Response>): Promise<T> => {
 
 function appRambleData(env: Env): RambleData {
 	return {
-		zone: user => answer(appFetch(env, INTERNAL.rambleZone, { user })),
-		keyterms: user => answer(appFetch(env, INTERNAL.rambleKeyterms, { user })),
+		zone: user => answer(appFetch(env, 'rambleZone', { user })),
+		keyterms: user => answer(appFetch(env, 'rambleKeyterms', { user })),
 		usage: user => ({
-			stored: day => answer(appFetch(env, INTERNAL.rambleStored, { user, day })),
-			add: async (day, seconds) => void (await answer(appFetch(env, INTERNAL.rambleAdd, { user, day, seconds }))),
+			stored: day => answer(appFetch(env, 'rambleStored', { user, day })),
+			add: async (day, seconds) => void (await answer(appFetch(env, 'rambleAdd', { user, day, seconds }))),
 		}),
 	};
 }

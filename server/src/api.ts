@@ -1,28 +1,17 @@
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { onError } from '@orpc/server';
-import { RAMBLE_SOCKET_PATH } from '../../shared/ramble/protocol';
 import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
-import { forgetSession, readActor } from './actor';
+import { clientOf, forgetSession, readActor } from './actor';
 import type { App } from './app';
 import { errorResponse } from './errors';
 import { imagesRoute, isImageRoute } from './images';
 import { faviconRoute, isFaviconRoute } from './link-preview';
 import { router } from './router';
-import { identify, reportRpcError, sentryTunnel } from './sentry';
+import { reportError, reportRpcError, sentryTunnel } from './sentry';
 import { handleSync, withBearer } from 'sync-engine/core';
-import { clientOf } from './actor';
 import { syncContext } from './writes';
-import { reportError } from './sentry';
 
 const rpc = new OpenAPIHandler(router, { interceptors: [onError(reportRpcError)] });
-
-async function rambleRoute(request: Request, app: App): Promise<Response> {
-	const actor = await readActor(request, app);
-	if (!actor || actor.kind !== 'human') return Response.json({ ok: false, error: 'Not signed in' }, { status: 401 });
-	identify(actor);
-	if (!app.ramble) return Response.json({ ok: false, error: 'Ramble is not configured' }, { status: 503 });
-	return app.ramble(request, actor);
-}
 
 /**
  * `POST /api/sync`, sync-engine's one round trip, for signed-in humans: an AI account writes through the agent API.
@@ -30,11 +19,10 @@ async function rambleRoute(request: Request, app: App): Promise<Response> {
  */
 async function syncRoute(request: Request, app: App): Promise<Response> {
 	const actor = await readActor(request, app);
-	if (!actor) return Response.json({ error: 'Not signed in' }, { status: 401 });
-	if (actor.kind !== 'human')
-		return Response.json({ error: 'AI accounts write through the agent API' }, { status: 403 });
+	if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
+	if (actor.kind !== 'human') return errorResponse('FORBIDDEN', 'AI accounts write through the agent API');
 	const client = clientOf(request);
-	if (!client) return Response.json({ error: 'Invalid client header' }, { status: 400 });
+	if (!client) return errorResponse('BAD_REQUEST', 'Invalid client header');
 	// The engine keeps each client's last sequence by client id; scoping it to the user keeps anyone who learned another
 	// device's id from acknowledging that device's writes away.
 	let body = await request.text();
@@ -67,26 +55,25 @@ async function syncRoute(request: Request, app: App): Promise<Response> {
 /** `GET /api/live`. A browser cannot set headers on a WebSocket, so its token is the `bearer.<token>` subprotocol. */
 async function liveRoute(request: Request, app: App): Promise<Response> {
 	if (request.headers.get('upgrade')?.toLowerCase() !== 'websocket') {
-		return Response.json({ error: 'Expected a WebSocket' }, { status: 426 });
+		return errorResponse('UPGRADE_REQUIRED', 'Expected a WebSocket', 426);
 	}
 	const actor = await readActor(withBearer(request), app);
-	if (!actor || actor.kind !== 'human') return Response.json({ error: 'Not signed in' }, { status: 401 });
+	if (!actor || actor.kind !== 'human') return errorResponse('UNAUTHORIZED', 'Not signed in');
 	return app.live.accept(request);
 }
 
 /**
- * One fetch handler for `/api/*`: the Sentry tunnel, sync and its live socket, image bytes, link icons, Ramble's
- * socket, the contract's procedures, then Better Auth for the rest of `/api/auth/*`. `index.ts` serves it with Bun and the `App`
- * Durable Object on Cloudflare, so it stays free of Bun and Node APIs.
+ * One fetch handler for `/api/*` but Ramble's socket: the Sentry tunnel, sync and its live socket, image bytes, link
+ * icons, the contract's procedures, then Better Auth for the rest of `/api/auth/*`. `dev-server.ts` serves it with Bun
+ * and the `App` Durable Object on Cloudflare, so it stays free of Bun and Node APIs.
  */
 export async function handle(request: Request, app: App): Promise<Response> {
 	const url = new URL(request.url);
-	if (request.method === 'POST' && url.pathname === SENTRY_TUNNEL_PATH) return sentryTunnel(request, app.env);
+	if (request.method === 'POST' && url.pathname === SENTRY_TUNNEL_PATH) return sentryTunnel(request, app.config);
 	if (request.method === 'POST' && url.pathname === '/api/sync') return syncRoute(request, app);
 	if (url.pathname === '/api/live') return liveRoute(request, app);
 	if (isImageRoute(request)) return imagesRoute(request, app);
 	if (isFaviconRoute(request)) return faviconRoute(request, app);
-	if (url.pathname === RAMBLE_SOCKET_PATH) return rambleRoute(request, app);
 	const { matched, response } = await rpc.handle(request, { context: { app, request } });
 	if (matched) return response;
 	if (url.pathname === '/api/auth/sign-out') forgetSession(request);

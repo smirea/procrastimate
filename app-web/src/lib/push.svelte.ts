@@ -11,7 +11,7 @@ import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 import { sheets } from './ui.svelte.ts';
 
-export type PushState =
+type PushState =
 	| { kind: 'checking' }
 	| { kind: 'unsupported' }
 	/** The server has no push key, as with the local Bun dev server. */
@@ -24,7 +24,7 @@ export type PushState =
 	| { kind: 'error'; message: string };
 
 /** `needs-permission` is the only one that does anything when tapped. */
-export type NotificationLine = 'on' | 'off' | 'needs-permission';
+type NotificationLine = 'on' | 'off' | 'needs-permission';
 
 const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 

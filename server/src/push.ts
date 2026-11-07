@@ -7,8 +7,6 @@ import { upcomingNotifications } from '../../shared/notifications';
 import { openTasks } from '../../shared/triggers';
 import type { RowWrite } from '../../shared/rows';
 import { pushTag, type PushMessage, type PushSubscriptionInfo } from '../../shared/push';
-import type { Env } from './bindings';
-import { config } from './config';
 import type { Db } from './db/sqlite';
 import {
 	classifyDelivery,
@@ -30,13 +28,13 @@ import { sendPush, type Vapid } from './web-push';
  */
 
 /** Sends one push and returns the push service's status, or null when it never answered. */
-export type SendPush = (subscription: PushSubscriptionInfo, message: PushMessage) => Promise<number | null>;
+type SendPush = (subscription: PushSubscriptionInfo, message: PushMessage) => Promise<number | null>;
 
 /**
  * Every notification the open tasks make from ten minutes ago on. Uncapped, because `planSchedule` caps each install
  * only after dropping what it already delivered.
  */
-export const computeNotifications = (open: readonly Task[], zone: string, now: number) =>
+const computeNotifications = (open: readonly Task[], zone: string, now: number) =>
 	upcomingNotifications(open, now - STALE_AFTER_MS - 1, Number.POSITIVE_INFINITY, zone);
 
 // `projectId` because a group of tasks at one moment opens the project they share.
@@ -113,8 +111,7 @@ async function send(subscription: PushSubscriptionInfo, message: PushMessage, va
 	}
 }
 
-export function pushSender(env: Env): SendPush {
-	const { vapid } = config(env);
+export function pushSender(vapid: Vapid): SendPush {
 	return (subscription, message) => send(subscription, message, vapid);
 }
 

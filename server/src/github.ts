@@ -23,7 +23,7 @@ function stateOf(issue: IssueJson): GithubState | null {
  * Null when it cannot be read: a private repo without a token, a signed-out read past GitHub's 60 an hour per address
  * (shared by every Worker on it), or no answer in time.
  */
-export async function readGithub(ref: GithubRef, token: string | null): Promise<GithubItem | null> {
+async function readGithub(ref: GithubRef, token: string | null): Promise<GithubItem | null> {
 	const response = await fetch(`${API}/repos/${ref.repo}/issues/${ref.number}`, {
 		signal: AbortSignal.timeout(TIMEOUT_MS),
 		headers: {

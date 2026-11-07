@@ -12,7 +12,7 @@ import { COLUMN_TYPES } from './columns';
 
 type Column = { columnType: string; notNull: boolean; enumValues?: readonly string[] };
 
-export const schemaTables = () =>
+const schemaTables = () =>
 	Object.entries(schema as Record<string, unknown>).filter(
 		(entry): entry is [string, SQLiteTable] => entry[1] instanceof SQLiteTable,
 	);

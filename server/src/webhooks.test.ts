@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
+import { beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import type { AgentTask } from '../../shared/sharing';
 import type { CreatedWebhook, WebhookDelivery } from '../../shared/webhooks';
 import { aiAccount, json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
@@ -46,7 +46,6 @@ beforeAll(async () => {
 	watched = (await post<{ id: string }>(bot, '/api/projects', { name: 'app' })).id;
 	other = (await post<{ id: string }>(bot, '/api/projects', { name: 'home' })).id;
 });
-afterAll(() => app.close());
 beforeEach(() => {
 	sent = [];
 	status = 202;

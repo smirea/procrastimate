@@ -6,13 +6,13 @@ import { user } from './auth-schema';
 import { SERVER_TABLES } from './migrate';
 import type { Db } from './sqlite';
 
-export const BACKUP_PREFIX = 'sqlite/';
-export const BACKUPS_KEPT = 30;
+const BACKUP_PREFIX = 'sqlite/';
+const BACKUPS_KEPT = 30;
 /** Where the `App` object looks for a dump to load into an empty database on start. */
 export const RESTORE_KEY = 'restore/pending.json';
 
 /** Every table but the engine's bookkeeping, which a restore starts fresh. */
-export type Dump = { at: string; tables: Record<string, Record<string, unknown>[]> };
+type Dump = { at: string; tables: Record<string, Record<string, unknown>[]> };
 
 /** Bytes become base64 so the dump stays JSON; everything else is what Drizzle reads. */
 const encode = (_key: string, value: unknown) =>
@@ -80,7 +80,7 @@ export async function backupDatabase(db: Db, bucket: R2Bucket, at: Date): Promis
 	return key;
 }
 
-export async function pruneBackups(bucket: R2Bucket): Promise<void> {
+async function pruneBackups(bucket: R2Bucket): Promise<void> {
 	const keys: string[] = [];
 	let cursor: string | undefined;
 	do {

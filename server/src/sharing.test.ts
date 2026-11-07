@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { beforeAll, describe, expect, test } from 'bun:test';
 import { and, eq, inArray } from 'drizzle-orm';
 import { access, comments, log, tasks } from '../../shared/db/schema';
 import type { Person, SharedView, ShareView, SpaceView } from '../../shared/sharing';
@@ -24,7 +24,6 @@ beforeAll(async () => {
 	owner = await signUp(app, 'Owner');
 	guest = await signUp(app, 'Guest');
 });
-afterAll(() => app.close());
 
 const call = (session: Session, method: string, path: string, body?: unknown) =>
 	app.fetch(path, { method, headers: session.headers, body: body === undefined ? undefined : JSON.stringify(body) });

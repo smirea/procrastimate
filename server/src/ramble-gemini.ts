@@ -10,7 +10,7 @@ import { rambleInstructions, spokenOnly } from './ramble-outline';
  * place.
  */
 
-export const RAMBLE_LIVE_MODEL = 'gemini-3.1-flash-live-preview';
+const RAMBLE_LIVE_MODEL = 'gemini-3.1-flash-live-preview';
 const LIVE_URL =
 	'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
 /**
@@ -19,7 +19,7 @@ const LIVE_URL =
  */
 const QUIET_AFTER_END_MS = 800;
 
-export type RawSocket = { send(text: string): void; close(): void };
+type RawSocket = { send(text: string): void; close(): void };
 /** Opens a WebSocket to `url`; resolves once it is open, and calls `close` when it closes after that. */
 export type OpenSocket = (url: string, events: UpstreamEvents) => Promise<RawSocket>;
 
@@ -64,7 +64,7 @@ const TOOLS = [
 	},
 ];
 
-export function liveInstructions(context: Omit<RambleOutlineInput, 'transcript'>): string {
+function liveInstructions(context: Omit<RambleOutlineInput, 'transcript'>): string {
 	return `${rambleInstructions(context)}
 
 You are listening live. Never speak. Only call tools, as soon as each task is clear, while the speaker is still talking:

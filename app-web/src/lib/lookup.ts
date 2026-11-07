@@ -13,7 +13,7 @@ import { unsynced } from './unsynced.svelte.ts';
  * What a task row reads besides the task. Inside the app it is the store. A public link's page provides its own,
  * read only, so the same list components render tasks the store never holds.
  */
-export type Lookup = {
+type Lookup = {
 	project: (id: string | null) => Project | undefined;
 	section: (id: string | null) => Section | undefined;
 	labelsOf: (task: Pick<Task, 'labelIds'>) => Label[];

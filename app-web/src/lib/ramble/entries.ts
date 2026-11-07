@@ -31,7 +31,7 @@ const METADATA = new Set<string>([
 	'label',
 ] satisfies TokenKind[]);
 
-export type CaptionPart = { text: string; kind: TokenKind | 'command' | null };
+type CaptionPart = { text: string; kind: TokenKind | 'command' | null };
 
 /**
  * The end of the transcript, cut at a word, split so recognized phrases can be tinted: metadata by its kind, and

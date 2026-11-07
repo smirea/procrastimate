@@ -1,3 +1,5 @@
+import { protocolHeaders } from './live';
+
 /**
  * WebSocket hosting for Ramble's audio stream: a `WebSocketPair` on the Worker, Bun's server in development. The
  * session code sees only `Socket` and `StreamEvents`.
@@ -34,7 +36,6 @@ export function workerStream(): StreamHost {
 		const { 0: client, 1: server } = new runtime.WebSocketPair();
 		server.accept();
 		listenWorkerSocket(server, start(server));
-		const headers = { 'Sec-WebSocket-Protocol': protocol };
-		return new Response(null, { status: 101, webSocket: client, headers } as ResponseInit);
+		return new Response(null, { status: 101, webSocket: client, headers: protocolHeaders(protocol) } as ResponseInit);
 	};
 }

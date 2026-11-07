@@ -22,7 +22,8 @@ import type { Db } from './db/sqlite';
 import { cassetteUpstream } from './ramble-cassette';
 import { geminiUpstream, type OpenSocket } from './ramble-gemini';
 import type { Config } from './config';
-import { reportError } from './sentry';
+import { errorResponse } from './errors';
+import { identify, reportError } from './sentry';
 import { listenWorkerSocket, type Socket, type StreamEvents, type StreamHost, type WorkerSocket } from './sockets';
 import { storedZone } from './space';
 
@@ -35,7 +36,7 @@ import { storedZone } from './space';
  * token costs.
  */
 
-export const ELEVENLABS_REALTIME_URL = 'wss://api.elevenlabs.io/v1/speech-to-text/realtime';
+const ELEVENLABS_REALTIME_URL = 'wss://api.elevenlabs.io/v1/speech-to-text/realtime';
 
 /** Fixed on the server, so tuning them never needs a client release. */
 const SESSION_SETTINGS = {
@@ -55,10 +56,10 @@ export function upstreamUrl(keyterms: readonly string[]): string {
 }
 
 export const KEYTERM_TRIGGERS = ['subtask', 'priority', 'remind', 'project', 'label'];
-export const MAX_KEYTERMS = 50;
-export const MAX_KEYTERM_LENGTH = 20;
+const MAX_KEYTERMS = 50;
+const MAX_KEYTERM_LENGTH = 20;
 
-export type KeytermSource = {
+type KeytermSource = {
 	tasks: readonly { projectId: string | null; labelIds: string[]; createdAt: number }[];
 	projects: readonly Named[];
 	labels: readonly Named[];
@@ -70,7 +71,7 @@ export type KeytermSource = {
  * View-only shares are left out. Recency reads the user's own tasks and every shared task they can see. A whole-space
  * share makes a manager with no rows, but only AI accounts hold one, and Ramble refuses them.
  */
-export function loadKeytermSource(db: Db, userId: string): KeytermSource {
+function loadKeytermSource(db: Db, userId: string): KeytermSource {
 	const sharedTo = (kind: AccessRow['kind'], id: SQLiteColumn, owner: SQLiteColumn, role?: AccessRow['role']) =>
 		exists(
 			db
@@ -131,11 +132,11 @@ export function rambleKeyterms(snapshot: KeytermSource): string[] {
 }
 
 export type UpstreamEvents = { message(text: string): void; close(): void };
-export type Upstream = { send(text: string): void; close(): void };
+type Upstream = { send(text: string): void; close(): void };
 
 /** Which service hears the audio: ElevenLabs transcribes it, and Gemini Live transcribes it and reads the tasks. */
-export const RAMBLE_ENGINES = ['elevenlabs', 'gemini'] as const;
-export type RambleEngine = (typeof RAMBLE_ENGINES)[number];
+const RAMBLE_ENGINES = ['elevenlabs', 'gemini'] as const;
+type RambleEngine = (typeof RAMBLE_ENGINES)[number];
 
 /**
  * Opens one session. `cassette` names the recording a fake upstream replays and is ignored by the real one, and
@@ -265,7 +266,7 @@ export type RambleData = {
 	usage(userId: string): RambleUsage;
 };
 
-export function dbRambleUsage(db: Db, owner: string): RambleUsage {
+function dbRambleUsage(db: Db, owner: string): RambleUsage {
 	return {
 		async stored(day) {
 			const row = db
@@ -531,8 +532,6 @@ function session({
 	};
 }
 
-const refuse = (status: number, error: string) => Response.json({ ok: false, error }, { status });
-
 /** A browser cannot read a refused upgrade, so a used-up day still opens and then closes with this error. */
 function refuseDaily(ramble: Ramble, request: Request, resetsAt: number) {
 	return ramble.stream(request, RAMBLE_SOCKET_PROTOCOL, client => {
@@ -551,14 +550,25 @@ function refuseDaily(ramble: Ramble, request: Request, resetsAt: number) {
 export type RambleRoute = (request: Request, actor: Actor) => Promise<Response>;
 
 /**
+ * Ramble's socket for a signed-in human. Each entry routes it before the `App`: the Bun server to its own route, the
+ * Worker to the user's `Ramble` object, so an hour of audio frames never runs on the object every request waits on.
+ */
+export async function rambleEntry(request: Request, actor: Actor | null, route: RambleRoute): Promise<Response> {
+	if (!actor || actor.kind !== 'human') return errorResponse('UNAUTHORIZED', 'Not signed in');
+	identify(actor);
+	return route(request, actor);
+}
+
+/**
  * The upgrade for one signed-in human's session, after the caller authenticated the request, over one database. The
  * route holds the users' days, so one route serves every session of a host.
  */
 export function rambleRoute(data: RambleData, stream: StreamHost, connect: ConnectUpstream | null): RambleRoute {
 	const ramble: Ramble = { stream, days: new Map() };
 	return async (request, actor) => {
-		if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return refuse(426, 'Expected a WebSocket');
-		if (!connect) return refuse(503, 'Ramble is not configured');
+		if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket')
+			return errorResponse('UPGRADE_REQUIRED', 'Expected a WebSocket', 426);
+		if (!connect) return errorResponse('SERVICE_UNAVAILABLE', 'Ramble is not configured');
 		const now = Date.now();
 		const usage = data.usage(actor.id);
 		const zone = await data.zone(actor.id);

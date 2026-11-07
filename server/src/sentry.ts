@@ -9,16 +9,14 @@ import {
 	type SeverityLevel,
 } from '@sentry/cloudflare';
 import type { Actor } from '../../shared/auth';
-import { envelopeUrl, parseDsn, SENTRY_DSN, SENTRY_TUNNEL_PATH, type SentryTarget } from '../../shared/sentry';
-import type { Env, Handler } from './bindings';
-import { config } from './config';
-import { BACKUP_CRON } from './crons';
+import { envelopeUrl, parseDsn, SENTRY_DSN, SENTRY_TUNNEL_PATH } from '../../shared/sentry';
+import { config, type Config, type Env } from './config';
+import { CRONS, cronNamed } from './crons';
 
 /**
- * The server's one Sentry module. `worker.ts` wraps the handler and the `Ramble` object with `sentryOptions`, and
- * `index.ts` starts `@sentry/bun` with `serverOptions` for the dev server. Feature code calls `identify` and
- * `reportError`, which go through `@sentry/core`'s global client, so they work under either SDK and do nothing where
- * no client is set up: tests and any run without `SENTRY_ENVIRONMENT`.
+ * The server's one Sentry module. `worker.ts` wraps the handler, the crons, and the `Ramble` object with
+ * `sentryOptions`. Feature code calls `identify` and `reportError`, which go through `@sentry/core`'s global client, so
+ * they do nothing where no client is set up: the Bun server, tests, and any run without `SENTRY_ENVIRONMENT`.
  */
 
 const isTunnel = (url: string | undefined) => {
@@ -29,8 +27,11 @@ const isTunnel = (url: string | undefined) => {
 	}
 };
 
-/** What the Worker and the Bun dev server share. Every request, header, cookie, and body is collected, by default. */
-export function serverOptions({ dsn, environment, release }: SentryTarget) {
+/** Every request, header, cookie, and body is collected, by default. */
+export function sentryOptions(env: Env): CloudflareOptions {
+	const { sentry } = config(env);
+	if (!sentry) return { enabled: false };
+	const { dsn, environment, release } = sentry;
 	return {
 		dsn,
 		environment,
@@ -44,19 +45,11 @@ export function serverOptions({ dsn, environment, release }: SentryTarget) {
 			if (event.request && isTunnel(event.request.url)) delete event.request.data;
 			return event;
 		},
-	};
-}
-
-export function sentryOptions(env: Env): CloudflareOptions {
-	const { sentry } = config(env);
-	if (!sentry) return { enabled: false };
-	return {
-		...serverOptions(sentry),
 		integrations: [
 			// The default caps a body at 10 KB; a sync body is the one worth reading whole.
 			httpServerIntegration({ maxRequestBodySize: 'always', ignoreRequestBody: isTunnel }),
 			// A Sentry cron monitor per trigger, so a cron that never runs alerts, not only one that throws.
-			cronTriggersIntegration({ monitorSlug: cron => (cron === BACKUP_CRON ? 'daily-backup' : 'push-delivery') }),
+			cronTriggersIntegration({ monitorSlug: cron => CRONS[cronNamed(cron)].monitor }),
 		],
 	};
 }
@@ -107,8 +100,8 @@ export function tunnelDestination(envelope: Uint8Array, allowedDsn: string): str
 const RATE_LIMIT_HEADERS = ['x-sentry-rate-limits', 'retry-after'];
 
 /** `POST /api/sentry`: the browser's only way to Sentry, since it talks to its own origin alone. */
-export const sentryTunnel: Handler = async (request, env) => {
-	if (!config(env).sentry) return new Response(null, { status: 204 });
+export async function sentryTunnel(request: Request, { sentry }: Config): Promise<Response> {
+	if (!sentry) return new Response(null, { status: 204 });
 	// Only the browser can break its own upload, as when it leaves the page mid-send, so that is not the server's error.
 	const body = await request.arrayBuffer().catch(() => null);
 	if (!body) return new Response(null, { status: 400 });
@@ -127,4 +120,4 @@ export const sentryTunnel: Handler = async (request, env) => {
 	}
 	await upstream.body?.cancel();
 	return new Response(null, { status: upstream.status, headers });
-};
+}

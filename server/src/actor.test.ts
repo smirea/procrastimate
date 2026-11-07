@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, setSystemTime, test } from 'bun:test';
+import { beforeAll, describe, expect, setSystemTime, test } from 'bun:test';
 import { sql } from 'drizzle-orm';
 import { signUp, testApp, type TestApp } from './test-app';
 
@@ -6,7 +6,6 @@ let app: TestApp;
 beforeAll(async () => {
 	app = await testApp();
 });
-afterAll(() => app.close());
 
 describe('the bearer session cache', () => {
 	test('a resolved bearer is trusted for a minute without the session row, and sign-out drops it at once', async () => {

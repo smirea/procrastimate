@@ -24,7 +24,7 @@ import { base64urlEncode } from './jwt';
  */
 
 /** The link token is `<ownerId>.<id>`, and the share's id is the secret. */
-export const linkUrl = (origin: string, ownerId: string, id: string) => `${origin}/s/${ownerId}.${id}`;
+const linkUrl = (origin: string, ownerId: string, id: string) => `${origin}/s/${ownerId}.${id}`;
 
 function randomSecret(): string {
 	return base64urlEncode(crypto.getRandomValues(new Uint8Array(24)));

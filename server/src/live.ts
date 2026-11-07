@@ -22,3 +22,7 @@ export const liveProtocol = (request: Request): string | null =>
 		: null;
 
 export const headMessage = (head: number) => JSON.stringify({ head });
+
+/** The headers that answer a WebSocket upgrade with `protocol`, or none when the client offered none we speak. */
+export const protocolHeaders = (protocol: string | null): Record<string, string> =>
+	protocol ? { 'Sec-WebSocket-Protocol': protocol } : {};

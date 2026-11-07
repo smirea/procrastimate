@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
+import { afterEach, beforeAll, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
 import type { ActivityEntry, ShareView } from '../../shared/sharing';
 import { COALESCE_WINDOW } from './activity';
 import { aiAccount, json, type Session, shareWith, signUp, taskRow, testApp, type TestApp, upload } from './test-app';
@@ -15,7 +15,6 @@ beforeAll(async () => {
 	owner = await signUp(app, 'Owner');
 	guest = await signUp(app, 'Guest');
 });
-afterAll(() => app.close());
 
 const activity = async (id: string) =>
 	(

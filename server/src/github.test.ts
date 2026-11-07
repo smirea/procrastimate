@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
+import { afterEach, beforeAll, describe, expect, test } from 'bun:test';
 import { type Session, signUp, testApp, type TestApp } from './test-app';
 
 let app: TestApp;
@@ -7,7 +7,6 @@ beforeAll(async () => {
 	app = await testApp({ env: { GITHUB_TOKEN: 'ghp_test' } });
 	owner = await signUp(app, 'Owner');
 });
-afterAll(() => app.close());
 
 const realFetch = globalThis.fetch;
 afterEach(() => {

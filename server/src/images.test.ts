@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { beforeAll, describe, expect, test } from 'bun:test';
 import { inArray } from 'drizzle-orm';
 import { images } from '../../shared/db/schema';
 import { IMAGE_GRACE_MS, sweepImages } from './images';
@@ -10,7 +10,6 @@ beforeAll(async () => {
 	app = await testApp();
 	owner = await signUp(app, 'Owner');
 });
-afterAll(() => app.close());
 
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
 const WEBP = new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, 1]);

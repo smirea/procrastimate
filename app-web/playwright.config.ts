@@ -66,7 +66,6 @@ export default defineConfig({
 						env: {
 							API_PORT: String(API_PORT),
 							PROCRASTIMATE_DATABASE: ':memory:',
-							AUTH_RATE_LIMIT: 'off',
 							RAMBLE_UPSTREAM: 'cassette',
 							...NO_SENTRY,
 						},

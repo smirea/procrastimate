@@ -2,7 +2,7 @@
  * The one bridge from env-manager project `procrastimate` to the Worker, GitHub, and `.dev.vars`.
  * Never prints a value: logs key names only and hands values to child processes on stdin.
  *
- * bun server/scripts/secrets.ts <push|github|dev-vars|check|verify|ios> [--env <name>] [--generate-only]
+ * bun scripts/secrets.ts <push|github|dev-vars|check|verify|ios> [--env <name>] [--generate-only]
  *
  * Environments are `prod` (the Worker and Release iOS) and `dev` (local development and Debug iOS).
  * There is no `local` environment. `--generate-only` skips AWS, for CI and any machine without credentials.
@@ -10,29 +10,9 @@
 import { chmod, copyFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { REQUIRED_WORKER_SECRETS } from '../src/config';
-import { generateVapidKeys } from '../src/web-push';
-import { parseDotenv, type Values } from '../../scripts/lib';
+import { REQUIRED_WORKER_SECRETS, WORKER_SECRETS, withLocalStandIns } from '../server/src/config';
+import { parseDotenv, type Values } from './lib';
 
-/** The Bun dev server's stand-in; `wrangler dev` gets the same through `.dev.vars`. */
-const INSECURE_DEV_AUTH_SECRET = 'insecure-local-dev-better-auth-secret-0123456789';
-
-export const WORKER_SECRETS = [
-	'VAPID_PUBLIC_KEY',
-	'VAPID_PRIVATE_KEY',
-	'ELEVENLABS_API_KEY',
-	'GEMINI_API_KEY',
-	'GITHUB_TOKEN',
-	'BETTER_AUTH_SECRET',
-	'GOOGLE_CLIENT_ID',
-	'GOOGLE_CLIENT_SECRET',
-	'GOOGLE_IOS_CLIENT_ID',
-	'APPLE_CLIENT_ID',
-	'APPLE_CLIENT_SECRET',
-	'APPLE_TEAM_ID',
-	'APPLE_KEY_ID',
-	'APPLE_PRIVATE_KEY',
-] as const;
 const CLOUDFLARE_SECRETS = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'] as const;
 const ASC_SECRETS = ['ASC_KEY_ID', 'ASC_ISSUER_ID', 'ASC_PRIVATE_KEY_B64'] as const;
 const SENTRY_SECRETS = ['SENTRY_AUTH_TOKEN'] as const;
@@ -42,15 +22,18 @@ const PROJECT = 'procrastimate';
 
 type WorkerSecret = (typeof WORKER_SECRETS)[number];
 
-const rootPath = new URL('../../', import.meta.url).pathname;
+const rootPath = new URL('../', import.meta.url).pathname;
 const devVarsPath = join(rootPath, '.dev.vars');
 const iosConfigPath = join(rootPath, 'app-ios/Config/Env.xcconfig');
 
-/** `Config/Base.xcconfig` pins the same URL. */
-export const PROD_API_URL = 'https://procrastimate.stf.lol';
+const wrangler = Bun.JSONC.parse(await Bun.file(join(rootPath, 'wrangler.jsonc')).text()) as {
+	routes: { pattern: string }[];
+};
+/** The Worker's custom domain. `Config/Base.xcconfig` pins the same URL. */
+export const PROD_API_URL = `https://${wrangler.routes[0]!.pattern}`;
 
 /** `optional` keys, like `SENTRY_ENVIRONMENT`, may stay empty: CI's `--generate-only` has no dev or prod values. */
-export type IosKey = { name: string; fallback: string; optional: boolean };
+type IosKey = { name: string; fallback: string; optional: boolean };
 
 export function appIosKeys(schema: string): IosKey[] {
 	let ios = false;
@@ -72,7 +55,7 @@ export function appIosKeys(schema: string): IosKey[] {
 }
 
 /** `123-abc.apps.googleusercontent.com` becomes the reversed scheme Google redirects to. Anything else keeps the placeholder. */
-export function googleUrlScheme(clientId: string | undefined): string {
+function googleUrlScheme(clientId: string | undefined): string {
 	const match = /^([A-Za-z0-9-]+)\.apps\.googleusercontent\.com$/.exec(clientId?.trim() ?? '');
 	return match ? `com.googleusercontent.apps.${match[1]}` : 'com.stefan.procrastimate';
 }
@@ -175,8 +158,8 @@ async function github(env: string) {
 }
 
 /**
- * Writes `.dev.vars` for `wrangler dev`, which must exist so wrangler never falls back to the root `.env` schema. Secrets
- * env-manager lacks get the local stand-ins: the committed dev signing key, a fixed auth secret, and a VAPID pair.
+ * Writes `.dev.vars` for `wrangler dev`, which must exist so wrangler never falls back to the root `.env` schema.
+ * What env-manager lacks gets the local stand-ins.
  */
 async function devVars(env: string, generateOnly: boolean) {
 	let values: Values = {};
@@ -189,14 +172,7 @@ async function devVars(env: string, generateOnly: boolean) {
 	}
 	const file = Bun.file(devVarsPath);
 	const existing = parseDotenv((await file.exists()) ? await file.text() : '');
-	const secrets: Values = { ...existing, ...workerSecrets(values) };
-	secrets.BETTER_AUTH_SECRET ||= INSECURE_DEV_AUTH_SECRET;
-	if (!secrets.VAPID_PUBLIC_KEY || !secrets.VAPID_PRIVATE_KEY) {
-		const keys = await generateVapidKeys();
-		secrets.VAPID_PUBLIC_KEY = keys.publicKey;
-		secrets.VAPID_PRIVATE_KEY = keys.privateKey;
-		console.log('Generated a new VAPID key pair');
-	}
+	const secrets: Values = await withLocalStandIns({ ...existing, ...workerSecrets(values) });
 	// wrangler's dotenv takes a single-quoted value literally but keeps the backslashes of `\"` in a double-quoted one,
 	// which broke the JSON signing key.
 	const quoted = (value: string) => (/['\n]/.test(value) ? JSON.stringify(value) : `'${value}'`);
@@ -240,7 +216,7 @@ const workerSecretNames = (env: Values) =>
 		parseJsonArray(run(['bunx', 'wrangler', 'secret', 'list', '--format', 'json'], { env })).map(secret => secret.name),
 	);
 
-export function missingRequired(names: Set<string>): string[] {
+function missingRequired(names: Set<string>): string[] {
 	return REQUIRED_WORKER_SECRETS.filter(name => !names.has(name));
 }
 
@@ -315,7 +291,7 @@ if (import.meta.main) {
 			break;
 		default:
 			console.error(
-				'Usage: bun server/scripts/secrets.ts <push|github|dev-vars|check|verify|ios> [--env <name>] [--generate-only]',
+				'Usage: bun scripts/secrets.ts <push|github|dev-vars|check|verify|ios> [--env <name>] [--generate-only]',
 			);
 			process.exit(1);
 	}

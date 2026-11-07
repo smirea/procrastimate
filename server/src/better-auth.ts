@@ -78,7 +78,7 @@ export function authMethods({ google, apple }: Config): AuthMethods {
 }
 
 /** Apple's client secret is an ES256 JWT. A stored JWT wins; otherwise the Worker mints one from the .p8. */
-export async function appleClientSecret(secret: AppleSecret, servicesId: string | null): Promise<string> {
+async function appleClientSecret(secret: AppleSecret, servicesId: string | null): Promise<string> {
 	if (secret.kind === 'stored') return secret.jwt;
 	const { teamId, keyId, pem } = secret;
 	const subject = servicesId ?? APPLE_BUNDLE_ID;

@@ -89,7 +89,7 @@ function taskSchema(depth: number, projects: readonly string[], labels: readonly
 	};
 }
 
-export function outlineJsonSchema(projects: readonly string[], labels: readonly string[]): JsonSchema {
+function outlineJsonSchema(projects: readonly string[], labels: readonly string[]): JsonSchema {
 	return {
 		type: 'object',
 		properties: { tasks: { type: 'array', items: taskSchema(SUBTASK_DEPTH, projects, labels) } },
@@ -97,7 +97,7 @@ export function outlineJsonSchema(projects: readonly string[], labels: readonly 
 	};
 }
 
-export class RambleOutlineError extends Error {}
+class RambleOutlineError extends Error {}
 
 export async function outlineRamble(
 	input: RambleOutlineInput,

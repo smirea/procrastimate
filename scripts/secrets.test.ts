@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
-import { GITHUB_SECRETS, appIosKeys, iosXcconfig, PROD_API_URL, WORKER_SECRETS, workerSecrets } from './secrets';
+import { WORKER_SECRETS } from '../server/src/config';
+import { GITHUB_SECRETS, appIosKeys, iosXcconfig, PROD_API_URL, workerSecrets } from './secrets';
 
 test('workerSecrets keeps only set Worker secrets', () => {
 	expect(
@@ -21,7 +22,7 @@ test('workerSecrets refuses half a VAPID pair', () => {
 	expect(() => workerSecrets({ VAPID_PRIVATE_KEY: 'priv' })).toThrow(/VAPID/);
 });
 
-const schema = await Bun.file(new URL('../../.env', import.meta.url)).text();
+const schema = await Bun.file(new URL('../.env', import.meta.url)).text();
 
 test('the iOS targets are API_URL and SENTRY_ENVIRONMENT, and Debug and Release take dev and prod', () => {
 	expect(appIosKeys(schema).map(key => key.name)).toEqual(['API_URL', 'SENTRY_ENVIRONMENT']);
@@ -51,7 +52,7 @@ test('a required iOS key without a value fails', () => {
 });
 
 test('wrangler.jsonc declares no vars that a deploy would write over a secret', async () => {
-	const config = Bun.JSONC.parse(await Bun.file(new URL('../../wrangler.jsonc', import.meta.url)).text()) as {
+	const config = Bun.JSONC.parse(await Bun.file(new URL('../wrangler.jsonc', import.meta.url)).text()) as {
 		vars?: Record<string, unknown>;
 	};
 	const vars = Object.keys(config.vars ?? {});
