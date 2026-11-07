@@ -171,12 +171,11 @@ export async function deleteMemoTasks(command: Command, memoId: string): Promise
 }
 
 /** The owner's own writes, as one command: all of them or, on a refusal, none. */
-function write({ store, live, owner, actor, client, now }: Command, writes: readonly RowWrite[]): void {
-	const { rejected, head } = store.space.write(
+function write({ store, owner, actor, client, now }: Command, writes: readonly RowWrite[]): void {
+	const { rejected } = store.space.write(
 		writes.map(change => serverWrite(change, owner)),
 		syncContext(actor, client, { now }),
 		{ atomic: true },
 	);
 	if (rejected.length) throw new ORPCError('BAD_REQUEST', { message: rejected[0]!.reason });
-	live.publish(head);
 }

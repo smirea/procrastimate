@@ -59,9 +59,6 @@ type Ctx = { app: App; request: Request };
 
 const os = implement(contract).$context<Ctx>();
 
-/** A share change moved `access` rows, which a guest's devices pull on the head. */
-const publishHead = (app: App) => app.live.publish(app.store.space.head());
-
 function requireClient(request: Request) {
 	const client = clientOf(request);
 	if (!client) throw new ORPCError('BAD_REQUEST', { message: `Invalid ${CLIENT_HEADER} header` });
@@ -81,7 +78,6 @@ async function command({ app, request }: Ctx, space?: string): Promise<Command> 
 	return {
 		db: app.db,
 		store: app.store,
-		live: app.live,
 		owner: spaceOf(actor, space),
 		actor,
 		client: requireClient(request),
@@ -169,7 +165,6 @@ export const router = os.router({
 			}
 			await deleteUser(context.app, ai.id);
 			revokeAi(context.app.store, actor.id, ai.id);
-			publishHead(context.app);
 			return ok;
 		}),
 	},
@@ -196,7 +191,6 @@ export const router = os.router({
 			}
 			const role = audience.kind === 'user' ? audience.role : 'view';
 			const view = createShare(app.store, actor.id, origin, target, grantee, role, now);
-			publishHead(app);
 			return view;
 		}),
 		list: os.shares.list.handler(async ({ context }) => {
@@ -206,7 +200,6 @@ export const router = os.router({
 		delete: os.shares.delete.handler(async ({ input, context }) => {
 			const { app, actor } = await own(context);
 			deleteShare(app.store, actor.id, input.query.id);
-			publishHead(app);
 			return ok;
 		}),
 	},

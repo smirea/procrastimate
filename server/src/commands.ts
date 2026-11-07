@@ -64,7 +64,6 @@ import { wallDate, zonedDateKey } from '../../shared/zoned-time';
 import type { Access } from './space';
 import type { Db } from './db/sqlite';
 import type { Store } from './db/store';
-import type { Live } from './live';
 import { peopleById, personOf, unknownPerson } from './people';
 import { accessIn, entity, loadTree, seesTask, sightOf, storedZone } from './space';
 import { serverWrite, syncContext } from './writes';
@@ -76,7 +75,7 @@ import { serverWrite, syncContext } from './writes';
  * `memo-tasks.ts` writes the same way for Notouroboros.
  */
 
-export type Command = { db: Db; store: Store; live: Live; owner: string; actor: Actor; client: Client; now: number };
+export type Command = { db: Db; store: Store; owner: string; actor: Actor; client: Client; now: number };
 
 /** The owner, or a guest the space is shared with. Anyone else is turned away before reading anything. */
 export function requireAccess(db: Db, owner: string, actor: Actor): Access {
@@ -165,7 +164,7 @@ async function run(
 	change: (data: StoreData, visible: Visible, zone: string, access: Access) => StoreData,
 	comment?: string,
 ): Promise<Snapshot> {
-	const { db, store, live, owner, actor, client, now } = command;
+	const { db, store, owner, actor, client, now } = command;
 	const access = requireAccess(db, owner, actor);
 	const { snapshot, zone } = loadSnapshot(db, owner, comment);
 	const visible = visibleOf(snapshot, access);
@@ -174,9 +173,8 @@ async function run(
 	const writes = rowWrites(snapshot, after).map(write => serverWrite(write, owner));
 	if (!writes.length) return after;
 	const manages = access.role === 'guest' && managesSpace(access.shares) ? [owner] : [];
-	const { rejected, head } = store.space.write(writes, syncContext(actor, client, { now, manages }), { atomic: true });
+	const { rejected } = store.space.write(writes, syncContext(actor, client, { now, manages }), { atomic: true });
 	if (rejected.length) throw new ORPCError('FORBIDDEN', { message: rejected[0]!.reason });
-	live.publish(head);
 	return after;
 }
 
