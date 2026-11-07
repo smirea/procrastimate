@@ -166,6 +166,9 @@ public final class Store {
 
     public func task(_ id: String) -> TaskItem? { index.tasks[id] }
 
+    /// When `task` counts as done: its own completion, or its nearest completed ancestor's.
+    public func completedAt(_ task: TaskItem) -> Int? { Triggers.completedAt(of: task, lookup: self.task) }
+
     public func project(_ id: String?) -> Project? { id.flatMap { index.projects[$0] } }
 
     public func section(_ id: String?) -> ProjectSection? { id.flatMap { index.sections[$0] } }

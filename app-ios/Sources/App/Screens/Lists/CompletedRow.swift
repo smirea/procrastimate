@@ -61,7 +61,7 @@ struct CompletedRow: View {
         guard canReopen, !reopening else { return }
         reopening = true
         Task {
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 260))
+            try? await Task.sleep(for: reduceMotion ? .zero : Checkbox.play)
             actions.reopen(task)
             reopening = false
         }

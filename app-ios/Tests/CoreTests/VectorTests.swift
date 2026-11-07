@@ -742,7 +742,6 @@ extension JSONValue: ExpressibleByStringLiteral {
 
 @Sendable func memoTasksVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
-    case "memoSourceKey": return try json(MemoTasks.memoSourceKey(a(0)))
     case "parseMemoSource": return try json(MemoTasks.parseMemoSource(a(0)))
     default: throw unknown(fn)
     }

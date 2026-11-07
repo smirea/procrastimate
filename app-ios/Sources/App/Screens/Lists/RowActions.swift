@@ -5,7 +5,7 @@ extension RowActions {
     /// A task left open under a completed parent is done with it, so it offers Reopen.
     @MainActor init(_ task: TaskItem, in store: Store, rolled: Bool = false) {
         var effective = task
-        effective.completedAt = Triggers.completedAt(of: task, lookup: store.task)
+        effective.completedAt = store.completedAt(task)
         self.init(effective, readOnly: store.isReadOnly(task.id), rolled: rolled)
     }
 }
