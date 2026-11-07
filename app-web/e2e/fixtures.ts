@@ -466,12 +466,17 @@ export class App {
 		return this.page.evaluate(() => window.procrastimate.pending());
 	}
 
+	/** Waits until every local write reached the server. */
+	async synced() {
+		await expect.poll(() => this.pending(), { timeout: 15_000 }).toBe(0);
+	}
+
 	/**
 	 * Patches rows as another device of the same account would. Use it for fields the web cannot set, such as an iOS
 	 * place.
 	 */
 	async pushFromOtherDevice(...patches: { kind: Kind; id: string; fields: Record<string, unknown> }[]) {
-		await expect.poll(() => this.pending(), { timeout: 15_000 }).toBe(0);
+		await this.synced();
 		const me = await this.#me();
 		await this.#upload(
 			patches.map(({ kind, id, fields }) => ({

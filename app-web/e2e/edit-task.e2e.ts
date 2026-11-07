@@ -74,7 +74,7 @@ test('a rename from another device reaches an open, untouched title field, and c
 	await expect(title).toHaveValue('Buy oat milk');
 	await title.press('Enter');
 	await app.closeDetails();
-	await expect.poll(() => app.pending()).toBe(0);
+	await app.synced();
 	await expect
 		.poll(() => app.page.evaluate(id => window.procrastimate.entity('task', id), id))
 		.toMatchObject({ title: 'Buy oat milk' });

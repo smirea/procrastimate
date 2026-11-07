@@ -27,7 +27,7 @@ test.describe.configure({ mode: 'serial' });
 const goOffline = ({ context }: Device) => cut(context);
 const goOnline = ({ context }: Device) => restore(context);
 
-const settled = ({ app }: Device) => expect.poll(() => app.pending(), { timeout: 15_000 }).toBe(0);
+const settled = ({ app }: Device) => app.synced();
 
 async function signOutOf({ app, page }: Device) {
 	await app.openSettings();

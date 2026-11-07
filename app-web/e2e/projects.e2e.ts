@@ -259,7 +259,7 @@ test('a project a live webhook watches says so under its title', async ({ app, p
 	await app.createProject('Work');
 	const work = page.url().replace(/.*\/projects\//, '');
 	await app.createProject('Home');
-	await expect.poll(() => app.pending()).toBe(0);
+	await app.synced();
 
 	const hook = await page.request.post('/api/webhooks', {
 		data: { url: 'https://hooks.example/wake', projectIds: [work] },
