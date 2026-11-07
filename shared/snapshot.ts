@@ -1,19 +1,16 @@
 import { compareIds } from './order.ts';
+import { LIST_NAMES, TABLE_OF } from './kinds.ts';
 import { DEFAULT_SETTINGS, FIELDS_SCHEMAS, SETTINGS_ID, type Kind, type Settings, type Snapshot } from './model.ts';
 
 export type Fields = Record<string, unknown>;
 
 export type Entity = { id: string } & Fields;
 
-export const emptySnapshot = (): Snapshot => ({
-	tasks: [],
-	projects: [],
-	sections: [],
-	labels: [],
-	comments: [],
-	reads: [],
-	settings: { ...DEFAULT_SETTINGS },
-});
+export const emptySnapshot = (): Snapshot => ({ ...emptyLists(), settings: { ...DEFAULT_SETTINGS } });
+
+/** Every list of a snapshot, empty. */
+export const emptyLists = () =>
+	Object.fromEntries(LIST_NAMES.map(name => [name, []])) as unknown as Omit<Snapshot, 'settings'>;
 
 /** Oldest first, then by id. */
 export const byCreation = (a: { createdAt: number; id: string }, b: { createdAt: number; id: string }) =>
@@ -33,19 +30,9 @@ export function sortSnapshot(snapshot: Snapshot): Snapshot {
 	};
 }
 
-/** The list each kind of entity lives in; settings are the one row that is not a list. */
-const LIST_OF = {
-	task: 'tasks',
-	project: 'projects',
-	section: 'sections',
-	label: 'labels',
-	comment: 'comments',
-	read: 'reads',
-} as const satisfies Record<Exclude<Kind, 'settings'>, keyof Snapshot>;
-
 export function entitiesOf(snapshot: Snapshot, kind: Kind): readonly Entity[] {
 	if (kind === 'settings') return [{ id: SETTINGS_ID, ...snapshot.settings }];
-	return snapshot[LIST_OF[kind]];
+	return snapshot[TABLE_OF[kind]];
 }
 
 export function withEntities(snapshot: Snapshot, kind: Kind, entities: readonly Entity[]): Snapshot {
@@ -53,7 +40,7 @@ export function withEntities(snapshot: Snapshot, kind: Kind, entities: readonly 
 		const { id: _, ...settings } = entities[0] ?? { id: SETTINGS_ID, ...DEFAULT_SETTINGS };
 		return { ...snapshot, settings: settings as Settings };
 	}
-	return { ...snapshot, [LIST_OF[kind]]: entities };
+	return { ...snapshot, [TABLE_OF[kind]]: entities };
 }
 
 /** Every synced field of an entity, with an absent `sourceKey` as `null`. */

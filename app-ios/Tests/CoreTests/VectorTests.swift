@@ -7,10 +7,7 @@ import Testing
     @Test(arguments: VectorFile.all)
     func matchesTypeScript(_ file: VectorFile) throws {
         let zone = try #require(TimeZone(identifier: file.timeZone))
-        guard let handler = handlers[file.module] else {
-            try #require(pendingPorts.contains(file.module), "No Swift port for shared/\(file.module).ts")
-            return
-        }
+        let handler = try #require(handlers[file.module], "No Swift port for shared/\(file.module).ts")
         for vector in file.cases {
             let args = Args(values: vector.input, zone: zone)
             let output = try handler(vector.fn, args)
@@ -25,12 +22,7 @@ import Testing
     }
 
     @Test func everyPortedModuleHasVectors() {
-        #expect(Set(VectorFile.all.map(\.module)).isSuperset(of: handlers.keys))
-    }
-
-    @Test func onlyPendingModulesLackAPort() {
-        let missing = Set(VectorFile.all.map(\.module)).subtracting(handlers.keys)
-        #expect(missing == pendingPorts)
+        #expect(Set(VectorFile.all.map(\.module)) == Set(handlers.keys))
     }
 }
 
@@ -105,8 +97,6 @@ func object(_ fields: [String: JSONValue]) -> JSONValue { .object(fields) }
 func unknown(_ fn: String) -> VectorError { VectorError(description: "No Swift handler for \(fn)") }
 
 typealias Handler = @Sendable (String, Args) throws -> JSONValue
-
-private let pendingPorts: Set<String> = []
 
 let handlers: [String: Handler] = [
     "task": taskVector,
@@ -216,7 +206,6 @@ private struct Occurrence: Decodable {
     case "labelViewTasks": return try json(Views.labelViewTasks(a(0), a(1), in: a.zone))
     case "eventTasks": return try json(Views.eventTasks(a(0), a(1), a(2), in: a.zone))
     case "todayTasks": return try json(Views.todayTasks(a(0), a(1), in: a.zone))
-    case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1), in: a.zone))
     case "dueDays": return try json(Views.dueDays(a(0), a(1), a(2), filtered: a(3, as: Views.DueFilter?.self), in: a.zone))
     case "dueCandidates": return try json(Views.dueCandidates(a(0), a(1), a(2), in: a.zone))
     case "weekEnd": return try json(Views.weekEnd(a(0)))
@@ -768,7 +757,6 @@ private struct RejectedInput: Decodable {
 @Sendable func rowsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "rowWrites": return rowWritesJSON(Rows.rowWrites(try a(0), try a(1)))
-    case "coalesce": return rowWritesJSON(Rows.coalesce(try a(0, as: [RowWriteInput].self).map(\.write)))
     case "rejectionNotice":
         let rejected = try a(1, as: [RejectedInput].self).map { (kind: $0.kind, id: $0.id) }
         return try json(Rows.rejectionNotice(try a(0), rejected))

@@ -37,19 +37,15 @@ import {
 import { clearLocalImages } from './attachments/local.ts';
 import { LocalRows } from 'shared/local-rows.ts';
 import { reportError } from './sentry.ts';
-import { emptyData, homes, merged, sharedSpace, type SharedSpace, type Spaces } from './spaces.ts';
+import { homes, merged, sharedSpace, type SharedSpace, type Spaces } from './spaces.ts';
+import { emptyLists } from 'shared/snapshot.ts';
+import { LIST_NAMES } from 'shared/kinds.ts';
 import { creationHome, fitPatch, fitToSpace, type Home, type Homes } from 'shared/space-routing.ts';
 
 export type { Completion, CompletionState, NewTask, TaskPatch } from 'shared/store.ts';
 
-const storeData = ({ tasks, projects, sections, labels, comments, reads }: rules.StoreData): rules.StoreData => ({
-	tasks,
-	projects,
-	sections,
-	labels,
-	comments,
-	reads,
-});
+const storeData = (data: rules.StoreData): rules.StoreData =>
+	Object.fromEntries(LIST_NAMES.map(name => [name, data[name]])) as rules.StoreData;
 
 /**
  * Clears the previous account's rows, upload queue, and local images, and tries again until it works: the database
@@ -73,7 +69,7 @@ async function clearUntilDone() {
  * back only the rows that changed. Each command runs its rule on one space's data only, so nothing ever crosses spaces.
  */
 class Store {
-	own = $state.raw<rules.StoreData>(emptyData());
+	own = $state.raw<rules.StoreData>(emptyLists());
 	settings = $state.raw<Settings>(DEFAULT_SETTINGS);
 	spaces = $state.raw<Spaces>({});
 	people = $state.raw<Person[]>([]);
@@ -178,7 +174,7 @@ class Store {
 	open(userId: string): Promise<void> {
 		if (this.#owner === userId) return this.#switching;
 		if (this.#owner !== null) {
-			this.own = emptyData();
+			this.own = emptyLists();
 			this.settings = DEFAULT_SETTINGS;
 			this.spaces = {};
 			this.people = [];
@@ -350,7 +346,7 @@ class Store {
 	/** Keeps the comments others wrote: the server refuses their deletion, and its purge removes them once the space is empty. */
 	deleteAll() {
 		const theirs = this.own.comments.filter(comment => comment.authorId !== null && comment.authorId !== this.#owner);
-		this.#apply({ ...emptyData(), comments: theirs });
+		this.#apply({ ...emptyLists(), comments: theirs });
 	}
 
 	get dictation(): DictationChoice {
@@ -405,7 +401,7 @@ class Store {
 
 	/** The data of one space, whose projects and labels are the only ones its tasks may use. */
 	dataOf(home: Home): rules.StoreData {
-		return home === null ? this.own : (this.spaces[home]?.data ?? emptyData());
+		return home === null ? this.own : (this.spaces[home]?.data ?? emptyLists());
 	}
 
 	/** False for a shared task its owner shared read only, and for one in a space this user no longer reaches. */
@@ -715,7 +711,7 @@ class Store {
 }
 
 function keepSpace(previous: SharedSpace | undefined, next: SharedSpace): SharedSpace {
-	const data = keepSame(previous?.data ?? emptyData(), next.data);
+	const data = keepSame(previous?.data ?? emptyLists(), next.data);
 	const readOnly =
 		previous && sameValue([...previous.readOnly].sort(), [...next.readOnly].sort()) ? previous.readOnly : next.readOnly;
 	const access = previous && sameValue(previous.access, next.access) ? previous.access : next.access;
@@ -734,15 +730,10 @@ function keepSame(previous: rules.StoreData, next: rules.StoreData): rules.Store
 		});
 		return kept.length === before.length && kept.every((entity, i) => entity === before[i]) ? (before as T[]) : kept;
 	};
-	const data: rules.StoreData = {
-		tasks: keep(previous.tasks, next.tasks),
-		projects: keep(previous.projects, next.projects),
-		sections: keep(previous.sections, next.sections),
-		labels: keep(previous.labels, next.labels),
-		comments: keep(previous.comments, next.comments),
-		reads: keep(previous.reads, next.reads),
-	};
-	return (Object.keys(data) as (keyof rules.StoreData)[]).every(key => data[key] === previous[key]) ? previous : data;
+	const data = Object.fromEntries(
+		LIST_NAMES.map(name => [name, keep<{ id: string }>(previous[name], next[name])]),
+	) as rules.StoreData;
+	return LIST_NAMES.every(name => data[name] === previous[name]) ? previous : data;
 }
 
 export const store = new Store();

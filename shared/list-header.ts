@@ -50,7 +50,11 @@ export function listHeader(list: HeaderList): ListHeader {
 			return { filters: false, common: ['copy'], specific: [] };
 		case 'project':
 			return list.own
-				? { filters: true, common: ['share', 'copy', 'show-completed'], specific: ['add-section', 'rename', 'icon', 'delete'] }
+				? {
+						filters: true,
+						common: ['share', 'copy', 'show-completed'],
+						specific: ['add-section', 'rename', 'icon', 'delete'],
+					}
 				: { filters: true, common: ['copy', 'show-completed'], specific: [] };
 		case 'label':
 			if (!list.own) return { filters: true, common: ['copy', 'show-completed'], specific: [] };

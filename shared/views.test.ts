@@ -10,7 +10,6 @@ const noDateTasks = recorded('views', views.noDateTasks);
 const projectTasks = recorded('views', views.projectTasks);
 const projectGroups = recorded('views', views.projectGroups);
 const todayTasks = recorded('views', views.todayTasks);
-const upcomingGroups = recorded('views', views.upcomingGroups);
 const dueDays = recorded('views', views.dueDays);
 const dueCandidates = recorded('views', views.dueCandidates);
 const weekEnd = recorded('views', views.weekEnd);
@@ -127,18 +126,9 @@ describe('task views', () => {
 		expect(ids(due)).toEqual(['today 9am urgent', 'today 9am', 'today 5pm', 'today, no time', 'subtask']);
 	});
 
-	test('Upcoming groups later tasks by day in date order', () => {
-		expect(upcomingGroups(tasks, today).map(g => [g.date, ids(g.tasks)])).toEqual([
-			['2026-10-15', ['tomorrow 8am', 'tomorrow']],
-			['2026-10-16', ['inbox subtask']],
-			['2026-11-02', ['after DST']],
-		]);
-	});
-
 	test('empty lists stay empty', () => {
 		expect(inboxTasks([], today)).toEqual([]);
 		expect(todayTasks([], today)).toEqual({ overdue: [], today: [] });
-		expect(upcomingGroups([], today)).toEqual([]);
 	});
 
 	test('event tasks sit on their occurrence and place tasks list by place', () => {
@@ -170,7 +160,6 @@ describe('task views', () => {
 		const { overdue, today: due } = todayTasks(list, today);
 		expect(ids(overdue)).toEqual(['missed']);
 		expect(ids(due)).toEqual(['jan', 'notes']);
-		expect(upcomingGroups(list, today).map(g => [g.date, ids(g.tasks)])).toEqual([['2026-10-21', ['next week']]]);
 		expect(ids(eventTasks(list, 'meetup', today))).toEqual(['missed', 'jan', 'notes', 'next week']);
 		expect(ids(placeTasks(list, '52.5200,13.4050'))).toEqual(['jan', 'kite']);
 		const park = { id: 'park', name: 'Park', color: 'green' as const, createdAt: 0 };
@@ -291,7 +280,6 @@ describe('due days', () => {
 		expect(days(dueDays(list, today, 'inbox'))).toEqual([[], ['buy milk'], [['2026-10-16', ['trip']]]]);
 		expect(days(dueDays(list, today, 'tomorrow'))).toEqual([[], [], [['2026-10-15', ['pack']]]]);
 		expect(ids(todayTasks(list, today).today)).toEqual(['book flights', 'buy milk']);
-		expect(upcomingGroups(list, today).map(g => [g.date, ids(g.tasks)])).toEqual([['2026-10-16', ['trip']]]);
 	});
 
 	test('a filter runs first, so a subtask whose parent it hides gets its own row', () => {

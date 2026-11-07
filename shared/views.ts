@@ -184,10 +184,6 @@ export function todayTasks(tasks: readonly Task[], today: DateKey): Today {
 	return { overdue, today: due };
 }
 
-export function upcomingGroups(tasks: readonly Task[], today: DateKey): DayGroup[] {
-	return byDay(tasks, today, { from: addDays(today, 1), to: null }).days;
-}
-
 /** The last day This week lists: the coming Sunday, or today on a Sunday, since weeks start on Monday. */
 export const weekEnd = (today: DateKey): DateKey => addDays(today, 6 - mondayIndex(weekdayOf(today)));
 
