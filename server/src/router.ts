@@ -370,7 +370,7 @@ export const router = os.router({
 			return { links: await listLinks(db, owner, access, origin) };
 		}),
 		create: os.links.create.handler(async ({ input, context }) => {
-			const { db, owner, access, origin, now } = await shared(context, input.query.space);
+			const { owner, access, origin, now } = await shared(context, input.query.space);
 			return createLink(context.app.store, owner, access, origin, input.body.target, now);
 		}),
 		delete: os.links.delete.handler(async ({ input, context }) => {

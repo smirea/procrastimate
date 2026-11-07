@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
-import { and, eq } from 'drizzle-orm';
-import { log, push, tasks } from '../../shared/db/schema';
+import { eq } from 'drizzle-orm';
+import { push } from '../../shared/db/schema';
 import type { PushMessage } from '../../shared/push';
 import { deliverDue, isAllowedEndpoint, touchesPush } from './push';
 import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';

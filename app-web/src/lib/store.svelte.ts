@@ -21,7 +21,6 @@ import {
 	writeRows,
 } from './database.ts';
 import {
-	forgetLegacyDocument,
 	onOwnerChange,
 	loadPeople,
 	loadRemindersCheckedAt,
@@ -155,7 +154,6 @@ class Store {
 
 	constructor() {
 		if (typeof localStorage === 'undefined') return;
-		forgetLegacyDocument();
 		this.people = loadPeople();
 		this.remindersCheckedAt = loadRemindersCheckedAt(Date.now());
 		// A pull names the synced tables it changed and a local write the change log too; either way the log has the ids.

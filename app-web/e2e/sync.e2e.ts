@@ -1,3 +1,4 @@
+import { DEVICE_KEYS } from '../src/lib/device.ts';
 import { strToU8, zipSync } from 'fflate';
 import {
 	BOOT_TIMEOUT,
@@ -201,7 +202,7 @@ test('delete all data clears this device and the other', async ({ devices }) => 
 	await a.page.keyboard.press('Escape');
 	await expect(a.app.row(title)).toHaveCount(0);
 	await expect(b.app.row(title)).toHaveCount(0, { timeout: 10_000 });
-	expect(await a.page.evaluate(() => localStorage.getItem('procrastimate-user'))).toBeTruthy();
+	expect(await a.page.evaluate(key => localStorage.getItem(key), DEVICE_KEYS.user)).toBeTruthy();
 });
 
 test(
@@ -298,7 +299,7 @@ test('this browser belongs to a new account only once the previous one’s rows 
 	const title = unique('First account’s');
 	await a.app.add(title);
 	await settled(a);
-	const owner = () => a.page.evaluate(() => localStorage.getItem('procrastimate-owner'));
+	const owner = () => a.page.evaluate(key => localStorage.getItem(key), DEVICE_KEYS.owner);
 	const tries = () => a.page.evaluate(() => Number(sessionStorage.getItem('e2e-clear-tries')));
 	const first = await owner();
 	expect(first).toBeTruthy();
@@ -319,7 +320,7 @@ test('this browser belongs to a new account only once the previous one’s rows 
 
 	await a.page.evaluate(() => sessionStorage.removeItem('e2e-refuse-clear'));
 	await expect(a.page.getByRole('heading', { name: 'No date' })).toBeVisible({ timeout: 15_000 });
-	expect(await owner()).toBe(await a.page.evaluate(() => localStorage.getItem('procrastimate-user')));
+	expect(await owner()).toBe(await a.page.evaluate(key => localStorage.getItem(key), DEVICE_KEYS.user));
 	expect(await owner()).not.toBe(first);
 	await expect(a.app.row(title)).toHaveCount(0);
 });
@@ -344,7 +345,7 @@ test('a switch whose clear the browser lost still clears before the next account
 	await outside.close();
 	// What a page closed right after a switch can leave: the browser kept `localStorage`, which already names the new
 	// account, and dropped the database's last commits, the clear among them.
-	await a.page.evaluate(id => localStorage.setItem('procrastimate-owner', id), user.id);
+	await a.page.evaluate(([key, id]) => localStorage.setItem(key!, id!), [DEVICE_KEYS.owner, user.id]);
 	// Without sync, since the new account's first checkpoint would drop the other account's rows anyway.
 	await a.context.route('**/api/sync/token', route => route.abort());
 

@@ -165,17 +165,10 @@ function dataset(me: string) {
 async function seed(app: App, page: Page) {
 	const me = ((await (await page.request.get('/api/me')).json()) as { id: string }).id;
 	const data = dataset(me);
-	const { getTableColumns } = await import('drizzle-orm');
 	const { ENTITY_TABLES } = await import('../../shared/db/schema');
-	const values = (kind: keyof typeof ENTITY_TABLES, fields: Record<string, unknown>) => {
-		const columns = getTableColumns(ENTITY_TABLES[kind]) as Record<string, { name: string }>;
-		return Object.fromEntries(
-			Object.entries({ ...fields, userId: me }).map(([k, v]) => [
-				columns[k]!.name,
-				v !== null && typeof v === 'object' ? JSON.stringify(v) : v,
-			]),
-		);
-	};
+	const { toWire } = await import('../../shared/db/wire');
+	const values = (kind: keyof typeof ENTITY_TABLES, fields: Record<string, unknown>) =>
+		toWire(ENTITY_TABLES[kind], { ...fields, userId: me });
 	const writes = [
 		...data.projects.map(p => ({ op: 'put', table: 'projects', id: p.id, values: values('project', p) })),
 		...data.sections.map(s => ({ op: 'put', table: 'sections', id: s.id, values: values('section', s) })),

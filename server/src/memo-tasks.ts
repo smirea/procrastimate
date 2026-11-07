@@ -1,7 +1,6 @@
 import { ORPCError } from '@orpc/server';
 import { and, eq, inArray, like, max, sql } from 'drizzle-orm';
 import { log, tasks } from '../../shared/db/schema';
-import { newId } from '../../shared/id';
 import {
 	memoSourceKey,
 	parseMemoSource,

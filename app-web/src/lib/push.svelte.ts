@@ -89,7 +89,8 @@ class Push {
 		const subscription = await registration?.pushManager.getSubscription();
 		const rekeying = localStorage.getItem(REKEY_KEY) !== null;
 		const current = subscription && sameKey(subscription.options.applicationServerKey, key) ? subscription : null;
-		if (!current && refusedRecently(localStorage.getItem(REFUSED_KEY), Date.now())) return { kind: 'off' };
+		if (!current && refusedRecently(localStorage.getItem(DEVICE_KEYS.pushRefusedAt), Date.now()))
+			return { kind: 'off' };
 		if (!registration || (!subscription && !rekeying)) {
 			await this.#subscribe(Promise.resolve('granted' as NotificationPermission), key);
 			return this.state;
@@ -169,7 +170,8 @@ class Push {
 	}
 
 	#retry() {
-		const askAgain = this.state.kind === 'off' && refusalOver(localStorage.getItem(REFUSED_KEY), Date.now());
+		const askAgain =
+			this.state.kind === 'off' && refusalOver(localStorage.getItem(DEVICE_KEYS.pushRefusedAt), Date.now());
 		if (this.state.kind === 'unavailable' || this.state.kind === 'error' || askAgain) void this.detect();
 		else if (this.state.kind === 'on') void this.#register(this.state.subscription);
 	}
@@ -236,8 +238,6 @@ async function rekey(
 	if (fresh !== 'refused') localStorage.removeItem(REKEY_KEY);
 	return fresh;
 }
-
-const REFUSED_KEY = DEVICE_KEYS.pushRefusedAt;
 
 function sameKey(current: ArrayBuffer | null, key: Uint8Array) {
 	if (!current) return false;

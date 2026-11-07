@@ -11,8 +11,8 @@ import {
 	type Page,
 } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
-import { getTableColumns } from 'drizzle-orm';
 import { ENTITY_TABLES } from '../../shared/db/schema';
+import { toWire } from '../../shared/db/wire';
 import type { Kind } from '../../shared/model';
 import { KIND_OF, TABLE_OF } from '../../shared/kinds';
 import { rowIdOf } from '../../shared/rows';
@@ -310,16 +310,8 @@ export const test = quietTest.extend<{ app: App; devices: Devices }>({
 
 export { expect };
 
-/** Column names and JSON-encoded objects, as the upload route reads a row. */
-function rowValues(kind: Kind, fields: Record<string, unknown>) {
-	const columns = getTableColumns(ENTITY_TABLES[kind]) as Record<string, { name: string }>;
-	return Object.fromEntries(
-		Object.entries(fields).map(([key, value]) => [
-			columns[key]!.name,
-			value !== null && typeof value === 'object' ? JSON.stringify(value) : value,
-		]),
-	);
-}
+/** A row's fields as sync carries them, through the server's own conversion. */
+const rowValues = (kind: Kind, fields: Record<string, unknown>) => toWire(ENTITY_TABLES[kind], fields);
 
 export class App {
 	constructor(readonly page: Page) {}
@@ -481,7 +473,7 @@ export class App {
 	 */
 	async pushFromOtherDevice(...patches: { kind: Kind; id: string; fields: Record<string, unknown> }[]) {
 		await expect.poll(() => this.pending(), { timeout: 15_000 }).toBe(0);
-		const me = (await (await this.page.request.get('/api/me')).json()) as { id: string };
+		const me = await this.#me();
 		await this.#upload(
 			patches.map(({ kind, id, fields }) => ({
 				op: 'patch',
@@ -502,10 +494,11 @@ export class App {
 	 * Each row's `id` and the account's `userId` are filled in; the rest is the row as `shared/testing.ts` shapes it.
 	 */
 	async seed(...rows: { kind: Kind; fields: Record<string, unknown> }[]) {
-		const me = (await (await this.page.request.get('/api/me')).json()) as { id: string };
+		const me = await this.#me();
 		const writes = rows.map(({ kind, fields }) => {
 			const id = (fields.id as string | undefined) ?? crypto.randomUUID();
-			return { op: 'put', table: TABLE_OF[kind], id, values: rowValues(kind, { ...fields, id, userId: me.id }) };
+			const values = rowValues(kind, { ...fields, id, userId: me.id });
+			return { op: 'put', table: TABLE_OF[kind], id: rowIdOf(kind, id, me.id), values };
 		});
 		await this.#upload(writes);
 		const last = writes.at(-1)!;
@@ -518,6 +511,10 @@ export class App {
 				},
 			)
 			.toMatchObject({ id: last.id });
+	}
+
+	async #me() {
+		return (await (await this.page.request.get('/api/me')).json()) as { id: string };
 	}
 
 	async #upload(writes: unknown[]) {

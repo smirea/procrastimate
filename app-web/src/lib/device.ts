@@ -2,15 +2,16 @@ import { z } from 'zod';
 import type { RowWrite } from 'shared/rows.ts';
 import { personSchema, type Person } from 'shared/sharing.ts';
 
-/** The account this browser's database was last opened for, so other tabs reload when it changes. */
-const OWNER_KEY = 'procrastimate-owner';
-const INSTALL_KEY = 'procrastimate-install';
-const PEOPLE_KEY = 'procrastimate-people';
-const REMINDERS_KEY = 'procrastimate-reminders-checked-at';
-const UNWRITTEN_KEY = 'procrastimate-unwritten';
-const LEGACY_DOCUMENT_KEY = 'procrastimate';
-/** The view choices and the cached account, also device-local, read by their own modules. */
+/** Every key this browser's `localStorage` and `sessionStorage` hold, so tests and the boot script read the same ones. */
 export const DEVICE_KEYS = {
+	/** The account this browser's database was last opened for, so other tabs reload when it changes. */
+	owner: 'procrastimate-owner',
+	install: 'procrastimate-install',
+	people: 'procrastimate-people',
+	remindersCheckedAt: 'procrastimate-reminders-checked-at',
+	/** In `sessionStorage`. */
+	unwritten: 'procrastimate-unwritten',
+	staleBuildReload: 'procrastimate-stale-build-reload',
 	user: 'procrastimate-user',
 	theme: 'procrastimate-theme',
 	accent: 'procrastimate-accent',
@@ -25,12 +26,8 @@ export const DEVICE_KEYS = {
 
 const peopleSchema = z.array(personSchema);
 
-export function forgetLegacyDocument() {
-	localStorage.removeItem(LEGACY_DOCUMENT_KEY);
-}
-
 export function saveOwner(id: string) {
-	localStorage.setItem(OWNER_KEY, id);
+	localStorage.setItem(DEVICE_KEYS.owner, id);
 }
 
 /**
@@ -39,29 +36,29 @@ export function saveOwner(id: string) {
  */
 export function onOwnerChange(changed: () => void) {
 	window.addEventListener('storage', event => {
-		if (event.key === OWNER_KEY && event.oldValue !== null && event.newValue !== event.oldValue) changed();
+		if (event.key === DEVICE_KEYS.owner && event.oldValue !== null && event.newValue !== event.oldValue) changed();
 	});
 }
 
 /** Push subscriptions and Ramble name the device by it; it is not a secret. */
 export function installId(): string {
-	const known = localStorage.getItem(INSTALL_KEY);
+	const known = localStorage.getItem(DEVICE_KEYS.install);
 	if (known) return known;
 	const id = crypto.randomUUID();
-	localStorage.setItem(INSTALL_KEY, id);
+	localStorage.setItem(DEVICE_KEYS.install, id);
 	return id;
 }
 
 export function loadPeople(): Person[] {
 	try {
-		return peopleSchema.parse(JSON.parse(localStorage.getItem(PEOPLE_KEY) ?? '[]'));
+		return peopleSchema.parse(JSON.parse(localStorage.getItem(DEVICE_KEYS.people) ?? '[]'));
 	} catch {
 		return [];
 	}
 }
 
 export function savePeople(people: readonly Person[]) {
-	localStorage.setItem(PEOPLE_KEY, JSON.stringify(people));
+	localStorage.setItem(DEVICE_KEYS.people, JSON.stringify(people));
 }
 
 /**
@@ -75,7 +72,7 @@ type Copy = { user: string; commands: Unwritten[] };
 
 export function loadUnwritten(user: string): Unwritten[] {
 	try {
-		const copy = JSON.parse(sessionStorage.getItem(UNWRITTEN_KEY) ?? 'null') as Copy | null;
+		const copy = JSON.parse(sessionStorage.getItem(DEVICE_KEYS.unwritten) ?? 'null') as Copy | null;
 		return copy?.user === user ? copy.commands : [];
 	} catch {
 		return [];
@@ -85,21 +82,21 @@ export function loadUnwritten(user: string): Unwritten[] {
 /** A copy too large to store is skipped: the edit is still written, it is only not safe from a reload until then. */
 export function saveUnwritten(user: string, commands: readonly Unwritten[]) {
 	try {
-		if (commands.length) sessionStorage.setItem(UNWRITTEN_KEY, JSON.stringify({ user, commands }));
-		else sessionStorage.removeItem(UNWRITTEN_KEY);
+		if (commands.length) sessionStorage.setItem(DEVICE_KEYS.unwritten, JSON.stringify({ user, commands }));
+		else sessionStorage.removeItem(DEVICE_KEYS.unwritten);
 	} catch {
-		sessionStorage.removeItem(UNWRITTEN_KEY);
+		sessionStorage.removeItem(DEVICE_KEYS.unwritten);
 	}
 }
 
 /** A first launch starts from now, so it never announces every reminder that came up before it. */
 export function loadRemindersCheckedAt(now: number): number {
-	const stored = Number(localStorage.getItem(REMINDERS_KEY));
+	const stored = Number(localStorage.getItem(DEVICE_KEYS.remindersCheckedAt));
 	return Number.isFinite(stored) && stored > 0 ? stored : now;
 }
 
 export function saveRemindersCheckedAt(at: number) {
-	localStorage.setItem(REMINDERS_KEY, String(at));
+	localStorage.setItem(DEVICE_KEYS.remindersCheckedAt, String(at));
 }
 
 /**

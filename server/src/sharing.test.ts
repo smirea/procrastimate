@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'bun:test';
-import { and, eq, inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { access, comments, log, tasks } from '../../shared/db/schema';
 import type { Person, SharedView, ShareView, SpaceView } from '../../shared/sharing';
 import {

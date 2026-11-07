@@ -7,7 +7,6 @@
 	},
 	"scripts": {
 		"start": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run vite",
-		"dev": "bun run start",
 		"build": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run vite build",
 		"check": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run svelte-kit sync && bun --env-file=.env.local run svelte-check-native --tsconfig ./tsconfig.json && bun check --no-script -p src/service-worker",
 		"test:e2e": "bun ../scripts/generate/index.ts && bun --env-file=.env.local scripts/e2e-build.ts && bun --env-file=.env.local run playwright test"
