@@ -298,7 +298,7 @@ public enum StoreRules {
         Order.sorted(sections.filter { $0.projectId == projectId })
     }
 
-    private static func sameName(_ a: String, _ b: String) -> Bool { a.lowercased() == b.lowercased() }
+    static func sameName(_ a: String, _ b: String) -> Bool { UTF16Text.equal(a.lowercased(), b.lowercased()) }
 
     /// Adds a section last in its project. Names stay unique in a project ignoring case, since `/name` must resolve to
     /// one section, so a taken name returns the section that has it.

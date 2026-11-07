@@ -19,6 +19,7 @@
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import TaskRow from './TaskRow.svelte';
 	import { useLookup } from '../lookup.ts';
+	import { reminderChipLabel } from 'shared/task-menus.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { clock, motion, type Arrival } from '../ui.svelte.ts';
 
@@ -44,7 +45,7 @@
 			!task.event && task.due ? `Due ${formatDue(task.due, clock.today)}` : null,
 			!task.event && task.due && task.recurrence ? repeatLabel(task.recurrence, task.due) : null,
 			task.priority !== 4 ? PRIORITIES[task.priority].label : null,
-			task.reminders.length ? `${task.reminders.length} reminder${task.reminders.length > 1 ? 's' : ''}` : null,
+			task.reminders.length ? reminderChipLabel(task.reminders.length) : null,
 			labels.length ? `Labels ${labels.map((l) => l.name).join(', ')}` : null,
 		].filter((fact) => fact !== null),
 	);

@@ -335,8 +335,6 @@ public enum Todoist {
         var labels = data.labels
         var tasks = data.tasks
         var summary = Summary(warnings: backup.warnings)
-        func sameName(_ a: String, _ b: String) -> Bool { UTF16Text.equal(a.lowercased(), b.lowercased()) }
-
         var projectIds: [String: String?] = [:]
         for source in backup.projects {
             if source.inbox {
@@ -344,7 +342,7 @@ public enum Todoist {
                 continue
             }
             let match = projects.firstIndex { $0.sourceKey == source.sourceKey }
-                ?? projects.firstIndex { ($0.sourceKey ?? "").isEmpty && sameName($0.name, source.name) }
+                ?? projects.firstIndex { ($0.sourceKey ?? "").isEmpty && StoreRules.sameName($0.name, source.name) }
             if let match {
                 projects[match].sourceKey = source.sourceKey
                 projectIds[source.sourceKey] = projects[match].id
@@ -367,7 +365,7 @@ public enum Todoist {
             guard let projectId = projectIds[source.projectKey] ?? nil else { continue }
             // Names are unique in a project, so a repeated name in the backup joins the section that already has it.
             let match = sections.firstIndex { $0.sourceKey == source.sourceKey }
-                ?? sections.firstIndex { $0.projectId == projectId && sameName($0.name, source.name) }
+                ?? sections.firstIndex { $0.projectId == projectId && StoreRules.sameName($0.name, source.name) }
             if let match {
                 if sections[match].sourceKey == nil { sections[match].sourceKey = source.sourceKey }
                 sectionIds[source.sourceKey] = sections[match].id
@@ -393,7 +391,7 @@ public enum Todoist {
         }
 
         func labelId(_ name: String) -> String {
-            if let existing = labels.first(where: { sameName($0.name, name) }) { return existing.id }
+            if let existing = labels.first(where: { StoreRules.sameName($0.name, name) }) { return existing.id }
             let label = Label(id: newId(), name: name, color: LabelColors.defaultLabelColor(name), createdAt: now)
             labels.append(label)
             summary.labels += 1

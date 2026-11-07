@@ -132,6 +132,9 @@ let handlers: [String: Handler] = [
     "space-routing": spaceRoutingVector,
     "list-filters": listFiltersVector,
     "list-header": listHeaderVector,
+    "task-menus": taskMenusVector,
+    "task-details": taskDetailsVector,
+    "quick-add-merge": quickAddMergeVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -944,6 +947,111 @@ private struct SharedSpaceDataInput: Decodable {
                 "owner": try json(entry.owner),
             ])
         })
+    default: throw unknown(fn)
+    }
+}
+
+private func optional(_ value: (some Encodable)?) throws -> JSONValue { try value.map(json) ?? .null }
+
+@Sendable func taskMenusVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "repeatPresets": return try json(RepeatMenu.presets(anchor: Due(date: a(0), time: nil)))
+    case "repeatAnchor": return try json(RepeatMenu.anchor(a(0), today: a(1)))
+    case "setRepeat":
+        let set = RepeatMenu.set(try a(0), opened: try a(1), due: try a(2))
+        return object(["recurrence": try optional(set.recurrence), "due": try optional(set.due)])
+    case "repeatWeekdays": return try json(RepeatMenu.weekdays(a(0), anchor: a(1)))
+    case "canToggleWeekday": return try json(RepeatMenu.canToggle(a(0), a(1)))
+    case "toggleWeekday": return try json(RepeatMenu.toggling(a(0), a(1), anchor: a(2)))
+    case "customRepeat": return try json(RepeatMenu.custom(a(1), a(2), a(0)))
+    case "isRepeatPreset": return try json(RepeatMenu.isSelected(a(0), a(1)))
+    case "addReminder": return try optional(ReminderMenu.adding(a(0), to: a(1)))
+    case "reminderAt": return try json(ReminderMenu.at(date: a(0), time: a(1), due: a(2), today: a(3)))
+    case "reminderChipLabel": return try json(ReminderMenu.chipLabel(a(0)))
+    case "reminderSectionTitle": return try json(ReminderMenu.sectionTitle(a(0)))
+    default: throw unknown(fn)
+    }
+}
+
+/// `TitleContext` in TS.
+private struct TitleContextInput: Decodable {
+    let now: Int
+    let projects: [Project]
+    let sections: [ProjectSection]
+    let labels: [Label]
+}
+
+/// A patch as TS writes one: only the fields it sets, a cleared one as `null`.
+private func patchJSON(_ patch: TaskPatch) throws -> JSONValue {
+    var fields: [String: JSONValue] = [:]
+    func put(_ key: String, _ value: (some Encodable)??) throws {
+        if let value { fields[key] = try optional(value) }
+    }
+    try put("title", patch.title.map { $0 })
+    try put("projectId", patch.projectId)
+    try put("sectionId", patch.sectionId)
+    try put("labelIds", patch.labelIds.map { $0 })
+    try put("due", patch.due)
+    try put("recurrence", patch.recurrence)
+    try put("priority", patch.priority.map { $0 })
+    try put("reminders", patch.reminders.map { $0 })
+    try put("location", patch.location)
+    return .object(fields)
+}
+
+private func draftJSON(_ draft: TaskDetails.Draft) throws -> JSONValue {
+    try patchJSON(TaskPatch(
+        title: draft.title, projectId: .some(draft.projectId), sectionId: .some(draft.sectionId), labelIds: draft.labelIds,
+        due: .some(draft.due), recurrence: .some(draft.recurrence), priority: draft.priority, reminders: draft.reminders,
+        location: .some(draft.location)
+    ))
+}
+
+@Sendable func taskDetailsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "parseTitle":
+        let context = try a(2, as: TitleContextInput.self)
+        return try json(TaskDetails.parse(
+            a(0), a(1), now: Date(epochMilliseconds: context.now), projects: context.projects, sections: context.sections,
+            labels: context.labels, in: a.zone
+        ))
+    case "titleDraft": return try draftJSON(TaskDetails.draft(a(0), title: a(1), a(2)))
+    case "titleTokens": return try json(TaskDetails.tokens(a(0), title: a(1), a(2)))
+    case "commitTitle":
+        return switch TaskDetails.commitTitle(try a(0), title: try a(1), try a(2)) {
+        case .unchanged: object(["kind": "unchanged"])
+        case .revert: object(["kind": "revert"])
+        case let .update(patch, _): object(["kind": "update", "patch": try patchJSON(patch)])
+        }
+    case "setDue": return try patchJSON(TaskDetails.setDue(a(0), a(1)))
+    default: throw unknown(fn)
+    }
+}
+
+/// `Placed` in TS, or `Typed`, whose fields may be absent.
+private struct MergePlacedInput: Decodable {
+    let due: Due?
+    let recurrence: Recurrence?
+    let priority: Priority?
+    let projectId: String?
+    let sectionId: String?
+
+    var placed: QuickAddMerge.Placed {
+        .init(due: due, recurrence: recurrence, priority: priority, projectId: projectId, sectionId: sectionId)
+    }
+}
+
+@Sendable func quickAddMergeVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "typedOver":
+        let placed = QuickAddMerge.typedOver(
+            try a(0, as: MergePlacedInput.self).placed, try a(1, as: MergePlacedInput.self).placed, event: try a(2)
+        )
+        return object([
+            "due": try optional(placed.due), "recurrence": try optional(placed.recurrence),
+            "priority": try optional(placed.priority), "projectId": try optional(placed.projectId),
+            "sectionId": try optional(placed.sectionId),
+        ])
     default: throw unknown(fn)
     }
 }

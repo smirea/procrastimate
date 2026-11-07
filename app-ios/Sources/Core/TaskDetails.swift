@@ -1,7 +1,7 @@
 import Foundation
 
-/// Task details' rules from `app-web/src/lib/components/TaskDetails.svelte`: the title parses like quick add, the chips
-/// show what it will apply before Enter or blur commits it, and a date change keeps or drops the repeat.
+/// Ports `shared/task-details.ts`: the title parses like quick add, the chips show what it will apply before Enter or
+/// blur commits it, and a date change keeps or drops the repeat.
 public enum TaskDetails {
     /// The fields the chips show: the task's, or what the edited title will apply to it.
     public struct Draft: Hashable, Sendable {
@@ -68,13 +68,16 @@ public enum TaskDetails {
         var draft = Draft(task)
         guard title != task.title, !parsed.title.isEmpty else { return draft }
         draft.title = parsed.title
-        // An event stands in for the date and repeat, so a typed one is ignored on an event task, as on the web.
-        draft.due = task.event == nil ? parsed.due ?? task.due : nil
-        draft.recurrence = task.event == nil ? parsed.recurrence ?? task.recurrence : nil
-        draft.priority = parsed.priority ?? task.priority
-        draft.projectId = parsed.projectId ?? task.projectId
-        draft.sectionId = parsed.sectionId
-            ?? (parsed.projectId.map { $0 != task.projectId } == true ? nil : task.sectionId)
+        let placed = QuickAddMerge.typedOver(
+            .init(due: task.due, recurrence: task.recurrence, priority: task.priority, projectId: task.projectId, sectionId: task.sectionId),
+            .init(parsed),
+            event: task.event
+        )
+        draft.due = placed.due
+        draft.recurrence = placed.recurrence
+        draft.priority = placed.priority ?? task.priority
+        draft.projectId = placed.projectId
+        draft.sectionId = placed.sectionId
         for id in parsed.labelIds where !draft.labelIds.contains(id) { draft.labelIds.append(id) }
         draft.reminders = task.reminders + parsed.reminders
         // A typed saved place keeps the task's trigger, as picking one does.
@@ -115,8 +118,8 @@ public enum TaskDetails {
     }
 }
 
-/// The repeat menu's rules from `RecurrencePicker.svelte`: presets, a custom interval, and a row of weekday toggles,
-/// Monday first, that edits a weekly set while the menu stays open.
+/// Ports the repeat menu of `shared/task-menus.ts`: presets, a custom interval, and a row of weekday toggles, Monday
+/// first, that edits a weekly set while the menu stays open.
 public enum RepeatMenu {
     /// One per unit, with the anchor's weekday of the month after `Every month`, as in `Every month on the 3rd Mon`.
     public static func presets(anchor: Due) -> [Recurrence] {
@@ -179,6 +182,7 @@ public enum RepeatMenu {
     }
 }
 
+/// Ports the reminder menu of `shared/task-menus.ts`.
 public enum ReminderMenu {
     /// Minutes before the due time: at due time, 10m, 30m, 1h, and 1d.
     public static let presets = [0, 10, 30, 60, 1440]

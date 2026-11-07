@@ -10,15 +10,20 @@ extension Ramble {
         let labelIds = (defaults?.labelIds.filter { !task.labelIds.contains($0) } ?? []) + task.labelIds
         let placed = Triggers.applyPickedLabels(labels, labelIds, defaults?.location)
         let event = defaults?.event
-        let ownProject = task.projectId == nil || task.projectId == defaults?.projectId
+        let typed = QuickAddMerge.typedOver(
+            .init(due: defaults?.date.map { Due(date: $0, time: nil) }, recurrence: nil, priority: nil,
+                  projectId: defaults?.projectId, sectionId: defaults?.sectionId),
+            .init(due: task.due, recurrence: task.recurrence, priority: task.priority, projectId: task.projectId, sectionId: nil),
+            event: event
+        )
         return NewTask(
             title: task.title.trimmingCharacters(in: .whitespacesAndNewlines),
-            projectId: task.projectId ?? defaults?.projectId,
-            sectionId: ownProject ? defaults?.sectionId : nil,
+            projectId: typed.projectId,
+            sectionId: typed.sectionId,
             labelIds: placed.labelIds,
-            due: event == nil ? task.due ?? defaults?.date.map { Due(date: $0, time: nil) } : nil,
-            recurrence: event == nil ? task.recurrence : nil,
-            priority: task.priority,
+            due: typed.due,
+            recurrence: typed.recurrence,
+            priority: typed.priority,
             reminders: task.reminders,
             location: placed.location,
             event: event

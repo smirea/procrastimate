@@ -128,14 +128,6 @@ enum RambleNormalize {
         return ordinalWords[folded] ?? 0
     }
 
-    static func ordinal(_ n: Int) -> String {
-        let suffix =
-            n % 10 == 1 && n != 11 ? "st"
-            : n % 10 == 2 && n != 12 ? "nd"
-            : n % 10 == 3 && n != 13 ? "rd" : "th"
-        return "\(n)\(suffix)"
-    }
-
     static func hourValue(_ text: String) -> Int {
         startsWithDigit.test(text) ? (Int(text) ?? 0) : numberValue(text)
     }
@@ -225,15 +217,15 @@ enum RambleNormalize {
             (JSRegex(#"\ban?(?=\s+(?:minute|hour|day|week)\s+before\b)"#, ignoreCase: true), { _ in "1" }),
             (JSRegex("\\b(\(monthName))\\s+(?:the\\s+)?(\(ordinalWord)|\\d{1,2}(?:st|nd|rd|th)?)\\b", ignoreCase: true), { match in
                 guard let month = match[1], let day = match[2] else { return nil }
-                let written = digitsOnly.test(day) ? day : ordinal(ordinalValue(day))
+                let written = digitsOnly.test(day) ? day : Format.ordinal(ordinalValue(day))
                 return "\(month) \(written)"
             }),
             (JSRegex("\\b(?:the\\s+)?(\(ordinalWord)|\\d{1,2}(?:st|nd|rd|th))\\s+of\\s+(\(monthName))\\b", ignoreCase: true), { match in
                 guard let day = match[1], let month = match[2] else { return nil }
-                return "\(ordinal(ordinalValue(day))) \(month)"
+                return "\(Format.ordinal(ordinalValue(day))) \(month)"
             }),
             (JSRegex("(?<=\\bthe\\s+)(\(ordinalWord))\\b", ignoreCase: true), { match in
-                match[1].map { ordinal(ordinalValue($0)) }
+                match[1].map { Format.ordinal(ordinalValue($0)) }
             }),
             (
                 JSRegex(

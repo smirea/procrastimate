@@ -1,7 +1,8 @@
 import Foundation
 
-/// The quick add sheet's state and rules from `app-web/src/lib/components/QuickAdd.svelte`: the typed text, the phrases
-/// kept as text, and the values picked with chips. The text wins over a pick for the same attribute, and picking a
+/// The quick add sheet's state and rules: the typed text, the phrases kept as text, and the values picked with chips.
+/// The web keeps its own in `app-web/src/lib/quick-add-draft.ts`, since iOS picks a place with its own chip and the web
+/// through a saved place's label. The text wins over a pick for the same attribute, and picking a
 /// value removes the phrase that set it. Offsets are UTF-16, like the parser's tokens.
 public struct QuickAddDraft: Hashable, Sendable {
     /// What the sheet opened with, from the screen it opened on (`Screens.defaults`). An event stands in for the date
@@ -230,14 +231,13 @@ public struct QuickAddDraft: Hashable, Sendable {
     ) -> (due: Due?, priority: Priority, projectId: String?, sectionId: String?, labelIds: [String]) {
         var labelIds = picked.labelIds
         for id in parsed.labelIds where !labelIds.contains(id) { labelIds.append(id) }
-        let projectId = parsed.projectId ?? picked.projectId
-        return (
-            parsed.due ?? picked.due,
-            parsed.priority ?? picked.priority ?? .default,
-            projectId,
-            parsed.sectionId ?? (projectId == picked.projectId ? picked.sectionId : nil),
-            labelIds
+        let placed = QuickAddMerge.typedOver(
+            .init(due: picked.due, recurrence: picked.recurrence, priority: picked.priority ?? .default,
+                  projectId: picked.projectId, sectionId: picked.sectionId),
+            .init(parsed),
+            event: nil
         )
+        return (placed.due, placed.priority ?? .default, placed.projectId, placed.sectionId, labelIds)
     }
 
     /// Starts the next task: an empty field with the sheet's defaults.
