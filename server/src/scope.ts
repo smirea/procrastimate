@@ -1,12 +1,12 @@
-import type { Entities, Links } from './dangling.ts';
-import type { AccessRow, ShareRow } from './db/schema.ts';
-import type { FieldsByKind } from './model.ts';
-import type { RowWrite } from './rows.ts';
+import type { Entities, Links } from '../../shared/dangling';
+import type { AccessRow, ShareRow } from '../../shared/db/schema';
+import type { FieldsByKind } from '../../shared/model';
+import type { RowWrite } from '../../shared/rows';
 
 /**
  * What a guest reaches in a space: `scopeOf` computes it from the owner's shares and rows, and the server stores the
- * result as `access` rows, which `guestRefusal` then checks a guest's write against. Server only, never ported:
- * clients see only the rows the `access` table lets PowerSync stream them. See `docs/decisions/sharing.md`.
+ * result as `access` rows, which `guestRefusal` then checks a guest's write against. Clients never run it: they see
+ * only the rows the `access` table lets sync pull to them. See `docs/decisions/sharing.md`.
  */
 
 export type Grant = Pick<ShareRow, 'targetKind' | 'targetId' | 'role'>;

@@ -11,6 +11,9 @@ export const MIN_ORDER_GAP = 1e-9;
 /** Ids are compared as code units, as Swift's `utf16` does, so every replica lists the same entities in the same order. */
 export const compareIds = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
+/** Names in `en-US` collation, ignoring case and accents, as Swift's `UTF16Text.compareBase` does. */
+export const compareNames = (a: string, b: string) => a.localeCompare(b, 'en-US', { sensitivity: 'base' });
+
 /** By `order`, then `createdAt`, then `id`, so a tie from two concurrent moves settles the same everywhere. */
 export const bySiblingOrder = (a: Sibling, b: Sibling) =>
 	a.order - b.order || a.createdAt - b.createdAt || compareIds(a.id, b.id);

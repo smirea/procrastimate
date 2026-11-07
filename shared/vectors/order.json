@@ -1,0 +1,263 @@
+{
+	"module": "order",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "moveOrders",
+			"test": "moveOrders › a move writes only the moved sibling, between its new neighbors",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "a",
+						"name": "a",
+						"order": 0
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "b",
+						"name": "b",
+						"order": 1
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "c",
+						"name": "c",
+						"order": 2
+					}
+				],
+				"c",
+				0
+			],
+			"output": [
+				{
+					"id": "c",
+					"order": -1
+				}
+			]
+		},
+		{
+			"fn": "moveOrders",
+			"test": "moveOrders › a move writes only the moved sibling, between its new neighbors",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "a",
+						"name": "a",
+						"order": 0
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "b",
+						"name": "b",
+						"order": 1
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "c",
+						"name": "c",
+						"order": 2
+					}
+				],
+				"a",
+				2
+			],
+			"output": [
+				{
+					"id": "a",
+					"order": 3
+				}
+			]
+		},
+		{
+			"fn": "moveOrders",
+			"test": "moveOrders › a move writes only the moved sibling, between its new neighbors",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "a",
+						"name": "a",
+						"order": 0
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "b",
+						"name": "b",
+						"order": 1
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "c",
+						"name": "c",
+						"order": 2
+					}
+				],
+				"a",
+				1
+			],
+			"output": [
+				{
+					"id": "a",
+					"order": 1.5
+				}
+			]
+		},
+		{
+			"fn": "moveOrders",
+			"test": "moveOrders › a move to where it already is writes nothing, and an unknown id moves nothing",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "a",
+						"name": "a",
+						"order": 0
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "b",
+						"name": "b",
+						"order": 1
+					}
+				],
+				"b",
+				1
+			],
+			"output": []
+		},
+		{
+			"fn": "moveOrders",
+			"test": "moveOrders › a move to where it already is writes nothing, and an unknown id moves nothing",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "a",
+						"name": "a",
+						"order": 0
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "b",
+						"name": "b",
+						"order": 1
+					}
+				],
+				"z",
+				0
+			],
+			"output": []
+		},
+		{
+			"fn": "moveOrders",
+			"test": "moveOrders › a move to where it already is writes nothing, and an unknown id moves nothing",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "a",
+						"name": "a",
+						"order": 5
+					}
+				],
+				"a",
+				0
+			],
+			"output": []
+		},
+		{
+			"fn": "moveOrders",
+			"test": "moveOrders › a gap too small to split renumbers every sibling out of place",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "a",
+						"name": "a",
+						"order": 0
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "b",
+						"name": "b",
+						"order": 1e-10
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "c",
+						"name": "c",
+						"order": 2
+					}
+				],
+				"c",
+				1
+			],
+			"output": [
+				{
+					"id": "c",
+					"order": 1
+				},
+				{
+					"id": "b",
+					"order": 2
+				}
+			]
+		},
+		{
+			"fn": "moveOrders",
+			"test": "moveOrders › ties settle by creation, then id",
+			"input": [
+				[
+					{
+						"createdAt": 1,
+						"icon": null,
+						"id": "b",
+						"name": "b",
+						"order": 0
+					},
+					{
+						"createdAt": 1,
+						"icon": null,
+						"id": "a",
+						"name": "a",
+						"order": 0
+					},
+					{
+						"createdAt": 0,
+						"icon": null,
+						"id": "c",
+						"name": "c",
+						"order": 0
+					}
+				],
+				"c",
+				2
+			],
+			"output": [
+				{
+					"id": "c",
+					"order": 1
+				}
+			]
+		}
+	]
+}

@@ -1,3 +1,4 @@
+import { compareNames } from './order.ts';
 import { z } from 'zod';
 import { labelSchema, projectSchema, taskSchema } from './model.ts';
 import type { Label, Project, Task } from './task.ts';
@@ -178,7 +179,7 @@ function searchNames<T extends { name: string }>(items: readonly T[], terms: rea
 			if (best.some(quality => quality === 0)) return [];
 			return [{ item, score: best.reduce((a, b) => a + b, 0), name: highlights[0]! }];
 		})
-		.toSorted((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name, 'en-US', { sensitivity: 'base' }));
+		.toSorted((a, b) => b.score - a.score || compareNames(a.item.name, b.item.name));
 }
 
 export function search(

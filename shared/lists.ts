@@ -1,3 +1,4 @@
+import { compareNames } from './order.ts';
 import { z } from 'zod';
 import { personSchema } from './sharing.ts';
 import { sharedEntries, type SharedSpaceData } from './space-routing.ts';
@@ -55,8 +56,7 @@ const TITLES: Record<ListGroupKind, string> = {
 
 const rows = (due: DueDays) => due.overdue.length + due.today.length + due.days.reduce((n, g) => n + g.tasks.length, 0);
 
-const labelsByName = (labels: readonly Label[]) =>
-	labels.toSorted((a, b) => a.name.localeCompare(b.name, 'en-US', { sensitivity: 'base' }));
+const labelsByName = (labels: readonly Label[]) => labels.toSorted((a, b) => compareNames(a.name, b.name));
 
 /**
  * Every top-level list, grouped and in order, empty ones included: a list stays put while it has no tasks, so menus

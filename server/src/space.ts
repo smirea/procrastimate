@@ -12,7 +12,7 @@ import {
 	tasks,
 	type AccessRow,
 } from '../../shared/db/schema';
-import { managesSpace, type Scope } from '../../shared/scope';
+import { managesSpace, type Scope } from './scope';
 import { byCreation } from '../../shared/snapshot';
 import { isTimeZone } from '../../shared/zoned-time';
 import type { ShareRow } from '../../shared/db/schema';

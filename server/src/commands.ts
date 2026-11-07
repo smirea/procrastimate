@@ -17,7 +17,7 @@ import {
 } from '../../shared/model';
 import { parseQuickAdd } from '../../shared/quick-add';
 import { rowWrites } from '../../shared/rows';
-import { authorOnly, filterTree, managesSpace, scopeOf } from '../../shared/scope';
+import { authorOnly, filterTree, managesSpace, scopeOf } from './scope';
 import type {
 	AgentNewTask,
 	AgentTask,

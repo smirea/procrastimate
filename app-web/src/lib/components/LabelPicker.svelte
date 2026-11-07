@@ -21,7 +21,7 @@
 	}: {
 		labelIds: string[];
 		onchange: (labelIds: string[]) => void;
-		labels?: readonly Label[];
+		labels: readonly Label[];
 		canCreate?: boolean;
 		open?: boolean;
 	} = $props();
@@ -29,9 +29,9 @@
 	let query = $state('');
 	let active = $state(0);
 
-	const chosen = $derived(labels ? labelIds.flatMap((id) => labels.find((l) => l.id === id) ?? []) : store.labelsOf({ labelIds }));
+	const chosen = $derived(labelIds.flatMap((id) => labels.find((l) => l.id === id) ?? []));
 	const options = $derived(
-		suggest(labels ?? store.labels, lastUsed(store.tasks, labelIdsOf), query).filter((o) => canCreate || o.kind !== 'create'),
+		suggest(labels, lastUsed(store.tasks, labelIdsOf), query).filter((o) => canCreate || o.kind !== 'create'),
 	);
 
 	function choose(option: Suggestion<Label>) {

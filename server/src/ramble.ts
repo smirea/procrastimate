@@ -1,3 +1,4 @@
+import { compareNames } from '../../shared/order';
 import { and, eq, exists, or, sql } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { base64Encode } from './jwt';
@@ -115,10 +116,7 @@ function loadKeytermSource(db: Db, userId: string): KeytermSource {
 export function rambleKeyterms(snapshot: KeytermSource): string[] {
 	const used = new Map([...lastUsed(snapshot.tasks, projectIdsOf), ...lastUsed(snapshot.tasks, labelIdsOf)]);
 	const names = [...snapshot.projects, ...snapshot.labels]
-		.toSorted(
-			(a, b) =>
-				(used.get(b.id) ?? 0) - (used.get(a.id) ?? 0) || a.name.localeCompare(b.name, 'en-US', { sensitivity: 'base' }),
-		)
+		.toSorted((a, b) => (used.get(b.id) ?? 0) - (used.get(a.id) ?? 0) || compareNames(a.name, b.name))
 		.map(item => item.name.trim());
 	const terms: string[] = [];
 	const seen = new Set<string>();

@@ -1,3 +1,4 @@
+import { compareNames } from './order.ts';
 import { z } from 'zod';
 import type { Task } from './task.ts';
 
@@ -119,7 +120,7 @@ export function suggest<T extends Named>(
 			(a, b) =>
 				a.tier - b.tier ||
 				(used.get(b.item.id) ?? 0) - (used.get(a.item.id) ?? 0) ||
-				a.item.name.localeCompare(b.item.name, 'en-US', { sensitivity: 'base' }),
+				compareNames(a.item.name, b.item.name),
 		);
 	const suggestions: Suggestion<T>[] = ranked.map(r => ({ kind: 'existing', item: r.item }));
 	if (q && ranked[0]?.tier !== 0) suggestions.push({ kind: 'create', name: query.trim() });

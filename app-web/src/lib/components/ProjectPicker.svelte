@@ -1,4 +1,5 @@
 <script lang="ts">
+	import InlineEdit from './InlineEdit.svelte';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import ProjectGlyph from './ProjectGlyph.svelte';
 	import Rows from 'phosphor-svelte/lib/Rows';
@@ -26,32 +27,26 @@
 		projectId: string | null;
 		sectionId?: string | null;
 		onchange: (place: Place) => void;
-		projects?: readonly Project[];
-		sections?: readonly Section[];
+		projects: readonly Project[];
+		sections: readonly Section[];
 		canCreate?: boolean;
 	} = $props();
 
 	const project = $derived(store.project(projectId));
 	const section = $derived(store.section(sectionId));
-	const allSections = $derived(sections ?? store.sections);
 	const options = $derived([
 		{ place: { projectId: null, sectionId: null }, name: 'Inbox', nested: false, project: null },
-		...(projects ?? store.projects).flatMap((p) => [
+		...projects.flatMap((p) => [
 			{ place: { projectId: p.id, sectionId: null }, name: p.name, nested: false, project: p },
-			...sectionsOf(allSections, p.id).map((s) => ({ place: { projectId: p.id, sectionId: s.id }, name: s.name, nested: true, project: null })),
+			...sectionsOf(sections, p.id).map((s) => ({ place: { projectId: p.id, sectionId: s.id }, name: s.name, nested: true, project: null })),
 		]),
 	]);
 	const label = $derived(project ? (section ? `${project.name} / ${section.name}` : project.name) : 'Inbox');
 
 	let creating = $state(false);
-	let name = $state('');
 
-	function create(close: () => void) {
-		const trimmed = name.trim();
-		creating = false;
-		name = '';
-		if (!trimmed) return;
-		onchange({ projectId: store.addProject(trimmed).id, sectionId: null });
+	function create(name: string, close: () => void) {
+		onchange({ projectId: store.addProject(name).id, sectionId: null });
 		close();
 	}
 </script>
@@ -84,25 +79,12 @@
 			{#if canCreate}
 				<div class="mt-1 border-t border-ink/5 pt-1">
 					{#if creating}
-						<input
+						<InlineEdit
 							class="field w-full"
-							aria-label="New project name"
+							label="New project name"
 							placeholder="Project name"
-							{@attach (node) => node.focus()}
-							bind:value={name}
-							onkeydown={(e) => {
-								if (e.key === 'Enter') {
-									e.preventDefault();
-									e.stopPropagation();
-									create(close);
-								} else if (e.key === 'Escape') {
-									e.preventDefault();
-									e.stopPropagation();
-									creating = false;
-									name = '';
-								}
-							}}
-							onblur={() => create(close)}
+							oncommit={(name) => create(name, close)}
+							onclose={() => (creating = false)}
 						/>
 					{:else}
 						<button type="button" class="menu-item text-muted" onclick={() => (creating = true)}>

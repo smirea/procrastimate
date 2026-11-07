@@ -18,7 +18,7 @@ import { newId } from '../../shared/id';
 import type { Kind } from '../../shared/model';
 import { KIND_OF, TABLE_OF, type SyncedTable } from '../../shared/kinds';
 import { rowIdOf, type RowWrite } from '../../shared/rows';
-import { authorOnly, guestRefusal, type GuestRows, type StoredRow } from '../../shared/scope';
+import { authorOnly, guestRefusal, type GuestRows, type StoredRow } from './scope';
 import type { Fields } from '../../shared/snapshot';
 import type { Client } from '../../shared/values';
 import { recomputeAccess, touchesAccess } from './access';

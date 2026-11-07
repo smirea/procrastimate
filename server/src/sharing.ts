@@ -2,7 +2,7 @@ import { ORPCError } from '@orpc/server';
 import { and, eq, isNull, type SQL } from 'drizzle-orm';
 import { apiTokens, labels, projects, shares, tasks, webhooks, type ShareRow } from '../../shared/db/schema';
 import { newId } from '../../shared/id';
-import { scopeOf } from '../../shared/scope';
+import { scopeOf } from './scope';
 import type { ApiToken, CreatedApiToken, Person, ShareTarget, ShareView, SharedView } from '../../shared/sharing';
 import type { Role } from '../../shared/values';
 import { syncAccess } from './access';

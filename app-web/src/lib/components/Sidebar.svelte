@@ -1,4 +1,5 @@
 <script lang="ts">
+	import InlineEdit from './InlineEdit.svelte';
 	import { screenPath } from 'shared/screens.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -49,17 +50,9 @@
 	const sharedTasks = $derived(sharedEntries(shared).filter(entry => entry.kind === 'task'));
 
 	let adding = $state(false);
-	let name = $state('');
 
-	function createProject() {
-		const trimmed = name.trim();
-		if (!trimmed) {
-			adding = false;
-			return;
-		}
-		const project = store.addProject(trimmed);
-		name = '';
-		adding = false;
+	function createProject(name: string) {
+		const project = store.addProject(name);
 		void goto(screenPath({ kind: 'project', id: project.id }));
 	}
 </script>
@@ -106,21 +99,12 @@
 			<ProjectList projects={group('projects').entries}>
 				{#if adding}
 					<li transition:slide={motion({ duration: 180, easing: cubicOut })}>
-						<!-- svelte-ignore a11y_autofocus -->
-						<input
+						<InlineEdit
 							class="field h-9 w-full rounded-full px-3 touch:h-11"
-							aria-label="Project name"
+							label="Project name"
 							placeholder="Project name"
-							autofocus
-							bind:value={name}
-							onblur={createProject}
-							onkeydown={(e) => {
-								if (e.key === 'Enter') createProject();
-								if (e.key === 'Escape') {
-									name = '';
-									adding = false;
-								}
-							}}
+							oncommit={createProject}
+							onclose={() => (adding = false)}
 						/>
 					</li>
 				{/if}
