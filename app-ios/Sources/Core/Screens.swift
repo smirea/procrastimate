@@ -106,8 +106,15 @@ public enum Screens {
         .inbox: "Inbox", .tomorrow: "Tomorrow", .thisWeek: "This week", .noDate: "No date",
     ]
 
+    /// The screen whose tasks `screen` lists: a saved place's label screen lists the tasks at the place, which never
+    /// carry the place as a label.
+    public static func listed(_ screen: ListScreen?, _ labels: [Label]) -> ListScreen? {
+        guard case let .label(id)? = screen, let place = labels.first(where: { $0.id == id })?.place else { return screen }
+        return .place(key: Triggers.placeKey(place))
+    }
+
     /// Where a task just added on `screen` shows: nil when `screen` itself shows it, else its project, else Inbox when
-    /// it has a day or No date when it has none. A saved place's label screen holds the tasks at the place.
+    /// it has a day or No date when it has none.
     public static func added(
         _ screen: ListScreen?,
         _ task: TaskItem,
@@ -115,11 +122,7 @@ public enum Screens {
         _ today: DateKey,
         in zone: TimeZone
     ) -> ListScreen? {
-        var holding = screen
-        if case let .label(id)? = screen, let place = labels.first(where: { $0.id == id })?.place {
-            holding = .place(key: Triggers.placeKey(place))
-        }
-        if holds(holding, task, today, in: zone) { return nil }
+        if holds(listed(screen, labels), task, today, in: zone) { return nil }
         if let projectId = task.projectId { return .project(id: projectId) }
         return Triggers.scheduledDue(task, today, in: zone) == nil ? .noDate : .inbox()
     }

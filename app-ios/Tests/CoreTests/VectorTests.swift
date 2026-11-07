@@ -648,6 +648,7 @@ private struct SharedSpaceInput: Decodable {
     case "screenHolds": return try json(Screens.holds(screen, a(1), a(2), in: a.zone))
     case "addedScreen": return try screenJSON(Screens.added(screen, a(1), a(2), a(3), in: a.zone))
     case "addedName": return try json(Screens.addedName(#require(screen), a(1)))
+    case "listedScreen": return try screenJSON(Screens.listed(screen, a(1)))
     default: throw unknown(fn)
     }
 }

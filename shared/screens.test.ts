@@ -12,6 +12,7 @@ const canAddTo = recorded('screens', screens.canAddTo);
 const reusedDefaults = recorded('screens', screens.reusedDefaults);
 const addedScreen = recorded('screens', screens.addedScreen);
 const addedName = recorded('screens', screens.addedName);
+const listedScreen = recorded('screens', screens.listedScreen);
 
 const today = '2026-10-14';
 
@@ -327,5 +328,18 @@ describe('screen paths', () => {
 		expect(screens.notificationHref({ kind: 'task', id: 't 1' })).toBe('/inbox?task=t%201');
 		expect(screens.notificationHref({ kind: 'place', id: '52.5,13.4' })).toBe('/places/52.5%2C13.4');
 		expect(screens.notificationHref({ kind: 'project', id: 'p1' })).toBe('/projects/p1');
+	});
+});
+
+describe('listedScreen', () => {
+	test('a saved place’s label screen lists the place, and any other screen itself', () => {
+		const place = label('l-rewe', { place: { address: null, latitude: 52.5, longitude: 13.4, radius: 150 } });
+		expect(listedScreen({ kind: 'label', id: 'l-rewe' }, [place])).toEqual({ kind: 'place', key: reweKey });
+		expect(listedScreen({ kind: 'label', id: 'calls' }, [place, label('calls')])).toEqual({
+			kind: 'label',
+			id: 'calls',
+		});
+		expect(listedScreen({ kind: 'inbox' }, [place])).toEqual({ kind: 'inbox' });
+		expect(listedScreen(null, [place])).toBeNull();
 	});
 });

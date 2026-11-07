@@ -6,6 +6,7 @@ struct LabelScreen: View {
     @Environment(Store.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(TaskActions.self) private var actions
+    @Environment(\.today) private var today
     let labelID: String
 
     @State private var editingPlace = false
@@ -25,25 +26,24 @@ struct LabelScreen: View {
             let unfiltered = Views.labelViewTasks(all, label, in: store.timeZone)
             let shown = { (tasks: [TaskItem]) in ListFilters.filterTasks(tasks, filter, me: store.me) }
             let tasks = shown(unfiltered)
-            // A saved place lists the tasks at it, which never carry it as a label.
-            let key = label.place.map(Triggers.placeKey)
+            let listed = Screens.listed(.label(id: label.id), store.labels)
             let done = showCompleted
                 ? shown(Views.completedTasks(
-                    all.filter { key == nil ? $0.labelIds.contains(label.id) : $0.location.map(Triggers.placeKey) == key },
+                    all.filter { Screens.holds(listed, $0, today, in: store.timeZone) },
                     .init(),
                     in: store.timeZone
                 )) : []
             TaskListScreen(
                 title: label.name,
                 isEmpty: unfiltered.isEmpty && !showCompleted,
-                emptyTitle: key == nil ? "No tasks with this label" : "No tasks at this place",
+                emptyTitle: label.place == nil ? "No tasks with this label" : "No tasks at this place",
                 emptyHint: Browse.labelEmptyHint(label.name),
                 labelColor: label.color,
                 labelIcon: label.systemImage(filled: true),
                 open: tasks.count,
-                header: ListHeaders.listHeader(.label(own: space == .own, place: key != nil)),
+                header: ListHeaders.listHeader(.label(own: space == .own, place: label.place != nil)),
                 actions: ListActions(
-                    noun: key == nil ? "label" : "place",
+                    noun: label.place == nil ? "label" : "place",
                     name: label.name,
                     copy: { actions.copyAsMarkdown(Markdown.Document(title: label.name, sections: [.init(tasks: tasks)])) },
                     share: API.ShareTarget(kind: .label, id: label.id),
@@ -53,7 +53,7 @@ struct LabelScreen: View {
                     editPlace: { editingPlace = true },
                     delete: .init(
                         prompt: Browse.deleteLabelPrompt(label.name),
-                        message: key == nil ? Browse.deleteLabelMessage : Browse.deletePlaceMessage
+                        message: label.place == nil ? Browse.deleteLabelMessage : Browse.deletePlaceMessage
                     ) { store.deleteLabel(label.id) }
                 ),
                 filter: $filter,

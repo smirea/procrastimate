@@ -2951,6 +2951,117 @@
 				[]
 			],
 			"output": "No date"
+		},
+		{
+			"fn": "listedScreen",
+			"test": "listedScreen › a saved place’s label screen lists the place, and any other screen itself",
+			"input": [
+				{
+					"id": "l-rewe",
+					"kind": "label"
+				},
+				[
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "l-rewe",
+						"name": "l-rewe",
+						"place": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"radius": 150
+						}
+					}
+				]
+			],
+			"output": {
+				"key": "52.5000,13.4000",
+				"kind": "place"
+			}
+		},
+		{
+			"fn": "listedScreen",
+			"test": "listedScreen › a saved place’s label screen lists the place, and any other screen itself",
+			"input": [
+				{
+					"id": "calls",
+					"kind": "label"
+				},
+				[
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "l-rewe",
+						"name": "l-rewe",
+						"place": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"radius": 150
+						}
+					},
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "calls",
+						"name": "calls",
+						"place": null
+					}
+				]
+			],
+			"output": {
+				"id": "calls",
+				"kind": "label"
+			}
+		},
+		{
+			"fn": "listedScreen",
+			"test": "listedScreen › a saved place’s label screen lists the place, and any other screen itself",
+			"input": [
+				{
+					"kind": "inbox"
+				},
+				[
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "l-rewe",
+						"name": "l-rewe",
+						"place": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"radius": 150
+						}
+					}
+				]
+			],
+			"output": {
+				"kind": "inbox"
+			}
+		},
+		{
+			"fn": "listedScreen",
+			"test": "listedScreen › a saved place’s label screen lists the place, and any other screen itself",
+			"input": [
+				null,
+				[
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "l-rewe",
+						"name": "l-rewe",
+						"place": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"radius": 150
+						}
+					}
+				]
+			],
+			"output": null
 		}
 	]
 }

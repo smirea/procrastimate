@@ -233,8 +233,11 @@ export function screenHolds(screen: Screen | null, task: Task, today: DateKey, z
 	}
 }
 
-/** A saved place's screen is its label's, but it holds the tasks at the place. */
-function holding(screen: Screen | null, labels: readonly Label[]): Screen | null {
+/**
+ * The screen whose tasks `screen` lists: a saved place's label screen lists the tasks at the place, which never carry
+ * the place as a label.
+ */
+export function listedScreen(screen: Screen | null, labels: readonly Label[]): Screen | null {
 	const place = screen?.kind === 'label' ? labels.find(label => label.id === screen.id)?.place : null;
 	return place ? { kind: 'place', key: placeKey(place) } : screen;
 }
@@ -250,7 +253,7 @@ export function addedScreen(
 	today: DateKey,
 	zone?: string,
 ): Screen | null {
-	if (screenHolds(holding(screen, labels), task, today, zone)) return null;
+	if (screenHolds(listedScreen(screen, labels), task, today, zone)) return null;
 	if (task.projectId) return { kind: 'project', id: task.projectId };
 	return { kind: scheduledDue(task, today, zone) ? 'inbox' : 'no-date' };
 }
