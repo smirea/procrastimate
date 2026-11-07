@@ -8,7 +8,6 @@
 	import FilterMenu from './FilterMenu.svelte';
 	import PendingCount from './PendingCount.svelte';
 	import { listFilters } from '../list-filters.svelte.ts';
-	import { session } from '../session.svelte.ts';
 	import { motion } from '../motion.ts';
 
 	let {

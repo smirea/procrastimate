@@ -357,6 +357,11 @@ class Store {
 		else this.#heldSettings = { ...this.#heldSettings, ...patch };
 	}
 
+	/** Runs a rule on the user's own data when `id` is theirs; a shared space's project, section, or label stays as it is. */
+	#onOwn(id: string, rule: (data: rules.StoreData) => rules.StoreData) {
+		if (this.homeOf(id) === null) this.#apply(rule(this.own));
+	}
+
 	#creation = (): rules.Creation => ({ id: newId(), now: Date.now() });
 
 	/** Every shared entity's owner, which decides the space a command runs in. */
@@ -505,11 +510,11 @@ class Store {
 	}
 
 	renameProject(id: string, name: string) {
-		if (this.homeOf(id) === null) this.#apply(rules.renameProject(this.own, id, name));
+		this.#onOwn(id, data => rules.renameProject(data, id, name));
 	}
 
 	setProjectIcon(id: string, icon: ProjectIcon | null) {
-		if (this.homeOf(id) === null) this.#apply(rules.setProjectIcon(this.own, id, icon));
+		this.#onOwn(id, data => rules.setProjectIcon(data, id, icon));
 	}
 
 	deleteProject(id: string): rules.Deleted | undefined {
@@ -517,7 +522,7 @@ class Store {
 	}
 
 	moveProject(id: string, index: number) {
-		if (this.homeOf(id) === null) this.#apply(rules.moveProject(this.own, id, index));
+		this.#onOwn(id, data => rules.moveProject(data, id, index));
 	}
 
 	addSection(projectId: string, name: string): Section | undefined {
@@ -528,15 +533,15 @@ class Store {
 	}
 
 	renameSection(id: string, name: string) {
-		if (this.homeOf(id) === null) this.#apply(rules.renameSection(this.own, id, name));
+		this.#onOwn(id, data => rules.renameSection(data, id, name));
 	}
 
 	setSectionCounter(id: string, counter: SectionCounter) {
-		if (this.homeOf(id) === null) this.#apply(rules.setSectionCounter(this.own, id, counter));
+		this.#onOwn(id, data => rules.setSectionCounter(data, id, counter));
 	}
 
 	moveSection(id: string, index: number) {
-		if (this.homeOf(id) === null) this.#apply(rules.moveSection(this.own, id, index));
+		this.#onOwn(id, data => rules.moveSection(data, id, index));
 	}
 
 	deleteSection(id: string): rules.Deleted | undefined {
@@ -550,7 +555,7 @@ class Store {
 	}
 
 	renameLabel(id: string, name: string) {
-		if (this.homeOf(id) === null) this.#apply(rules.renameLabel(this.own, id, name));
+		this.#onOwn(id, data => rules.renameLabel(data, id, name));
 	}
 
 	/** Null when a label already has the name. */
@@ -561,7 +566,7 @@ class Store {
 	}
 
 	setLabelColor(id: string, color: LabelColor) {
-		if (this.homeOf(id) === null) this.#apply(rules.setLabelColor(this.own, id, color));
+		this.#onOwn(id, data => rules.setLabelColor(data, id, color));
 	}
 
 	deleteLabel(id: string): rules.Deleted | undefined {

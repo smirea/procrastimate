@@ -8,7 +8,7 @@
 	import { formatDue, repeatLabel } from 'shared/format.ts';
 	import { progressOf } from 'shared/subtasks.ts';
 	import { formatEvent, scheduledDue } from 'shared/triggers.ts';
-	import type { Task } from 'shared/task.ts';
+	import { DEFAULT_PRIORITY, type Task } from 'shared/task.ts';
 	import LinkedText from './LinkedText.svelte';
 	import DuePicker from './DuePicker.svelte';
 	import PriorityPicker from './PriorityPicker.svelte';
@@ -46,7 +46,7 @@
 			task.event ? `Event ${formatEvent(task.event)}${eventDue ? `, ${formatDue(eventDue, clock.today)}` : ''}` : null,
 			!task.event && task.due ? `Due ${formatDue(task.due, clock.today)}` : null,
 			!task.event && task.due && task.recurrence ? repeatLabel(task.recurrence, task.due) : null,
-			task.priority !== 4 ? PRIORITIES[task.priority].label : null,
+			task.priority !== DEFAULT_PRIORITY ? PRIORITIES[task.priority].label : null,
 			task.reminders.length ? reminderChipLabel(task.reminders.length) : null,
 			labels.length ? `Labels ${labels.map((l) => l.name).join(', ')}` : null,
 		].filter((fact) => fact !== null),
@@ -82,7 +82,7 @@
 		<h2 class="text-[19px] font-semibold break-words"><LinkedText text={task.title} /></h2>
 	</div>
 	<!-- Only what is set shows: an empty chip invites a pick this page cannot take. -->
-	{#if task.event || task.due || task.priority !== 4 || task.reminders.length || labels.length}
+	{#if task.event || task.due || task.priority !== DEFAULT_PRIORITY || task.reminders.length || labels.length}
 		<ul class="sr-only" aria-label="Details">
 			{#each facts as fact (fact)}<li>{fact}</li>{/each}
 		</ul>
@@ -96,7 +96,7 @@
 				<DuePicker due={task.due} onchange={noop} />
 				{#if task.recurrence}<RecurrencePicker recurrence={task.recurrence} due={task.due} onchange={noop} />{/if}
 			{/if}
-			{#if task.priority !== 4}<PriorityPicker priority={task.priority} onchange={noop} />{/if}
+			{#if task.priority !== DEFAULT_PRIORITY}<PriorityPicker priority={task.priority} onchange={noop} />{/if}
 			{#if task.reminders.length}<ReminderPicker due={eventDue ?? task.due} reminders={task.reminders} onchange={noop} />{/if}
 			{#if labels.length}<LabelPicker labelIds={task.labelIds} {labels} canCreate={false} onchange={noop} />{/if}
 		</div>

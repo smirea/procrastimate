@@ -47,9 +47,9 @@ export function quickAddDefaults(screen?: Screen) {
 	return own;
 }
 
-/** Quick add just saved `task` on the list at `path`. */
-export function reuseAdded(path: string, task: Task) {
-	reused = { path, task };
+/** Quick add just saved `task` on the open list. */
+export function reuseAdded(task: Task) {
+	reused = { path: page.url.pathname, task };
 }
 
 /** Leaving the list ends the reuse. */

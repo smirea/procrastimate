@@ -5,7 +5,6 @@
 	import ListMenu from '#lib/components/ListMenu.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { listFilters } from '#lib/list-filters.svelte.ts';
-	import { session } from '#lib/session.svelte.ts';
 	import { clock } from '#lib/clock.svelte.ts';
 	import { eventGroups } from 'shared/triggers.ts';
 	import { eventTasks } from 'shared/views.ts';

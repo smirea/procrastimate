@@ -15,7 +15,6 @@
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { listFilters } from '#lib/list-filters.svelte.ts';
-	import { session } from '#lib/session.svelte.ts';
 	import { toastDeleted } from '#lib/completion.ts';
 	import { leaving, motion } from '#lib/motion.ts';
 	import { sheets } from '#lib/sheets.svelte.ts';

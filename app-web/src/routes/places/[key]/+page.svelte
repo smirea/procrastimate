@@ -8,7 +8,6 @@
 	import ListMenu from '#lib/components/ListMenu.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { listFilters } from '#lib/list-filters.svelte.ts';
-	import { session } from '#lib/session.svelte.ts';
 	import { formatRadius, placeGroups, savedPlaceAt } from 'shared/triggers.ts';
 	import { placeTasks } from 'shared/views.ts';
 	import { filterKey } from 'shared/list-filters.ts';

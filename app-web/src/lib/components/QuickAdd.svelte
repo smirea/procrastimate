@@ -47,7 +47,6 @@
 	import { attachments, droppedFiles, isImageFile } from '../attachments/attachments.svelte.ts';
 	import FileIcon from './FileIcon.svelte';
 	import { reuseAdded } from '../screen.ts';
-	import { page } from '$app/state';
 
 	let { defaults }: { defaults: ListDefaults } = $props();
 
@@ -183,7 +182,7 @@
 		const typing = subtaskTask(subtaskParsed, subtaskLiteral);
 		for (const child of [...subtaskRows.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
 		if (drafted.length) void attachments.attach(task.id, drafted.map((d) => d.file));
-		reuseAdded(page.url.pathname, task);
+		reuseAdded(task);
 		return task;
 	}
 

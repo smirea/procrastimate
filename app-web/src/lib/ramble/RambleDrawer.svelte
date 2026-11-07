@@ -15,12 +15,11 @@
 	import { parseRamble, resolveOutline, type RambleTask, type RambleToken } from 'shared/ramble.ts';
 	import type { RambleOutline } from 'shared/ramble/outline.ts';
 	import type { RambleMode } from 'shared/dictation.ts';
-	import { toDateKey, toTimeOfDay } from 'shared/task.ts';
+	import { DEFAULT_PRIORITY, toDateKey, toTimeOfDay } from 'shared/task.ts';
 	import { api } from '../api.ts';
 	import { Outliner, smartTasks } from './outliner.ts';
 	import { rambleNewTask } from 'shared/ramble-fill.ts';
 	import { creationHome } from 'shared/space-routing.ts';
-	import { DEFAULT_PRIORITY } from 'shared/task.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
 	import DuePicker from '../components/DuePicker.svelte';
 	import PriorityPicker from '../components/PriorityPicker.svelte';
@@ -641,7 +640,7 @@
 {#snippet chips(entry: RambleEntry)}
 	{@const project = store.project(entry.projectId)}
 	{@const labels = store.labelsOf(entry)}
-	{#if entry.due || entry.recurrence || entry.reminders.length || (entry.priority && entry.priority !== 4) || project || labels.length}
+	{#if entry.due || entry.recurrence || entry.reminders.length || (entry.priority && entry.priority !== DEFAULT_PRIORITY) || project || labels.length}
 		<div class="mt-1.5 flex flex-wrap gap-1.5">
 			{#if entry.due}
 				{#key formatDue(entry.due, clock.today)}
@@ -656,7 +655,7 @@
 			{#each entry.reminders as reminder, i (i)}
 				<span class="token" style="color: var(--tone-week)" in:pop><Bell size={13} weight="fill" />{formatReminder(reminder, clock.today)}</span>
 			{/each}
-			{#if entry.priority && entry.priority !== 4}
+			{#if entry.priority && entry.priority !== DEFAULT_PRIORITY}
 				{#key entry.priority}
 					<span class="token" style={`color: ${PRIORITIES[entry.priority].tone}`} in:pop><Flag size={13} weight="fill" />P{entry.priority}</span>
 				{/key}
