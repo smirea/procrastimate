@@ -42,7 +42,7 @@ Preconditions:
 - **Task.** Opening `Buy milk` presents task details.
 - **Search.** Searching `milk` opens Browse with `milk` in its field and shows `Buy milk` and not `Call mom`. The rules are covered by `searchReturnsOpenHitsBeforeCompletedOnes`.
 - **Today and overdue.** With the clock a day earlier, add `Overdue task today`, then return to the pinned day and add `Pay rent today`. Inbox lists both, the overdue readout names `Overdue task`, and the today readout names `Pay rent`.
-- **Spotlight.** After `Buy milk` is completed, the indexed titles are `Call mom` only. The rules are covered by `spotlightIndexesOpenTasksOnly`.
+- **Spotlight.** After `Buy milk` is completed, the indexed titles are `Call mom` only. Spotlight indexes `Triggers.openTasks`, which `VectorTests` replays from `shared/triggers.ts`.
 
 ## Gotchas
 
