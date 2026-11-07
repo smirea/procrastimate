@@ -7,12 +7,11 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import LinkSimple from 'phosphor-svelte/lib/LinkSimple';
 	import UserPlus from 'phosphor-svelte/lib/UserPlus';
-	import { type Person, type ShareAudience, type ShareTarget, type ShareView } from 'shared/sharing.ts';
+	import { shareSuggestions, type Person, type ShareAudience, type ShareTarget, type ShareView } from 'shared/sharing.ts';
 	import type { Role } from 'shared/values.ts';
 	import PersonName from './PersonName.svelte';
 	import { api } from '../api.ts';
 	import { OptimisticList, type Row } from '../optimistic.svelte.ts';
-	import { shareSuggestions } from '../share-suggestions.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
 	import { settled } from '../sync.svelte.ts';

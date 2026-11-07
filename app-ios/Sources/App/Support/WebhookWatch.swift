@@ -14,7 +14,7 @@ final class WebhookWatch {
     /// Asking starts the read, so the first answer is false until it lands.
     func watches(_ projectID: String) -> Bool {
         if Date.now.timeIntervalSince(readAt) > 60 { refresh() }
-        return hooks.contains { $0.disabledAt == nil && ($0.projectIds.isEmpty || $0.projectIds.contains(projectID)) }
+        return Webhooks.watches(hooks, projectID)
     }
 
     private func refresh() {

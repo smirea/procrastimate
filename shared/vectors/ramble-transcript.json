@@ -1,0 +1,162 @@
+{
+	"module": "ramble-transcript",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "joinTranscript",
+			"test": "joinTranscript › joins a partial after the committed text",
+			"input": [
+				"Buy milk",
+				"tomorrow"
+			],
+			"output": {
+				"partialStart": 9,
+				"text": "Buy milk tomorrow"
+			}
+		},
+		{
+			"fn": "joinTranscript",
+			"test": "joinTranscript › joins a partial after the committed text",
+			"input": [
+				"Buy milk ",
+				"tomorrow"
+			],
+			"output": {
+				"partialStart": 9,
+				"text": "Buy milk tomorrow"
+			}
+		},
+		{
+			"fn": "joinTranscript",
+			"test": "joinTranscript › joins a partial after the committed text",
+			"input": [
+				"",
+				"  buy milk  "
+			],
+			"output": {
+				"partialStart": 0,
+				"text": "buy milk"
+			}
+		},
+		{
+			"fn": "joinTranscript",
+			"test": "joinTranscript › joins a partial after the committed text",
+			"input": [
+				"Buy milk",
+				""
+			],
+			"output": {
+				"partialStart": 8,
+				"text": "Buy milk"
+			}
+		},
+		{
+			"fn": "caption",
+			"test": "caption › tints metadata by kind and spoken commands as commands",
+			"input": [
+				"buy milk tomorrow next task call mom",
+				[
+					{
+						"end": 27,
+						"kind": "separator",
+						"start": 18,
+						"text": "next task"
+					},
+					{
+						"end": 17,
+						"kind": "due",
+						"start": 9,
+						"text": "tomorrow"
+					}
+				]
+			],
+			"output": [
+				{
+					"kind": null,
+					"text": "buy milk "
+				},
+				{
+					"kind": "due",
+					"text": "tomorrow"
+				},
+				{
+					"kind": null,
+					"text": " "
+				},
+				{
+					"kind": "command",
+					"text": "next task"
+				},
+				{
+					"kind": null,
+					"text": " call mom"
+				}
+			]
+		},
+		{
+			"fn": "caption",
+			"test": "caption › a long transcript shows its end, cut at a word, and a token cut at the start keeps its tail",
+			"input": [
+				"one two three four five",
+				[
+					{
+						"end": 13,
+						"kind": "priority",
+						"start": 4,
+						"text": "two three"
+					}
+				],
+				12
+			],
+			"output": [
+				{
+					"kind": null,
+					"text": "… "
+				},
+				{
+					"kind": null,
+					"text": "four five"
+				}
+			]
+		},
+		{
+			"fn": "caption",
+			"test": "caption › a long transcript shows its end, cut at a word, and a token cut at the start keeps its tail",
+			"input": [
+				"one two three four five",
+				[
+					{
+						"end": 18,
+						"kind": "priority",
+						"start": 8,
+						"text": "three four"
+					}
+				],
+				12
+			],
+			"output": [
+				{
+					"kind": null,
+					"text": "… "
+				},
+				{
+					"kind": "priority",
+					"text": "four"
+				},
+				{
+					"kind": null,
+					"text": " five"
+				}
+			]
+		},
+		{
+			"fn": "caption",
+			"test": "caption › an empty transcript has no parts",
+			"input": [
+				"",
+				[]
+			],
+			"output": []
+		}
+	]
+}

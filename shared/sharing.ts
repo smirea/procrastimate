@@ -36,6 +36,30 @@ export type ShareAudience = z.infer<typeof shareAudienceSchema>;
 /** How people search matches a name, on the server and on each client's instant local pass. */
 export const namePrefixed = (name: string, q: string) => name.toLowerCase().startsWith(q.toLowerCase());
 
+/**
+ * Who the share sheet offers for `q`: people the space has already met match at once, and the server's answer for the
+ * same query joins them once it lands. Neither offers this user or anyone the list is already shared with.
+ */
+export function shareSuggestions({
+	q,
+	me,
+	known,
+	found,
+	granted,
+}: {
+	q: string;
+	me: string | null;
+	known: readonly Person[];
+	found: { q: string; people: readonly Person[] } | null;
+	granted: readonly string[];
+}): Person[] {
+	if (!q) return [];
+	const local = known.filter(p => p.id !== me && namePrefixed(p.name, q));
+	const remote = found?.q === q ? found.people : [];
+	const all = [...local, ...remote.filter(p => !local.some(k => k.id === p.id))];
+	return all.filter(p => !granted.includes(p.id));
+}
+
 /** A `shares` row as the store hands it out. Revoking deletes it. */
 export const shareSchema = sharesRowSchema.omit({ userId: true });
 export type Share = z.infer<typeof shareSchema>;

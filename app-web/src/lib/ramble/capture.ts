@@ -1,10 +1,20 @@
 import { DEVICE_PROTOCOL_PREFIX } from 'shared/auth.ts';
-import { RAMBLE_SOCKET_PATH, RAMBLE_SOCKET_PROTOCOL, type RambleServerMessage } from 'shared/ramble/protocol.ts';
+import {
+	RAMBLE_FINAL_COMMIT_MS,
+	RAMBLE_FRAME_BYTES,
+	RAMBLE_SAMPLE_RATE,
+	RAMBLE_SOCKET_PATH,
+	RAMBLE_SOCKET_PROTOCOL,
+	RAMBLE_STOP_WAIT_MARGIN_MS,
+	rambleServerMessageSchema,
+	type RambleClientMessage,
+} from 'shared/ramble/protocol.ts';
 import type { RambleOutline } from 'shared/ramble/outline.ts';
 import { voiceCapture, type DictationChoice } from 'shared/dictation.ts';
 import { NativeDictation, speechRecognitionConstructor, type DictationEnd } from '../dictation.ts';
 import { installId } from '../device.ts';
-import { joinTranscript } from './transcript.ts';
+import { reportError } from '../sentry.ts';
+import { joinTranscript } from 'shared/ramble/transcript.ts';
 
 export type CaptureStop = 'stopped' | 'denied' | 'unsupported' | 'error' | 'unavailable' | 'limit';
 
@@ -17,10 +27,10 @@ const WORKLET = `
 class RamblePCM extends AudioWorkletProcessor {
 	constructor() {
 		super();
-		this.step = sampleRate / 16000;
+		this.step = sampleRate / ${RAMBLE_SAMPLE_RATE};
 		this.frac = 0;
 		this.fill = 0;
-		this.pending = new Int16Array(1600);
+		this.pending = new Int16Array(${RAMBLE_FRAME_BYTES / 2});
 	}
 	process(inputs) {
 		const channel = inputs[0] && inputs[0][0];
@@ -31,9 +41,9 @@ class RamblePCM extends AudioWorkletProcessor {
 			const sample = Math.max(-1, Math.min(1, channel[Math.floor(index)] || 0));
 			peak = Math.max(peak, Math.abs(sample));
 			this.pending[this.fill++] = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
-			if (this.fill === 1600) {
+			if (this.fill === ${RAMBLE_FRAME_BYTES / 2}) {
 				this.port.postMessage(this.pending.buffer, [this.pending.buffer]);
-				this.pending = new Int16Array(1600);
+				this.pending = new Int16Array(${RAMBLE_FRAME_BYTES / 2});
 				this.fill = 0;
 			}
 			index += this.step;
@@ -142,12 +152,15 @@ function socket(options: {
 	socket.binaryType = 'arraybuffer';
 	socket.onmessage = event => {
 		if (typeof event.data !== 'string') return;
-		let message: RambleServerMessage;
+		let parsed: unknown;
 		try {
-			message = JSON.parse(event.data) as RambleServerMessage;
+			parsed = JSON.parse(event.data);
 		} catch {
 			return;
 		}
+		const read = rambleServerMessageSchema.safeParse(parsed);
+		if (!read.success) return;
+		const message = read.data;
 		switch (message.type) {
 			case 'started':
 				heard = true;
@@ -195,9 +208,8 @@ function socket(options: {
 			userStop = true;
 			stream?.getTracks().forEach(track => track.stop());
 			if (socket && socket.readyState === WebSocket.OPEN) {
-				socket.send(JSON.stringify({ type: 'stop' }));
-				// The server waits up to 6 seconds for Gemini Live's last tool calls, 3 for ElevenLabs' last text.
-				setTimeout(() => finish('stopped'), options.engine === 'gemini' ? 7000 : 3500);
+				socket.send(JSON.stringify({ type: 'stop' } satisfies RambleClientMessage));
+				setTimeout(() => finish('stopped'), RAMBLE_FINAL_COMMIT_MS[options.engine] + RAMBLE_STOP_WAIT_MARGIN_MS);
 			} else finish('stopped');
 		},
 	};

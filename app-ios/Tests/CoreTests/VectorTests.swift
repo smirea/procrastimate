@@ -135,6 +135,9 @@ let handlers: [String: Handler] = [
     "task-menus": taskMenusVector,
     "task-details": taskDetailsVector,
     "quick-add-merge": quickAddMergeVector,
+    "sharing": sharingVector,
+    "webhooks": webhooksVector,
+    "ramble-transcript": rambleTranscriptVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -1052,6 +1055,56 @@ private struct MergePlacedInput: Decodable {
             "priority": try optional(placed.priority), "projectId": try optional(placed.projectId),
             "sectionId": try optional(placed.sectionId),
         ])
+    default: throw unknown(fn)
+    }
+}
+
+private struct SuggestionsInput: Decodable {
+    struct Found: Decodable {
+        let q: String
+        let people: [Person]
+    }
+
+    let q: String
+    let me: String?
+    let known: [Person]
+    let found: Found?
+    let granted: [String]
+}
+
+@Sendable func sharingVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "shareSuggestions":
+        let input = try a(0, as: SuggestionsInput.self)
+        return try json(Sharing.suggestions(
+            q: input.q, me: input.me, known: input.known, found: input.found.map { ($0.q, $0.people) }, granted: input.granted
+        ))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func webhooksVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "watchedByWebhook": return try json(Webhooks.watches(a(0), a(1)))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func rambleTranscriptVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "joinTranscript":
+        let joined = Ramble.joinTranscript(try a(0), try a(1))
+        return object(["text": .string(joined.text), "partialStart": try json(joined.partialStart)])
+    case "caption":
+        let parts = try a.values.count > 2 ? Ramble.caption(a(0), a(1), limit: a(2)) : Ramble.caption(a(0), a(1))
+        return .array(parts.map { part in
+            let kind: JSONValue = switch part.kind {
+            case nil: .null
+            case .command: "command"
+            case let .metadata(kind)?: .string(kind.rawValue)
+            }
+            return object(["text": .string(part.text), "kind": kind])
+        })
     default: throw unknown(fn)
     }
 }

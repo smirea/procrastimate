@@ -7,6 +7,7 @@ import { labelIdsOf, lastUsed, projectIdsOf, type Named } from '../../shared/nam
 import {
 	RAMBLE_BYTES_PER_SECOND,
 	RAMBLE_DAILY_SECONDS,
+	RAMBLE_FINAL_COMMIT_MS,
 	RAMBLE_MAX_FRAME_BYTES,
 	RAMBLE_SAMPLE_RATE,
 	RAMBLE_SESSION_SECONDS,
@@ -294,8 +295,6 @@ export const dbRambleData = (db: Db): RambleData => ({
 	usage: userId => dbRambleUsage(db, userId),
 });
 
-/** Gemini Live may still be calling tools for the last words when the audio ends. */
-const FINAL_COMMIT_MS: Record<RambleEngine, number> = { elevenlabs: 3000, gemini: 6000 };
 const CONNECT_MS = 10_000;
 /** A socket that stops sending anything ends after this, so a dropped client does not hold the object open. */
 const IDLE_MS = 60_000;
@@ -419,7 +418,7 @@ function session({
 	function finish(reason: RambleEndReason) {
 		if (ending || ended) return;
 		ending = reason;
-		later(FINAL_COMMIT_MS[engine] + (started ? 0 : CONNECT_MS), () => end(reason));
+		later(RAMBLE_FINAL_COMMIT_MS[engine] + (started ? 0 : CONNECT_MS), () => end(reason));
 		flush();
 	}
 

@@ -35,7 +35,8 @@
 	import { showAdded } from '../show-added.ts';
 	import { addableLabels, addableProjects } from '../screen.ts';
 	import { listenRamble, type CaptureStop, type RambleListen } from './capture.ts';
-	import { caption, keyed, type RambleEntry } from './entries.ts';
+	import { keyed, type RambleEntry } from './entries.ts';
+	import { caption } from 'shared/ramble/transcript.ts';
 	import Waveform, { type LevelMeter } from './Waveform.svelte';
 
 	let { defaults }: { defaults: ListDefaults } = $props();

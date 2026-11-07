@@ -1,0 +1,107 @@
+{
+	"module": "webhooks",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "watchedByWebhook",
+			"test": "watchedByWebhook › a live hook watches the projects it names, or every project when it names none",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"createdBy": "me",
+						"cursor": 0,
+						"deliveredAt": null,
+						"disabledAt": null,
+						"failingSince": null,
+						"id": "h-home",
+						"lastError": null,
+						"projectIds": [
+							"home"
+						],
+						"url": "https://agent.example/hook"
+					}
+				],
+				"home"
+			],
+			"output": true
+		},
+		{
+			"fn": "watchedByWebhook",
+			"test": "watchedByWebhook › a live hook watches the projects it names, or every project when it names none",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"createdBy": "me",
+						"cursor": 0,
+						"deliveredAt": null,
+						"disabledAt": null,
+						"failingSince": null,
+						"id": "h-home",
+						"lastError": null,
+						"projectIds": [
+							"home"
+						],
+						"url": "https://agent.example/hook"
+					}
+				],
+				"work"
+			],
+			"output": false
+		},
+		{
+			"fn": "watchedByWebhook",
+			"test": "watchedByWebhook › a live hook watches the projects it names, or every project when it names none",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"createdBy": "me",
+						"cursor": 0,
+						"deliveredAt": null,
+						"disabledAt": null,
+						"failingSince": null,
+						"id": "h-",
+						"lastError": null,
+						"projectIds": [],
+						"url": "https://agent.example/hook"
+					}
+				],
+				"work"
+			],
+			"output": true
+		},
+		{
+			"fn": "watchedByWebhook",
+			"test": "watchedByWebhook › a disabled hook watches nothing",
+			"input": [
+				[
+					{
+						"createdAt": 0,
+						"createdBy": "me",
+						"cursor": 0,
+						"deliveredAt": null,
+						"disabledAt": 5,
+						"failingSince": null,
+						"id": "h-",
+						"lastError": null,
+						"projectIds": [],
+						"url": "https://agent.example/hook"
+					}
+				],
+				"home"
+			],
+			"output": false
+		},
+		{
+			"fn": "watchedByWebhook",
+			"test": "watchedByWebhook › a disabled hook watches nothing",
+			"input": [
+				[],
+				"home"
+			],
+			"output": false
+		}
+	]
+}

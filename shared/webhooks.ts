@@ -66,3 +66,7 @@ export const webhookDeliverySchema = z
 			'The body of a webhook POST. It carries ids only, never titles or comment text; read them through the API.',
 	});
 export type WebhookDelivery = z.infer<typeof webhookDeliverySchema>;
+
+/** Whether a live webhook watches the user's own project. A hook with no projects watches them all. */
+export const watchedByWebhook = (hooks: readonly Webhook[], projectId: string) =>
+	hooks.some(hook => hook.disabledAt === null && (hook.projectIds.length === 0 || hook.projectIds.includes(projectId)));

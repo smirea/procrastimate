@@ -19,6 +19,13 @@ export const RAMBLE_BYTES_PER_SECOND = RAMBLE_SAMPLE_RATE * 2;
 export const RAMBLE_FRAME_BYTES = RAMBLE_BYTES_PER_SECOND / 10;
 export const RAMBLE_MAX_FRAME_BYTES = RAMBLE_BYTES_PER_SECOND;
 
+/**
+ * How long the server waits after `stop` for each engine's last words: Gemini Live may still be calling tools for them.
+ * A client waits a second longer for `ended` before it gives up on the socket.
+ */
+export const RAMBLE_FINAL_COMMIT_MS = { elevenlabs: 3000, gemini: 6000 } as const;
+export const RAMBLE_STOP_WAIT_MARGIN_MS = 1000;
+
 export const RAMBLE_SESSION_SECONDS = 5 * 60;
 export const RAMBLE_DAILY_SECONDS = 60 * 60;
 

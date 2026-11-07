@@ -1,0 +1,258 @@
+{
+	"module": "sharing",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "shareSuggestions",
+			"test": "shareSuggestions › people the space has met match before the server answers, and never this user",
+			"input": [
+				{
+					"found": null,
+					"granted": [],
+					"known": [
+						{
+							"id": "me",
+							"kind": "human",
+							"name": "Rosa",
+							"ownerId": null
+						},
+						{
+							"id": "robo",
+							"kind": "ai",
+							"name": "Robo",
+							"ownerId": "me"
+						},
+						{
+							"id": "ann",
+							"kind": "human",
+							"name": "Ann",
+							"ownerId": null
+						}
+					],
+					"me": "me",
+					"q": "Ro"
+				}
+			],
+			"output": [
+				{
+					"id": "robo",
+					"kind": "ai",
+					"name": "Robo",
+					"ownerId": "me"
+				}
+			]
+		},
+		{
+			"fn": "shareSuggestions",
+			"test": "shareSuggestions › people the space has met match before the server answers, and never this user",
+			"input": [
+				{
+					"found": {
+						"people": [],
+						"q": "r"
+					},
+					"granted": [],
+					"known": [
+						{
+							"id": "me",
+							"kind": "human",
+							"name": "Rosa",
+							"ownerId": null
+						},
+						{
+							"id": "robo",
+							"kind": "ai",
+							"name": "Robo",
+							"ownerId": "me"
+						},
+						{
+							"id": "ann",
+							"kind": "human",
+							"name": "Ann",
+							"ownerId": null
+						}
+					],
+					"me": "me",
+					"q": "ro"
+				}
+			],
+			"output": [
+				{
+					"id": "robo",
+					"kind": "ai",
+					"name": "Robo",
+					"ownerId": "me"
+				}
+			]
+		},
+		{
+			"fn": "shareSuggestions",
+			"test": "shareSuggestions › the server’s answer for the same query joins them once, and people with access already drop out",
+			"input": [
+				{
+					"found": {
+						"people": [
+							{
+								"id": "robo",
+								"kind": "ai",
+								"name": "Robo",
+								"ownerId": "me"
+							},
+							{
+								"id": "ron",
+								"kind": "human",
+								"name": "Ron",
+								"ownerId": null
+							}
+						],
+						"q": "Ro"
+					},
+					"granted": [],
+					"known": [
+						{
+							"id": "me",
+							"kind": "human",
+							"name": "Rosa",
+							"ownerId": null
+						},
+						{
+							"id": "robo",
+							"kind": "ai",
+							"name": "Robo",
+							"ownerId": "me"
+						},
+						{
+							"id": "ann",
+							"kind": "human",
+							"name": "Ann",
+							"ownerId": null
+						}
+					],
+					"me": "me",
+					"q": "Ro"
+				}
+			],
+			"output": [
+				{
+					"id": "robo",
+					"kind": "ai",
+					"name": "Robo",
+					"ownerId": "me"
+				},
+				{
+					"id": "ron",
+					"kind": "human",
+					"name": "Ron",
+					"ownerId": null
+				}
+			]
+		},
+		{
+			"fn": "shareSuggestions",
+			"test": "shareSuggestions › the server’s answer for the same query joins them once, and people with access already drop out",
+			"input": [
+				{
+					"found": {
+						"people": [
+							{
+								"id": "robo",
+								"kind": "ai",
+								"name": "Robo",
+								"ownerId": "me"
+							},
+							{
+								"id": "ron",
+								"kind": "human",
+								"name": "Ron",
+								"ownerId": null
+							}
+						],
+						"q": "Ro"
+					},
+					"granted": [
+						"robo"
+					],
+					"known": [
+						{
+							"id": "me",
+							"kind": "human",
+							"name": "Rosa",
+							"ownerId": null
+						},
+						{
+							"id": "robo",
+							"kind": "ai",
+							"name": "Robo",
+							"ownerId": "me"
+						},
+						{
+							"id": "ann",
+							"kind": "human",
+							"name": "Ann",
+							"ownerId": null
+						}
+					],
+					"me": "me",
+					"q": "Ro"
+				}
+			],
+			"output": [
+				{
+					"id": "ron",
+					"kind": "human",
+					"name": "Ron",
+					"ownerId": null
+				}
+			]
+		},
+		{
+			"fn": "shareSuggestions",
+			"test": "shareSuggestions › the server’s answer for the same query joins them once, and people with access already drop out",
+			"input": [
+				{
+					"found": {
+						"people": [
+							{
+								"id": "robo",
+								"kind": "ai",
+								"name": "Robo",
+								"ownerId": "me"
+							},
+							{
+								"id": "ron",
+								"kind": "human",
+								"name": "Ron",
+								"ownerId": null
+							}
+						],
+						"q": "Ro"
+					},
+					"granted": [],
+					"known": [
+						{
+							"id": "me",
+							"kind": "human",
+							"name": "Rosa",
+							"ownerId": null
+						},
+						{
+							"id": "robo",
+							"kind": "ai",
+							"name": "Robo",
+							"ownerId": "me"
+						},
+						{
+							"id": "ann",
+							"kind": "human",
+							"name": "Ann",
+							"ownerId": null
+						}
+					],
+					"me": "me",
+					"q": ""
+				}
+			],
+			"output": []
+		}
+	]
+}
