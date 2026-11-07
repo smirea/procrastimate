@@ -131,7 +131,7 @@ public enum RepeatMenu {
     }
     public static let units = RecurrenceUnit.allCases
     public static let week: [Weekday] = [1, 2, 3, 4, 5, 6, 0]
-    public static let intervals = 1...365
+    public static let intervals = 1...SharedConstants.maxCustomInterval
 
     /// Setting a repeat on an undated task dates it today, so presets read as they will apply.
     public static func anchor(_ due: Due?, today: DateKey) -> Due {
@@ -185,7 +185,7 @@ public enum RepeatMenu {
 /// Ports the reminder menu of `shared/task-menus.ts`.
 public enum ReminderMenu {
     /// Minutes before the due time: at due time, 10m, 30m, 1h, and 1d.
-    public static let presets = [0, 10, 30, 60, 1440]
+    public static let presets = SharedConstants.reminderPresets
 
     /// Adds a reminder unless the task already has the same one.
     public static func adding(_ reminder: Reminder, to reminders: [Reminder]) -> [Reminder]? {

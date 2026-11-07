@@ -3,8 +3,8 @@ import Foundation
 /// The date and recurrence rules of `shared/task.ts`. Calendar dates are civil (no zone), and only turning a date and
 /// time into a moment takes a time zone, which the caller passes in.
 public enum Dates {
-    /// `MAX_RECURRENCE_INTERVAL` in `shared/values.ts`. A larger interval could overflow the month math and trap.
-    public static let maxRecurrenceInterval = 999
+    /// A larger interval could overflow the month math and trap.
+    public static let maxRecurrenceInterval = SharedConstants.maxRecurrenceInterval
 
     /// Days since 1970-01-01 for a proleptic Gregorian date, from Howard Hinnant's `days_from_civil`.
     static func days(year: Int, month: Int, day: Int) -> Int {

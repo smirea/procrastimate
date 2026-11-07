@@ -7,27 +7,16 @@ public enum FileKind: String, CaseIterable, Sendable {
 
     /// The icon's tint, from the label palette, as on the web.
     public var color: LabelColor {
-        switch self {
-        case .pdf: .red
-        case .document: .blue
-        case .spreadsheet: .green
-        case .presentation: .orange
-        case .archive: .amber
-        case .audio: .pink
-        case .video: .violet
-        case .image: .teal
-        case .code: .indigo
-        case .text, .other: .gray
-        }
+        LabelColor(rawValue: SharedConstants.FileKindColors.all[rawValue] ?? "") ?? .gray
     }
 }
 
 public enum FileKinds {
     /// Each part fits one server row, under the 2 MB a Durable Object row holds.
-    public static let partBytes = 1_500_000
-    public static let maxBytes = 25_000_000
+    public static let partBytes = SharedConstants.filePartBytes
+    public static let maxBytes = SharedConstants.fileMaxBytes
     /// The server stores and answers every part as opaque bytes.
-    public static let partType = "application/octet-stream"
+    public static let partType = SharedConstants.filePartType
 
     public static func partCount(_ bytes: Int) -> Int { max(1, (bytes + partBytes - 1) / partBytes) }
 

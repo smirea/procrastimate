@@ -10,7 +10,7 @@ extension TaskItem: Ordered {}
 
 public enum Order {
     /// Below this gap a move renumbers the siblings instead of splitting it further.
-    static let minGap = 1e-9
+    static let minGap = SharedConstants.minOrderGap
 
     /// By `order`, then `createdAt`, then `id` in UTF-16 order, as JavaScript compares strings.
     static func siblings<T: Ordered>(_ a: T, _ b: T) -> Bool? {

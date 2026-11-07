@@ -98,8 +98,8 @@ final class RambleSession {
         }
         socket.send(.string(#"{"type":"stop"}"#)) { _ in }
         let token = epoch
-        // `RAMBLE_FINAL_COMMIT_MS` plus `RAMBLE_STOP_WAIT_MARGIN_MS` in `shared/ramble/protocol.ts`.
-        let wait: Duration = .milliseconds((gemini ? 6000 : 3000) + 1000)
+        let commit = gemini ? SharedConstants.RambleFinalCommitMs.gemini : SharedConstants.RambleFinalCommitMs.elevenlabs
+        let wait: Duration = .milliseconds(commit + SharedConstants.rambleStopWaitMarginMs)
         Task { @MainActor in
             try? await Task.sleep(for: wait)
             guard token == self.epoch else { return }
