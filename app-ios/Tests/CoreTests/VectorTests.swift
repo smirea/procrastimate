@@ -139,6 +139,7 @@ let handlers: [String: Handler] = [
     "webhooks": webhooksVector,
     "ramble-transcript": rambleTranscriptVector,
     "order": orderVector,
+    "shared-link": sharedLinkVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -1114,6 +1115,14 @@ private struct SuggestionsInput: Decodable {
     case "moveOrders":
         let orders = Order.moveOrders(try a(0, as: [Project].self), try a(1), try a(2))
         return .array(try orders.map { object(["id": .string($0.id), "order": try json($0.order)]) })
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func sharedLinkVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "sharedGroups": return try json(SharedLink.groups(a(0), in: a.zone))
+    case "sharedTitle": return try json(SharedLink.title(a(0)))
     default: throw unknown(fn)
     }
 }

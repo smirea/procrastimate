@@ -126,14 +126,7 @@ private struct SharedList: View {
         .feedback(self)
     }
 
-    private var title: String {
-        switch view.target.kind {
-        case .project: view.projects.first { $0.id == view.target.id }?.name ?? "Project"
-        case .label: view.labels.first { $0.id == view.target.id }.map { "@\($0.name)" } ?? "Label"
-        case .task: view.tasks.first { $0.id == view.target.id }?.title ?? "Task"
-        case .space: "\(view.owner.name)’s tasks"
-        }
-    }
+    private var title: String { SharedLink.title(view) }
 
     private func pendingTitles(listed: [TaskItem]) -> [String: [String]] {
         let shown = Set(listed.map(\.id))
@@ -142,22 +135,13 @@ private struct SharedList: View {
         }
     }
 
-    private var projectGroups: [Views.ProjectGroup] {
-        view.target.kind == .project ? Views.projectGroups(view.tasks, view.sections, view.target.id, in: store.timeZone) : []
-    }
+    private var groups: [Views.ProjectGroup] { SharedLink.groups(view, in: store.timeZone) }
 
     private var sectionGroups: [(section: ProjectSection, tasks: [TaskItem])] {
-        projectGroups.dropFirst().compactMap { group in group.section.map { ($0, group.tasks) } }
+        groups.dropFirst().compactMap { group in group.section.map { ($0, group.tasks) } }
     }
 
-    private var rows: [TaskItem] {
-        let zone = store.timeZone
-        switch view.target.kind {
-        case .project: return projectGroups.first?.tasks ?? []
-        case .label: return Views.labelTasks(view.tasks, view.target.id, in: zone)
-        case .task, .space: return Triggers.openTasks(view.tasks)
-        }
-    }
+    private var rows: [TaskItem] { groups.first?.tasks ?? [] }
 }
 
 private struct SharedTaskRow: View {
