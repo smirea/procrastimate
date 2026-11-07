@@ -262,11 +262,6 @@ public struct QuickAddDraft: Hashable, Sendable {
         return (string(units[..<start]) + inserted + tail, start + inserted.utf16.count)
     }
 
-    /// The label a `@name` token names, matched like the web's chip, ignoring case.
-    public static func labelName(_ token: QuickAdd.Token, _ labels: [Label]) -> String? {
-        labels.first { "@\($0.name)".lowercased() == token.text.lowercased() }?.name
-    }
-
     /// The date menu's presets: `Today`, `Tomorrow`, and `Next week`, the coming Monday.
     public static func datePresets(_ today: DateKey) -> [(label: String, date: DateKey)] {
         let toMonday = (8 - Dates.weekdayOf(today)) % 7

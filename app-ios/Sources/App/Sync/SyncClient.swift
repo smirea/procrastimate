@@ -324,10 +324,6 @@ final class SyncClient {
         TaskAttachments.clearLocal()
     }
 
-    private func reject() {
-        session?.end()
-    }
-
     private func rejected(_ rows: [(kind: EntityKind, id: String)]) {
         let shown = Snapshot(
             tasks: store.allTasks, projects: store.allProjects, sections: store.allSections, labels: store.allLabels,

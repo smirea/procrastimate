@@ -40,10 +40,8 @@ extension Notifications {
         )
     }
 
-    /// Whether an identifier is a scheduled moment, `at:<epoch ms>`. Any `<prefix>:<epoch ms>` counts, so a request
-    /// left from before moments were grouped, `<taskId>:<epoch ms>`, is removed instead of firing beside its group.
+    /// Whether an identifier is a scheduled moment, `at:<epoch ms>`, as `pushTag` in `shared/push.ts` writes it.
     public static func isMomentTag(_ id: String) -> Bool {
-        guard let colon = id.lastIndex(of: ":") else { return false }
-        return colon != id.startIndex && Int(id[id.index(after: colon)...]) != nil
+        id.hasPrefix("at:") && Int(id.dropFirst(3)) != nil
     }
 }

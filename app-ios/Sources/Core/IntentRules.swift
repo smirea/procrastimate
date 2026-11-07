@@ -135,11 +135,6 @@ public enum IntentRules {
         }
     }
 
-    /// Open tasks, which are the ones Spotlight lists. A completed task, and any task under one, leaves the index.
-    public static func indexedTasks(_ tasks: [TaskItem]) -> [TaskItem] {
-        Triggers.openTasks(tasks)
-    }
-
     /// Search hits in the app's order: open, then completed.
     public static func searchTasks(_ query: String, _ tasks: [TaskItem], projects: [Project], labels: [Label]) -> [TaskItem] {
         let results = Search.search(query, tasks, projects: projects, labels: labels)

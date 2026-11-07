@@ -13,6 +13,7 @@ final class IntentSession {
     let clock: AppClock
     let router: IntentRouter
     let notifications: LocalNotifications
+    let places: PlaceMonitor
 
     init(
         store: Store,
@@ -21,7 +22,8 @@ final class IntentSession {
         toasts: Toasts,
         clock: AppClock,
         router: IntentRouter,
-        notifications: LocalNotifications
+        notifications: LocalNotifications,
+        places: PlaceMonitor
     ) {
         self.store = store
         self.navigator = navigator
@@ -30,7 +32,17 @@ final class IntentSession {
         self.clock = clock
         self.router = router
         self.notifications = notifications
+        self.places = places
     }
 
     func install() { Self.current = self }
+
+    /// Everything that follows the store, brought in line before an intent answers: the open app's views do it on the
+    /// next frame, which is too late when the intent ran first, and never when the app is not showing.
+    func storeChanged() async {
+        SpotlightIndex.schedule(self)
+        WidgetSync.write(store, clock: clock)
+        await notifications.resync()
+        await places.sync()
+    }
 }

@@ -10,6 +10,8 @@ enum Launch {
     nonisolated(unsafe) static var offline = false
     /// DEBUG UI tests set this to offer a camera on the simulator. Written once in `prepare()`, like `signedIn`.
     nonisolated(unsafe) static var cameraStub = false
+    /// DEBUG UI tests set this to answer the notification prompt with a denial. Written once in `prepare()`.
+    nonisolated(unsafe) static var notificationsDenied = false
 
     static func prepare() -> AppClock {
         #if DEBUG
@@ -22,6 +24,7 @@ enum Launch {
         signedIn = options.signedIn
         offline = options.offline
         cameraStub = options.cameraStub
+        notificationsDenied = options.notificationsDenied
         if options.reset { StoreLocation.reset() }
         return options.clock(system: .system)
         #else

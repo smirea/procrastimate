@@ -115,13 +115,6 @@ import Testing
         #expect(inserted.caret == 15)
     }
 
-    @Test func labelChipsNameTheLabelIgnoringCase() throws {
-        var draft = QuickAddDraft(defaults: .init())
-        draft.setText("Ping @CALLS")
-        let token = try #require(parse(draft).tokens.first { $0.kind == .label })
-        #expect(QuickAddDraft.labelName(token, labels) == "Calls")
-    }
-
     @Test func aPickClearsEveryCopyOfARepeatedPhrase() {
         var draft = QuickAddDraft(defaults: .init())
         draft.setText("Water every mon every fri p1")

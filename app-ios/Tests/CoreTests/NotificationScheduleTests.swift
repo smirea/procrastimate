@@ -29,12 +29,12 @@ import Testing
         let held = [
             pending(schedule[0]),
             Notifications.Pending(id: "at:\(minutes(30))", title: "old title", body: "Today 10:30 AM", opens: schedule[1].opens),
-            Notifications.Pending(id: "done:\(minutes(5))", title: "done", body: "Today 10:05 AM", opens: nil),
+            Notifications.Pending(id: "at:\(minutes(5))", title: "done", body: "Today 10:05 AM", opens: nil),
             Notifications.Pending(id: "test", title: "Notifications are on", body: "", opens: nil),
         ]
         let change = Notifications.scheduleChange(schedule, pending: held)
         #expect(change.add.map(\.tag) == ["at:\(minutes(30))", "at:\(minutes(480))"])
-        #expect(change.remove == ["done:\(minutes(5))"])
+        #expect(change.remove == ["at:\(minutes(5))"])
         #expect(Notifications.scheduleChange(schedule, pending: schedule.map(pending)) == Notifications.ScheduleChange())
     }
 
@@ -65,13 +65,12 @@ import Testing
         #expect(one.opens == .init(kind: .task, id: "Gun courses"))
     }
 
-    @Test func momentTagsAreAPrefixAndAnEpoch() {
+    @Test func momentTagsAreAtAndAnEpoch() {
         #expect(Notifications.isMomentTag("at:1791972000000"))
-        #expect(Notifications.isMomentTag("3f2a:1791972000000"))
-        #expect(Notifications.isMomentTag("a:b:1"))
+        #expect(!Notifications.isMomentTag("3f2a:1791972000000"))
         #expect(!Notifications.isMomentTag("test"))
-        #expect(!Notifications.isMomentTag(":1"))
-        #expect(!Notifications.isMomentTag("task:soon"))
+        #expect(!Notifications.isMomentTag("at:"))
+        #expect(!Notifications.isMomentTag("at:soon"))
     }
 
 }

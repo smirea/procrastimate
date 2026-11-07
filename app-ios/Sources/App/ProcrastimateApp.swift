@@ -41,6 +41,8 @@ struct ProcrastimateApp: App {
         sync.session = auth
         sync.toasts = toasts
         let attachments = TaskAttachments(store: store, toasts: toasts)
+        // Created at launch so a relaunch for a place crossing finds its listener.
+        let places = PlaceMonitor(store: store, clock: clock)
         let session = IntentSession(
             store: store,
             navigator: navigator,
@@ -48,12 +50,11 @@ struct ProcrastimateApp: App {
             toasts: toasts,
             clock: clock,
             router: router,
-            notifications: notifications
+            notifications: notifications,
+            places: places
         )
         session.install()
         ProcrastimateShortcuts.updateAppShortcutParameters()
-        // Created at launch so a relaunch for a place crossing finds its listener.
-        let places = PlaceMonitor(store: store, clock: clock)
         _places = State(initialValue: places)
         _calendar = State(initialValue: CalendarSync(store: store, clock: clock))
         Task { await places.start() }

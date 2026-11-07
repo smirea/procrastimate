@@ -43,11 +43,7 @@ final class LocalNotifications: NSObject {
         self.store = store
         self.navigator = navigator
         self.clock = clock
-        #if DEBUG
-        simulatesDenial = (try? LaunchOptions.parse(ProcessInfo.processInfo.environment))?.notificationsDenied ?? false
-        #else
-        simulatesDenial = false
-        #endif
+        simulatesDenial = Launch.notificationsDenied
         super.init()
         center.delegate = self
     }

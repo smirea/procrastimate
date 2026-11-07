@@ -253,12 +253,12 @@ enum IntentEffects {
 
     static func spotlightEntities() -> [TaskEntity] {
         let (snapshot, clock) = snapshot()
-        return IntentRules.indexedTasks(snapshot.tasks).map(entity(snapshot, clock))
+        return Triggers.openTasks(snapshot.tasks).map(entity(snapshot, clock))
     }
 
     static func spotlightEntities(ids: [String]) -> (keep: [TaskEntity], drop: [String]) {
         let (snapshot, clock) = snapshot()
-        let open = Dictionary(uniqueKeysWithValues: IntentRules.indexedTasks(snapshot.tasks).map { ($0.id, $0) })
+        let open = Dictionary(uniqueKeysWithValues: Triggers.openTasks(snapshot.tasks).map { ($0.id, $0) })
         let make = entity(snapshot, clock)
         var keep: [TaskEntity] = []
         var drop: [String] = []
@@ -274,14 +274,10 @@ enum IntentEffects {
 
     /// Returns once the local database holds the command, since the system may suspend the process as soon as the
     /// intent returns, even with the app open.
-    /// Runs the change, then writes the notification schedule before answering: the open app's view does that on the
-    /// next frame, which is too late when the intent ran first, and never when the app is not showing.
     private static func withStore<T>(_ body: (Store, AppClock, IntentSession) -> T) async -> T {
         let session = IntentSession.current!
         let result = body(session.store, session.clock, session)
-        SpotlightIndex.schedule(session)
-        WidgetSync.write(session.store, clock: session.clock)
-        await session.notifications.resync()
+        await session.storeChanged()
         await SyncClient.shared(clock: session.clock).saved()
         return result
     }
