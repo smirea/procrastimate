@@ -101,7 +101,7 @@ struct AIAccountsSection: View {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         name = ""
-        let owner = UserDefaults.standard.string(forKey: Session.ownerKey)
+        let owner = Session.userID
         accounts.add(Person(id: "", name: trimmed, kind: .ai, ownerId: owner), failure: "Could not create \(trimmed)", toasts: toasts) {
             let account = try await APIClient.send(API.Endpoints.AiCreate.self, API.AiCreateInput(name: trimmed))
             store.rememberPeople([account])

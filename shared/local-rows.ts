@@ -94,7 +94,6 @@ export class LocalRows {
 		return settings as Settings;
 	}
 
-	/** Every owner other than the user with something that reaches them, sorted. */
 	sharers(): string[] {
 		return [...this.#owners.keys()].filter(owner => owner !== this.me).sort();
 	}

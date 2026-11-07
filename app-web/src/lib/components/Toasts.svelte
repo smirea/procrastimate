@@ -2,7 +2,9 @@
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { leaving, sheets, toasts, motion } from '../ui.svelte.ts';
+	import { leaving, motion } from '../motion.ts';
+	import { sheets } from '../sheets.svelte.ts';
+	import { toasts } from '../toasts.svelte.ts';
 
 	const overSheet = $derived(sheets.current.kind !== 'none');
 

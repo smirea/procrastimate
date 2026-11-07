@@ -6,14 +6,14 @@ import type { StoreData } from 'shared/store.ts';
 import type { Label, Project, Section, Task } from 'shared/task.ts';
 import { comments } from './comments.svelte.ts';
 import { store } from './store.svelte.ts';
-import { sheets, type Arrival } from './ui.svelte.ts';
+import { sheets, type Arrival } from './sheets.svelte.ts';
 import { unsynced } from './unsynced.svelte.ts';
 
 /**
  * What a task row reads besides the task. Inside the app it is the store. A public link's page provides its own,
  * read only, so the same list components render tasks the store never holds.
  */
-export type Lookup = {
+type Lookup = {
 	project: (id: string | null) => Project | undefined;
 	section: (id: string | null) => Section | undefined;
 	labelsOf: (task: Pick<Task, 'labelIds'>) => Label[];

@@ -1,7 +1,8 @@
 import { goto, replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import type { NotificationTarget } from 'shared/notifications.ts';
-import { notificationHref, pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
+import { pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
+import { notificationHref, TASK_PARAM } from 'shared/screens.ts';
 import { api, isUnauthorized } from './api.ts';
 import { DEVICE_KEYS, installId } from './device.ts';
 import { forgetInstallId, rememberInstallId } from './install-cache.ts';
@@ -9,9 +10,9 @@ import { refusalOver, refusedRecently, subscribe } from './push-refusal.ts';
 import { reportError } from './sentry.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
-import { sheets } from './ui.svelte.ts';
+import { sheets } from './sheets.svelte.ts';
 
-export type PushState =
+type PushState =
 	| { kind: 'checking' }
 	| { kind: 'unsupported' }
 	/** The server has no push key, as with the local Bun dev server. */
@@ -24,7 +25,7 @@ export type PushState =
 	| { kind: 'error'; message: string };
 
 /** `needs-permission` is the only one that does anything when tapped. */
-export type NotificationLine = 'on' | 'off' | 'needs-permission';
+type NotificationLine = 'on' | 'off' | 'needs-permission';
 
 const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
@@ -88,7 +89,8 @@ class Push {
 		const subscription = await registration?.pushManager.getSubscription();
 		const rekeying = localStorage.getItem(REKEY_KEY) !== null;
 		const current = subscription && sameKey(subscription.options.applicationServerKey, key) ? subscription : null;
-		if (!current && refusedRecently(localStorage.getItem(REFUSED_KEY), Date.now())) return { kind: 'off' };
+		if (!current && refusedRecently(localStorage.getItem(DEVICE_KEYS.pushRefusedAt), Date.now()))
+			return { kind: 'off' };
 		if (!registration || (!subscription && !rekeying)) {
 			await this.#subscribe(Promise.resolve('granted' as NotificationPermission), key);
 			return this.state;
@@ -168,7 +170,8 @@ class Push {
 	}
 
 	#retry() {
-		const askAgain = this.state.kind === 'off' && refusalOver(localStorage.getItem(REFUSED_KEY), Date.now());
+		const askAgain =
+			this.state.kind === 'off' && refusalOver(localStorage.getItem(DEVICE_KEYS.pushRefusedAt), Date.now());
 		if (this.state.kind === 'unavailable' || this.state.kind === 'error' || askAgain) void this.detect();
 		else if (this.state.kind === 'on') void this.#register(this.state.subscription);
 	}
@@ -178,11 +181,11 @@ export const push = new Push();
 
 /** Opens the task a notification was for when its tap launched the app on `?task=`. */
 export function openTaskFromUrl() {
-	const id = page.url.searchParams.get('task');
+	const id = page.url.searchParams.get(TASK_PARAM);
 	if (id === null) return;
 	openNotification({ kind: 'task', id });
 	const url = new URL(page.url.href);
-	url.searchParams.delete('task');
+	url.searchParams.delete(TASK_PARAM);
 	replaceState(url, page.state);
 }
 
@@ -235,8 +238,6 @@ async function rekey(
 	if (fresh !== 'refused') localStorage.removeItem(REKEY_KEY);
 	return fresh;
 }
-
-const REFUSED_KEY = DEVICE_KEYS.pushRefusedAt;
 
 function sameKey(current: ArrayBuffer | null, key: Uint8Array) {
 	if (!current) return false;

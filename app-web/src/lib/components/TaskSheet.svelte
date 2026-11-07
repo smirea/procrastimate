@@ -2,7 +2,7 @@
 	import type { Task } from 'shared/task.ts';
 	import Sheet from './Sheet.svelte';
 	import TaskDetails from './TaskDetails.svelte';
-	import type { Arrival } from '../ui.svelte.ts';
+	import type { Arrival } from '../sheets.svelte.ts';
 
 	let { task, arrival }: { task: Task; arrival: Arrival } = $props();
 </script>

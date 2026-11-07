@@ -3,13 +3,12 @@
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import type { Task } from 'shared/task.ts';
-	import { filterActive, filterTasks, NO_FILTER } from 'shared/list-filters.ts';
+	import { filterActive, NO_FILTER } from 'shared/list-filters.ts';
 	import AddTaskButton from './AddTaskButton.svelte';
 	import FilterMenu from './FilterMenu.svelte';
 	import PendingCount from './PendingCount.svelte';
 	import { listFilters } from '../list-filters.svelte.ts';
-	import { session } from '../session.svelte.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	let {
 		name,
@@ -47,7 +46,7 @@
 	/** The filter hid every row, which reads differently from a list with nothing in it. */
 	const filteredOut = $derived(
 		!!filter && filter.tasks.length > 0 && filterActive(listFilters.get(filter.list)) &&
-			filterTasks(filter.tasks, listFilters.get(filter.list), session.userId ?? '').length === 0,
+			listFilters.apply(filter.list, filter.tasks).length === 0,
 	);
 </script>
 

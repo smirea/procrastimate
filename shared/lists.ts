@@ -1,3 +1,4 @@
+import { compareNames } from './order.ts';
 import { z } from 'zod';
 import { personSchema } from './sharing.ts';
 import { sharedEntries, type SharedSpaceData } from './space-routing.ts';
@@ -5,6 +6,7 @@ import { projectsInOrder, type StoreData } from './store.ts';
 import type { DateKey, Label } from './task.ts';
 import { eventGroups, placeGroups } from './triggers.ts';
 import { dueDays, inboxTasks, openCounts, type DueDays } from './views.ts';
+import { FIXED_NAMES, type FixedScreen } from './screens.ts';
 
 /**
  * The top-level lists of tasks: every screen a user navigates to, pins, or picks a list from. Each surface (the web
@@ -52,12 +54,9 @@ const TITLES: Record<ListGroupKind, string> = {
 	labels: 'Labels',
 };
 
-const NAMES = { inbox: 'Inbox', tomorrow: 'Tomorrow', 'this-week': 'This week', 'no-date': 'No date' } as const;
-
 const rows = (due: DueDays) => due.overdue.length + due.today.length + due.days.reduce((n, g) => n + g.tasks.length, 0);
 
-const labelsByName = (labels: readonly Label[]) =>
-	labels.toSorted((a, b) => a.name.localeCompare(b.name, 'en-US', { sensitivity: 'base' }));
+const labelsByName = (labels: readonly Label[]) => labels.toSorted((a, b) => compareNames(a.name, b.name));
 
 /**
  * Every top-level list, grouped and in order, empty ones included: a list stays put while it has no tasks, so menus
@@ -67,10 +66,10 @@ const labelsByName = (labels: readonly Label[]) =>
  */
 export function listCatalog(source: ListSource, today: DateKey): ListGroup[] {
 	const { tasks, projects, labels } = source.own;
-	const fixed = (kind: keyof typeof NAMES, count: number): ListEntry => ({
+	const fixed = (kind: Exclude<FixedScreen, 'completed'>, count: number): ListEntry => ({
 		kind,
 		id: kind,
-		name: NAMES[kind],
+		name: FIXED_NAMES[kind],
 		count,
 		owner: null,
 	});

@@ -75,6 +75,8 @@ write(
 	),
 );
 
+const { swiftConstants } = await import('./constants');
+write('app-ios/Sources/Core/Generated/SharedConstants.swift', swiftConstants());
 for (const [path, contents] of Object.entries(tokenFiles(indexCss))) write(path, contents);
 
 const models = handWrittenModels(root, ['app-ios/Sources']);

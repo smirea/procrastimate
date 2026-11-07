@@ -272,28 +272,20 @@ struct RambleDrawer: View {
     }
 
     private var caption: Text {
-        let text = capture.transcript as NSString
-        var from = max(0, text.length - 140)
-        if from > 0 {
-            let space = text.range(of: " ", range: NSRange(location: from, length: text.length - from))
-            if space.location != NSNotFound { from = space.location + 1 }
-        }
-        var out = AttributedString(from > 0 ? "… " : "")
-        var cursor = from
-        for token in capture.tokens.sorted(by: { $0.start < $1.start }) where token.end > cursor {
-            let start = max(token.start, cursor)
-            if start > cursor { out += AttributedString(text.substring(with: NSRange(location: cursor, length: start - cursor))) }
-            var piece = AttributedString(text.substring(with: NSRange(location: start, length: token.end - start)))
-            if let kind = QuickAdd.TokenKind(rawValue: token.kind.rawValue) {
+        var out = AttributedString()
+        for part in Ramble.caption(capture.transcript, capture.tokens) {
+            var piece = AttributedString(part.text)
+            switch part.kind {
+            case let .metadata(kind)?:
                 piece.backgroundColor = kind.tint
                 piece.foregroundColor = .ink
-            } else {
+            case .command?:
                 piece.inlinePresentationIntent = .emphasized
+            case nil:
+                break
             }
             out += piece
-            cursor = token.end
         }
-        if cursor < text.length { out += AttributedString(text.substring(from: cursor)) }
         return Text(out)
     }
 

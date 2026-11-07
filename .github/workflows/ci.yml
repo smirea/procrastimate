@@ -175,35 +175,36 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup
 
-      - name: Sentry auth token
-        if: env.HAS_CLOUDFLARE == 'true' && env.HAS_SENTRY != 'true'
+      - name: Deploy credentials
         run: |
-          echo "::error::Add the SENTRY_AUTH_TOKEN repository secret with 'bun run secrets:github'. The deploy uploads source maps to Sentry with it."
-          exit 1
+          if [ "$HAS_CLOUDFLARE" != 'true' ]; then
+            echo "::error::Not deployed. Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets with 'bun run secrets:github'."
+            exit 1
+          fi
+          if [ "$HAS_SENTRY" != 'true' ]; then
+            echo "::error::Add the SENTRY_AUTH_TOKEN repository secret with 'bun run secrets:github'. The deploy uploads source maps to Sentry with it."
+            exit 1
+          fi
 
       # SENTRY_ENVIRONMENT turns reporting on; the build fails while shared/sentry.ts has no web DSN.
       - name: Build
-        if: env.HAS_CLOUDFLARE == 'true'
         run: bun run build
         env:
           SENTRY_ENVIRONMENT: production
           SENTRY_RELEASE: ${{ github.sha }}
 
       - name: Required Worker secrets
-        if: env.HAS_CLOUDFLARE == 'true'
-        run: bun server/scripts/secrets.ts verify
+        run: bun scripts/secrets.ts verify
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       # Bundled first and deployed with --no-bundle, so the code Sentry's debug ids are injected into is the code that runs.
       - name: Bundle the Worker
-        if: env.HAS_CLOUDFLARE == 'true'
         run: bunx wrangler deploy --dry-run --outdir .wrangler/deploy
 
       # The web maps are deleted after the upload so the Worker never serves them.
       - name: Sentry release and source maps
-        if: env.HAS_CLOUDFLARE == 'true'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
@@ -215,7 +216,6 @@ jobs:
           find app-web/build -name '*.map' -delete
 
       - name: Deploy
-        if: env.HAS_CLOUDFLARE == 'true'
         run: >-
           bunx wrangler deploy -c wrangler.jsonc --no-bundle .wrangler/deploy/worker.js
           --var SENTRY_ENVIRONMENT:production --var "SENTRY_RELEASE:$RELEASE"
@@ -224,15 +224,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Sentry deploy
-        if: env.HAS_CLOUDFLARE == 'true'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           bunx sentry-cli releases finalize "$RELEASE"
           bunx sentry-cli deploys new --release "$RELEASE" -e production
-
-      - name: Deploy skipped
-        if: env.HAS_CLOUDFLARE != 'true'
-        run: |
-          echo "::error::Not deployed. Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets with 'bun run secrets:github'."
-          exit 1

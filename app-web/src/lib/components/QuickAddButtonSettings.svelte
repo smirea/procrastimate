@@ -7,16 +7,16 @@
 	import { BUTTON_INFO, WEB_BUTTONS, type WebButton } from '../quick-add-buttons.ts';
 	import { Reorder } from '../reorder.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 
-	const buttons = $derived(rowButtons(store.quickAddButtons, WEB_BUTTONS, WEB_BUTTONS) as WebButton[]);
-	const pinned = $derived(buttons.filter((button) => store.quickAddButtons.includes(button)));
+	const buttons = $derived(rowButtons(store.settings.quickAddButtons, WEB_BUTTONS, WEB_BUTTONS) as WebButton[]);
+	const pinned = $derived(buttons.filter((button) => store.settings.quickAddButtons.includes(button)));
 	let list: HTMLUListElement;
 	const reorder = new Reorder({ key: 'data-quick-add-button', lift: 'handle', count: () => pinned.length, move });
 
 	function move(button: string, to: number) {
 		const rest = pinned.filter((b) => b !== button);
-		store.setQuickAddButtons(moveButton(store.quickAddButtons, button as WebButton, rest[to] ?? null));
+		store.setSettings({ quickAddButtons: moveButton(store.settings.quickAddButtons, button as WebButton, rest[to] ?? null) });
 	}
 
 	async function moveByKey(event: KeyboardEvent, button: WebButton, index: number) {
@@ -47,7 +47,7 @@
 				type="button"
 				class="menu-item min-w-0 flex-1 touch:h-11 touch:text-[15px]"
 				aria-pressed={shown}
-				onclick={() => store.setQuickAddButtons(toggleButton(store.quickAddButtons, button))}
+				onclick={() => store.setSettings({ quickAddButtons: toggleButton(store.settings.quickAddButtons, button) })}
 			>
 				<Icon size={16} weight={shown ? 'fill' : 'regular'} class={shown ? 'text-accent' : 'text-faint'} />
 				<span class={['flex-1 truncate', !shown && 'text-muted']}>{name}</span>

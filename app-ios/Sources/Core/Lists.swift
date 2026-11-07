@@ -13,8 +13,6 @@ public enum Lists {
         .labels: "Labels",
     ]
 
-    private static let names: [Kind: String] = [.inbox: "Inbox", .tomorrow: "Tomorrow", .thisWeek: "This week", .noDate: "No date"]
-
     private static func rows(_ due: Views.DueDays) -> Int {
         due.overdue.count + due.today.count + due.days.reduce(0) { $0 + $1.tasks.count }
     }
@@ -30,7 +28,7 @@ public enum Lists {
         in zone: TimeZone
     ) -> [Group] {
         let (tasks, projects, labels) = own
-        func fixed(_ kind: Kind, _ count: Int) -> Entry { Entry(kind: kind, id: kind.rawValue, name: names[kind]!, count: count) }
+        func fixed(_ kind: Kind, _ count: Int) -> Entry { Entry(kind: kind, id: kind.rawValue, name: Screens.fixedNames[kind]!, count: count) }
         let inbox = Views.dueDays(tasks, today, .inbox, in: zone)
         let counts = Views.openCounts(tasks, labels)
         let groups: [GroupKind: [Entry]] = [

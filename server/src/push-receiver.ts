@@ -1,7 +1,7 @@
 import { base64urlDecode, base64urlEncode, utf8 } from './jwt';
 import { deriveContentKey, ecdhSecret, importEcdhPublic } from './web-push';
 
-export type PushReceiver = { privateKey: CryptoKey; publicKey: Uint8Array<ArrayBuffer>; auth: Uint8Array<ArrayBuffer> };
+type PushReceiver = { privateKey: CryptoKey; publicKey: Uint8Array<ArrayBuffer>; auth: Uint8Array<ArrayBuffer> };
 
 export async function createReceiverKeys(): Promise<{
 	receiver: PushReceiver;

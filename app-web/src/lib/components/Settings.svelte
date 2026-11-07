@@ -17,7 +17,7 @@
 	import { push } from '../push.svelte.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 	import { reportError } from '../sentry.ts';
 	import { readBackupZip } from '../todoist-import.ts';
 
@@ -94,9 +94,9 @@
 		<Segmented
 			label="Dictation"
 			choices={DICTATION_CHOICES}
-			value={store.dictation}
+			value={store.settings.dictation}
 			options={{ native: { label: 'Native' }, elevenlabs: { label: 'ElevenLabs' }, gemini: { label: 'Gemini Live' } }}
-			onchange={(choice) => store.setDictation(choice)}
+			onchange={(dictation) => store.setSettings({ dictation })}
 		/>
 	</section>
 

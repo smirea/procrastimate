@@ -3,7 +3,6 @@ import Feetback
 import SwiftUI
 import UIKit
 
-/// Settings' entry to the tab bar's pins.
 struct TabsSettingsLink: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store

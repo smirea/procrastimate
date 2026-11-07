@@ -4,7 +4,6 @@ import { label, project, snapshotOf, task } from './testing.ts';
 import { describe, recorded, test } from './vectors/record.ts';
 
 const rowWrites = recorded('rows', rows.rowWrites);
-const coalesce = recorded('rows', rows.coalesce);
 const rejectionNotice = recorded('rows', rows.rejectionNotice);
 const rowIdOf = recorded('rows', rows.rowIdOf);
 const entityIdOf = recorded('rows', rows.entityIdOf);
@@ -94,62 +93,6 @@ describe('rowWrites', () => {
 			labels: [label('l')],
 		});
 		expect(rowWrites(snapshotOf(), after).map(write => write.kind)).toEqual(['project', 'label', 'task']);
-	});
-});
-
-describe('coalesce', () => {
-	test('keystrokes in a title fold into one patch with the last value', () => {
-		const writes = ['H', 'He', 'Hello'].map(title => ({
-			op: 'patch' as const,
-			kind: 'task' as const,
-			id: 't',
-			values: { title },
-		}));
-		expect(coalesce(writes)).toEqual([{ op: 'patch', kind: 'task', id: 't', values: { title: 'Hello' } }]);
-	});
-
-	test('a patch folds into the put before it', () => {
-		expect(
-			coalesce([
-				{ op: 'put', kind: 'task', id: 't', values: { title: '', notes: '' } },
-				{ op: 'patch', kind: 'task', id: 't', values: { title: 'Milk' } },
-			]),
-		).toEqual([{ op: 'put', kind: 'task', id: 't', values: { title: 'Milk', notes: '' } }]);
-	});
-
-	test('a delete replaces earlier writes and a patch after it changes nothing', () => {
-		expect(
-			coalesce([
-				{ op: 'patch', kind: 'task', id: 't', values: { title: 'Milk' } },
-				{ op: 'delete', kind: 'task', id: 't' },
-				{ op: 'patch', kind: 'task', id: 't', values: { title: 'Late' } },
-			]),
-		).toEqual([{ op: 'delete', kind: 'task', id: 't' }]);
-	});
-
-	test('a row deleted and put again moves after the rows it points at', () => {
-		expect(
-			coalesce([
-				{ op: 'delete', kind: 'task', id: 't' },
-				{ op: 'put', kind: 'project', id: 'p', values: { name: 'Home' } },
-				{ op: 'put', kind: 'task', id: 't', values: { projectId: 'p' } },
-			]),
-		).toEqual([
-			{ op: 'put', kind: 'project', id: 'p', values: { name: 'Home' } },
-			{ op: 'put', kind: 'task', id: 't', values: { projectId: 'p' } },
-		]);
-	});
-
-	test('writes to other rows keep their order', () => {
-		const writes: rows.RowWrite[] = [
-			{ op: 'patch' as const, kind: 'task' as const, id: 'a', values: { title: 'A' } },
-			{ op: 'patch' as const, kind: 'task' as const, id: 'b', values: { title: 'B' } },
-			{ op: 'patch' as const, kind: 'task' as const, id: 'a', values: { notes: 'n' } },
-		];
-		expect(coalesce(writes)).toEqual([
-			{ op: 'patch', kind: 'task', id: 'a', values: { title: 'A', notes: 'n' } },
-			{ op: 'patch', kind: 'task', id: 'b', values: { title: 'B' } },
-		]);
 	});
 });
 

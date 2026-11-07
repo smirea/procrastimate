@@ -11,15 +11,6 @@ export type SharedSpace = {
 };
 export type Spaces = Readonly<Record<string, SharedSpace>>;
 
-export const emptyData = (): StoreData => ({
-	tasks: [],
-	projects: [],
-	sections: [],
-	labels: [],
-	comments: [],
-	reads: [],
-});
-
 /** The web's view of one shared space: the rows `LocalRows` holds for it, and the tasks it may only view. */
 export function sharedSpace(owner: string, { data, access }: SpaceRows): SharedSpace {
 	const readOnly = new Set(access.filter(row => row.kind === 'task' && row.role === 'view').map(row => row.entityId));

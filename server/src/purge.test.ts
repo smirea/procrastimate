@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, test } from 'bun:test';
+import { beforeAll, expect, test } from 'bun:test';
 import { asc, eq } from 'drizzle-orm';
 import { comments, log } from '../../shared/db/schema';
 import { type Session, shareWith, signUp, taskRow, testApp, type TestApp, upload as uploadAs } from './test-app';
@@ -11,7 +11,6 @@ beforeAll(async () => {
 	owner = await signUp(app, 'Owner');
 	guest = await signUp(app, 'Guest');
 });
-afterAll(() => app.close());
 
 const upload = async (session: Session, writes: unknown[]) => expect(await uploadAs(app, session, writes)).toEqual([]);
 

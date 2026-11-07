@@ -2,13 +2,14 @@ import { untrack } from 'svelte';
 import type { Rejected } from 'sync-engine/core';
 import type { Kind } from 'shared/model.ts';
 import { entitiesOf } from 'shared/snapshot.ts';
-import { KIND_OF, rejectionNotice, type SyncedTable } from 'shared/rows.ts';
+import { KIND_OF, type SyncedTable } from 'shared/kinds.ts';
+import { rejectionNotice } from 'shared/rows.ts';
 import { api, isUnauthorized } from './api.ts';
 import { localDatabase } from './database.ts';
 import { session } from './session.svelte.ts';
 import { store } from './store.svelte.ts';
 import { reportError, reportWarning } from './sentry.ts';
-import { toasts } from './ui.svelte.ts';
+import { toasts } from './toasts.svelte.ts';
 import { unsynced } from './unsynced.svelte.ts';
 
 /**

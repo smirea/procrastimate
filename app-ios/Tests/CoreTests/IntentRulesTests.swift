@@ -143,7 +143,7 @@ import Testing
         #expect(IntentRules.completionTarget(.complete, id: "movers", title: "Call movers", in: [move, movers]) == nil)
         #expect(IntentRules.completionTarget(.reopen, id: "movers", title: "Call movers", in: tasks)?.id == "movers")
         #expect(IntentRules.completionTarget(.reopen, id: "older", title: "Call movers", in: tasks)?.id == "movers")
-        #expect(IntentRules.indexedTasks(tasks).map(\.id) == ["older"])
+        #expect(Triggers.openTasks(tasks).map(\.id) == ["older"])
     }
 
     @Test func aSubtaskUnderACompletedParentSortsWithTheCompletedOnes() {
@@ -157,14 +157,6 @@ import Testing
         #expect(IntentRules.titleMatches(tasks, "call movers").map(\.id) == ["older", "movers", "called"])
         #expect(IntentRules.prefixMatches(tasks, "call").map(\.id) == ["older", "movers", "called"])
         #expect(IntentRules.suggestedTasks(tasks).map(\.id) == ["older", "movers", "move", "called"])
-    }
-
-    @Test func spotlightIndexesOpenTasksOnly() {
-        let tasks = [
-            task("Buy milk", id: "open"),
-            task("Pay rent", id: "done", completedAt: 2),
-        ]
-        #expect(IntentRules.indexedTasks(tasks).map(\.id) == ["open"])
     }
 
     @Test func searchReturnsOpenHitsBeforeCompletedOnes() {

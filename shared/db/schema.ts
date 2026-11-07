@@ -3,7 +3,7 @@ import { sql } from 'drizzle-orm';
 import type { ByteKey } from '../images.ts';
 import { DICTATION_CHOICES, RAMBLE_MODES } from '../dictation.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
-import { KINDS } from '../kinds.ts';
+import { ACCESS_KINDS, KINDS, type Kind } from '../kinds.ts';
 import { LABEL_COLORS } from '../label-colors.ts';
 import { PROJECT_ICONS } from '../project-icons.ts';
 import { DEFAULT_PRIORITY, ROLES, SECTION_COUNTERS, SERVER_ACTOR, SHARE_TARGET_KINDS, TITLE_MODES } from '../values.ts';
@@ -192,7 +192,7 @@ export const access = sqliteTable(
 		id: text('id').primaryKey(),
 		grantee: text('grantee').notNull(),
 		owner: text('owner').notNull(),
-		kind: text('kind', { enum: ['task', 'project', 'section', 'label'] }).notNull(),
+		kind: text('kind', { enum: ACCESS_KINDS }).notNull(),
 		entityId: text('entity_id').notNull(),
 		role: text('role', { enum: ROLES }).$type<ColumnValue<'access', 'role'>>().notNull(),
 	},
@@ -200,16 +200,16 @@ export const access = sqliteTable(
 );
 
 export const ENTITY_TABLES = {
-	task: tasks,
 	project: projects,
 	section: sections,
 	label: labels,
+	task: tasks,
 	comment: comments,
 	read: reads,
 	settings,
-} as const;
+} as const satisfies Record<Kind, unknown>;
 
-/** The tables sync-engine syncs, in every client's local database, in snapshot order. */
+/** The tables sync-engine syncs, in every client's local database, in `KINDS` order. */
 export const SYNCED_TABLES = { ...ENTITY_TABLES, access } as const;
 
 /**
@@ -383,5 +383,4 @@ type Row<T extends { $inferSelect: object }> = Omit<T['$inferSelect'], 'userId'>
 export type LogRow = Row<typeof log>;
 export type RambleUsage = Row<typeof rambleUsage>;
 export type ShareRow = Row<typeof shares>;
-export type ImageRow = Row<typeof images>;
 export type AccessRow = typeof access.$inferSelect;

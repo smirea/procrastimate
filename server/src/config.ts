@@ -1,10 +1,79 @@
+import type { DurableObjectNamespace, R2Bucket } from '@cloudflare/workers-types';
 import { parseSentryTarget, SENTRY_DSN, type SentryTarget } from '../../shared/sentry';
-import type { Env } from './bindings';
 import { base64urlDecode } from './jwt';
-import { VAPID_SUBJECT, type Vapid } from './web-push';
+import { generateVapidKeys, VAPID_SUBJECT, type Vapid } from './web-push';
 
-/** A deploy without any of these fails every request. `secrets.ts verify` checks them before `wrangler deploy`. */
-export const REQUIRED_WORKER_SECRETS = ['BETTER_AUTH_SECRET', 'VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY'] as const;
+/**
+ * Every setting the server reads. A `secret` is a Worker secret that `secrets:push` uploads from env-manager, and a
+ * `required` one fails every request when it is missing. A `var` is a plain value a deploy or a local run passes.
+ */
+const SETTINGS = {
+	BETTER_AUTH_SECRET: 'required',
+	VAPID_PUBLIC_KEY: 'required',
+	VAPID_PRIVATE_KEY: 'required',
+	ELEVENLABS_API_KEY: 'secret',
+	/** Ramble's smart parse. */
+	GEMINI_API_KEY: 'secret',
+	/** Reads GitHub issues and pull requests, private ones included. Without it public ones are read signed out. */
+	GITHUB_TOKEN: 'secret',
+	GOOGLE_CLIENT_ID: 'secret',
+	GOOGLE_CLIENT_SECRET: 'secret',
+	GOOGLE_IOS_CLIENT_ID: 'secret',
+	APPLE_CLIENT_ID: 'secret',
+	APPLE_CLIENT_SECRET: 'secret',
+	APPLE_TEAM_ID: 'secret',
+	APPLE_KEY_ID: 'secret',
+	/** A PKCS8 .p8, with newlines as `\n` when the secret is a single line. */
+	APPLE_PRIVATE_KEY: 'secret',
+	/** `off` disables Better Auth's sign-in rate limit, for local runs that sign up many users from one address. */
+	AUTH_RATE_LIMIT: 'var',
+	/** `cassette` replays recorded transcripts instead of calling ElevenLabs. */
+	RAMBLE_UPSTREAM: 'var',
+	/** Set by `wrangler deploy --var`. See `Config.sentry`. */
+	SENTRY_ENVIRONMENT: 'var',
+	SENTRY_RELEASE: 'var',
+} as const satisfies Record<string, 'required' | 'secret' | 'var'>;
+
+type Setting = keyof typeof SETTINGS;
+const settingsOf = (kinds: readonly string[]) =>
+	(Object.keys(SETTINGS) as Setting[]).filter(key => kinds.includes(SETTINGS[key]));
+
+export const WORKER_SECRETS = settingsOf(['required', 'secret']);
+/** `secrets.ts verify` checks these before `wrangler deploy`. */
+export const REQUIRED_WORKER_SECRETS = settingsOf(['required']);
+
+/**
+ * Raw Worker bindings. Every field is optional because Bun serves the same handler without the Cloudflare ones.
+ * Read the settings through `config(env)`, which decides what is required.
+ */
+export type Env = { [K in Setting]?: string } & {
+	/** The `App` Durable Object, which holds the database and serves `/api/*` on the Worker. */
+	APP?: DurableObjectNamespace;
+	RAMBLE?: DurableObjectNamespace;
+	BACKUPS?: R2Bucket;
+};
+
+/** The auth secret every local run shares, the Bun server, `wrangler dev`, and tests alike. */
+const LOCAL_AUTH_SECRET = 'insecure-local-dev-better-auth-secret-0123456789';
+
+let localVapid: ReturnType<typeof generateVapidKeys> | undefined;
+
+/**
+ * `env` with what env-manager leaves empty in a local run filled in: a fixed auth secret, no sign-in rate limit, and a
+ * VAPID pair made once per process. Local sign-ups come in bursts from one address: every smoke run, every e2e
+ * worker, every agent's test user.
+ */
+export async function withLocalStandIns<T extends Env>(env: T): Promise<T> {
+	const filled = { ...env, BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET || LOCAL_AUTH_SECRET };
+	filled.AUTH_RATE_LIMIT ||= 'off';
+	if (!filled.VAPID_PUBLIC_KEY || !filled.VAPID_PRIVATE_KEY) {
+		localVapid ??= generateVapidKeys();
+		const keys = await localVapid;
+		filled.VAPID_PUBLIC_KEY = keys.publicKey;
+		filled.VAPID_PRIVATE_KEY = keys.privateKey;
+	}
+	return filled;
+}
 
 export type AppleSecret = { kind: 'stored'; jwt: string } | { kind: 'key'; teamId: string; keyId: string; pem: string };
 
@@ -22,8 +91,6 @@ export type Config = {
 	/** Reporting to `procrastimate-worker`, on only where the deploy passes `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`. */
 	sentry: SentryTarget | null;
 };
-
-type Key = Exclude<keyof Env, 'APP' | 'RAMBLE' | 'BACKUPS'>;
 
 function decodedLength(text: string): number | null {
 	try {
@@ -50,8 +117,8 @@ function vapidProblems(publicKey: string, privateKey: string): string[] {
 /** `sentryDsn` is the committed worker DSN; tests pass their own. */
 export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Config {
 	const problems: string[] = [];
-	const read = (key: Key) => env[key]?.trim() || null;
-	const group = <K extends Key>(keys: readonly K[], required: boolean): Record<K, string> | null => {
+	const read = (key: Setting) => env[key]?.trim() || null;
+	const group = <K extends Setting>(keys: readonly K[], required: boolean): Record<K, string> | null => {
 		const missing = keys.filter(key => !read(key));
 		if (!missing.length) return Object.fromEntries(keys.map(key => [key, read(key)])) as Record<K, string>;
 		if (required) problems.push(`Missing ${missing.join(', ')}`);

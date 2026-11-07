@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { beforeAll, describe, expect, test } from 'bun:test';
 import type { MemoTasks } from '../../shared/memo-tasks';
 import { inArray } from 'drizzle-orm';
 import { tasks } from '../../shared/db/schema';
@@ -10,7 +10,6 @@ beforeAll(async () => {
 	app = await testApp();
 	owner = await signUp(app, 'Owner');
 });
-afterAll(() => app.close());
 
 const memoId = crypto.randomUUID();
 const keys = [crypto.randomUUID(), crypto.randomUUID()];

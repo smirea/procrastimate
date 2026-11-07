@@ -608,8 +608,6 @@ public enum QuickAdd {
         )
     }
 
-    // MARK: Resolving
-
     /// A typed date wins, moved to the first listed weekday on or after it, even when that leaves it in the past.
     /// Otherwise a time never lands in the past. A time alone lands on the date set outside the text, or on the first
     /// future occurrence: today, or tomorrow once that time has passed. A repeat without a typed date starts on its

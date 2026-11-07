@@ -1,4 +1,4 @@
-import { and, eq, exists, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, eq, exists, sql, type SQL } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import type { Actor } from '../../shared/auth';
 import { resolveDangling, type Entities, type Links } from '../../shared/dangling';
@@ -12,7 +12,7 @@ import {
 	tasks,
 	type AccessRow,
 } from '../../shared/db/schema';
-import { managesSpace, type Scope } from '../../shared/scope';
+import { managesSpace, type Scope } from './scope';
 import { byCreation } from '../../shared/snapshot';
 import { isTimeZone } from '../../shared/zoned-time';
 import type { ShareRow } from '../../shared/db/schema';

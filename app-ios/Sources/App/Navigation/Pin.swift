@@ -43,10 +43,10 @@ extension Store {
     /// Nil for a project or label that is gone, or not synced to this device yet; its pin stays stored but hidden.
     func label(of pin: Pin) -> PinLabel? {
         switch pin {
-        case .inbox: PinLabel(title: "Inbox", systemImage: Pin.inbox.systemImage)
-        case .tomorrow: PinLabel(title: "Tomorrow", systemImage: Pin.tomorrow.systemImage)
-        case .thisWeek: PinLabel(title: "This week", systemImage: Pin.thisWeek.systemImage)
-        case .noDate: PinLabel(title: "No date", systemImage: Pin.noDate.systemImage)
+        case .inbox: PinLabel(title: Screens.fixedNames[.inbox]!, systemImage: Pin.inbox.systemImage)
+        case .tomorrow: PinLabel(title: Screens.fixedNames[.tomorrow]!, systemImage: Pin.tomorrow.systemImage)
+        case .thisWeek: PinLabel(title: Screens.fixedNames[.thisWeek]!, systemImage: Pin.thisWeek.systemImage)
+        case .noDate: PinLabel(title: Screens.fixedNames[.noDate]!, systemImage: Pin.noDate.systemImage)
         case let .project(id): project(id).map { PinLabel(title: $0.name, systemImage: $0.systemImage) }
         case let .label(id): label(id).map { PinLabel(title: $0.name, systemImage: $0.systemImage()) }
         case let .place(_, name): PinLabel(title: name, systemImage: "mappin.and.ellipse")

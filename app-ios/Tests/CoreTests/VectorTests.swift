@@ -7,10 +7,7 @@ import Testing
     @Test(arguments: VectorFile.all)
     func matchesTypeScript(_ file: VectorFile) throws {
         let zone = try #require(TimeZone(identifier: file.timeZone))
-        guard let handler = handlers[file.module] else {
-            try #require(pendingPorts.contains(file.module), "No Swift port for shared/\(file.module).ts")
-            return
-        }
+        let handler = try #require(handlers[file.module], "No Swift port for shared/\(file.module).ts")
         for vector in file.cases {
             let args = Args(values: vector.input, zone: zone)
             let output = try handler(vector.fn, args)
@@ -25,12 +22,7 @@ import Testing
     }
 
     @Test func everyPortedModuleHasVectors() {
-        #expect(Set(VectorFile.all.map(\.module)).isSuperset(of: handlers.keys))
-    }
-
-    @Test func onlyPendingModulesLackAPort() {
-        let missing = Set(VectorFile.all.map(\.module)).subtracting(handlers.keys)
-        #expect(missing == pendingPorts)
+        #expect(Set(VectorFile.all.map(\.module)) == Set(handlers.keys))
     }
 }
 
@@ -106,8 +98,6 @@ func unknown(_ fn: String) -> VectorError { VectorError(description: "No Swift h
 
 typealias Handler = @Sendable (String, Args) throws -> JSONValue
 
-private let pendingPorts: Set<String> = []
-
 let handlers: [String: Handler] = [
     "task": taskVector,
     "subtasks": subtasksVector,
@@ -142,6 +132,14 @@ let handlers: [String: Handler] = [
     "space-routing": spaceRoutingVector,
     "list-filters": listFiltersVector,
     "list-header": listHeaderVector,
+    "task-menus": taskMenusVector,
+    "task-details": taskDetailsVector,
+    "quick-add-merge": quickAddMergeVector,
+    "sharing": sharingVector,
+    "webhooks": webhooksVector,
+    "ramble-transcript": rambleTranscriptVector,
+    "order": orderVector,
+    "shared-link": sharedLinkVector,
 ]
 
 private struct Occurrence: Decodable {
@@ -216,7 +214,6 @@ private struct Occurrence: Decodable {
     case "labelViewTasks": return try json(Views.labelViewTasks(a(0), a(1), in: a.zone))
     case "eventTasks": return try json(Views.eventTasks(a(0), a(1), a(2), in: a.zone))
     case "todayTasks": return try json(Views.todayTasks(a(0), a(1), in: a.zone))
-    case "upcomingGroups": return try json(Views.upcomingGroups(a(0), a(1), in: a.zone))
     case "dueDays": return try json(Views.dueDays(a(0), a(1), a(2), filtered: a(3, as: Views.DueFilter?.self), in: a.zone))
     case "dueCandidates": return try json(Views.dueCandidates(a(0), a(1), a(2), in: a.zone))
     case "weekEnd": return try json(Views.weekEnd(a(0)))
@@ -620,6 +617,23 @@ private struct ScreenInput: Decodable {
     }
 }
 
+/// A `ListScreen` as TS writes a `Screen`.
+private func screenJSON(_ screen: ListScreen?) throws -> JSONValue {
+    guard let screen else { return .null }
+    let fields: [String: String] = switch screen {
+    case .inbox: ["kind": "inbox"]
+    case .tomorrow: ["kind": "tomorrow"]
+    case .thisWeek: ["kind": "this-week"]
+    case .noDate: ["kind": "no-date"]
+    case .completed: ["kind": "completed"]
+    case let .project(id, _): ["kind": "project", "id": id]
+    case let .label(id): ["kind": "label", "id": id]
+    case let .place(key): ["kind": "place", "key": key]
+    case let .event(id): ["kind": "event", "id": id]
+    }
+    return .object(fields.mapValues { .string($0) })
+}
+
 /// `SharedSpace` in TS: `{ access }`.
 private struct SharedSpaceInput: Decodable {
     let access: [Access]
@@ -632,6 +646,9 @@ private struct SharedSpaceInput: Decodable {
     case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.access, today: a(3))))
     case "canAddTo": return try json(Screens.canAdd(to: screen, a(1, as: SharedSpaceInput?.self)?.access))
     case "screenHolds": return try json(Screens.holds(screen, a(1), a(2), in: a.zone))
+    case "addedScreen": return try screenJSON(Screens.added(screen, a(1), a(2), a(3), in: a.zone))
+    case "addedName": return try json(Screens.addedName(#require(screen), a(1)))
+    case "listedScreen": return try screenJSON(Screens.listed(screen, a(1)))
     default: throw unknown(fn)
     }
 }
@@ -727,7 +744,6 @@ extension JSONValue: ExpressibleByStringLiteral {
 
 @Sendable func memoTasksVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
-    case "memoSourceKey": return try json(MemoTasks.memoSourceKey(a(0)))
     case "parseMemoSource": return try json(MemoTasks.parseMemoSource(a(0)))
     default: throw unknown(fn)
     }
@@ -768,7 +784,6 @@ private struct RejectedInput: Decodable {
 @Sendable func rowsVector(_ fn: String, _ a: Args) throws -> JSONValue {
     switch fn {
     case "rowWrites": return rowWritesJSON(Rows.rowWrites(try a(0), try a(1)))
-    case "coalesce": return rowWritesJSON(Rows.coalesce(try a(0, as: [RowWriteInput].self).map(\.write)))
     case "rejectionNotice":
         let rejected = try a(1, as: [RejectedInput].self).map { (kind: $0.kind, id: $0.id) }
         return try json(Rows.rejectionNotice(try a(0), rejected))
@@ -937,6 +952,178 @@ private struct SharedSpaceDataInput: Decodable {
                 "owner": try json(entry.owner),
             ])
         })
+    default: throw unknown(fn)
+    }
+}
+
+private func optional(_ value: (some Encodable)?) throws -> JSONValue { try value.map(json) ?? .null }
+
+@Sendable func taskMenusVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "repeatPresets": return try json(RepeatMenu.presets(anchor: Due(date: a(0), time: nil)))
+    case "repeatAnchor": return try json(RepeatMenu.anchor(a(0), today: a(1)))
+    case "setRepeat":
+        let set = RepeatMenu.set(try a(0), opened: try a(1), due: try a(2))
+        return object(["recurrence": try optional(set.recurrence), "due": try optional(set.due)])
+    case "repeatWeekdays": return try json(RepeatMenu.weekdays(a(0), anchor: a(1)))
+    case "canToggleWeekday": return try json(RepeatMenu.canToggle(a(0), a(1)))
+    case "toggleWeekday": return try json(RepeatMenu.toggling(a(0), a(1), anchor: a(2)))
+    case "customRepeat": return try json(RepeatMenu.custom(a(1), a(2), a(0)))
+    case "isRepeatPreset": return try json(RepeatMenu.isSelected(a(0), a(1)))
+    case "addReminder": return try optional(ReminderMenu.adding(a(0), to: a(1)))
+    case "reminderAt": return try json(ReminderMenu.at(date: a(0), time: a(1), due: a(2), today: a(3)))
+    case "reminderChipLabel": return try json(ReminderMenu.chipLabel(a(0)))
+    case "reminderSectionTitle": return try json(ReminderMenu.sectionTitle(a(0)))
+    default: throw unknown(fn)
+    }
+}
+
+/// `TitleContext` in TS.
+private struct TitleContextInput: Decodable {
+    let now: Int
+    let projects: [Project]
+    let sections: [ProjectSection]
+    let labels: [Label]
+}
+
+/// A patch as TS writes one: only the fields it sets, a cleared one as `null`.
+private func patchJSON(_ patch: TaskPatch) throws -> JSONValue {
+    var fields: [String: JSONValue] = [:]
+    func put(_ key: String, _ value: (some Encodable)??) throws {
+        if let value { fields[key] = try optional(value) }
+    }
+    try put("title", patch.title.map { $0 })
+    try put("projectId", patch.projectId)
+    try put("sectionId", patch.sectionId)
+    try put("labelIds", patch.labelIds.map { $0 })
+    try put("due", patch.due)
+    try put("recurrence", patch.recurrence)
+    try put("priority", patch.priority.map { $0 })
+    try put("reminders", patch.reminders.map { $0 })
+    try put("location", patch.location)
+    return .object(fields)
+}
+
+private func draftJSON(_ draft: TaskDetails.Draft) throws -> JSONValue {
+    try patchJSON(TaskPatch(
+        title: draft.title, projectId: .some(draft.projectId), sectionId: .some(draft.sectionId), labelIds: draft.labelIds,
+        due: .some(draft.due), recurrence: .some(draft.recurrence), priority: draft.priority, reminders: draft.reminders,
+        location: .some(draft.location)
+    ))
+}
+
+@Sendable func taskDetailsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "parseTitle":
+        let context = try a(2, as: TitleContextInput.self)
+        return try json(TaskDetails.parse(
+            a(0), a(1), now: Date(epochMilliseconds: context.now), projects: context.projects, sections: context.sections,
+            labels: context.labels, in: a.zone
+        ))
+    case "titleDraft": return try draftJSON(TaskDetails.draft(a(0), title: a(1), a(2)))
+    case "titleTokens": return try json(TaskDetails.tokens(a(0), title: a(1), a(2)))
+    case "commitTitle":
+        return switch TaskDetails.commitTitle(try a(0), title: try a(1), try a(2)) {
+        case .unchanged: object(["kind": "unchanged"])
+        case .revert: object(["kind": "revert"])
+        case let .update(patch, _): object(["kind": "update", "patch": try patchJSON(patch)])
+        }
+    case "setDue": return try patchJSON(TaskDetails.setDue(a(0), a(1)))
+    default: throw unknown(fn)
+    }
+}
+
+/// `Placed` in TS, or `Typed`, whose fields may be absent.
+private struct MergePlacedInput: Decodable {
+    let due: Due?
+    let recurrence: Recurrence?
+    let priority: Priority?
+    let projectId: String?
+    let sectionId: String?
+
+    var placed: QuickAddMerge.Placed {
+        .init(due: due, recurrence: recurrence, priority: priority, projectId: projectId, sectionId: sectionId)
+    }
+}
+
+@Sendable func quickAddMergeVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "typedOver":
+        let placed = QuickAddMerge.typedOver(
+            try a(0, as: MergePlacedInput.self).placed, try a(1, as: MergePlacedInput.self).placed, event: try a(2)
+        )
+        return object([
+            "due": try optional(placed.due), "recurrence": try optional(placed.recurrence),
+            "priority": try optional(placed.priority), "projectId": try optional(placed.projectId),
+            "sectionId": try optional(placed.sectionId),
+        ])
+    default: throw unknown(fn)
+    }
+}
+
+private struct SuggestionsInput: Decodable {
+    struct Found: Decodable {
+        let q: String
+        let people: [Person]
+    }
+
+    let q: String
+    let me: String?
+    let known: [Person]
+    let found: Found?
+    let granted: [String]
+}
+
+@Sendable func sharingVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "shareSuggestions":
+        let input = try a(0, as: SuggestionsInput.self)
+        return try json(Sharing.suggestions(
+            q: input.q, me: input.me, known: input.known, found: input.found.map { ($0.q, $0.people) }, granted: input.granted
+        ))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func webhooksVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "watchedByWebhook": return try json(Webhooks.watches(a(0), a(1)))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func rambleTranscriptVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "joinTranscript":
+        let joined = Ramble.joinTranscript(try a(0), try a(1))
+        return object(["text": .string(joined.text), "partialStart": try json(joined.partialStart)])
+    case "caption":
+        let parts = try a.values.count > 2 ? Ramble.caption(a(0), a(1), limit: a(2)) : Ramble.caption(a(0), a(1))
+        return .array(parts.map { part in
+            let kind: JSONValue = switch part.kind {
+            case nil: .null
+            case .command: "command"
+            case let .metadata(kind)?: .string(kind.rawValue)
+            }
+            return object(["text": .string(part.text), "kind": kind])
+        })
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func orderVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "moveOrders":
+        let orders = Order.moveOrders(try a(0, as: [Project].self), try a(1), try a(2))
+        return .array(try orders.map { object(["id": .string($0.id), "order": try json($0.order)]) })
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func sharedLinkVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "sharedGroups": return try json(SharedLink.groups(a(0), in: a.zone))
+    case "sharedTitle": return try json(SharedLink.title(a(0)))
     default: throw unknown(fn)
     }
 }

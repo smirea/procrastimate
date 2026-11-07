@@ -6,10 +6,6 @@ public typealias MemoSource = API.MemoSource
 public enum MemoTasks {
     private static let prefix = "voicememo:"
 
-    public static func memoSourceKey(_ source: MemoSource) -> String {
-        "\(prefix)\(source.memoId):\(source.taskKey)"
-    }
-
     /// The memo a task came from, or nil for a task the memo app did not send.
     public static func parseMemoSource(_ sourceKey: String?) -> MemoSource? {
         guard let sourceKey, sourceKey.hasPrefix(prefix) else { return nil }
@@ -33,6 +29,5 @@ public enum MemoTasks {
 }
 
 extension TaskItem {
-    /// The memo this task came from, when Notouroboros sent it.
     public var memoSource: MemoSource? { MemoTasks.parseMemoSource(sourceKey) }
 }

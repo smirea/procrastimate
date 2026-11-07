@@ -14,7 +14,7 @@ import { isImage, type Attachment, type FileRef } from 'shared/values.ts';
 import { reportError } from '../sentry.ts';
 import { store } from '../store.svelte.ts';
 import { toastUndo } from '../completion.ts';
-import { toasts } from '../ui.svelte.ts';
+import { toasts } from '../toasts.svelte.ts';
 import { encodeImage } from './encode.ts';
 import { imageKey, keepNew, readBytes, writeBytes } from './local.ts';
 
@@ -29,8 +29,8 @@ const MAX_RETRIES = 20;
 
 export const droppedFiles = (data: DataTransfer | null) => [...(data?.files ?? [])];
 
-/** SVG keeps its vectors as a file, which a canvas re-encode would flatten. */
-const encodable = (file: File) => file.type.startsWith('image/') && file.type !== 'image/svg+xml';
+/** Whether a file is kept as an image, re-encoded. SVG keeps its vectors as a file, which a canvas re-encode would flatten. */
+export const isImageFile = (file: File) => file.type.startsWith('image/') && file.type !== 'image/svg+xml';
 
 /**
  * The types a file may open as in a new tab. Anything that can run script there, such as HTML or SVG, downloads
@@ -130,7 +130,7 @@ class Attachments {
 	/** An image becomes its two encoded sizes; anything else, an image no canvas decodes included, its own bytes. */
 	async #keep(space: string | null, file: File): Promise<Attachment> {
 		const id = newId();
-		const encoded = encodable(file) ? await encodeImage(file).catch(() => null) : null;
+		const encoded = isImageFile(file) ? await encodeImage(file).catch(() => null) : null;
 		if (encoded) {
 			await keepNew(space, id, [
 				['full', encoded.sizes.full],

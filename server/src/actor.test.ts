@@ -1,12 +1,11 @@
-import { afterAll, beforeAll, describe, expect, setSystemTime, test } from 'bun:test';
+import { beforeAll, describe, expect, setSystemTime, test } from 'bun:test';
 import { sql } from 'drizzle-orm';
-import { signUp, testApp, type TestApp } from './test-app';
+import { aiAccount, signUp, testApp, type TestApp } from './test-app';
 
 let app: TestApp;
 beforeAll(async () => {
 	app = await testApp();
 });
-afterAll(() => app.close());
 
 describe('the bearer session cache', () => {
 	test('a resolved bearer is trusted for a minute without the session row, and sign-out drops it at once', async () => {
@@ -56,5 +55,23 @@ describe('reading a session', () => {
 			app.db.select = select;
 		}
 		expect((await app.fetch('/api/sync/token', { headers: me.headers })).status).toBe(200);
+	});
+});
+
+describe('human-only routes', () => {
+	test('an AI account is refused where the contract says FORBIDDEN, and its owner is not', async () => {
+		const owner = await signUp(app, 'Botowner');
+		const { headers } = await aiAccount(app, owner);
+		for (const path of [
+			'/api/me',
+			'/api/people?q=a',
+			'/api/sync/token',
+			'/api/push/schedule',
+			'/api/ai',
+			'/api/ai-tokens',
+		]) {
+			expect([path, (await app.fetch(path, { headers })).status]).toEqual([path, 403]);
+			expect((await app.fetch(path, { headers: owner.headers })).status).not.toBe(403);
+		}
 	});
 });

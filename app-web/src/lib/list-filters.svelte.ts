@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { DEVICE_KEYS } from './device.ts';
-import { filterActive, listFilterSchema, NO_FILTER, type ListFilter } from 'shared/list-filters.ts';
+import { filterActive, filterTasks, listFilterSchema, NO_FILTER, type ListFilter } from 'shared/list-filters.ts';
+import type { Task } from 'shared/task.ts';
+import { session } from './session.svelte.ts';
 
 const filtersSchema = z.record(z.string(), listFilterSchema);
 
@@ -18,6 +20,11 @@ class ListFilters {
 
 	get(key: string): ListFilter {
 		return this.#filters[key] ?? NO_FILTER;
+	}
+
+	/** The tasks `key`'s filter keeps, by creator as this user sees them. */
+	apply(key: string, tasks: readonly Task[]): Task[] {
+		return filterTasks(tasks, this.get(key), session.userId ?? '');
 	}
 
 	set(key: string, filter: ListFilter) {

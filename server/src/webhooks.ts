@@ -132,7 +132,7 @@ const firstSeq = (db: Db, kind: 'task' | 'comment', id: string) =>
  * project, and a comment created. Each is judged by the task as it is now, so a task deleted since, or moved out of
  * the watched projects, is left out. `next` is where the cursor moves once these are delivered.
  */
-export function pendingEvents(db: Db, hook: WebhookRow, through: number): { events: WebhookEvent[]; next: number } {
+function pendingEvents(db: Db, hook: WebhookRow, through: number): { events: WebhookEvent[]; next: number } {
 	const rows = db
 		.select({ seq: log.seq, kind: log.kind, id: log.id, op: log.op, fields: log.fields, actor: log.actor, at: log.at })
 		.from(log)

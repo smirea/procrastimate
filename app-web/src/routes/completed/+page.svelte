@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { FIXED_NAMES } from 'shared/screens.ts';
 	import View from '#lib/components/View.svelte';
 	import CompletedList from '#lib/components/CompletedList.svelte';
 	import CompletedRangePicker from '#lib/components/CompletedRangePicker.svelte';
@@ -6,7 +7,7 @@
 	import ListMenu from '#lib/components/ListMenu.svelte';
 	import { completed } from '#lib/completed.svelte.ts';
 	import { store } from '#lib/store.svelte.ts';
-	import { clock } from '#lib/ui.svelte.ts';
+	import { clock } from '#lib/clock.svelte.ts';
 	import { completedHeading } from 'shared/format.ts';
 	import { completedDays } from 'shared/views.ts';
 	import { listHeader } from 'shared/list-header.ts';
@@ -15,10 +16,10 @@
 	const days = $derived(completedDays(store.own.tasks, range));
 </script>
 
-<svelte:head><title>Completed · ProcrastiMate</title></svelte:head>
+<svelte:head><title>{FIXED_NAMES['completed']} · ProcrastiMate</title></svelte:head>
 
 <View
-	name="Completed"
+	name={FIXED_NAMES['completed']}
 	empty={days.length === 0}
 	emptyTitle="Nothing completed"
 	emptyHint={range.from === null && range.to === null ? 'Tasks you complete show up here.' : 'Pick a longer range to see more.'}

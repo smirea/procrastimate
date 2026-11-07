@@ -40,7 +40,7 @@ The server repairs nothing. Readers resolve what concurrent edits leave behind (
 
 ## Sharing
 
-Sections follow their project's visibility: a guest sees every section of each project in its view, and none of a project it cannot see. Sections are never a guest's to write, and a guest's task op may only name a section in its view (`staysInScope` in `shared/scope.ts`). Public links of a project show its sections. The agent command API returns `sections` in its view and takes `sectionId` and `/name` in `text` when creating a task.
+Sections follow their project's visibility: a guest sees every section of each project in its view, and none of a project it cannot see. Sections are never a guest's to write, and a guest's task op may only name a section in its view (`staysInScope` in `server/src/scope.ts`). Public links of a project show its sections. The agent command API returns `sections` in its view and takes `sectionId` and `/name` in `text` when creating a task.
 
 ## Todoist import
 

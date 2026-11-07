@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Flag from 'phosphor-svelte/lib/Flag';
 	import Check from 'phosphor-svelte/lib/Check';
-	import type { Priority } from 'shared/task.ts';
+	import { DEFAULT_PRIORITY, type Priority } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
 	import { PRIORITIES } from '../priorities.ts';
 
@@ -21,13 +21,13 @@
 			<button
 				type="button"
 				class="chip"
-				data-active={priority !== 4}
-				style={iconOnly && priority !== 4 ? `background: color-mix(in srgb, ${PRIORITIES[priority].tone} 18%, transparent)` : ''}
+				data-active={priority !== DEFAULT_PRIORITY}
+				style={iconOnly && priority !== DEFAULT_PRIORITY ? `background: color-mix(in srgb, ${PRIORITIES[priority].tone} 18%, transparent)` : ''}
 				aria-label={`Priority ${priority}`}
 				onclick={toggle}
 			>
-				<Flag size={15} weight={priority !== 4 ? 'fill' : 'regular'} color={priority !== 4 ? PRIORITIES[priority].tone : undefined} />
-				{#if !iconOnly}{priority !== 4 ? `P${priority}` : 'Priority'}{/if}
+				<Flag size={15} weight={priority !== DEFAULT_PRIORITY ? 'fill' : 'regular'} color={priority !== DEFAULT_PRIORITY ? PRIORITIES[priority].tone : undefined} />
+				{#if !iconOnly}{priority !== DEFAULT_PRIORITY ? `P${priority}` : 'Priority'}{/if}
 			</button>
 		{/snippet}
 		{#snippet children({ close })}
@@ -40,7 +40,7 @@
 						close();
 					}}
 				>
-					<Flag size={15} weight={level !== 4 ? 'fill' : 'regular'} color={PRIORITIES[level].tone} />
+					<Flag size={15} weight={level !== DEFAULT_PRIORITY ? 'fill' : 'regular'} color={PRIORITIES[level].tone} />
 					<span class="flex-1">{PRIORITIES[level].label}</span>
 					{#if level === priority}<Check size={14} class="text-accent" />{/if}
 				</button>

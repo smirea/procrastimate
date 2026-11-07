@@ -3,32 +3,28 @@
 	import X from 'phosphor-svelte/lib/X';
 	import type { DateKey, Due, Reminder, TimeOfDay } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
+	import { addReminder, REMINDER_PRESETS, reminderAt, reminderChipLabel, reminderSectionTitle } from 'shared/task-menus.ts';
 	import { formatReminder } from 'shared/format.ts';
-	import { clock } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
 
 	let {
 		reminders,
 		due,
 		onchange,
-		label = 'Reminders',
 		open = $bindable(false),
 	}: {
 		reminders: Reminder[];
 		due: Due | null;
 		onchange: (reminders: Reminder[]) => void;
-		label?: string;
 		open?: boolean;
 	} = $props();
 
-	const PRESETS = [0, 10, 30, 60, 1440];
 	let customDate = $state('');
 	let customTime = $state('09:00');
 
-	const sameReminder = (a: Reminder, b: Reminder) => JSON.stringify(a) === JSON.stringify(b);
-
 	function add(reminder: Reminder) {
-		if (reminders.some((r) => sameReminder(r, reminder))) return;
-		onchange([...reminders, reminder]);
+		const next = addReminder(reminder, reminders);
+		if (next) onchange(next);
 	}
 
 	function remove(index: number) {
@@ -38,13 +34,13 @@
 	const presetLabel = (minutes: number) => formatReminder({ kind: 'before', minutes }, clock.today);
 </script>
 
-<Popover {label} bind:open>
+<Popover label="Reminders" bind:open>
 	{#snippet trigger({ toggle })}
 		<button
 			type="button"
 			class="chip"
 			data-active={reminders.length > 0}
-			aria-label={reminders.length ? `${reminders.length} reminder${reminders.length > 1 ? 's' : ''}` : 'Add reminder'}
+			aria-label={reminderChipLabel(reminders.length)}
 			onclick={toggle}
 		>
 			<Bell size={15} weight={reminders.length ? 'fill' : 'regular'} />
@@ -64,9 +60,9 @@
 			{/each}
 			{#if reminders.length}<div class="my-1 border-t border-ink/5"></div>{/if}
 			<div class="px-2 pt-1 pb-0.5 text-[11px] font-medium tracking-wide text-faint uppercase">
-				{due?.time ? 'Before due time' : 'Before due time · needs a time'}
+				{reminderSectionTitle(due)}
 			</div>
-			{#each PRESETS as minutes (minutes)}
+			{#each REMINDER_PRESETS as minutes (minutes)}
 				<button type="button" class="menu-item disabled:opacity-40" disabled={!due?.time} onclick={() => {
 						add({ kind: 'before', minutes });
 						close();
@@ -84,7 +80,7 @@
 					class="btn btn-quiet mt-1.5 w-full"
 					disabled={!customTime}
 					onclick={() => {
-						add({ kind: 'at', date: (customDate || due?.date || clock.today) as DateKey, time: customTime as TimeOfDay });
+						add(reminderAt((customDate || null) as DateKey | null, customTime as TimeOfDay, due, clock.today));
 						close();
 					}}
 				>

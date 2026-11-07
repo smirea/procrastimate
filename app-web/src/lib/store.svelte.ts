@@ -1,7 +1,5 @@
-import type { DictationChoice, RambleMode } from 'shared/dictation.ts';
 import type { LabelColor } from 'shared/label-colors.ts';
 import type { ProjectIcon } from 'shared/project-icons.ts';
-import type { QuickAddButton } from 'shared/quick-add-buttons.ts';
 import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
 import type { SavedPlace, SectionCounter } from 'shared/values.ts';
 import { DEFAULT_SETTINGS, type Comment, type Settings, type Snapshot } from 'shared/model.ts';
@@ -23,7 +21,6 @@ import {
 	writeRows,
 } from './database.ts';
 import {
-	forgetLegacyDocument,
 	onOwnerChange,
 	loadPeople,
 	loadRemindersCheckedAt,
@@ -37,19 +34,15 @@ import {
 import { clearLocalImages } from './attachments/local.ts';
 import { LocalRows } from 'shared/local-rows.ts';
 import { reportError } from './sentry.ts';
-import { emptyData, homes, merged, sharedSpace, type SharedSpace, type Spaces } from './spaces.ts';
+import { homes, merged, sharedSpace, type SharedSpace, type Spaces } from './spaces.ts';
+import { emptyLists } from 'shared/snapshot.ts';
+import { LIST_NAMES } from 'shared/kinds.ts';
 import { creationHome, fitPatch, fitToSpace, type Home, type Homes } from 'shared/space-routing.ts';
 
 export type { Completion, CompletionState, NewTask, TaskPatch } from 'shared/store.ts';
 
-const storeData = ({ tasks, projects, sections, labels, comments, reads }: rules.StoreData): rules.StoreData => ({
-	tasks,
-	projects,
-	sections,
-	labels,
-	comments,
-	reads,
-});
+const storeData = (data: rules.StoreData): rules.StoreData =>
+	Object.fromEntries(LIST_NAMES.map(name => [name, data[name]])) as rules.StoreData;
 
 /**
  * Clears the previous account's rows, upload queue, and local images, and tries again until it works: the database
@@ -73,7 +66,7 @@ async function clearUntilDone() {
  * back only the rows that changed. Each command runs its rule on one space's data only, so nothing ever crosses spaces.
  */
 class Store {
-	own = $state.raw<rules.StoreData>(emptyData());
+	own = $state.raw<rules.StoreData>(emptyLists());
 	settings = $state.raw<Settings>(DEFAULT_SETTINGS);
 	spaces = $state.raw<Spaces>({});
 	people = $state.raw<Person[]>([]);
@@ -161,7 +154,6 @@ class Store {
 
 	constructor() {
 		if (typeof localStorage === 'undefined') return;
-		forgetLegacyDocument();
 		this.people = loadPeople();
 		this.remindersCheckedAt = loadRemindersCheckedAt(Date.now());
 		// A pull names the synced tables it changed and a local write the change log too; either way the log has the ids.
@@ -178,7 +170,7 @@ class Store {
 	open(userId: string): Promise<void> {
 		if (this.#owner === userId) return this.#switching;
 		if (this.#owner !== null) {
-			this.own = emptyData();
+			this.own = emptyLists();
 			this.settings = DEFAULT_SETTINGS;
 			this.spaces = {};
 			this.people = [];
@@ -304,7 +296,8 @@ class Store {
 		this.readStats.ms += performance.now() - started;
 		this.unreadable = false;
 		// In the same step as `loaded`, so nothing that waits for the store to load can see it before the zone is noted.
-		if (!this.loaded) this.noteTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		// The zone push notifications are planned in.
+		if (!this.loaded) this.setSettings({ timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone });
 		this.loaded = true;
 		trimChanges(read).catch(reportError);
 	}
@@ -350,40 +343,10 @@ class Store {
 	/** Keeps the comments others wrote: the server refuses their deletion, and its purge removes them once the space is empty. */
 	deleteAll() {
 		const theirs = this.own.comments.filter(comment => comment.authorId !== null && comment.authorId !== this.#owner);
-		this.#apply({ ...emptyData(), comments: theirs });
+		this.#apply({ ...emptyLists(), comments: theirs });
 	}
 
-	get dictation(): DictationChoice {
-		return this.settings.dictation;
-	}
-
-	/** Offline voice still uses native. */
-	setDictation(dictation: DictationChoice) {
-		this.#setSettings({ dictation });
-	}
-
-	get rambleMode(): RambleMode {
-		return this.settings.rambleMode;
-	}
-
-	setRambleMode(rambleMode: RambleMode) {
-		this.#setSettings({ rambleMode });
-	}
-
-	get quickAddButtons(): QuickAddButton[] {
-		return this.settings.quickAddButtons;
-	}
-
-	setQuickAddButtons(quickAddButtons: QuickAddButton[]) {
-		this.#setSettings({ quickAddButtons });
-	}
-
-	/** The zone push notifications are planned in. */
-	noteTimeZone(timeZone: string) {
-		this.#setSettings({ timeZone });
-	}
-
-	#setSettings(patch: Partial<Settings>) {
+	setSettings(patch: Partial<Settings>) {
 		if (!this.#owner) return;
 		const before = this.settings;
 		const after = { ...before, ...patch };
@@ -392,6 +355,11 @@ class Store {
 		if (this.#hasSettings)
 			this.#persist(this.#owner, { ...this.own, settings: before }, { ...this.own, settings: after });
 		else this.#heldSettings = { ...this.#heldSettings, ...patch };
+	}
+
+	/** Runs a rule on the user's own data when `id` is theirs; a shared space's project, section, or label stays as it is. */
+	#onOwn(id: string, rule: (data: rules.StoreData) => rules.StoreData) {
+		if (this.homeOf(id) === null) this.#apply(rule(this.own));
 	}
 
 	#creation = (): rules.Creation => ({ id: newId(), now: Date.now() });
@@ -405,7 +373,7 @@ class Store {
 
 	/** The data of one space, whose projects and labels are the only ones its tasks may use. */
 	dataOf(home: Home): rules.StoreData {
-		return home === null ? this.own : (this.spaces[home]?.data ?? emptyData());
+		return home === null ? this.own : (this.spaces[home]?.data ?? emptyLists());
 	}
 
 	/** False for a shared task its owner shared read only, and for one in a space this user no longer reaches. */
@@ -542,11 +510,11 @@ class Store {
 	}
 
 	renameProject(id: string, name: string) {
-		if (this.homeOf(id) === null) this.#apply(rules.renameProject(this.own, id, name));
+		this.#onOwn(id, data => rules.renameProject(data, id, name));
 	}
 
 	setProjectIcon(id: string, icon: ProjectIcon | null) {
-		if (this.homeOf(id) === null) this.#apply(rules.setProjectIcon(this.own, id, icon));
+		this.#onOwn(id, data => rules.setProjectIcon(data, id, icon));
 	}
 
 	deleteProject(id: string): rules.Deleted | undefined {
@@ -554,7 +522,7 @@ class Store {
 	}
 
 	moveProject(id: string, index: number) {
-		if (this.homeOf(id) === null) this.#apply(rules.moveProject(this.own, id, index));
+		this.#onOwn(id, data => rules.moveProject(data, id, index));
 	}
 
 	addSection(projectId: string, name: string): Section | undefined {
@@ -565,15 +533,15 @@ class Store {
 	}
 
 	renameSection(id: string, name: string) {
-		if (this.homeOf(id) === null) this.#apply(rules.renameSection(this.own, id, name));
+		this.#onOwn(id, data => rules.renameSection(data, id, name));
 	}
 
 	setSectionCounter(id: string, counter: SectionCounter) {
-		if (this.homeOf(id) === null) this.#apply(rules.setSectionCounter(this.own, id, counter));
+		this.#onOwn(id, data => rules.setSectionCounter(data, id, counter));
 	}
 
 	moveSection(id: string, index: number) {
-		if (this.homeOf(id) === null) this.#apply(rules.moveSection(this.own, id, index));
+		this.#onOwn(id, data => rules.moveSection(data, id, index));
 	}
 
 	deleteSection(id: string): rules.Deleted | undefined {
@@ -587,7 +555,7 @@ class Store {
 	}
 
 	renameLabel(id: string, name: string) {
-		if (this.homeOf(id) === null) this.#apply(rules.renameLabel(this.own, id, name));
+		this.#onOwn(id, data => rules.renameLabel(data, id, name));
 	}
 
 	/** Null when a label already has the name. */
@@ -598,7 +566,7 @@ class Store {
 	}
 
 	setLabelColor(id: string, color: LabelColor) {
-		if (this.homeOf(id) === null) this.#apply(rules.setLabelColor(this.own, id, color));
+		this.#onOwn(id, data => rules.setLabelColor(data, id, color));
 	}
 
 	deleteLabel(id: string): rules.Deleted | undefined {
@@ -649,7 +617,9 @@ class Store {
 	}
 
 	/** Comments are written in the task's space, so only someone who may edit the task can comment on it. */
-	addComment(taskId: string, body: string, me: string): Comment | undefined {
+	addComment(taskId: string, body: string): Comment | undefined {
+		const me = this.#owner;
+		if (!me) return undefined;
 		let comment: Comment | null = null;
 		this.#onTask(taskId, data => {
 			const result = comments.addComment(data, taskId, body, me, this.#creation());
@@ -659,15 +629,17 @@ class Store {
 		return comment ?? undefined;
 	}
 
-	editComment(id: string, body: string, me: string) {
+	editComment(id: string, body: string) {
 		const comment = this.#commentById.get(id);
-		if (comment) this.#onTask(comment.taskId, data => comments.editComment(data, id, body, me, Date.now()));
+		const me = this.#owner;
+		if (comment && me) this.#onTask(comment.taskId, data => comments.editComment(data, id, body, me, Date.now()));
 	}
 
-	/** Deletes `me`'s own comment and returns it for undo. */
-	deleteComment(id: string, me: string): Comment | undefined {
+	/** Deletes the user's own comment and returns it for undo. */
+	deleteComment(id: string): Comment | undefined {
 		const comment = this.#commentById.get(id);
-		if (comment?.authorId !== me) return undefined;
+		const me = this.#owner;
+		if (!me || comment?.authorId !== me) return undefined;
 		this.#onTask(comment.taskId, data => comments.deleteComment(data, id, me));
 		return comment;
 	}
@@ -679,8 +651,9 @@ class Store {
 	}
 
 	/** The marker goes into the user's own space, whichever space holds the task. */
-	markCommentsRead(taskId: string, me: string) {
-		const next = comments.markRead(this.own, taskId, this.comments, me, Date.now());
+	markCommentsRead(taskId: string) {
+		if (!this.#owner) return;
+		const next = comments.markRead(this.own, taskId, this.comments, this.#owner, Date.now());
 		if (next !== this.own) this.#apply(next);
 	}
 
@@ -715,7 +688,7 @@ class Store {
 }
 
 function keepSpace(previous: SharedSpace | undefined, next: SharedSpace): SharedSpace {
-	const data = keepSame(previous?.data ?? emptyData(), next.data);
+	const data = keepSame(previous?.data ?? emptyLists(), next.data);
 	const readOnly =
 		previous && sameValue([...previous.readOnly].sort(), [...next.readOnly].sort()) ? previous.readOnly : next.readOnly;
 	const access = previous && sameValue(previous.access, next.access) ? previous.access : next.access;
@@ -734,15 +707,10 @@ function keepSame(previous: rules.StoreData, next: rules.StoreData): rules.Store
 		});
 		return kept.length === before.length && kept.every((entity, i) => entity === before[i]) ? (before as T[]) : kept;
 	};
-	const data: rules.StoreData = {
-		tasks: keep(previous.tasks, next.tasks),
-		projects: keep(previous.projects, next.projects),
-		sections: keep(previous.sections, next.sections),
-		labels: keep(previous.labels, next.labels),
-		comments: keep(previous.comments, next.comments),
-		reads: keep(previous.reads, next.reads),
-	};
-	return (Object.keys(data) as (keyof rules.StoreData)[]).every(key => data[key] === previous[key]) ? previous : data;
+	const data = Object.fromEntries(
+		LIST_NAMES.map(name => [name, keep<{ id: string }>(previous[name], next[name])]),
+	) as rules.StoreData;
+	return LIST_NAMES.every(name => data[name] === previous[name]) ? previous : data;
 }
 
 export const store = new Store();

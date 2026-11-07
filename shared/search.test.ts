@@ -6,6 +6,7 @@ import { describe, recorded, test } from './vectors/record.ts';
 const excerpt = recorded('search', searching.excerpt);
 const search = recorded('search', searching.search);
 const searchTerms = recorded('search', searching.searchTerms);
+const searchSections = recorded('search', searching.searchSections);
 
 const projects: Project[] = [
 	{ id: 'home', name: 'Home', order: 0, icon: null, createdAt: 0 },
@@ -263,5 +264,24 @@ describe('excerpt', () => {
 			text: '…can and then water the ferns by the window',
 			ranges: [[24, 29]],
 		});
+	});
+});
+
+describe('search sections', () => {
+	test('sections keep their order, show their best rows, and count every match', () => {
+		const many = Array.from({ length: 40 }, (_, i) => task(`Home task ${i}`));
+		const done = { ...task('Home done'), completedAt: 5 };
+		const sections = searchSections(searching.search('home', [...many, done], { projects, labels }));
+		expect(sections.map(s => [s.title, s.total, s.rows.length])).toEqual([
+			['Projects', 1, 1],
+			['Tasks', 40, 30],
+			['Completed', 1, 1],
+		]);
+		expect(sections[0]!.rows[0]!.key).toBe('p-home');
+		expect(sections[2]!.rows.map(row => row.key)).toEqual([`t-${done.id}`]);
+	});
+
+	test('no match leaves no section', () => {
+		expect(searchSections(searching.search('zzz', [task('Home')], { projects, labels }))).toEqual([]);
 	});
 });

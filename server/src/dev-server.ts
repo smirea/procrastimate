@@ -1,13 +1,15 @@
 import type { Server } from 'bun';
+import { RAMBLE_SOCKET_PATH } from '../../shared/ramble/protocol';
+import { readActor } from './actor';
 import { handle } from './api';
 import { createApp } from './app';
-import type { Env } from './bindings';
-import { config } from './config';
+import type { Config } from './config';
 import type { Store } from './db/store';
-import { headMessage, liveProtocol, type Live } from './live';
-import { dbRambleData, rambleRoute, upstreamOf, upstreamUrl, type ConnectUpstream } from './ramble';
+import { errorResponse } from './errors';
+import { headMessage, liveProtocol, protocolHeaders, type Live } from './live';
+import { dbRambleData, rambleEntry, rambleRoute, upstreamOf, upstreamUrl, type ConnectUpstream } from './ramble';
 import type { OpenSocket } from './ramble-gemini';
-import type { Socket, StreamEvents, StreamHost } from './sockets';
+import type { Socket, StreamEvents } from './sockets';
 
 type SocketData = { start: (socket: Socket) => StreamEvents; events?: StreamEvents };
 
@@ -30,7 +32,7 @@ function bunLive(stream: (request: Request, protocol: string | null, start: Sock
 }
 
 /** ElevenLabs from Bun, whose `WebSocket` client can set the key header. */
-export function bunUpstream(apiKey: string): ConnectUpstream {
+function bunUpstream(apiKey: string): ConnectUpstream {
 	return ({ keyterms }, events) =>
 		new Promise((resolve, reject) => {
 			// Bun's client takes headers; the DOM typing the root config loads does not know them.
@@ -47,7 +49,7 @@ export function bunUpstream(apiKey: string): ConnectUpstream {
 }
 
 /** A WebSocket from Bun. Gemini sends its messages as binary frames, so they are decoded to text. */
-export const bunSocket: OpenSocket = (url, events) =>
+const bunSocket: OpenSocket = (url, events) =>
 	new Promise((resolve, reject) => {
 		const socket = new WebSocket(url);
 		socket.binaryType = 'arraybuffer';
@@ -66,31 +68,33 @@ export const bunSocket: OpenSocket = (url, events) =>
 	});
 
 /**
- * The Bun dev server: the Worker's handler on Bun's HTTP server, with Ramble's socket on Bun's WebSocket server.
+ * The Bun dev server: the `App` object's handler on Bun's HTTP server, with Ramble's socket, which the Worker routes
+ * to its own object, served here.
  * Bun upgrades through `server.upgrade` and needs the fetch handler to answer nothing, so an accepted upgrade
  * returns a marker response that `fetch` swaps for `undefined`. No idle timeout, since sync sockets stay open.
  */
-export async function serveDev(port: number, env: Env, store: Store): Promise<Server<SocketData>> {
+export async function serveDev(port: number, settings: Config, store: Store): Promise<Server<SocketData>> {
 	const upgraded = new WeakSet<Response>();
 	let server: Server<SocketData> | undefined;
 	const upgrade = (request: Request, protocol: string | null, start: SocketData['start']) => {
-		const headers = protocol ? { 'Sec-WebSocket-Protocol': protocol } : undefined;
-		if (!server?.upgrade(request, { data: { start }, headers })) {
-			return Response.json({ ok: false, error: 'Upgrade failed' }, { status: 400 });
+		if (!server?.upgrade(request, { data: { start }, headers: protocolHeaders(protocol) })) {
+			return errorResponse('BAD_REQUEST', 'Upgrade failed');
 		}
 		const marker = new Response(null);
 		upgraded.add(marker);
 		return marker;
 	};
-	const stream: StreamHost = (request, protocol, start) => upgrade(request, protocol, start);
-	const ramble = rambleRoute(dbRambleData(store.db), stream, upstreamOf(config(env), bunUpstream, bunSocket));
-	const app = await createApp(env, store, ramble, bunLive(upgrade));
+	const ramble = rambleRoute(dbRambleData(store.db), upgrade, upstreamOf(settings, bunUpstream, bunSocket));
+	const app = await createApp(settings, store, bunLive(upgrade));
 	server = Bun.serve<SocketData>({
 		development: true,
 		idleTimeout: 0,
 		port,
 		async fetch(request) {
-			const response = await handle(request, app);
+			const response =
+				new URL(request.url).pathname === RAMBLE_SOCKET_PATH
+					? await rambleEntry(request, await readActor(request, app), ramble)
+					: await handle(request, app);
 			return upgraded.has(response) ? undefined : response;
 		},
 		websocket: {

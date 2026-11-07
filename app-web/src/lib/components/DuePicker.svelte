@@ -4,7 +4,7 @@
 	import Popover from './Popover.svelte';
 	import DuePanel from './DuePanel.svelte';
 	import { dueTone, formatDue } from 'shared/format.ts';
-	import { clock } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
 
 	let {
 		due,

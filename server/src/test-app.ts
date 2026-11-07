@@ -5,11 +5,10 @@ import { tasks } from '../../shared/db/schema';
 import type { Person, ShareView } from '../../shared/sharing';
 import { handle } from './api';
 import { createApp, type App } from './app';
-import type { Env } from './bindings';
+import { config, withLocalStandIns, type Env } from './config';
 import { bunStore } from './db/bun-store';
 import type { Live } from './live';
-import { dbRambleData, rambleRoute, type ConnectUpstream } from './ramble';
-import { generateVapidKeys } from './web-push';
+import { errorResponse } from './errors';
 
 /**
  * The server under test: a fresh in-memory SQLite database per `testApp()`, migrated like the Bun server's, behind
@@ -19,43 +18,32 @@ import { generateVapidKeys } from './web-push';
 
 export const ORIGIN = 'https://procrastimate.test';
 
-let vapid: Promise<{ publicKey: string; privateKey: string }> | undefined;
-
 export async function testEnv(overrides: Partial<Env> = {}): Promise<Env> {
-	vapid ??= generateVapidKeys();
-	const keys = await vapid;
-	return {
-		BETTER_AUTH_SECRET: 'test-better-auth-secret-0123456789abcdef',
-		AUTH_RATE_LIMIT: 'off',
-		VAPID_PUBLIC_KEY: keys.publicKey,
-		VAPID_PRIVATE_KEY: keys.privateKey,
-		SENTRY_ENVIRONMENT: '',
-		...overrides,
-	};
+	return { ...(await withLocalStandIns({})), ...overrides };
 }
 
 export type TestApp = App & {
 	fetch: (path: string, init?: RequestInit) => Promise<Response>;
-	close: () => Promise<void>;
 	/** Every SQL statement Drizzle ran since the last `statements.length = 0`, for the write-cost tests. */
 	statements: string[];
 	/** Every head the app published to its sync sockets. */
 	published: number[];
 };
 
-/** A fresh database, migrated, with the app on top. Sockets are refused; Ramble tests pass their own config. */
-export async function testApp(options: { env?: Partial<Env>; connect?: ConnectUpstream } = {}): Promise<TestApp> {
+/** A fresh database, migrated, with the app on top. Sockets are refused. */
+export async function testApp(options: { env?: Partial<Env> } = {}): Promise<TestApp> {
 	const statements: string[] = [];
 	const published: number[] = [];
 	const store = bunStore(':memory:', { logQuery: query => void statements.push(query) });
 	const env = await testEnv(options.env);
-	const stream = () => Response.json({ ok: false, error: 'No sockets in tests' }, { status: 501 });
-	const live: Live = { accept: stream, publish: head => void published.push(head) };
-	const app = await createApp(env, store, rambleRoute(dbRambleData(store.db), stream, options.connect ?? null), live);
+	const live: Live = {
+		accept: () => errorResponse('NOT_IMPLEMENTED', 'No sockets in tests'),
+		publish: head => void published.push(head),
+	};
+	const app = await createApp(config(env), store, live);
 	return {
 		...app,
 		fetch: (path, init) => handle(new Request(`${ORIGIN}${path}`, init), app),
-		close: async () => {},
 		statements,
 		published,
 	};

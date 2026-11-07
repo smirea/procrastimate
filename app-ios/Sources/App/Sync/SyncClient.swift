@@ -139,7 +139,6 @@ final class SyncClient {
         await reload().value
     }
 
-    /// Reads the local database again, after it could not be read.
     func retryRead() {
         reload()
     }
@@ -322,10 +321,6 @@ final class SyncClient {
         reload()
         askedForPeople = []
         TaskAttachments.clearLocal()
-    }
-
-    private func reject() {
-        session?.end()
     }
 
     private func rejected(_ rows: [(kind: EntityKind, id: String)]) {

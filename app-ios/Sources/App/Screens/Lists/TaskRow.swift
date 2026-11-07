@@ -110,7 +110,7 @@ struct TaskRow<Trailing: View>: View {
         guard !checking else { return }
         checking = true
         Task {
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 260))
+            try? await Task.sleep(for: reduceMotion ? .zero : Checkbox.play)
             actions.complete(task)
             checking = false
         }
@@ -133,7 +133,7 @@ struct TaskRow<Trailing: View>: View {
     }
 
     /// A task left open under a completed parent is done with it.
-    private var done: Bool { Triggers.completedAt(of: task, lookup: store.task) != nil }
+    private var done: Bool { store.completedAt(task) != nil }
 
     private var offered: RowActions { RowActions(task, in: store) }
     private var project: Project? { store.project(task.projectId) }
@@ -339,6 +339,9 @@ struct SubtaskProgress: View {
 }
 
 struct Checkbox: View {
+    /// How long the check plays before its row completes and moves.
+    static let play: Duration = .milliseconds(260)
+
     let checked: Bool
     let tone: Color
     let action: () -> Void
@@ -358,7 +361,7 @@ struct Checkbox: View {
             .phaseAnimator([1.0, 1.18, 1.0], trigger: checked) { content, scale in
                 content.scaleEffect(checked ? scale : 1)
             }
-            .animation(.spring(duration: 0.26), value: checked)
+            .animation(.spring(duration: Checkbox.play / .seconds(1)), value: checked)
             .frame(width: 44, height: 44)
             .contentShape(.circle)
         }

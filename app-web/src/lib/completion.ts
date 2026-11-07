@@ -2,7 +2,11 @@ import { completedToast, formatDate, reopenedToast } from 'shared/format.ts';
 import type { Deleted, Undo } from 'shared/store.ts';
 import type { DateKey, Task } from 'shared/task.ts';
 import { store } from './store.svelte.ts';
-import { clock, toasts } from './ui.svelte.ts';
+import { clock } from './clock.svelte.ts';
+import { toasts } from './toasts.svelte.ts';
+
+/** How long a checkbox plays its check before the row completes and moves. */
+export const CHECK_PLAY_MS = 260;
 
 /** The store holds the undo while the toast shows, so stacked undos give the same result in any order. */
 export function toastUndo(message: string, undo: Undo) {

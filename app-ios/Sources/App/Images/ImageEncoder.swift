@@ -15,8 +15,8 @@ enum ImageEncoder {
 
     enum Failure: Error { case unreadable, tooLarge }
 
-    static let full = (edge: 2048, bytes: 1_500_000)
-    static let thumb = (edge: 320, bytes: 200_000)
+    static let full = (edge: SharedConstants.ImageLimits.Full.edge, bytes: SharedConstants.ImageLimits.Full.bytes)
+    static let thumb = (edge: SharedConstants.ImageLimits.Thumb.edge, bytes: SharedConstants.ImageLimits.Thumb.bytes)
     private static let qualities: [Double] = [0.85, 0.75, 0.6, 0.45]
 
     static func encode(_ data: Data) throws -> Encoded {

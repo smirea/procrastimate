@@ -1,6 +1,6 @@
 import type { ByteKey } from 'shared/images.ts';
 
-export type Upload = { key: string; space: string | null; id: string; size: ByteKey };
+type Upload = { key: string; space: string | null; id: string; size: ByteKey };
 /** An `ArrayBuffer` with its type, because WebKit refuses a `Blob` in IndexedDB in a private window. */
 type Stored = { type: string; bytes: ArrayBuffer };
 

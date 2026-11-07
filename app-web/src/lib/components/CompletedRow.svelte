@@ -15,10 +15,10 @@
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { useLookup } from '../lookup.ts';
 	import { PRIORITIES } from '../priorities.ts';
-	import { deleteTask, reopenTask } from '../completion.ts';
+	import { deleteTask, reopenTask, CHECK_PLAY_MS } from '../completion.ts';
 	import { session } from '../session.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { clock } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
 	import { taskMenu } from '../row-menu.svelte.ts';
 
 	let { task, showProject = false }: { task: Task; showProject?: boolean } = $props();
@@ -43,7 +43,7 @@
 		setTimeout(() => {
 			reopenTask(task);
 			reopening = false;
-		}, 260);
+		}, CHECK_PLAY_MS);
 	}
 </script>
 

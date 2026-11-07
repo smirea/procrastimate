@@ -30,7 +30,6 @@ public struct RowsRead: Sendable {
 
     public init() {}
 
-    /// Every table whole.
     public init(everything rows: StoredRows) {
         tasks = TableRead(ids: .all, rows: rows.tasks)
         projects = TableRead(ids: .all, rows: rows.projects)

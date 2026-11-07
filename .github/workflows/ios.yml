@@ -159,7 +159,7 @@ jobs:
       # No AWS here. Debug gets the dev schema default; Release is pinned in Base.xcconfig.
       - name: Debug and Release env
         working-directory: ${{ github.workspace }}
-        run: bun server/scripts/secrets.ts ios --generate-only
+        run: bun scripts/secrets.ts ios --generate-only
 
       # One -showBuildSettings per configuration: each call loads the package graph again, which takes seconds.
       - name: Debug calls dev and Release calls prod, and only Release reports to Sentry, with dSYMs

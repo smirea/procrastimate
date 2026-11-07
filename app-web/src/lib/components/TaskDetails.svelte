@@ -19,8 +19,7 @@
 	import { formatDue } from 'shared/format.ts';
 	import { applyPickedLabels, formatEvent, formatLocation, formatRadius, pickedLabels, scheduledDue } from 'shared/triggers.ts';
 	import { parseMemoSource } from 'shared/memo-tasks.ts';
-	import { typedOver } from 'shared/quick-add-merge.ts';
-	import { parseQuickAdd } from 'shared/quick-add.ts';
+	import { commitTitle, parseTitle, setDue, titleDraft, titleTokens } from 'shared/task-details.ts';
 	import type { Task } from 'shared/task.ts';
 	import SmartInput from './SmartInput.svelte';
 	import LinkedField from './LinkedField.svelte';
@@ -39,7 +38,9 @@
 	import PersonName from './PersonName.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import { store, type TaskPatch } from '../store.svelte.ts';
-	import { clock, sheets, motion, type Arrival } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { sheets, type Arrival } from '../sheets.svelte.ts';
+	import { motion } from '../motion.ts';
 	import { completeTask, deleteTask } from '../completion.ts';
 	import { attachments, droppedFiles } from '../attachments/attachments.svelte.ts';
 	import { unsynced } from '../unsynced.svelte.ts';
@@ -67,33 +68,9 @@
 	const edited = $derived(title !== task.title);
 	// Only an edited title is parsed: every command replaces the space, and parsing on each would rerun the parser on
 	// every change made anywhere while the sheet is open.
-	const parsed = $derived(
-		edited
-			? parseQuickAdd(title, {
-					literal,
-					now: new Date(clock.now),
-					projects: parent ? [] : space.projects,
-					sections: parent ? [] : space.sections,
-					labels: space.labels,
-					projectId: task.projectId,
-					due: task.due,
-				})
-			: null,
-	);
-	// A phrase left in the saved title stays text, so only an edit's phrases highlight, matching what the chips apply.
-	const tokens = $derived(parsed?.tokens ?? []);
-	// The chips below show what the title will apply, so the edit can be checked before Enter or blur commits it.
-	const draft = $derived(
-		parsed?.title
-			? {
-					title: parsed.title,
-					...typedOver(task, parsed, task.event),
-					labelIds: [...new Set([...task.labelIds, ...parsed.labelIds])],
-					reminders: [...task.reminders, ...parsed.reminders],
-					location: parsed.location ? { ...parsed.location, trigger: task.location?.trigger ?? 'arrive' } : task.location,
-				}
-			: task,
-	);
+	const parsed = $derived(edited ? parseTitle(title, task, { now: new Date(clock.now), ...space }) : null);
+	const tokens = $derived(titleTokens(task, title, parsed));
+	const draft = $derived(titleDraft(task, title, parsed));
 
 	const update = (patch: TaskPatch) => store.updateTask(id, patch);
 
@@ -119,28 +96,20 @@
 	onDestroy(commitNotes);
 	const eventDue = $derived(task.event ? scheduledDue(task, clock.today) : null);
 
-	function commitTitle() {
-		if (typed === null || title === task.title) {
-			typed = null;
-			return;
-		}
-		if (!parsed?.title) {
-			typed = null;
-			return;
-		}
-		const { title: next, due, recurrence, priority, projectId, sectionId, labelIds, reminders, location } = draft;
-		update({ title: next, due, recurrence, priority, projectId, sectionId, labelIds, reminders, location });
+	function saveTitle() {
+		const commit = commitTitle(task, title, parsed);
+		if (commit.kind === 'update') update(commit.patch);
 		typed = null;
 	}
 
 	function onkeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
 			event.preventDefault();
-			commitTitle();
+			saveTitle();
 		} else if (event.key === 'Escape') {
 			event.preventDefault();
 			// Throwing away the only title a new task has would delete it, so Escape keeps what was typed there.
-			if (task.title === '') commitTitle();
+			if (task.title === '') saveTitle();
 			typed = null;
 			sheets.close();
 		}
@@ -263,7 +232,7 @@
 		{/if}
 		{#if editable}
 			<LinkedField text={title} class="px-1 py-0.5 text-[19px] leading-[1.6] font-semibold whitespace-pre-wrap [overflow-wrap:anywhere]">
-				<SmartInput bind:value={() => title, (value) => (typed = value)} autofocus={untitled} placeholder="Task name" {tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent && !literal} suggestNames={!literal} class="text-[19px] font-semibold" {onkeydown} onblur={commitTitle} />
+				<SmartInput bind:value={() => title, (value) => (typed = value)} autofocus={untitled} placeholder="Task name" {tokens} projectId={draft.projectId} label="Title" enterkeyhint="done" suggestProjects={!parent && !literal} suggestNames={!literal} class="text-[19px] font-semibold" {onkeydown} onblur={saveTitle} />
 			</LinkedField>
 		{:else}
 			<h2 class="text-[19px] font-semibold break-words"><LinkedText text={task.title} /></h2>
@@ -292,7 +261,7 @@
 		{:else}
 			<DuePicker
 				due={draft.due}
-				onchange={(due) => update({ due, recurrence: due ? task.recurrence : null })}
+				onchange={(due) => update(setDue(task, due))}
 			/>
 			<RecurrencePicker
 				recurrence={draft.recurrence}

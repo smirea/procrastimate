@@ -2,6 +2,7 @@
 
 - **Source keys.** A task or project brought in by an import stores where it came from, such as `todoist:task:…`, so the import can skip what it already brought in. Other tasks have none.
 - **Local databases are sync-engine's.** Each client keeps its rows in a SQLite database the engine syncs: on the web sync-engine's browser client on OPFS with Drizzle, on iOS the engine's Swift client over a GRDB `DatabasePool` (`Application Support/procrastimate/sync.sqlite`). The in-memory store the screens render from is loaded from it and written back through `rowWrites` after every command (see [Sync](sync.md)). The client areas document their databases: [iOS app](ios.md) and the web client in [Sync](sync.md#web-client).
+- **One registry of browser storage keys.** `DEVICE_KEYS` in `app-web/src/lib/device.ts` names every `localStorage` and `sessionStorage` key the web writes, and e2e specs and scripts import it. Only `app.html`'s first-paint script repeats the theme keys, since it runs before any module. Nothing deletes storage from earlier designs: there is no backwards compatibility.
 - **Task order.** Tasks are stored sorted by `createdAt`, then `id`. A new task's `createdAt` is at least one millisecond past the newest task's, so tasks added within one millisecond keep the order they were added in instead of falling back to their random ids.
 
 ## The server database

@@ -1,0 +1,1309 @@
+{
+	"module": "task-menus",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "repeatPresets",
+			"test": "repeat menu › the presets for a task due 2026-10-19 offer \"Every Mon\" and \"Every month on the 3rd Mon\"",
+			"input": [
+				"2026-10-19"
+			],
+			"output": [
+				{
+					"interval": 1,
+					"unit": "day"
+				},
+				{
+					"interval": 1,
+					"unit": "weekday"
+				},
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"nth": {
+						"week": 3,
+						"weekday": 1
+					},
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"unit": "year"
+				}
+			]
+		},
+		{
+			"fn": "repeatPresets",
+			"test": "repeat menu › the presets for a task due 2026-10-01 offer \"Every Thu\" and \"Every month on the 1st Thu\"",
+			"input": [
+				"2026-10-01"
+			],
+			"output": [
+				{
+					"interval": 1,
+					"unit": "day"
+				},
+				{
+					"interval": 1,
+					"unit": "weekday"
+				},
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"nth": {
+						"week": 1,
+						"weekday": 4
+					},
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"unit": "year"
+				}
+			]
+		},
+		{
+			"fn": "repeatPresets",
+			"test": "repeat menu › the presets for a task due 2026-10-30 offer \"Every Fri\" and \"Every month on the last Fri\"",
+			"input": [
+				"2026-10-30"
+			],
+			"output": [
+				{
+					"interval": 1,
+					"unit": "day"
+				},
+				{
+					"interval": 1,
+					"unit": "weekday"
+				},
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"nth": {
+						"week": -1,
+						"weekday": 5
+					},
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"unit": "year"
+				}
+			]
+		},
+		{
+			"fn": "repeatAnchor",
+			"test": "repeat menu › a repeat on an undated task dates it today, and no repeat keeps the date",
+			"input": [
+				null,
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"time": null
+			}
+		},
+		{
+			"fn": "setRepeat",
+			"test": "repeat menu › a repeat on an undated task dates it today, and no repeat keeps the date",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "day"
+				},
+				{
+					"date": "2026-10-14",
+					"time": null
+				},
+				null
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": null
+				},
+				"recurrence": {
+					"interval": 1,
+					"unit": "day"
+				}
+			}
+		},
+		{
+			"fn": "setRepeat",
+			"test": "repeat menu › a repeat on an undated task dates it today, and no repeat keeps the date",
+			"input": [
+				null,
+				{
+					"date": "2026-10-14",
+					"time": null
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				"recurrence": null
+			}
+		},
+		{
+			"fn": "repeatWeekdays",
+			"test": "repeat menu › weekday toggles build a set from the plain weekly repeat",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": [
+				3
+			]
+		},
+		{
+			"fn": "repeatWeekdays",
+			"test": "repeat menu › weekday toggles build a set from the plain weekly repeat",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "day"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "toggleWeekday",
+			"test": "repeat menu › weekday toggles build a set from the plain weekly repeat",
+			"input": [
+				5,
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"days": [
+					3,
+					5
+				],
+				"interval": 1,
+				"unit": "week"
+			}
+		},
+		{
+			"fn": "toggleWeekday",
+			"test": "repeat menu › weekday toggles build a set from the plain weekly repeat",
+			"input": [
+				1,
+				{
+					"days": [
+						3,
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"days": [
+					1,
+					3,
+					5
+				],
+				"interval": 1,
+				"unit": "week"
+			}
+		},
+		{
+			"fn": "setRepeat",
+			"test": "repeat menu › weekday toggles build a set from the plain weekly repeat",
+			"input": [
+				{
+					"days": [
+						1,
+						3,
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				"recurrence": {
+					"days": [
+						1,
+						3,
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				}
+			}
+		},
+		{
+			"fn": "canToggleWeekday",
+			"test": "repeat menu › weekday toggles build a set from the plain weekly repeat",
+			"input": [
+				3,
+				[
+					3
+				]
+			],
+			"output": false
+		},
+		{
+			"fn": "canToggleWeekday",
+			"test": "repeat menu › weekday toggles build a set from the plain weekly repeat",
+			"input": [
+				3,
+				[
+					3,
+					5
+				]
+			],
+			"output": true
+		},
+		{
+			"fn": "toggleWeekday",
+			"test": "repeat menu › a first toggle makes a weekly repeat on that day and moves the date",
+			"input": [
+				5,
+				null,
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"days": [
+					5
+				],
+				"interval": 1,
+				"unit": "week"
+			}
+		},
+		{
+			"fn": "setRepeat",
+			"test": "repeat menu › a first toggle makes a weekly repeat on that day and moves the date",
+			"input": [
+				{
+					"days": [
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": "09:00"
+				},
+				"recurrence": {
+					"interval": 1,
+					"unit": "week"
+				}
+			}
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a first toggle makes a weekly repeat on that day and moves the date",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"interval": 1,
+					"unit": "week"
+				}
+			],
+			"output": true
+		},
+		{
+			"fn": "toggleWeekday",
+			"test": "repeat menu › toggle order never changes the result",
+			"input": [
+				5,
+				null,
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"days": [
+					5
+				],
+				"interval": 1,
+				"unit": "week"
+			}
+		},
+		{
+			"fn": "toggleWeekday",
+			"test": "repeat menu › toggle order never changes the result",
+			"input": [
+				1,
+				{
+					"days": [
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"days": [
+					1,
+					5
+				],
+				"interval": 1,
+				"unit": "week"
+			}
+		},
+		{
+			"fn": "toggleWeekday",
+			"test": "repeat menu › toggle order never changes the result",
+			"input": [
+				1,
+				null,
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"days": [
+					1
+				],
+				"interval": 1,
+				"unit": "week"
+			}
+		},
+		{
+			"fn": "toggleWeekday",
+			"test": "repeat menu › toggle order never changes the result",
+			"input": [
+				5,
+				{
+					"days": [
+						1
+					],
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"days": [
+					1,
+					5
+				],
+				"interval": 1,
+				"unit": "week"
+			}
+		},
+		{
+			"fn": "setRepeat",
+			"test": "repeat menu › toggle order never changes the result",
+			"input": [
+				{
+					"days": [
+						1,
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": "09:00"
+				},
+				"recurrence": {
+					"days": [
+						1,
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				}
+			}
+		},
+		{
+			"fn": "setRepeat",
+			"test": "repeat menu › toggle order never changes the result",
+			"input": [
+				{
+					"days": [
+						1,
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": "09:00"
+				},
+				"recurrence": {
+					"days": [
+						1,
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				}
+			}
+		},
+		{
+			"fn": "setRepeat",
+			"test": "repeat menu › toggle order never changes the result",
+			"input": [
+				{
+					"days": [
+						1,
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": "09:00"
+				},
+				"recurrence": {
+					"days": [
+						1,
+						5
+					],
+					"interval": 1,
+					"unit": "week"
+				}
+			}
+		},
+		{
+			"fn": "customRepeat",
+			"test": "repeat menu › a custom weekly interval keeps the set, and a weekday set matches no preset",
+			"input": [
+				{
+					"days": [
+						2,
+						4
+					],
+					"interval": 1,
+					"unit": "week"
+				},
+				2,
+				"week"
+			],
+			"output": {
+				"days": [
+					2,
+					4
+				],
+				"interval": 2,
+				"unit": "week"
+			}
+		},
+		{
+			"fn": "customRepeat",
+			"test": "repeat menu › a custom weekly interval keeps the set, and a weekday set matches no preset",
+			"input": [
+				{
+					"days": [
+						2,
+						4
+					],
+					"interval": 1,
+					"unit": "week"
+				},
+				3,
+				"day"
+			],
+			"output": {
+				"interval": 3,
+				"unit": "day"
+			}
+		},
+		{
+			"fn": "toggleWeekday",
+			"test": "repeat menu › a custom weekly interval keeps the set, and a weekday set matches no preset",
+			"input": [
+				1,
+				{
+					"days": [
+						2,
+						4
+					],
+					"interval": 2,
+					"unit": "week"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"days": [
+					1,
+					2,
+					4
+				],
+				"interval": 2,
+				"unit": "week"
+			}
+		},
+		{
+			"fn": "repeatPresets",
+			"test": "repeat menu › a custom weekly interval keeps the set, and a weekday set matches no preset",
+			"input": [
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"interval": 1,
+					"unit": "day"
+				},
+				{
+					"interval": 1,
+					"unit": "weekday"
+				},
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"nth": {
+						"week": 2,
+						"weekday": 3
+					},
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"unit": "year"
+				}
+			]
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom weekly interval keeps the set, and a weekday set matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "day"
+				},
+				{
+					"days": [
+						2,
+						4
+					],
+					"interval": 1,
+					"unit": "week"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom weekly interval keeps the set, and a weekday set matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "weekday"
+				},
+				{
+					"days": [
+						2,
+						4
+					],
+					"interval": 1,
+					"unit": "week"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom weekly interval keeps the set, and a weekday set matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"days": [
+						2,
+						4
+					],
+					"interval": 1,
+					"unit": "week"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom weekly interval keeps the set, and a weekday set matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"days": [
+						2,
+						4
+					],
+					"interval": 1,
+					"unit": "week"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom weekly interval keeps the set, and a weekday set matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"nth": {
+						"week": 2,
+						"weekday": 3
+					},
+					"unit": "month"
+				},
+				{
+					"days": [
+						2,
+						4
+					],
+					"interval": 1,
+					"unit": "week"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom weekly interval keeps the set, and a weekday set matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "year"
+				},
+				{
+					"days": [
+						2,
+						4
+					],
+					"interval": 1,
+					"unit": "week"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "customRepeat",
+			"test": "repeat menu › a custom monthly interval keeps the day, and a day of the month matches no preset",
+			"input": [
+				{
+					"day": 31,
+					"interval": 1,
+					"unit": "month"
+				},
+				2,
+				"month"
+			],
+			"output": {
+				"day": 31,
+				"interval": 2,
+				"unit": "month"
+			}
+		},
+		{
+			"fn": "customRepeat",
+			"test": "repeat menu › a custom monthly interval keeps the day, and a day of the month matches no preset",
+			"input": [
+				{
+					"day": 31,
+					"interval": 1,
+					"unit": "month"
+				},
+				2,
+				"week"
+			],
+			"output": {
+				"interval": 2,
+				"unit": "week"
+			}
+		},
+		{
+			"fn": "repeatPresets",
+			"test": "repeat menu › a custom monthly interval keeps the day, and a day of the month matches no preset",
+			"input": [
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"interval": 1,
+					"unit": "day"
+				},
+				{
+					"interval": 1,
+					"unit": "weekday"
+				},
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"nth": {
+						"week": 2,
+						"weekday": 3
+					},
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"unit": "year"
+				}
+			]
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom monthly interval keeps the day, and a day of the month matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "day"
+				},
+				{
+					"day": 31,
+					"interval": 1,
+					"unit": "month"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom monthly interval keeps the day, and a day of the month matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "weekday"
+				},
+				{
+					"day": 31,
+					"interval": 1,
+					"unit": "month"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom monthly interval keeps the day, and a day of the month matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"day": 31,
+					"interval": 1,
+					"unit": "month"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom monthly interval keeps the day, and a day of the month matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"day": 31,
+					"interval": 1,
+					"unit": "month"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom monthly interval keeps the day, and a day of the month matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"nth": {
+						"week": 2,
+						"weekday": 3
+					},
+					"unit": "month"
+				},
+				{
+					"day": 31,
+					"interval": 1,
+					"unit": "month"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › a custom monthly interval keeps the day, and a day of the month matches no preset",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "year"
+				},
+				{
+					"day": 31,
+					"interval": 1,
+					"unit": "month"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "setRepeat",
+			"test": "repeat menu › the weekday-of-the-month preset moves the date, and a custom interval keeps it",
+			"input": [
+				{
+					"interval": 1,
+					"nth": {
+						"week": -1,
+						"weekday": 5
+					},
+					"unit": "month"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-30",
+					"time": "09:00"
+				},
+				"recurrence": {
+					"interval": 1,
+					"nth": {
+						"week": -1,
+						"weekday": 5
+					},
+					"unit": "month"
+				}
+			}
+		},
+		{
+			"fn": "customRepeat",
+			"test": "repeat menu › the weekday-of-the-month preset moves the date, and a custom interval keeps it",
+			"input": [
+				{
+					"interval": 1,
+					"nth": {
+						"week": -1,
+						"weekday": 5
+					},
+					"unit": "month"
+				},
+				2,
+				"month"
+			],
+			"output": {
+				"interval": 2,
+				"nth": {
+					"week": -1,
+					"weekday": 5
+				},
+				"unit": "month"
+			}
+		},
+		{
+			"fn": "repeatPresets",
+			"test": "repeat menu › the weekday-of-the-month preset moves the date, and a custom interval keeps it",
+			"input": [
+				"2026-10-14"
+			],
+			"output": [
+				{
+					"interval": 1,
+					"unit": "day"
+				},
+				{
+					"interval": 1,
+					"unit": "weekday"
+				},
+				{
+					"interval": 1,
+					"unit": "week"
+				},
+				{
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"nth": {
+						"week": 2,
+						"weekday": 3
+					},
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"unit": "year"
+				}
+			]
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › the weekday-of-the-month preset moves the date, and a custom interval keeps it",
+			"input": [
+				{
+					"interval": 1,
+					"nth": {
+						"week": 2,
+						"weekday": 3
+					},
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"nth": {
+						"week": 2,
+						"weekday": 3
+					},
+					"unit": "month"
+				}
+			],
+			"output": true
+		},
+		{
+			"fn": "isRepeatPreset",
+			"test": "repeat menu › the weekday-of-the-month preset moves the date, and a custom interval keeps it",
+			"input": [
+				{
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"interval": 1,
+					"nth": {
+						"week": -1,
+						"weekday": 5
+					},
+					"unit": "month"
+				}
+			],
+			"output": false
+		},
+		{
+			"fn": "setRepeat",
+			"test": "repeat menu › a repeat past the year 9999 keeps the opened date",
+			"input": [
+				{
+					"day": 15,
+					"interval": 1,
+					"unit": "month"
+				},
+				{
+					"date": "9999-12-20",
+					"time": null
+				},
+				{
+					"date": "9999-12-20",
+					"time": null
+				}
+			],
+			"output": {
+				"due": {
+					"date": "9999-12-20",
+					"time": null
+				},
+				"recurrence": {
+					"day": 15,
+					"interval": 1,
+					"unit": "month"
+				}
+			}
+		},
+		{
+			"fn": "addReminder",
+			"test": "reminder menu › a reminder adds once, and a custom one defaults to the due date, else today",
+			"input": [
+				{
+					"kind": "before",
+					"minutes": 10
+				},
+				[
+					{
+						"kind": "before",
+						"minutes": 10
+					}
+				]
+			],
+			"output": null
+		},
+		{
+			"fn": "addReminder",
+			"test": "reminder menu › a reminder adds once, and a custom one defaults to the due date, else today",
+			"input": [
+				{
+					"kind": "before",
+					"minutes": 30
+				},
+				[
+					{
+						"kind": "before",
+						"minutes": 10
+					}
+				]
+			],
+			"output": [
+				{
+					"kind": "before",
+					"minutes": 10
+				},
+				{
+					"kind": "before",
+					"minutes": 30
+				}
+			]
+		},
+		{
+			"fn": "reminderAt",
+			"test": "reminder menu › a reminder adds once, and a custom one defaults to the due date, else today",
+			"input": [
+				null,
+				"08:00",
+				{
+					"date": "2026-10-16",
+					"time": null
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-16",
+				"kind": "at",
+				"time": "08:00"
+			}
+		},
+		{
+			"fn": "reminderAt",
+			"test": "reminder menu › a reminder adds once, and a custom one defaults to the due date, else today",
+			"input": [
+				null,
+				"08:00",
+				null,
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-14",
+				"kind": "at",
+				"time": "08:00"
+			}
+		},
+		{
+			"fn": "reminderAt",
+			"test": "reminder menu › a reminder adds once, and a custom one defaults to the due date, else today",
+			"input": [
+				"2026-10-20",
+				"08:00",
+				{
+					"date": "2026-10-16",
+					"time": null
+				},
+				"2026-10-14"
+			],
+			"output": {
+				"date": "2026-10-20",
+				"kind": "at",
+				"time": "08:00"
+			}
+		},
+		{
+			"fn": "reminderChipLabel",
+			"test": "reminder menu › the chip and section name what the menu holds",
+			"input": [
+				0,
+				0,
+				[
+					0,
+					1,
+					2
+				]
+			],
+			"output": "Add reminder"
+		},
+		{
+			"fn": "reminderChipLabel",
+			"test": "reminder menu › the chip and section name what the menu holds",
+			"input": [
+				1,
+				1,
+				[
+					0,
+					1,
+					2
+				]
+			],
+			"output": "1 reminder"
+		},
+		{
+			"fn": "reminderChipLabel",
+			"test": "reminder menu › the chip and section name what the menu holds",
+			"input": [
+				2,
+				2,
+				[
+					0,
+					1,
+					2
+				]
+			],
+			"output": "2 reminders"
+		},
+		{
+			"fn": "reminderSectionTitle",
+			"test": "reminder menu › the chip and section name what the menu holds",
+			"input": [
+				{
+					"date": "2026-10-16",
+					"time": null
+				}
+			],
+			"output": "Before due time · needs a time"
+		},
+		{
+			"fn": "reminderSectionTitle",
+			"test": "reminder menu › the chip and section name what the menu holds",
+			"input": [
+				{
+					"date": "2026-10-14",
+					"time": "09:00"
+				}
+			],
+			"output": "Before due time"
+		}
+	]
+}

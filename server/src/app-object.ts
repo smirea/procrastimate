@@ -4,28 +4,19 @@ import { drizzle } from 'drizzle-orm/durable-sqlite';
 import { durableDriver } from 'sync-engine/cloudflare';
 import { handle } from './api';
 import { readActor } from './actor';
+import { INTERNAL } from './app-stub';
 import { createApp, type App } from './app';
-import type { Env } from './bindings';
-import { BACKUP_CRON } from './crons';
+import { config, type Env } from './config';
+import { cronNamed, type CronName } from './crons';
 import { user } from './db/auth-schema';
 import { backupDatabase, RESTORE_KEY, restoreDump } from './db/backup';
 import type { Db } from './db/sqlite';
 import { openStore } from './db/store';
 import { sweepImages } from './images';
-import { headMessage, liveProtocol, type Live } from './live';
+import { headMessage, liveProtocol, protocolHeaders, type Live } from './live';
 import { deliverDue, pushSender } from './push';
 import { dbRambleData } from './ramble';
 import { deliverWebhooks, fetchWebhook } from './webhooks';
-
-/** Paths only the Worker reaches: it forwards nothing but `/api/*` from the internet. */
-export const INTERNAL = {
-	actor: '/internal/actor',
-	cron: '/internal/cron',
-	rambleZone: '/internal/ramble/zone',
-	rambleKeyterms: '/internal/ramble/keyterms',
-	rambleStored: '/internal/ramble/stored',
-	rambleAdd: '/internal/ramble/add',
-} as const;
 
 /**
  * The one object that holds the database: every user's synced rows, the server's tables, and Better Auth's, in its
@@ -47,11 +38,10 @@ export class AppObject extends DurableObject<Env> {
 			accept: request => {
 				const { 0: client, 1: server } = new WebSocketPair();
 				ctx.acceptWebSocket(server as never);
-				const protocol = liveProtocol(request);
 				return new Response(null, {
 					status: 101,
 					webSocket: client,
-					headers: protocol ? { 'Sec-WebSocket-Protocol': protocol } : {},
+					headers: protocolHeaders(liveProtocol(request)),
 				} as ResponseInit);
 			},
 			publish: head => {
@@ -64,7 +54,7 @@ export class AppObject extends DurableObject<Env> {
 				}
 			},
 		};
-		this.app = createApp(env, store, null, live);
+		this.app = createApp(config(env), store, live);
 	}
 
 	override async fetch(request: Request): Promise<Response> {
@@ -78,7 +68,7 @@ export class AppObject extends DurableObject<Env> {
 				return Response.json(await readActor(request, app));
 			case INTERNAL.cron:
 				return Response.json(
-					await this.cron(app, url.searchParams.get('cron') ?? '', Number(url.searchParams.get('at'))),
+					await this.crons[cronNamed(url.searchParams.get('cron') ?? '')](app, Number(url.searchParams.get('at'))),
 				);
 			case INTERNAL.rambleZone:
 				return Response.json(await ramble.zone(user));
@@ -109,21 +99,23 @@ export class AppObject extends DurableObject<Env> {
 	}
 
 	/** Every minute the due pushes and webhooks go out; at 09:00 UTC the database is dumped to R2 and orphaned image bytes swept. */
-	private async cron(app: App, cron: string, at: number): Promise<string> {
-		if (cron === BACKUP_CRON) {
+	private readonly crons: Record<CronName, (app: App, at: number) => Promise<string>> = {
+		delivery: async (app, at) => {
+			const [sent, hooks] = await Promise.all([
+				deliverDue(app.db, at, pushSender(app.config.vapid)),
+				deliverWebhooks(app.db, at, fetchWebhook),
+			]);
+			return [sent && `Delivered ${sent} push notifications`, hooks && `Delivered ${hooks} webhooks`]
+				.filter(Boolean)
+				.join('; ');
+		},
+		backup: async (app, at) => {
 			if (!this.env.BACKUPS) throw new Error('The BACKUPS R2 binding is missing');
 			const key = await backupDatabase(app.db, this.env.BACKUPS, new Date(at));
 			sweepImages(app.db, at);
 			return `Backed up the database to ${key}`;
-		}
-		const [sent, hooks] = await Promise.all([
-			deliverDue(app.db, at, pushSender(this.env)),
-			deliverWebhooks(app.db, at, fetchWebhook),
-		]);
-		return [sent && `Delivered ${sent} push notifications`, hooks && `Delivered ${hooks} webhooks`]
-			.filter(Boolean)
-			.join('; ');
-	}
+		},
+	};
 
 	webSocketMessage(): void {}
 

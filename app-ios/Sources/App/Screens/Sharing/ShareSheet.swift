@@ -43,17 +43,15 @@ struct ShareSheet: View {
     private var link: Row? { shares.rows.first { $0.value.grantee == nil } }
     private var people: [Row] { shares.rows.filter { $0.value.grantee != nil } }
 
-    /// The people this space has met match at once; the server adds exact email matches when it answers. Matching is
-    /// `namePrefixed` in `shared/sharing.ts`.
+    /// The people this space has met match at once; the server adds exact email matches when it answers.
     private var suggestions: [Person] {
-        let q = trimmedQuery.lowercased()
-        guard !q.isEmpty else { return [] }
-        let me = UserDefaults.standard.string(forKey: Session.ownerKey)
-        let known = store.people.filter { $0.id != me && $0.name.lowercased().hasPrefix(q) }
-        let remote = searched == trimmedQuery ? found : []
-        let granted = Set(people.compactMap(\.value.grantee?.id))
-        let all = known + remote.filter { person in !known.contains { $0.id == person.id } }
-        return all.filter { !granted.contains($0.id) }
+        Sharing.suggestions(
+            q: trimmedQuery,
+            me: store.me,
+            known: store.people,
+            found: (searched, found),
+            granted: people.compactMap(\.value.grantee?.id)
+        )
     }
 
     var body: some View {

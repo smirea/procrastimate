@@ -1,8 +1,8 @@
 import type { RambleTask } from 'shared/ramble.ts';
 import type { RambleOutline } from 'shared/ramble/outline.ts';
 
-export type OutlineRequest = (transcript: string, signal: AbortSignal) => Promise<RambleOutline>;
-export type Outlined = { transcript: string; outline: RambleOutline };
+type OutlineRequest = (transcript: string, signal: AbortSignal) => Promise<RambleOutline>;
+type Outlined = { transcript: string; outline: RambleOutline };
 
 /**
  * Keeps Gemini's outline of a ramble current while it is spoken, so stopping rarely waits on a request. One request

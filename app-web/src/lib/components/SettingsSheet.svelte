@@ -2,7 +2,7 @@
 	import X from 'phosphor-svelte/lib/X';
 	import Settings from './Settings.svelte';
 	import Sheet from './Sheet.svelte';
-	import { sheets } from '../ui.svelte.ts';
+	import { sheets } from '../sheets.svelte.ts';
 </script>
 
 <Sheet label="Settings" desktop="fly" class="flex-col overflow-y-auto overscroll-contain p-3 md:top-[14vh] md:left-1/2 md:w-80 md:-translate-x-1/2 md:rounded-panel">

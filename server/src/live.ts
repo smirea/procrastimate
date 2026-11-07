@@ -22,3 +22,6 @@ export const liveProtocol = (request: Request): string | null =>
 		: null;
 
 export const headMessage = (head: number) => JSON.stringify({ head });
+
+export const protocolHeaders = (protocol: string | null): Record<string, string> =>
+	protocol ? { 'Sec-WebSocket-Protocol': protocol } : {};

@@ -3,7 +3,8 @@
 	import { cubicOut } from 'svelte/easing';
 	import { sectionBadge } from 'shared/views.ts';
 	import type { Task } from 'shared/task.ts';
-	import { clock, motion } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	/** `rows` are the open rows the section shows. */
 	let { rows }: { rows: Task[] } = $props();

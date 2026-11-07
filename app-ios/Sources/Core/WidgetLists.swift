@@ -292,7 +292,6 @@ public enum WidgetLists {
         }
     }
 
-    /// The cell for a list.
     public static func shortcut(_ choice: Choice, counter: Counter, _ data: WidgetData, now: Date, today: DateKey, in zone: TimeZone) -> Shortcut {
         let open = Triggers.openTasks(data.tasks)
         // Today lists a dated subtask under an undated parent, so Due counts it though a project's own rows do not.
@@ -305,14 +304,9 @@ public enum WidgetLists {
         return Shortcut(choice: choice, count: count, overdue: counter != .none && !due.overdue.isEmpty)
     }
 
-    /// Whether a task belongs to a list, open or done. A saved place's label lives on its tasks as a location, never in
-    /// `labelIds`, so a placed label holds the place's tasks.
+    /// Whether a task belongs to a list, open or done.
     static func holds(_ list: WidgetList, _ task: TaskItem, _ data: WidgetData, today: DateKey, in zone: TimeZone) -> Bool {
-        var screen = list.screen(today: today)
-        if case let .pin(.label(id)) = list, let place = data.labels.first(where: { $0.id == id })?.place {
-            screen = .place(key: Triggers.placeKey(place))
-        }
-        return Screens.holds(screen, task, today, in: zone)
+        Screens.holds(Screens.listed(list.screen(today: today), data.labels), task, today, in: zone)
     }
 
     /// How long a checked row stays struck through, counted from the tap. The widget extension redraws within a moment

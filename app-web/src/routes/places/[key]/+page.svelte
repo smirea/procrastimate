@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { screenPath } from 'shared/screens.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { untrack } from 'svelte';
@@ -7,17 +8,16 @@
 	import ListMenu from '#lib/components/ListMenu.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { listFilters } from '#lib/list-filters.svelte.ts';
-	import { session } from '#lib/session.svelte.ts';
 	import { formatRadius, placeGroups, savedPlaceAt } from 'shared/triggers.ts';
 	import { placeTasks } from 'shared/views.ts';
-	import { filterKey, filterTasks } from 'shared/list-filters.ts';
+	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
 
 	const key = $derived(page.params.key ?? '');
 	const place = $derived(placeGroups(store.own.tasks, []).find((g) => g.key === key));
 	const all = $derived(placeTasks(store.own.tasks, key));
 	const list = $derived(filterKey({ kind: 'place', key }));
-	const tasks = $derived(filterTasks(all, listFilters.get(list), session.userId ?? ''));
+	const tasks = $derived(listFilters.apply(list, all));
 	const title = $derived(place?.name ?? 'Place');
 	const saved = $derived(savedPlaceAt(store.own.labels, key));
 	/** The earliest task names the place, so its spot and radius are what gets saved. */
@@ -28,7 +28,7 @@
 
 	// A saved place lives on its label's screen, so a link from before it was saved lands there.
 	$effect(() => {
-		if (saved) void goto(`/labels/${saved.id}`, { replace: true });
+		if (saved) void goto(screenPath({ kind: 'label', id: saved.id }), { replace: true });
 	});
 
 	function save() {

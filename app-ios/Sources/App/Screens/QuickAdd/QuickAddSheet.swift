@@ -503,7 +503,6 @@ struct QuickAddSheet: View {
         focused = true
     }
 
-    /// Saves the task with its subtasks and attachments.
     private func save(untitled: Bool = false) -> TaskItem? {
         guard loadingImages == 0 else { return nil }
         guard let task = draft.resolve(draft.parse(context), untitled: untitled, images: drafted.count, files: draftedFiles.map(\.name)) else { return nil }
@@ -556,12 +555,7 @@ struct QuickAddSheet: View {
         guard let route = navigator.destination(of: task, labels: store.labels, today: clock.today, in: clock.timeZone) else {
             return navigator.flash(task.id)
         }
-        let name = switch route {
-        case let .project(id): store.project(id)?.name ?? "its project"
-        case .noDate: "No date"
-        default: "Inbox"
-        }
-        confirmation = toasts.show("Added to \(name)", action: .init(label: "Show") { [navigator, store, clock] in
+        confirmation = toasts.show("Added to \(Screens.addedName(route.screen, store.projects))", action: .init(label: "Show") { [navigator, store, clock] in
             if navigator.quickAdd != nil { navigator.sheet = nil }
             navigator.reveal(task, labels: store.labels, today: clock.today, in: clock.timeZone)
         })

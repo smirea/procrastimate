@@ -32,7 +32,9 @@
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
 	import { labelIcon } from '../label-icon.ts';
-	import { clock, sheets, mobile, motion } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { sheets } from '../sheets.svelte.ts';
+	import { mobile, motion } from '../motion.ts';
 	import { drawerDrag } from '../drawer-drag.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
 	import { formatEvent, formatLocation } from 'shared/triggers.ts';
@@ -42,10 +44,9 @@
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { NAME_SOURCES } from '../names.ts';
 	import { confirmAdded, showAdded } from '../show-added.ts';
-	import { attachments, droppedFiles } from '../attachments/attachments.svelte.ts';
+	import { attachments, droppedFiles, isImageFile } from '../attachments/attachments.svelte.ts';
 	import FileIcon from './FileIcon.svelte';
 	import { reuseAdded } from '../screen.ts';
-	import { page } from '$app/state';
 
 	let { defaults }: { defaults: ListDefaults } = $props();
 
@@ -105,7 +106,7 @@
 	});
 	/** An event stands in for the date and the repeat, as in task details. */
 	const buttons = $derived(
-		(rowButtons(store.quickAddButtons, [...opened, ...WEB_BUTTONS.filter((b) => values[b])], WEB_BUTTONS) as WebButton[]).filter(
+		(rowButtons(store.settings.quickAddButtons, [...opened, ...WEB_BUTTONS.filter((b) => values[b])], WEB_BUTTONS) as WebButton[]).filter(
 			(b) => !picked.event || (b !== 'date' && b !== 'repeat'),
 		),
 	);
@@ -119,7 +120,6 @@
 		input.focus();
 	}
 
-	/** A pick lands in the draft and the focus goes back to the text. */
 	function pick(apply: () => void) {
 		apply();
 		input.focus();
@@ -174,7 +174,6 @@
 		return () => observer.disconnect();
 	});
 
-	/** Saves the task with its subtasks and attachments. */
 	function save(options?: { untitled: boolean }) {
 		const next = draft.task({ ...options, images: draftedImages.length, files: draftedFiles });
 		if (!next) return null;
@@ -183,7 +182,7 @@
 		const typing = subtaskTask(subtaskParsed, subtaskLiteral);
 		for (const child of [...subtaskRows.map((s) => s.task), ...(typing ? [typing] : [])]) store.addTask(child, task.id);
 		if (drafted.length) void attachments.attach(task.id, drafted.map((d) => d.file));
-		reuseAdded(page.url.pathname, task);
+		reuseAdded(task);
 		return task;
 	}
 
@@ -215,8 +214,7 @@
 	}
 
 	function addFiles(files: File[]) {
-		const previewed = (file: File) => /^image\/(png|jpeg|gif|webp|avif|bmp)$/.test(file.type);
-		drafted.push(...files.map((file) => ({ key: draftKey++, file, url: previewed(file) ? URL.createObjectURL(file) : null })));
+		drafted.push(...files.map((file) => ({ key: draftKey++, file, url: isImageFile(file) ? URL.createObjectURL(file) : null })));
 	}
 
 	function removeDrafted(key: number) {

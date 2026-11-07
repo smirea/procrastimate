@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { leaving, motion } from '../ui.svelte.ts';
+	import { leaving, motion } from '../motion.ts';
 	import { flip } from 'svelte/animate';
 	import { fly, slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';

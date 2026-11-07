@@ -7,7 +7,7 @@
 	import { completedPresetSchema, completedRange } from 'shared/views.ts';
 	import Popover from './Popover.svelte';
 	import { completed } from '../completed.svelte.ts';
-	import { clock } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
 
 	const range = $derived(completed.range(clock.today));
 	let from = $state('');

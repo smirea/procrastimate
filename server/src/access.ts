@@ -4,7 +4,7 @@ import { access, shares, type AccessRow } from '../../shared/db/schema';
 import { toWire } from '../../shared/db/wire';
 import type { Links } from '../../shared/dangling';
 import type { RowWrite } from '../../shared/rows';
-import { managesSpace, scopeOf, type Grant } from '../../shared/scope';
+import { managesSpace, scopeOf, type Grant } from './scope';
 import type { Db } from './db/sqlite';
 import { loadLinks } from './space';
 

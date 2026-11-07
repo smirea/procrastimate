@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { beforeAll, describe, expect, test } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import { log, reads, settings, tasks } from '../../shared/db/schema';
 import type { SpaceView } from '../../shared/sharing';
@@ -22,7 +22,6 @@ beforeAll(async () => {
 	app = await testApp();
 	owner = await signUp(app, 'Owner');
 });
-afterAll(() => app.close());
 
 const upload = (session: Session, writes: unknown[]) => uploadAs(app, session, writes);
 

@@ -15,12 +15,11 @@
 	import { parseRamble, resolveOutline, type RambleTask, type RambleToken } from 'shared/ramble.ts';
 	import type { RambleOutline } from 'shared/ramble/outline.ts';
 	import type { RambleMode } from 'shared/dictation.ts';
-	import { toDateKey, toTimeOfDay } from 'shared/task.ts';
+	import { DEFAULT_PRIORITY, toDateKey, toTimeOfDay } from 'shared/task.ts';
 	import { api } from '../api.ts';
 	import { Outliner, smartTasks } from './outliner.ts';
 	import { rambleNewTask } from 'shared/ramble-fill.ts';
 	import { creationHome } from 'shared/space-routing.ts';
-	import { DEFAULT_PRIORITY } from 'shared/task.ts';
 	import { dueTone, formatDue, formatRecurrence, formatReminder } from 'shared/format.ts';
 	import DuePicker from '../components/DuePicker.svelte';
 	import PriorityPicker from '../components/PriorityPicker.svelte';
@@ -29,13 +28,17 @@
 	import { store } from '../store.svelte.ts';
 	import { labelStyle } from '../label-colors.ts';
 	import { labelIcon } from '../label-icon.ts';
-	import { clock, mobile, motion, sheets, toasts } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { mobile, motion } from '../motion.ts';
+	import { sheets } from '../sheets.svelte.ts';
+	import { toasts } from '../toasts.svelte.ts';
 	import type { ListDefaults } from 'shared/screens.ts';
 	import { PRIORITIES } from '../priorities.ts';
 	import { showAdded } from '../show-added.ts';
 	import { addableLabels, addableProjects } from '../screen.ts';
 	import { listenRamble, type CaptureStop, type RambleListen } from './capture.ts';
-	import { caption, keyed, type RambleEntry } from './entries.ts';
+	import { keyed, type RambleEntry } from './entries.ts';
+	import { caption } from 'shared/ramble/transcript.ts';
 	import Waveform, { type LevelMeter } from './Waveform.svelte';
 
 	let { defaults }: { defaults: ListDefaults } = $props();
@@ -92,7 +95,7 @@
 	const subtaskCount = $derived(saving.reduce((sum, entry) => sum + entry.subtasks.length, 0));
 	const captionParts = $derived(caption(transcript, tokens));
 	const listening = $derived(phase !== 'review');
-	const mode = $derived(store.rambleMode);
+	const mode = $derived(store.settings.rambleMode);
 
 	/** Ramble names every space's projects and labels a task may land on, as quick add does. */
 	const names = $derived({ projects: addableProjects(), labels: addableLabels() });
@@ -149,7 +152,7 @@
 	/** Switching reads the capture in progress, or the last one, again; edits to its tasks give way to the new read. */
 	async function setMode(next: RambleMode) {
 		if (next === mode || phase === 'structuring') return;
-		store.setRambleMode(next);
+		store.setSettings({ rambleMode: next });
 		if (phase === 'listening' || phase === 'finishing') {
 			if (next === 'smart') {
 				outliner ??= newOutliner(generation);
@@ -194,9 +197,9 @@
 		let ended = false;
 		const timer = setInterval(() => (elapsed = Math.floor((performance.now() - began) / 1000)), 250);
 		// Gemini Live reads the tasks in the audio stream itself, so its outlines replace the reads made from the text.
-		const geminiLive = store.dictation === 'gemini';
+		const geminiLive = store.settings.dictation === 'gemini';
 		const next = listenRamble({
-			choice: store.dictation,
+			choice: store.settings.dictation,
 			online: navigator.onLine,
 			onOutline: (outline) => {
 				if (token !== generation || phase === 'review') return;
@@ -637,7 +640,7 @@
 {#snippet chips(entry: RambleEntry)}
 	{@const project = store.project(entry.projectId)}
 	{@const labels = store.labelsOf(entry)}
-	{#if entry.due || entry.recurrence || entry.reminders.length || (entry.priority && entry.priority !== 4) || project || labels.length}
+	{#if entry.due || entry.recurrence || entry.reminders.length || (entry.priority && entry.priority !== DEFAULT_PRIORITY) || project || labels.length}
 		<div class="mt-1.5 flex flex-wrap gap-1.5">
 			{#if entry.due}
 				{#key formatDue(entry.due, clock.today)}
@@ -652,7 +655,7 @@
 			{#each entry.reminders as reminder, i (i)}
 				<span class="token" style="color: var(--tone-week)" in:pop><Bell size={13} weight="fill" />{formatReminder(reminder, clock.today)}</span>
 			{/each}
-			{#if entry.priority && entry.priority !== 4}
+			{#if entry.priority && entry.priority !== DEFAULT_PRIORITY}
 				{#key entry.priority}
 					<span class="token" style={`color: ${PRIORITIES[entry.priority].tone}`} in:pop><Flag size={13} weight="fill" />P{entry.priority}</span>
 				{/key}

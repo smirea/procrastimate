@@ -56,7 +56,7 @@ export const account = sqliteTable(
 	table => [index('account_userId_idx').on(table.userId)],
 );
 
-export const verification = sqliteTable(
+const verification = sqliteTable(
 	'verification',
 	{
 		id: text('id').primaryKey(),

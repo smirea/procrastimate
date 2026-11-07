@@ -98,8 +98,8 @@ final class RambleSession {
         }
         socket.send(.string(#"{"type":"stop"}"#)) { _ in }
         let token = epoch
-        // The server waits up to 6 seconds for Gemini Live's last tool calls, 3 for ElevenLabs' last text.
-        let wait: Duration = gemini ? .seconds(7) : .seconds(3.5)
+        let commit = gemini ? SharedConstants.RambleFinalCommitMs.gemini : SharedConstants.RambleFinalCommitMs.elevenlabs
+        let wait: Duration = .milliseconds(commit + SharedConstants.rambleStopWaitMarginMs)
         Task { @MainActor in
             try? await Task.sleep(for: wait)
             guard token == self.epoch else { return }
@@ -215,7 +215,7 @@ final class RambleSession {
             partial = event.text ?? ""
             publish()
         case "committed":
-            let joined = join(committed, event.text ?? "")
+            let joined = Ramble.joinTranscript(committed, event.text ?? "")
             committed = joined.text
             partial = ""
             publish()
@@ -233,7 +233,7 @@ final class RambleSession {
 
     private func publish() {
         heard = true
-        let joined = join(committed, partial)
+        let joined = Ramble.joinTranscript(committed, partial)
         onText(joined.text, joined.partialStart)
     }
 
@@ -263,15 +263,6 @@ final class RambleSession {
         var message: String?
         var outline: RambleOutline?
     }
-}
-
-private func join(_ committed: String, _ partial: String) -> (text: String, partialStart: Int) {
-    let tail = partial.trimmingCharacters(in: .whitespacesAndNewlines)
-    let base = committed as NSString
-    if committed.isEmpty { return (tail, 0) }
-    if tail.isEmpty { return (committed, base.length) }
-    let gap = committed.hasSuffix(" ") || tail.hasPrefix(" ") ? "" : " "
-    return (committed + gap + tail, base.length + (gap as NSString).length)
 }
 
 /// Downsamples mic buffers to 16 kHz 16-bit frames. The tap calls it off the main actor.

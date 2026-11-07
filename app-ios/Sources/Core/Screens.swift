@@ -101,6 +101,45 @@ public enum Screens {
         }
     }
 
+    /// The fixed lists' names, which every client and the list catalog show.
+    public static let fixedNames: [Lists.Kind: String] = [
+        .inbox: "Inbox", .tomorrow: "Tomorrow", .thisWeek: "This week", .noDate: "No date",
+    ]
+
+    /// The screen whose tasks `screen` lists: a saved place's label screen lists the tasks at the place, which never
+    /// carry the place as a label.
+    public static func listed(_ screen: ListScreen?, _ labels: [Label]) -> ListScreen? {
+        guard case let .label(id)? = screen, let place = labels.first(where: { $0.id == id })?.place else { return screen }
+        return .place(key: Triggers.placeKey(place))
+    }
+
+    /// Where a task just added on `screen` shows: nil when `screen` itself shows it, else its project, else Inbox when
+    /// it has a day or No date when it has none.
+    public static func added(
+        _ screen: ListScreen?,
+        _ task: TaskItem,
+        _ labels: [Label],
+        _ today: DateKey,
+        in zone: TimeZone
+    ) -> ListScreen? {
+        if holds(listed(screen, labels), task, today, in: zone) { return nil }
+        if let projectId = task.projectId { return .project(id: projectId) }
+        return Triggers.scheduledDue(task, today, in: zone) == nil ? .noDate : .inbox()
+    }
+
+    /// How the toast after a save names the list `added` chose.
+    public static func addedName(_ screen: ListScreen, _ projects: [Project]) -> String {
+        switch screen {
+        case let .project(id, _): projects.first { $0.id == id }?.name ?? "its project"
+        case .inbox: fixedNames[.inbox]!
+        case .noDate: fixedNames[.noDate]!
+        case .tomorrow: fixedNames[.tomorrow]!
+        case .thisWeek: fixedNames[.thisWeek]!
+        case .completed: "Completed"
+        default: "its list"
+        }
+    }
+
     /// The earliest open task's copy, the one a place's or event's name comes from. Once every task there is done, the
     /// screen can stay open, so the latest done task's copy keeps quick add on it.
     private static func earliest(_ tasks: [TaskItem], _ match: (TaskItem) -> Bool) -> TaskItem? {

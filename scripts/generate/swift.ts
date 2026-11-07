@@ -192,7 +192,6 @@ class Generator {
 		return schema.$ref ? this.input.components[this.refName(schema.$ref)]! : schema;
 	}
 
-	/** The schema without its `null` branch, and whether it had one. */
 	private nullable(schema: Schema): { schema: Schema; nullable: boolean } {
 		if (Array.isArray(schema.type)) {
 			const rest = schema.type.filter(type => type !== 'null');

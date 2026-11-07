@@ -12,7 +12,7 @@
  * `n` picks an extra simulator named `<dir>-n`.
  */
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { agentCommand, agentOutput } from './agent-command';
 import { type Device, findDevice, shutdown } from './simulators';
@@ -25,13 +25,6 @@ const args = process.argv.slice(2);
 function install() {
 	writeFileSync(shim, '#!/bin/sh\ncd "$(dirname "$0")" && exec bun scripts/worktree-sim.ts "$@"\n');
 	chmodSync(shim, 0o755);
-}
-
-// Shims written before agent-simulator passed the simulator name first; it now follows from the directory.
-const legacyName = existsSync(shim) ? readFileSync(shim, 'utf8').match(/worktree-sim\.ts '([^']+)'/)?.[1] : undefined;
-if (legacyName) {
-	if (args[0] === legacyName) args.shift();
-	install();
 }
 
 const command = ['install', 'build', 'test', 'stop', 'udid'].includes(args[0] ?? '') ? args.shift()! : 'run';

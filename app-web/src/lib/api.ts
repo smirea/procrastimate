@@ -46,7 +46,7 @@ export function client(): Client {
  * Push routes also carry the install id, since their subscription belongs to this browser. The session cookie is the
  * credential; these are not.
  */
-export function deviceHeaders(path: readonly string[] = []): Record<string, string> {
+function deviceHeaders(path: readonly string[] = []): Record<string, string> {
 	const app = { [CLIENT_HEADER]: JSON.stringify(client()) };
 	if (path[0] !== 'push') return app;
 	return { ...app, [DEVICE_HEADER]: installId(), [DEVICE_NAME_HEADER]: deviceName };

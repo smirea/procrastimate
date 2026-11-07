@@ -1,4 +1,4 @@
-export const DOT = 4;
+const DOT = 4;
 
 /**
  * Bar sizes for the Ramble waveform. The newest level sits in the middle and older levels ripple out to both edges,

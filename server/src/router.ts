@@ -2,9 +2,8 @@ import { implement, ORPCError } from '@orpc/server';
 import { contract, JSON_UTF8, MARKDOWN } from '../../shared/api/contract';
 import { CLIENT_HEADER, DEVICE_HEADER } from '../../shared/auth';
 import { taskActivity } from './activity';
-import { clientOf, requireActor, requireHuman, spaceOf } from './actor';
+import { clientOf, deviceIdFrom, requireActor, requireHuman, spaceOf } from './actor';
 import { originOf, type App } from './app';
-import { deviceIdFrom } from './actor';
 import { aiAccounts, authMethods, createAiUser, deleteUser } from './better-auth';
 import {
 	createComment,
@@ -59,9 +58,6 @@ type Ctx = { app: App; request: Request };
 
 const os = implement(contract).$context<Ctx>();
 
-/** A share change moved `access` rows, which a guest's devices pull on the head. */
-const publishHead = (app: App) => app.live.publish(app.store.space.head());
-
 function requireClient(request: Request) {
 	const client = clientOf(request);
 	if (!client) throw new ORPCError('BAD_REQUEST', { message: `Invalid ${CLIENT_HEADER} header` });
@@ -81,7 +77,6 @@ async function command({ app, request }: Ctx, space?: string): Promise<Command> 
 	return {
 		db: app.db,
 		store: app.store,
-		live: app.live,
 		owner: spaceOf(actor, space),
 		actor,
 		client: requireClient(request),
@@ -91,7 +86,7 @@ async function command({ app, request }: Ctx, space?: string): Promise<Command> 
 
 async function shared(ctx: Ctx, space?: string) {
 	const cmd = await command(ctx, space);
-	return { ...cmd, access: await requireAccess(cmd.db, cmd.owner, cmd.actor), origin: originOf(ctx.request) };
+	return { ...cmd, access: requireAccess(cmd.db, cmd.owner, cmd.actor), origin: originOf(ctx.request) };
 }
 
 async function own({ app, request }: Ctx) {
@@ -169,7 +164,6 @@ export const router = os.router({
 			}
 			await deleteUser(context.app, ai.id);
 			revokeAi(context.app.store, actor.id, ai.id);
-			publishHead(context.app);
 			return ok;
 		}),
 	},
@@ -196,7 +190,6 @@ export const router = os.router({
 			}
 			const role = audience.kind === 'user' ? audience.role : 'view';
 			const view = createShare(app.store, actor.id, origin, target, grantee, role, now);
-			publishHead(app);
 			return view;
 		}),
 		list: os.shares.list.handler(async ({ context }) => {
@@ -206,7 +199,6 @@ export const router = os.router({
 		delete: os.shares.delete.handler(async ({ input, context }) => {
 			const { app, actor } = await own(context);
 			deleteShare(app.store, actor.id, input.query.id);
-			publishHead(app);
 			return ok;
 		}),
 	},
@@ -370,7 +362,7 @@ export const router = os.router({
 			return { links: await listLinks(db, owner, access, origin) };
 		}),
 		create: os.links.create.handler(async ({ input, context }) => {
-			const { db, owner, access, origin, now } = await shared(context, input.query.space);
+			const { owner, access, origin, now } = await shared(context, input.query.space);
 			return createLink(context.app.store, owner, access, origin, input.body.target, now);
 		}),
 		delete: os.links.delete.handler(async ({ input, context }) => {

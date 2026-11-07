@@ -9,6 +9,7 @@
  * incognito contexts cannot subscribe, so this uses a persistent profile.
  */
 import { mkdtempSync } from 'node:fs';
+import { DEVICE_KEYS } from '../src/lib/device.ts';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, expect, type Page } from '@playwright/test';
@@ -64,7 +65,7 @@ const shown = (page: Page) =>
 	});
 
 const schedule = async (page: Page) => {
-	const deviceId = await page.evaluate(() => localStorage.getItem('procrastimate-install') ?? '');
+	const deviceId = await page.evaluate(key => localStorage.getItem(key) ?? '', DEVICE_KEYS.install);
 	const response = await page.request.get('/api/push/schedule', { headers: { [DEVICE_HEADER]: deviceId } });
 	const { notifications } = (await response.json()) as {
 		notifications: { title: string; body: string; at: number }[];
@@ -83,15 +84,15 @@ const failedPushRoutes: string[] = [];
 const pushFailure = async (page: Page) => ({
 	line: await page.getByText(/^Notifications/).allTextContents(),
 	failedPushRoutes,
-	...(await page.evaluate(async () => {
+	...(await page.evaluate(async refusedKey => {
 		const registration = await navigator.serviceWorker.getRegistration();
 		return {
 			subscribeErrors: (window as unknown as { pushErrors: string[] }).pushErrors,
 			permission: Notification.permission,
 			subscription: (await registration?.pushManager.getSubscription())?.endpoint ?? null,
-			refusedAt: localStorage.getItem('procrastimate-push-refused-at'),
+			refusedAt: localStorage.getItem(refusedKey),
 		};
-	})),
+	}, DEVICE_KEYS.pushRefusedAt)),
 });
 
 const signed = await context.request.post('/api/auth/sign-up/email', {
@@ -108,7 +109,7 @@ await page.goto('/inbox');
 const nav = page.getByRole('navigation', { name: 'Main' });
 const settings = page.getByRole('dialog', { name: 'Settings' });
 await expect
-	.poll(() => page.evaluate(() => localStorage.getItem('procrastimate-user')), { timeout: 15_000 })
+	.poll(() => page.evaluate(key => localStorage.getItem(key), DEVICE_KEYS.user), { timeout: 15_000 })
 	.toBeTruthy();
 log('PASS sync is on');
 await nav.getByRole('button', { name: 'Settings' }).click();

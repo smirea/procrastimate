@@ -19,14 +19,14 @@ test('a woken object skips both migrations while the schema is unchanged, and ru
 	const store = bunStore(':memory:');
 	const reopened = counting(store.driver);
 	openStore(store.db, reopened.counted);
-	expect(reopened.statements).toEqual([
-		"SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = '_schema_fingerprint'",
-		'SELECT fingerprint FROM _schema_fingerprint',
-	]);
+	const ddl = (statements: string[]) => statements.filter(sql => /^\s*(CREATE|ALTER|DROP)\b/i.test(sql));
+	expect(ddl(reopened.statements)).toEqual([]);
 
 	store.driver.exec("UPDATE _schema_fingerprint SET fingerprint = 'an older schema'");
 	const changed = counting(store.driver);
 	openStore(store.db, changed.counted);
-	expect(changed.statements.some(sql => sql.startsWith('CREATE TABLE IF NOT EXISTS "log"'))).toBe(true);
-	expect(changed.statements.at(-1)).toBe('INSERT INTO _schema_fingerprint (fingerprint) VALUES (?)');
+	expect(ddl(changed.statements).some(sql => sql.includes('"log"'))).toBe(true);
+	const again = counting(store.driver);
+	openStore(store.db, again.counted);
+	expect(ddl(again.statements)).toEqual([]);
 });

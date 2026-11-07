@@ -41,7 +41,7 @@ test(
 			.click();
 		await guest.app.details().getByRole('textbox', { name: 'Notes' }).pressSequentially('Two litres, oat');
 		// The notes finish uploading first, or their last keystrokes land after the comment as a second edit.
-		await expect.poll(() => guest.app.pending(), { timeout: 15_000 }).toBe(0);
+		await guest.app.synced();
 		const composer = guest.app.details().getByRole('textbox', { name: 'Add a comment' });
 		await composer.fill('Oat milk? https://example.com/oat');
 		await composer.press('Enter');
@@ -248,7 +248,7 @@ test('delete all data uploads no delete the server refuses for a guest’s comme
 	await owner.app.settings().getByRole('button', { name: 'Delete all data' }).click();
 	await owner.page.keyboard.press('Escape');
 	await expect(owner.app.row(task)).toHaveCount(0);
-	await expect.poll(() => owner.app.pending(), { timeout: 15_000 }).toBe(0);
+	await owner.app.synced();
 	expect(rejected).toEqual([]);
 	await expect
 		.poll(() => owner.page.evaluate(id => window.procrastimate.entity('comment', id), commentId), { timeout: 10_000 })

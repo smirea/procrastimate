@@ -5,7 +5,7 @@ import { basename, join } from 'node:path';
 const ROOT = join(import.meta.dir, '..');
 const MAPS = '.cursor/skills/verify-procrastimate/features';
 
-export type Citation = {
+type Citation = {
 	map: string;
 	line: number;
 	kind: 'file' | 'test' | 'swift' | 'project' | 'artifact';

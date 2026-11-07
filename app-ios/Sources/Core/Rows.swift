@@ -116,28 +116,6 @@ public enum Rows {
         return fields
     }
 
-    /// Folds writes to one row into one: a patch folds into the write before it, keeping that write's place, later
-    /// fields winning. A put or a delete replaces what came before and moves to its own place, so a row deleted and
-    /// created again still follows the rows it points at. A patch after a delete changes nothing.
-    public static func coalesce(_ writes: [RowWrite]) -> [RowWrite] {
-        var out: [RowWrite?] = []
-        var at: [String: Int] = [:]
-        for write in writes {
-            let key = "\(write.kind.rawValue):\(write.id)"
-            let index = at[key]
-            if let index, let prior = out[index], write.op == .patch {
-                if prior.op != .delete {
-                    out[index]?.values = (prior.values ?? [:]).merging(write.values ?? [:]) { _, later in later }
-                }
-                continue
-            }
-            if let index { out[index] = nil }
-            out.append(write)
-            at[key] = out.count - 1
-        }
-        return out.compactMap(\.self)
-    }
-
     /// The notice for writes the server refused, named by what `snapshot` shows before the server's value replaces it.
     public static func rejectionNotice(_ snapshot: Snapshot, _ rejected: [(kind: EntityKind, id: String)]) -> String? {
         var seen = Set<String>()

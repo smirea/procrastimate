@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { listedScreen, screenHolds } from 'shared/screens.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import View from '#lib/components/View.svelte';
@@ -7,16 +8,16 @@
 	import InlineEdit from '#lib/components/InlineEdit.svelte';
 	import CompletedSection from '#lib/components/CompletedSection.svelte';
 	import { store } from '#lib/store.svelte.ts';
+	import { clock } from '#lib/clock.svelte.ts';
 	import { listFilters } from '#lib/list-filters.svelte.ts';
-	import { session } from '#lib/session.svelte.ts';
 	import { toastDeleted } from '#lib/completion.ts';
-	import { sheets } from '#lib/ui.svelte.ts';
+	import { sheets } from '#lib/sheets.svelte.ts';
 	import { completed } from '#lib/completed.svelte.ts';
 	import { canAddHere } from '#lib/screen.ts';
 	import { completedTasks, labelViewTasks } from 'shared/views.ts';
-	import { formatRadius, placeKey } from 'shared/triggers.ts';
+	import { formatRadius } from 'shared/triggers.ts';
 	import type { Task } from 'shared/task.ts';
-	import { filterKey, filterTasks } from 'shared/list-filters.ts';
+	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
 	import { labelStyle } from '#lib/label-colors.ts';
 	import { labelIcon } from '#lib/label-icon.ts';
@@ -24,16 +25,16 @@
 	const label = $derived(store.label(page.params.id ?? ''));
 	/** A saved place lists the open tasks at it, which never carry it as a label. */
 	const place = $derived(label?.place ?? null);
-	const atPlace = (task: Task) => !!place && !!task.location && placeKey(task.location) === placeKey(place);
+	const listed = $derived(listedScreen({ kind: 'label', id: page.params.id ?? '' }, store.labels));
 	const list = $derived(filterKey({ kind: 'label', id: page.params.id ?? '' }));
-	const shown = (tasks: Task[]) => filterTasks(tasks, listFilters.get(list), session.userId ?? '');
+	const shown = (tasks: Task[]) => listFilters.apply(list, tasks);
 	const all = $derived(label ? labelViewTasks(store.tasks, label) : []);
 	const tasks = $derived(shown(all));
 	const noun = $derived(place ? 'place' : 'label');
 	/** The label's own slice, open and done, so a subtask finished with its parent stays under it. */
 	const done = $derived(
 		label && completed.shown(`label:${label.id}`)
-			? shown(completedTasks(store.tasks.filter((t) => (place ? atPlace(t) : t.labelIds.includes(label.id))), { from: null, to: null }))
+			? shown(completedTasks(store.tasks.filter((t) => screenHolds(listed, t, clock.today)), { from: null, to: null }))
 			: [],
 	);
 	const home = $derived(label ? store.homeOf(label.id) : null);

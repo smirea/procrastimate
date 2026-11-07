@@ -6,7 +6,8 @@
 	import TokenReveal from './TokenReveal.svelte';
 	import { api } from '../api.ts';
 	import { session } from '../session.svelte.ts';
-	import { motion, toasts } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
+	import { toasts } from '../toasts.svelte.ts';
 
 	/** Ids of the tokens that act as the user, read once, so Revoke shows only when there is one to revoke. */
 	let ids = $state<string[]>([]);

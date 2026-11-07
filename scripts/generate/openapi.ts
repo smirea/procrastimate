@@ -2,30 +2,14 @@ import { OpenAPIGenerator } from '@orpc/openapi';
 import { ZodToJsonSchemaConverter } from '@orpc/zod';
 import { z } from 'zod';
 import { agentContract, contract } from '../../shared/api/contract';
-// Register the shared model's schemas that no endpoint uses.
-import '../../shared/comments';
-import '../../shared/dictation';
-import '../../shared/format';
-import '../../shared/links';
-import '../../shared/lists';
-import '../../shared/markdown';
-import '../../shared/quick-add-buttons';
-import '../../shared/name-search';
-import '../../shared/quick-add';
-import '../../shared/ramble';
-import '../../shared/ramble/protocol';
-import '../../shared/search';
-import '../../shared/snapshot';
-import '../../shared/store';
-import '../../shared/subtasks';
-import '../../shared/list-filters';
-import '../../shared/list-header';
-import '../../shared/theme';
-import '../../shared/accents';
-import '../../shared/todoist';
-import '../../shared/triggers';
-import '../../shared/views';
 import type { Schema } from './swift';
+
+// Every shared schema with an `id` registers when its module loads, including the ones no endpoint uses.
+const shared = new URL('../../shared/', import.meta.url).pathname;
+for (const file of new Bun.Glob('**/*.ts').scanSync(shared)) {
+	if (/\.test\.ts$|^(vectors|fixtures)\/|(^|\/)generated\//.test(file)) continue;
+	await import(`${shared}${file}`);
+}
 
 /**
  * The contract as OpenAPI. Every shared schema with an `id` in zod's registry becomes a named component, through

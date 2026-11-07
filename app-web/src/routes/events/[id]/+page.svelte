@@ -5,18 +5,17 @@
 	import ListMenu from '#lib/components/ListMenu.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { listFilters } from '#lib/list-filters.svelte.ts';
-	import { session } from '#lib/session.svelte.ts';
-	import { clock } from '#lib/ui.svelte.ts';
+	import { clock } from '#lib/clock.svelte.ts';
 	import { eventGroups } from 'shared/triggers.ts';
 	import { eventTasks } from 'shared/views.ts';
-	import { filterKey, filterTasks } from 'shared/list-filters.ts';
+	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
 
 	const id = $derived(page.params.id ?? '');
 	const event = $derived(eventGroups(store.own.tasks, clock.today).find((g) => g.id === id));
 	const all = $derived(eventTasks(store.own.tasks, id, clock.today));
 	const list = $derived(filterKey({ kind: 'event', id }));
-	const tasks = $derived(filterTasks(all, listFilters.get(list), session.userId ?? ''));
+	const tasks = $derived(listFilters.apply(list, all));
 	const title = $derived(event?.title ?? 'Event');
 </script>
 

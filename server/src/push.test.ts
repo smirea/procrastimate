@@ -1,6 +1,6 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
-import { and, eq } from 'drizzle-orm';
-import { log, push, tasks } from '../../shared/db/schema';
+import { afterEach, beforeAll, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
+import { eq } from 'drizzle-orm';
+import { push } from '../../shared/db/schema';
 import type { PushMessage } from '../../shared/push';
 import { deliverDue, isAllowedEndpoint, touchesPush } from './push';
 import { json, signUp, taskRow, testApp, upload, type Session, type TestApp } from './test-app';
@@ -15,7 +15,6 @@ beforeAll(async () => {
 	app = await testApp();
 	owner = await signUp(app, 'Owner', 'install-a-0000000');
 });
-afterAll(() => app.close());
 
 const subscription = (endpoint: string) => ({ endpoint, keys: { p256dh: 'p256dh-key', auth: 'auth-key' } });
 

@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import { DEVICE_KEYS } from './device.ts';
 import { refusalOver, refusedRecently, subscribe } from './push-refusal.ts';
 
 const HOUR = 60 * 60 * 1000;
@@ -33,7 +34,7 @@ test('Chrome’s push service refusal is answered as refused and starts the back
 		Promise.reject(new DOMException('Registration failed - push service error', 'AbortError')),
 	);
 	expect(await subscribe(registration, KEY, storage, after(0))).toBe('refused');
-	expect([...stored]).toEqual([['procrastimate-push-refused-at', refusedAt]]);
+	expect([...stored]).toEqual([[DEVICE_KEYS.pushRefusedAt, refusedAt]]);
 });
 
 test('any other subscribe failure throws and starts no backoff', async () => {
@@ -46,7 +47,7 @@ test('any other subscribe failure throws and starts no backoff', async () => {
 test('a subscription clears an earlier refusal', async () => {
 	const made = { endpoint: 'https://push.example/1' } as PushSubscription;
 	const { registration, storage, stored } = device(() => Promise.resolve(made));
-	stored.set('procrastimate-push-refused-at', refusedAt);
+	stored.set(DEVICE_KEYS.pushRefusedAt, refusedAt);
 	expect(await subscribe(registration, KEY, storage, after(30))).toBe(made);
 	expect(stored.size).toBe(0);
 });

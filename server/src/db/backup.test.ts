@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, test } from 'bun:test';
+import { beforeAll, expect, test } from 'bun:test';
 import { images } from '../../../shared/db/schema';
 import { signUp, testApp, type TestApp } from '../test-app';
 import { backupKey, dumpJson, restoreDump } from './backup';
@@ -7,7 +7,6 @@ let app: TestApp;
 beforeAll(async () => {
 	app = await testApp();
 });
-afterAll(() => app.close());
 
 test('the dump carries a full-size image as base64 and names the day', async () => {
 	const owner = await signUp(app, 'Owner');

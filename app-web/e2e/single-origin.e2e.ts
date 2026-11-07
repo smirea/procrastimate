@@ -16,7 +16,7 @@ test(
 		await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
 		const title = unique('Stays home');
 		await app.add(title);
-		await expect.poll(() => app.pending(), { timeout: 15_000 }).toBe(0);
+		await app.synced();
 		expect([...origins]).toEqual([new URL(page.url()).origin]);
 		expect([...paths].filter(path => path === '/api/sync')).not.toEqual([]);
 	},

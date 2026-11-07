@@ -1,3 +1,4 @@
+/// Ports the search sheet's sections from `shared/search.ts`.
 public enum SearchSections {
     public static let limits = (projects: 5, labels: 5, open: 30, completed: 15)
 

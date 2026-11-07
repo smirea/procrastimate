@@ -1,5 +1,5 @@
 /// Fractional sibling order, as `shared/order.ts`: projects, sections, and subtasks sort and move by it.
-protocol Ordered: Identifiable<String> {
+public protocol Ordered: Identifiable<String> {
     var order: Double { get set }
     var createdAt: Int { get }
 }
@@ -8,9 +8,9 @@ extension Project: Ordered {}
 extension ProjectSection: Ordered {}
 extension TaskItem: Ordered {}
 
-enum Order {
+public enum Order {
     /// Below this gap a move renumbers the siblings instead of splitting it further.
-    static let minGap = 1e-9
+    static let minGap = SharedConstants.minOrderGap
 
     /// By `order`, then `createdAt`, then `id` in UTF-16 order, as JavaScript compares strings.
     static func siblings<T: Ordered>(_ a: T, _ b: T) -> Bool? {
@@ -24,7 +24,7 @@ enum Order {
 
     /// The orders to write to move `id` to `index`: only the moved one's, or every sibling's new position when the gap
     /// is too small to split, in placed order. Siblings already in place are left out. `moveOrders` in `shared/order.ts`.
-    static func moveOrders<T: Ordered>(_ items: [T], _ id: String, _ index: Int) -> [(id: String, order: Double)] {
+    public static func moveOrders<T: Ordered>(_ items: [T], _ id: String, _ index: Int) -> [(id: String, order: Double)] {
         guard let moved = items.first(where: { $0.id == id }) else { return [] }
         let siblings = sorted(items)
         let others = siblings.filter { $0.id != id }

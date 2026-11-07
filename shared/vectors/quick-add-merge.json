@@ -1,0 +1,235 @@
+{
+	"module": "quick-add-merge",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "typedOver",
+			"test": "typedOver › nothing typed keeps the base",
+			"input": [
+				{
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"priority": 3,
+					"projectId": "home",
+					"recurrence": {
+						"interval": 1,
+						"unit": "week"
+					},
+					"sectionId": "garden"
+				},
+				{},
+				null
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": null
+				},
+				"priority": 3,
+				"projectId": "home",
+				"recurrence": {
+					"interval": 1,
+					"unit": "week"
+				},
+				"sectionId": "garden"
+			}
+		},
+		{
+			"fn": "typedOver",
+			"test": "typedOver › typed values win, and a typed project leaves the base section behind",
+			"input": [
+				{
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"priority": 3,
+					"projectId": "home",
+					"recurrence": {
+						"interval": 1,
+						"unit": "week"
+					},
+					"sectionId": "garden"
+				},
+				{
+					"due": {
+						"date": "2026-10-16",
+						"time": "18:00"
+					},
+					"priority": 1,
+					"projectId": "work"
+				},
+				null
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": "18:00"
+				},
+				"priority": 1,
+				"projectId": "work",
+				"recurrence": {
+					"interval": 1,
+					"unit": "week"
+				},
+				"sectionId": null
+			}
+		},
+		{
+			"fn": "typedOver",
+			"test": "typedOver › typing the base project keeps its section, and a typed section wins",
+			"input": [
+				{
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"priority": 3,
+					"projectId": "home",
+					"recurrence": {
+						"interval": 1,
+						"unit": "week"
+					},
+					"sectionId": "garden"
+				},
+				{
+					"projectId": "home"
+				},
+				null
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": null
+				},
+				"priority": 3,
+				"projectId": "home",
+				"recurrence": {
+					"interval": 1,
+					"unit": "week"
+				},
+				"sectionId": "garden"
+			}
+		},
+		{
+			"fn": "typedOver",
+			"test": "typedOver › typing the base project keeps its section, and a typed section wins",
+			"input": [
+				{
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"priority": 3,
+					"projectId": "home",
+					"recurrence": {
+						"interval": 1,
+						"unit": "week"
+					},
+					"sectionId": "garden"
+				},
+				{
+					"projectId": "work",
+					"sectionId": "inbox"
+				},
+				null
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": null
+				},
+				"priority": 3,
+				"projectId": "work",
+				"recurrence": {
+					"interval": 1,
+					"unit": "week"
+				},
+				"sectionId": "inbox"
+			}
+		},
+		{
+			"fn": "typedOver",
+			"test": "typedOver › an event stands in for the date and the repeat",
+			"input": [
+				{
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"priority": 3,
+					"projectId": "home",
+					"recurrence": {
+						"interval": 1,
+						"unit": "week"
+					},
+					"sectionId": "garden"
+				},
+				{
+					"due": {
+						"date": "2026-10-16",
+						"time": null
+					}
+				},
+				{
+					"allDay": false,
+					"edge": "during",
+					"id": "meetup",
+					"minutes": 0,
+					"occurrences": [
+						{
+							"end": 1,
+							"original": 0,
+							"start": 0
+						}
+					],
+					"series": false,
+					"title": "Walking meetup"
+				}
+			],
+			"output": {
+				"due": null,
+				"priority": 3,
+				"projectId": "home",
+				"recurrence": null,
+				"sectionId": "garden"
+			}
+		},
+		{
+			"fn": "typedOver",
+			"test": "typedOver › a ramble may have no priority",
+			"input": [
+				{
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"priority": null,
+					"projectId": "home",
+					"recurrence": {
+						"interval": 1,
+						"unit": "week"
+					},
+					"sectionId": "garden"
+				},
+				{},
+				null
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": null
+				},
+				"priority": null,
+				"projectId": "home",
+				"recurrence": {
+					"interval": 1,
+					"unit": "week"
+				},
+				"sectionId": "garden"
+			}
+		}
+	]
+}

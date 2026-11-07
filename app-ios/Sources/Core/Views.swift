@@ -188,10 +188,6 @@ public enum Views {
         return Today(overdue: due.overdue, today: due.today)
     }
 
-    public static func upcomingGroups(_ tasks: [TaskItem], _ today: DateKey, in zone: TimeZone) -> [DayGroup] {
-        byDay(tasks, today, from: Dates.addDays(today, 1), to: nil, in: zone).days
-    }
-
     /// The last day This week lists: the coming Sunday, or today on a Sunday, since weeks start on Monday.
     public static func weekEnd(_ today: DateKey) -> DateKey {
         Dates.addDays(today, 6 - Dates.mondayIndex(Dates.weekdayOf(today)))

@@ -8,7 +8,7 @@
 	import Popover from './Popover.svelte';
 	import GithubIcon from './GithubIcon.svelte';
 	import { githubItem } from '../github.svelte.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	let { task, editable, onchange }: { task: Task; editable: boolean; onchange: (github: GithubRef[]) => void } = $props();
 

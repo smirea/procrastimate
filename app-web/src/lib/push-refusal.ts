@@ -1,7 +1,6 @@
 import { DEVICE_KEYS } from './device.ts';
 
 const BACKOFF_MS = 24 * 60 * 60 * 1000;
-const REFUSED_KEY = DEVICE_KEYS.pushRefusedAt;
 
 /**
  * Chrome answers `AbortError: Registration failed - push service error` when its push service will not register the
@@ -30,11 +29,11 @@ export async function subscribe(
 ): Promise<PushSubscription | 'refused'> {
 	try {
 		const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
-		storage.removeItem(REFUSED_KEY);
+		storage.removeItem(DEVICE_KEYS.pushRefusedAt);
 		return subscription;
 	} catch (error) {
 		if (!isPushRefusal(error)) throw error;
-		storage.setItem(REFUSED_KEY, String(now));
+		storage.setItem(DEVICE_KEYS.pushRefusedAt, String(now));
 		return 'refused';
 	}
 }

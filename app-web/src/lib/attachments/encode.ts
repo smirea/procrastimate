@@ -1,6 +1,6 @@
 import { fitWithin, IMAGE_LIMITS, type ImageSize } from 'shared/images.ts';
 
-export type Encoded = { width: number; height: number; sizes: Record<ImageSize, Blob> };
+type Encoded = { width: number; height: number; sizes: Record<ImageSize, Blob> };
 
 const QUALITIES = [0.85, 0.75, 0.6, 0.45];
 

@@ -1,7 +1,6 @@
 import { getTableColumns, getTableName } from 'drizzle-orm';
 import { COLUMN_TYPES, type LocalKind } from './columns';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
-import { COLUMN_VALUES } from '../../shared/db/json';
 import { SYNCED_TABLES } from '../../shared/db/schema';
 import { CHANGE_LOG, changeLogStatements } from '../../shared/local-database';
 
@@ -14,10 +13,7 @@ type Column = { name: string; columnType: string; notNull: boolean; primary: boo
 type SyncedColumn = { key: string; name: string; kind: LocalKind; notNull: boolean; enumValues?: readonly string[] };
 export type SyncedTable = { name: string; columns: SyncedColumn[] };
 
-const valuesOf = (table: string): Record<string, unknown> =>
-	(COLUMN_VALUES as Record<string, Record<string, unknown>>)[table] ?? {};
-
-export function syncedTables(): SyncedTable[] {
+function syncedTables(): SyncedTable[] {
 	return Object.values(SYNCED_TABLES).map(table => {
 		const name = getTableName(table as SQLiteTable);
 		const columns = Object.entries(getTableColumns(table as SQLiteTable) as Record<string, Column>).map(

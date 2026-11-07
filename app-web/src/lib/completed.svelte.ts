@@ -6,7 +6,7 @@ import { completedPresetSchema, completedRange, type CompletedRange } from 'shar
 
 /** A preset follows today, so it is stored by name; a custom range is stored as its days. */
 const choiceSchema = z.union([completedPresetSchema, z.object({ from: dateKeySchema, to: dateKeySchema })]);
-export type CompletedChoice = z.infer<typeof choiceSchema>;
+type CompletedChoice = z.infer<typeof choiceSchema>;
 
 /** A project or label view, whose `Show completed` toggle is its own. */
 const shownListSchema = z.templateLiteral([z.enum(['project', 'label']), ':', z.string()]);

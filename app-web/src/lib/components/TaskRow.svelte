@@ -25,7 +25,9 @@
 	import PersonName from './PersonName.svelte';
 	import { useLookup } from '../lookup.ts';
 	import { session } from '../session.svelte.ts';
-	import { clock, reveal, motion } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { reveal } from '../sheets.svelte.ts';
+	import { motion } from '../motion.ts';
 	import { store } from '../store.svelte.ts';
 	import { addedAgo, attachmentsLabel, dueTone, formatDue, formatTime, repeatLabel } from 'shared/format.ts';
 	import { isImage } from 'shared/values.ts';
@@ -35,7 +37,7 @@
 	import { githubLabel } from 'shared/github.ts';
 	import GithubLogo from 'phosphor-svelte/lib/GithubLogo';
 	import { PRIORITIES } from '../priorities.ts';
-	import { completeTask } from '../completion.ts';
+	import { completeTask, CHECK_PLAY_MS } from '../completion.ts';
 	import { progressOf } from 'shared/subtasks.ts';
 	import { rowMenu, taskMenu } from '../row-menu.svelte.ts';
 
@@ -99,7 +101,7 @@
 		setTimeout(() => {
 			completeTask(task);
 			checking = false;
-		}, 260);
+		}, CHECK_PLAY_MS);
 	}
 </script>
 

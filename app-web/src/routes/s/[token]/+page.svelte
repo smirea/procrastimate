@@ -5,9 +5,7 @@
 	import { page } from '$app/state';
 	import LinkSimple from 'phosphor-svelte/lib/LinkSimple';
 	import type { SharedView } from 'shared/sharing.ts';
-	import { sortTasks } from 'shared/store.ts';
-	import { openTasks } from 'shared/triggers.ts';
-	import { projectGroups } from 'shared/views.ts';
+	import { sharedGroups, sharedTitle } from 'shared/shared-link.ts';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import Sheet from '#lib/components/Sheet.svelte';
 	import SharedTaskDetails from '#lib/components/SharedTaskDetails.svelte';
@@ -16,7 +14,8 @@
 	import SectionBadge from '#lib/components/SectionBadge.svelte';
 	import { api, isNotFound } from '#lib/api.ts';
 	import { provideReadOnlyLookup } from '#lib/lookup.ts';
-	import { motion, type Arrival } from '#lib/ui.svelte.ts';
+	import { motion } from '#lib/motion.ts';
+	import { type Arrival } from '#lib/sheets.svelte.ts';
 
 	type State = { kind: 'loading' } | { kind: 'gone' } | { kind: 'failed' } | { kind: 'ready'; view: SharedView };
 
@@ -32,28 +31,8 @@
 		(id, arrival = 'none') => (opened = { id, arrival }),
 	);
 
-	/** Open tasks whose parent is not shared with them, so subtasks show under their parent's progress instead. */
-	const tasks = $derived.by(() => {
-		if (!view) return [];
-		const ids = new Set(view.tasks.map((t) => t.id));
-		return sortTasks(openTasks(view.tasks).filter((t) => t.parentId === null || !ids.has(t.parentId)));
-	});
-
-	/** A shared project shows under its sections, like the project view. */
-	const groups = $derived(
-		view?.target.kind === 'project'
-			? projectGroups(view.tasks, view.sections, view.target.id)
-			: [{ section: null, tasks }],
-	);
-
-	const title = $derived.by(() => {
-		if (!view) return 'Shared tasks';
-		const { kind, id } = view.target;
-		if (kind === 'project') return view.projects.find((p) => p.id === id)?.name ?? 'Shared project';
-		if (kind === 'label') return view.labels.find((l) => l.id === id)?.name ?? 'Shared label';
-		if (kind === 'task') return view.tasks.find((t) => t.id === id)?.title ?? 'Shared task';
-		return `${view.owner.name}’s tasks`;
-	});
+	const groups = $derived(view ? sharedGroups(view) : []);
+	const title = $derived(view ? sharedTitle(view) : 'Shared tasks');
 
 	async function load() {
 		status = { kind: 'loading' };
@@ -95,7 +74,7 @@
 				{/if}
 				<TaskList tasks={group.tasks} showProject={view.target.kind !== 'project'} label={`${group.section?.name ?? title} tasks`} />
 			{/each}
-			{#if tasks.length === 0}
+			{#if groups.every((group) => group.tasks.length === 0)}
 				<p class="mt-16 text-center text-[15px] font-medium" in:fade={motion({ duration: 240, delay: 120 })}>Nothing open here</p>
 			{/if}
 		</section>

@@ -1,0 +1,1780 @@
+{
+	"module": "task-details",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "parseTitle",
+			"test": "task details title › the draft shows what the edited title will apply",
+			"input": [
+				"Water plants fri 6pm !! remind me 1h before #Home @calls",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [
+						"l-old"
+					],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [
+						{
+							"kind": "before",
+							"minutes": 0
+						}
+					],
+					"sectionId": null,
+					"title": "Water plants",
+					"titleMode": "parse"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": "18:00"
+				},
+				"labelIds": [
+					"l-calls"
+				],
+				"location": null,
+				"priority": 2,
+				"projectId": "p-home",
+				"recurrence": null,
+				"reminders": [
+					{
+						"kind": "before",
+						"minutes": 60
+					}
+				],
+				"sectionId": null,
+				"title": "Water plants",
+				"tokens": [
+					{
+						"end": 20,
+						"kind": "due",
+						"start": 13,
+						"text": "fri 6pm"
+					},
+					{
+						"end": 23,
+						"kind": "priority",
+						"start": 21,
+						"text": "!!"
+					},
+					{
+						"end": 43,
+						"kind": "reminder",
+						"start": 24,
+						"text": "remind me 1h before"
+					},
+					{
+						"end": 49,
+						"kind": "project",
+						"start": 44,
+						"text": "#Home"
+					},
+					{
+						"end": 56,
+						"kind": "label",
+						"start": 50,
+						"text": "@calls"
+					}
+				]
+			}
+		},
+		{
+			"fn": "titleDraft",
+			"test": "task details title › the draft shows what the edited title will apply",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [
+						"l-old"
+					],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [
+						{
+							"kind": "before",
+							"minutes": 0
+						}
+					],
+					"sectionId": null,
+					"title": "Water plants",
+					"titleMode": "parse"
+				},
+				"Water plants fri 6pm !! remind me 1h before #Home @calls",
+				{
+					"due": {
+						"date": "2026-10-16",
+						"time": "18:00"
+					},
+					"labelIds": [
+						"l-calls"
+					],
+					"location": null,
+					"priority": 2,
+					"projectId": "p-home",
+					"recurrence": null,
+					"reminders": [
+						{
+							"kind": "before",
+							"minutes": 60
+						}
+					],
+					"sectionId": null,
+					"title": "Water plants",
+					"tokens": [
+						{
+							"end": 20,
+							"kind": "due",
+							"start": 13,
+							"text": "fri 6pm"
+						},
+						{
+							"end": 23,
+							"kind": "priority",
+							"start": 21,
+							"text": "!!"
+						},
+						{
+							"end": 43,
+							"kind": "reminder",
+							"start": 24,
+							"text": "remind me 1h before"
+						},
+						{
+							"end": 49,
+							"kind": "project",
+							"start": 44,
+							"text": "#Home"
+						},
+						{
+							"end": 56,
+							"kind": "label",
+							"start": 50,
+							"text": "@calls"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": "18:00"
+				},
+				"labelIds": [
+					"l-old",
+					"l-calls"
+				],
+				"location": null,
+				"priority": 2,
+				"projectId": "p-home",
+				"recurrence": null,
+				"reminders": [
+					{
+						"kind": "before",
+						"minutes": 0
+					},
+					{
+						"kind": "before",
+						"minutes": 60
+					}
+				],
+				"sectionId": null,
+				"title": "Water plants"
+			}
+		},
+		{
+			"fn": "parseTitle",
+			"test": "task details title › the draft shows what the edited title will apply",
+			"input": [
+				"Water plants",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [
+						"l-old"
+					],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [
+						{
+							"kind": "before",
+							"minutes": 0
+						}
+					],
+					"sectionId": null,
+					"title": "Water plants",
+					"titleMode": "parse"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Water plants",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "titleDraft",
+			"test": "task details title › the draft shows what the edited title will apply",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [
+						"l-old"
+					],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [
+						{
+							"kind": "before",
+							"minutes": 0
+						}
+					],
+					"sectionId": null,
+					"title": "Water plants",
+					"titleMode": "parse"
+				},
+				"Water plants",
+				{
+					"due": null,
+					"labelIds": [],
+					"location": null,
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Water plants",
+					"tokens": []
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [
+					"l-old"
+				],
+				"location": null,
+				"priority": 4,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [
+					{
+						"kind": "before",
+						"minutes": 0
+					}
+				],
+				"sectionId": null,
+				"title": "Water plants"
+			}
+		},
+		{
+			"fn": "parseTitle",
+			"test": "task details title › only an edited title highlights what it will apply",
+			"input": [
+				"Sign out of prime and yt nov 7",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": "09:00"
+					},
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt nov 7",
+					"titleMode": "parse"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-07",
+					"time": null
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Sign out of prime and yt",
+				"tokens": [
+					{
+						"end": 30,
+						"kind": "due",
+						"start": 25,
+						"text": "nov 7"
+					}
+				]
+			}
+		},
+		{
+			"fn": "titleTokens",
+			"test": "task details title › only an edited title highlights what it will apply",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": "09:00"
+					},
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt nov 7",
+					"titleMode": "parse"
+				},
+				"Sign out of prime and yt nov 7",
+				{
+					"due": {
+						"date": "2026-11-07",
+						"time": null
+					},
+					"labelIds": [],
+					"location": null,
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt",
+					"tokens": [
+						{
+							"end": 30,
+							"kind": "due",
+							"start": 25,
+							"text": "nov 7"
+						}
+					]
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "parseTitle",
+			"test": "task details title › only an edited title highlights what it will apply",
+			"input": [
+				"Sign out of prime and yt nov 7",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": "09:00"
+					},
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt nov 7",
+					"titleMode": "parse"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-07",
+					"time": null
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Sign out of prime and yt",
+				"tokens": [
+					{
+						"end": 30,
+						"kind": "due",
+						"start": 25,
+						"text": "nov 7"
+					}
+				]
+			}
+		},
+		{
+			"fn": "titleDraft",
+			"test": "task details title › only an edited title highlights what it will apply",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": "09:00"
+					},
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt nov 7",
+					"titleMode": "parse"
+				},
+				"Sign out of prime and yt nov 7",
+				{
+					"due": {
+						"date": "2026-11-07",
+						"time": null
+					},
+					"labelIds": [],
+					"location": null,
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt",
+					"tokens": [
+						{
+							"end": 30,
+							"kind": "due",
+							"start": 25,
+							"text": "nov 7"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-14",
+					"time": "09:00"
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": 4,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Sign out of prime and yt nov 7"
+			}
+		},
+		{
+			"fn": "parseTitle",
+			"test": "task details title › only an edited title highlights what it will apply",
+			"input": [
+				"Sign out of prime and yt nov 7 p1",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": "09:00"
+					},
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt nov 7",
+					"titleMode": "parse"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-07",
+					"time": null
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": 1,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Sign out of prime and yt",
+				"tokens": [
+					{
+						"end": 30,
+						"kind": "due",
+						"start": 25,
+						"text": "nov 7"
+					},
+					{
+						"end": 33,
+						"kind": "priority",
+						"start": 31,
+						"text": "p1"
+					}
+				]
+			}
+		},
+		{
+			"fn": "titleTokens",
+			"test": "task details title › only an edited title highlights what it will apply",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": "09:00"
+					},
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt nov 7",
+					"titleMode": "parse"
+				},
+				"Sign out of prime and yt nov 7 p1",
+				{
+					"due": {
+						"date": "2026-11-07",
+						"time": null
+					},
+					"labelIds": [],
+					"location": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt",
+					"tokens": [
+						{
+							"end": 30,
+							"kind": "due",
+							"start": 25,
+							"text": "nov 7"
+						},
+						{
+							"end": 33,
+							"kind": "priority",
+							"start": 31,
+							"text": "p1"
+						}
+					]
+				}
+			],
+			"output": [
+				{
+					"end": 30,
+					"kind": "due",
+					"start": 25,
+					"text": "nov 7"
+				},
+				{
+					"end": 33,
+					"kind": "priority",
+					"start": 31,
+					"text": "p1"
+				}
+			]
+		},
+		{
+			"fn": "titleDraft",
+			"test": "task details title › only an edited title highlights what it will apply",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": "09:00"
+					},
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt nov 7",
+					"titleMode": "parse"
+				},
+				"Sign out of prime and yt nov 7 p1",
+				{
+					"due": {
+						"date": "2026-11-07",
+						"time": null
+					},
+					"labelIds": [],
+					"location": null,
+					"priority": 1,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Sign out of prime and yt",
+					"tokens": [
+						{
+							"end": 30,
+							"kind": "due",
+							"start": 25,
+							"text": "nov 7"
+						},
+						{
+							"end": 33,
+							"kind": "priority",
+							"start": 31,
+							"text": "p1"
+						}
+					]
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-11-07",
+					"time": null
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": 1,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Sign out of prime and yt"
+			}
+		},
+		{
+			"fn": "parseTitle",
+			"test": "task details title › a literal title saves an edit as typed",
+			"input": [
+				"Standup notes 9am tomorrow p1  #Home",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup notse 9am tomorrow p1",
+					"titleMode": "literal"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Standup notes 9am tomorrow p1 #Home",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "titleTokens",
+			"test": "task details title › a literal title saves an edit as typed",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup notse 9am tomorrow p1",
+					"titleMode": "literal"
+				},
+				"Standup notes 9am tomorrow p1  #Home",
+				{
+					"due": null,
+					"labelIds": [],
+					"location": null,
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup notes 9am tomorrow p1 #Home",
+					"tokens": []
+				}
+			],
+			"output": []
+		},
+		{
+			"fn": "commitTitle",
+			"test": "task details title › a literal title saves an edit as typed",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup notse 9am tomorrow p1",
+					"titleMode": "literal"
+				},
+				"Standup notes 9am tomorrow p1  #Home",
+				{
+					"due": null,
+					"labelIds": [],
+					"location": null,
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup notes 9am tomorrow p1 #Home",
+					"tokens": []
+				}
+			],
+			"output": {
+				"kind": "update",
+				"patch": {
+					"due": null,
+					"labelIds": [],
+					"location": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup notes 9am tomorrow p1 #Home"
+				}
+			}
+		},
+		{
+			"fn": "parseTitle",
+			"test": "task details title › committing saves the draft, or reverts an edit that leaves no title",
+			"input": [
+				"Standup",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 3,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup",
+					"titleMode": "parse"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Standup",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "commitTitle",
+			"test": "task details title › committing saves the draft, or reverts an edit that leaves no title",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 3,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup",
+					"titleMode": "parse"
+				},
+				"Standup",
+				{
+					"due": null,
+					"labelIds": [],
+					"location": null,
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup",
+					"tokens": []
+				}
+			],
+			"output": {
+				"kind": "unchanged"
+			}
+		},
+		{
+			"fn": "parseTitle",
+			"test": "task details title › committing saves the draft, or reverts an edit that leaves no title",
+			"input": [
+				"tomorrow",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 3,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup",
+					"titleMode": "parse"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": null
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "",
+				"tokens": [
+					{
+						"end": 8,
+						"kind": "due",
+						"start": 0,
+						"text": "tomorrow"
+					}
+				]
+			}
+		},
+		{
+			"fn": "commitTitle",
+			"test": "task details title › committing saves the draft, or reverts an edit that leaves no title",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 3,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup",
+					"titleMode": "parse"
+				},
+				"tomorrow",
+				{
+					"due": {
+						"date": "2026-10-15",
+						"time": null
+					},
+					"labelIds": [],
+					"location": null,
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "",
+					"tokens": [
+						{
+							"end": 8,
+							"kind": "due",
+							"start": 0,
+							"text": "tomorrow"
+						}
+					]
+				}
+			],
+			"output": {
+				"kind": "revert"
+			}
+		},
+		{
+			"fn": "parseTitle",
+			"test": "task details title › committing saves the draft, or reverts an edit that leaves no title",
+			"input": [
+				"Standup fri",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 3,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup",
+					"titleMode": "parse"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": null
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Standup",
+				"tokens": [
+					{
+						"end": 11,
+						"kind": "due",
+						"start": 8,
+						"text": "fri"
+					}
+				]
+			}
+		},
+		{
+			"fn": "commitTitle",
+			"test": "task details title › committing saves the draft, or reverts an edit that leaves no title",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 3,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup",
+					"titleMode": "parse"
+				},
+				"Standup fri",
+				{
+					"due": {
+						"date": "2026-10-16",
+						"time": null
+					},
+					"labelIds": [],
+					"location": null,
+					"priority": null,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup",
+					"tokens": [
+						{
+							"end": 11,
+							"kind": "due",
+							"start": 8,
+							"text": "fri"
+						}
+					]
+				}
+			],
+			"output": {
+				"kind": "update",
+				"patch": {
+					"due": {
+						"date": "2026-10-16",
+						"time": null
+					},
+					"labelIds": [],
+					"location": null,
+					"priority": 3,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Standup"
+				}
+			}
+		},
+		{
+			"fn": "parseTitle",
+			"test": "task details title › an event task ignores a typed date and repeat",
+			"input": [
+				"Talk to Jan every fri",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "during",
+						"id": "meetup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1,
+								"original": 0,
+								"start": 0
+							}
+						],
+						"series": true,
+						"title": "Walking meetup"
+					},
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Talk to Jan",
+					"titleMode": "parse"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-16",
+					"time": null
+				},
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": {
+					"interval": 1,
+					"unit": "week"
+				},
+				"reminders": [],
+				"sectionId": null,
+				"title": "Talk to Jan",
+				"tokens": [
+					{
+						"end": 21,
+						"kind": "recurrence",
+						"start": 12,
+						"text": "every fri"
+					}
+				]
+			}
+		},
+		{
+			"fn": "commitTitle",
+			"test": "task details title › an event task ignores a typed date and repeat",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": {
+						"allDay": false,
+						"edge": "during",
+						"id": "meetup",
+						"minutes": 0,
+						"occurrences": [
+							{
+								"end": 1,
+								"original": 0,
+								"start": 0
+							}
+						],
+						"series": true,
+						"title": "Walking meetup"
+					},
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Talk to Jan",
+					"titleMode": "parse"
+				},
+				"Talk to Jan every fri",
+				{
+					"due": {
+						"date": "2026-10-16",
+						"time": null
+					},
+					"labelIds": [],
+					"location": null,
+					"priority": null,
+					"projectId": null,
+					"recurrence": {
+						"interval": 1,
+						"unit": "week"
+					},
+					"reminders": [],
+					"sectionId": null,
+					"title": "Talk to Jan",
+					"tokens": [
+						{
+							"end": 21,
+							"kind": "recurrence",
+							"start": 12,
+							"text": "every fri"
+						}
+					]
+				}
+			],
+			"output": {
+				"kind": "update",
+				"patch": {
+					"due": null,
+					"labelIds": [],
+					"location": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Talk to Jan"
+				}
+			}
+		},
+		{
+			"fn": "parseTitle",
+			"test": "task details title › a subtask title keeps a project hashtag as text",
+			"input": [
+				"Charger #Home",
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "s",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": "t",
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "Charger",
+					"titleMode": "parse"
+				},
+				{
+					"labels": [
+						{
+							"color": "gray",
+							"createdAt": 1,
+							"id": "l-calls",
+							"name": "calls",
+							"place": null
+						}
+					],
+					"now": 1791986400000,
+					"projects": [
+						{
+							"createdAt": 1,
+							"icon": null,
+							"id": "p-home",
+							"name": "Home",
+							"order": 0
+						}
+					],
+					"sections": []
+				}
+			],
+			"output": {
+				"due": null,
+				"labelIds": [],
+				"location": null,
+				"priority": null,
+				"projectId": null,
+				"recurrence": null,
+				"reminders": [],
+				"sectionId": null,
+				"title": "Charger #Home",
+				"tokens": []
+			}
+		},
+		{
+			"fn": "setDue",
+			"test": "task details title › removing the date removes the repeat",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": {
+						"interval": 1,
+						"unit": "day"
+					},
+					"reminders": [],
+					"sectionId": null,
+					"title": "t",
+					"titleMode": "parse"
+				},
+				null
+			],
+			"output": {
+				"due": null,
+				"recurrence": null
+			}
+		},
+		{
+			"fn": "setDue",
+			"test": "task details title › removing the date removes the repeat",
+			"input": [
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 1,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-14",
+						"time": null
+					},
+					"event": null,
+					"github": [],
+					"id": "t",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": {
+						"interval": 1,
+						"unit": "day"
+					},
+					"reminders": [],
+					"sectionId": null,
+					"title": "t",
+					"titleMode": "parse"
+				},
+				{
+					"date": "2026-10-15",
+					"time": null
+				}
+			],
+			"output": {
+				"due": {
+					"date": "2026-10-15",
+					"time": null
+				},
+				"recurrence": {
+					"interval": 1,
+					"unit": "day"
+				}
+			}
+		}
+	]
+}

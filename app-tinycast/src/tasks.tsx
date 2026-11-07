@@ -16,13 +16,22 @@ import {
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { completedToast, dayHeading, postponeOptions, reopenedToast } from 'shared/format.ts';
 import { parseQuickAdd } from 'shared/quick-add.ts';
+import { FIXED_NAMES, screenDefaults, type Screen } from 'shared/screens.ts';
 import { search } from 'shared/search.ts';
 import { descendantsOf } from 'shared/subtasks.ts';
 import { scheduledDays } from 'shared/triggers.ts';
 import type { AgentTask, SpaceView } from 'shared/sharing.ts';
 import { projectsInOrder, type TaskPatch } from 'shared/store.ts';
 import { toDateKey, toTimeOfDay, type DateKey, type Due, type Priority, type Task } from 'shared/task.ts';
-import { dueDays, inboxTasks, labelViewTasks, projectGroups, todayTasks, type DueDays } from 'shared/views.ts';
+import {
+	dueDays,
+	inboxTasks,
+	labelViewTasks,
+	noDateTasks,
+	projectGroups,
+	todayTasks,
+	type DueDays,
+} from 'shared/views.ts';
 import { agentClient, failureOf, showFailure, webUrl, type Failure } from './api.ts';
 import {
 	addedMessage,
@@ -40,10 +49,10 @@ type Group = { title: string; tasks: readonly Task[] };
 
 const LISTS: { id: ListId; title: string; icon: Image.ImageLike }[] = [
 	{ id: 'today', title: 'Today', icon: Icon.Calendar },
-	{ id: 'inbox', title: 'Inbox', icon: Icon.Tray },
-	{ id: 'tomorrow', title: 'Tomorrow', icon: Icon.Sunrise },
-	{ id: 'this-week', title: 'This week', icon: Icon.Clock },
-	{ id: 'no-date', title: 'No date', icon: Icon.CircleEllipsis },
+	{ id: 'inbox', title: FIXED_NAMES.inbox, icon: Icon.Tray },
+	{ id: 'tomorrow', title: FIXED_NAMES.tomorrow, icon: Icon.Sunrise },
+	{ id: 'this-week', title: FIXED_NAMES['this-week'], icon: Icon.Clock },
+	{ id: 'no-date', title: FIXED_NAMES['no-date'], icon: Icon.CircleEllipsis },
 ];
 
 /** The last view, shown at once on launch while the fresh one loads, so the list never opens empty. */
@@ -93,23 +102,32 @@ function groupsOf(list: ListId, view: SpaceView, today: DateKey): Group[] {
 		case 'this-week':
 			return dayGroups(dueDays(tasks, today, list), today);
 		case 'no-date':
-			return [{ title: '', tasks: inboxTasks(tasks, today) }];
+			return [{ title: '', tasks: noDateTasks(tasks, today, true) }];
 		default:
 			return [];
 	}
 }
 
-/** What a new task gets from the list it is typed into, as quick add's list defaults do in the app. */
-function listDefaults(list: ListId, today: DateKey): { projectId?: string; labelIds?: string[]; due?: Due } {
-	if (list.startsWith('project:')) return { projectId: list.slice('project:'.length) };
-	if (list.startsWith('label:')) return { labelIds: [list.slice('label:'.length)] };
-	if (list === 'today') return { due: { date: today, time: null } };
-	if (list === 'tomorrow') {
-		const date = new Date();
-		date.setDate(date.getDate() + 1);
-		return { due: { date: toDateKey(date), time: null } };
-	}
-	return {};
+/** The app's screen for a list. Today is Inbox's today heading, which adds a task due today. */
+function screenOf(list: ListId, today: DateKey): Screen {
+	if (list.startsWith('project:')) return { kind: 'project', id: list.slice('project:'.length) };
+	if (list.startsWith('label:')) return { kind: 'label', id: list.slice('label:'.length) };
+	if (list === 'today') return { kind: 'inbox', date: today };
+	return { kind: list as Exclude<ListId, 'today' | `project:${string}` | `label:${string}`> };
+}
+
+/** What a new task gets from the list it is typed into: quick add's list defaults in the app. */
+function listDefaults(
+	list: ListId,
+	view: SpaceView | null,
+	today: DateKey,
+): { projectId?: string; labelIds?: string[]; due?: Due } {
+	const defaults = screenDefaults(screenOf(list, today), view?.tasks ?? [], null, today);
+	return {
+		...(defaults.projectId ? { projectId: defaults.projectId } : {}),
+		...(defaults.labelIds.length ? { labelIds: [...defaults.labelIds] } : {}),
+		...(defaults.date ? { due: { date: defaults.date, time: null } } : {}),
+	};
 }
 
 export default function Tasks() {
@@ -172,7 +190,7 @@ export default function Tasks() {
 	const trimmed = query.trim();
 	const draft = useMemo(() => {
 		if (!view || !trimmed) return null;
-		const defaults = listDefaults(list, today);
+		const defaults = listDefaults(list, view, today);
 		return parseQuickAdd(trimmed, {
 			now: new Date(),
 			projects: view.projects,
@@ -192,7 +210,7 @@ export default function Tasks() {
 
 	async function add() {
 		if (!draft || !view) return;
-		const defaults = listDefaults(list, today);
+		const defaults = listDefaults(list, view, today);
 		const toast = await showToast({ style: Toast.Style.Animated, title: 'Adding task…' });
 		try {
 			const api = agentClient();

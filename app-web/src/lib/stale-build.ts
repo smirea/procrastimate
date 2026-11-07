@@ -1,4 +1,4 @@
-const RELOADED_AT = 'procrastimate-stale-build-reload';
+import { DEVICE_KEYS } from './device.ts';
 /** A chunk still missing this soon after a reload is not a replaced deploy, so it fails as usual. */
 const RELOAD_WINDOW_MS = 10_000;
 
@@ -14,9 +14,9 @@ export const reloadingForNewBuild = () => reloading;
  */
 export function reloadOnStaleBuild() {
 	window.addEventListener('vite:preloadError', () => {
-		const last = Number(sessionStorage.getItem(RELOADED_AT));
+		const last = Number(sessionStorage.getItem(DEVICE_KEYS.staleBuildReload));
 		if (Date.now() - last < RELOAD_WINDOW_MS) return;
-		sessionStorage.setItem(RELOADED_AT, String(Date.now()));
+		sessionStorage.setItem(DEVICE_KEYS.staleBuildReload, String(Date.now()));
 		reloading = true;
 		location.reload();
 	});

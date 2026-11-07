@@ -159,17 +159,9 @@ final class Navigator {
         flash(task.id)
     }
 
-    /// The list a new task lands in when the open one doesn't show it: its project, else Inbox when it has a day or No
-    /// date when it has none. Nil when the open list shows it.
+    /// The list a new task lands in when the open one doesn't show it. Nil when the open list shows it.
     func destination(of task: TaskItem, labels: [Label], today: DateKey, in zone: TimeZone) -> Route? {
-        // A saved place's screen is its label's, but it holds the tasks at the place.
-        var screen = currentRoute?.screen
-        if case let .label(id)? = screen, let place = labels.first(where: { $0.id == id })?.place {
-            screen = .place(key: Triggers.placeKey(place))
-        }
-        if Screens.holds(screen, task, today, in: zone) { return nil }
-        if let projectId = task.projectId { return .project(id: projectId) }
-        return Triggers.scheduledDue(task, today, in: zone) == nil ? .noDate : .inbox
+        Screens.added(currentRoute?.screen, task, labels, today, in: zone).map(Route.init)
     }
 
     /// Scrolls the open list to the task and flashes its row.

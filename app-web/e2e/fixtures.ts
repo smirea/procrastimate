@@ -11,10 +11,11 @@ import {
 	type Page,
 } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
-import { getTableColumns } from 'drizzle-orm';
 import { ENTITY_TABLES } from '../../shared/db/schema';
+import { toWire } from '../../shared/db/wire';
 import type { Kind } from '../../shared/model';
-import { KIND_OF, rowIdOf, TABLE_OF } from '../../shared/rows';
+import { KIND_OF, TABLE_OF } from '../../shared/kinds';
+import { rowIdOf } from '../../shared/rows';
 import { todoistBackupFiles } from '../../shared/fixtures/todoist-backup.mts';
 import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
 import { DATABASE_FILE_KEY } from '../../shared/local-database';
@@ -149,18 +150,18 @@ export async function signInAccount(context: BrowserContext) {
 }
 
 /**
- * Collects every uncaught error in the context's pages. The pinned clock runs timer callbacks itself and logs what
- * they throw with `console.error(error)` instead of letting it escape, so a console error whose first argument is an
- * Error counts too. The app never logs an Error itself, and the browser's own lines, such as `Failed to load
- * resource`, carry no arguments.
- */
-/**
  * WebKit's words for a request it cancelled because the page navigated, such as the token fetch during a reload. The
  * app tries again after the reload, so it is not a crash. The single-origin spec still fails
  * on any request that really leaves the origin.
  */
 const NAVIGATION_ABORT = /due to access control checks\.$/;
 
+/**
+ * Collects every uncaught error in the context's pages. The pinned clock runs timer callbacks itself and logs what
+ * they throw with `console.error(error)` instead of letting it escape, so a console error whose first argument is an
+ * Error counts too. The app never logs an Error itself, and the browser's own lines, such as `Failed to load
+ * resource`, carry no arguments.
+ */
 export function watchPageErrors(context: BrowserContext) {
 	const errors: string[] = [];
 	const record = (error: string) => {
@@ -309,16 +310,8 @@ export const test = quietTest.extend<{ app: App; devices: Devices }>({
 
 export { expect };
 
-/** Column names and JSON-encoded objects, as the upload route reads a row. */
-function rowValues(kind: Kind, fields: Record<string, unknown>) {
-	const columns = getTableColumns(ENTITY_TABLES[kind]) as Record<string, { name: string }>;
-	return Object.fromEntries(
-		Object.entries(fields).map(([key, value]) => [
-			columns[key]!.name,
-			value !== null && typeof value === 'object' ? JSON.stringify(value) : value,
-		]),
-	);
-}
+/** A row's fields as sync carries them, through the server's own conversion. */
+const rowValues = (kind: Kind, fields: Record<string, unknown>) => toWire(ENTITY_TABLES[kind], fields);
 
 export class App {
 	constructor(readonly page: Page) {}
@@ -426,7 +419,6 @@ export class App {
 		await expect(this.page.getByRole('heading', { level: 1, name: view })).toBeVisible();
 	}
 
-	/** Opens the open list's `…` menu and returns it. */
 	async listMenu(page = this.page) {
 		const name = /^(Inbox|Tomorrow|This week|No date|Completed|Project|Label|Place|Event) actions$/;
 		await page.getByRole('button', { name }).click();
@@ -474,13 +466,18 @@ export class App {
 		return this.page.evaluate(() => window.procrastimate.pending());
 	}
 
+	/** Waits until every local write reached the server. */
+	async synced() {
+		await expect.poll(() => this.pending(), { timeout: 15_000 }).toBe(0);
+	}
+
 	/**
 	 * Patches rows as another device of the same account would. Use it for fields the web cannot set, such as an iOS
 	 * place.
 	 */
 	async pushFromOtherDevice(...patches: { kind: Kind; id: string; fields: Record<string, unknown> }[]) {
-		await expect.poll(() => this.pending(), { timeout: 15_000 }).toBe(0);
-		const me = (await (await this.page.request.get('/api/me')).json()) as { id: string };
+		await this.synced();
+		const me = await this.#me();
 		await this.#upload(
 			patches.map(({ kind, id, fields }) => ({
 				op: 'patch',
@@ -501,10 +498,11 @@ export class App {
 	 * Each row's `id` and the account's `userId` are filled in; the rest is the row as `shared/testing.ts` shapes it.
 	 */
 	async seed(...rows: { kind: Kind; fields: Record<string, unknown> }[]) {
-		const me = (await (await this.page.request.get('/api/me')).json()) as { id: string };
+		const me = await this.#me();
 		const writes = rows.map(({ kind, fields }) => {
 			const id = (fields.id as string | undefined) ?? crypto.randomUUID();
-			return { op: 'put', table: TABLE_OF[kind], id, values: rowValues(kind, { ...fields, id, userId: me.id }) };
+			const values = rowValues(kind, { ...fields, id, userId: me.id });
+			return { op: 'put', table: TABLE_OF[kind], id: rowIdOf(kind, id, me.id), values };
 		});
 		await this.#upload(writes);
 		const last = writes.at(-1)!;
@@ -517,6 +515,10 @@ export class App {
 				},
 			)
 			.toMatchObject({ id: last.id });
+	}
+
+	async #me() {
+		return (await (await this.page.request.get('/api/me')).json()) as { id: string };
 	}
 
 	async #upload(writes: unknown[]) {

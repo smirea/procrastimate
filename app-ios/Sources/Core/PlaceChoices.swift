@@ -19,7 +19,6 @@ public enum PlaceChoices {
 
     public struct Choice: Hashable, Sendable, Identifiable {
         public var location: TaskLocation
-        /// The saved place this is, if it is one.
         public var savedID: String?
         public var id: String { Triggers.placeKey(location) }
     }

@@ -7,7 +7,7 @@ import type { Db } from './sqlite';
 import { openStore, type Store } from './store';
 
 /** A Durable Object binds at most 100 parameters per statement, so local runs refuse more, as production would. */
-export const MAX_PARAMETERS = 100;
+const MAX_PARAMETERS = 100;
 
 const tooMany = (sql: string, count: number) =>
 	new Error(`A statement bound ${count} parameters, over the Durable Object's ${MAX_PARAMETERS}: ${sql.slice(0, 200)}`);

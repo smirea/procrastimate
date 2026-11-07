@@ -16,8 +16,9 @@ import { syncSchema } from '../../shared/db/sync';
 import { fromWire, toWire } from '../../shared/db/wire';
 import { newId } from '../../shared/id';
 import type { Kind } from '../../shared/model';
-import { KIND_OF, rowIdOf, TABLE_OF, type RowWrite, type SyncedTable } from '../../shared/rows';
-import { authorOnly, guestRefusal, type GuestRows, type StoredRow } from '../../shared/scope';
+import { KIND_OF, TABLE_OF, type SyncedTable } from '../../shared/kinds';
+import { rowIdOf, type RowWrite } from '../../shared/rows';
+import { authorOnly, guestRefusal, type GuestRows, type StoredRow } from './scope';
 import type { Fields } from '../../shared/snapshot';
 import type { Client } from '../../shared/values';
 import { recomputeAccess, touchesAccess } from './access';
@@ -69,7 +70,7 @@ export function syncContext(
 	};
 }
 
-export const OTHER_SPACE = 'Belongs to another space';
+const OTHER_SPACE = 'Belongs to another space';
 const NOT_SHARED = 'Not shared with you';
 
 /** One write of a request: a device's carries its sequence, and the server's own write one per row. */

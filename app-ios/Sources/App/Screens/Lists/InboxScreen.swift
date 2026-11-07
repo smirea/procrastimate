@@ -21,9 +21,9 @@ struct DueScreen: View {
         let due = (overdue: filtered.overdue, today: filtered.today, days: filtered.days.map { (date: $0.date, tasks: $0.tasks) })
         let candidates = Views.dueCandidates(store.openTasks, today, list, in: store.timeZone)
         let title = switch list {
-        case .inbox: "Inbox"
-        case .tomorrow: "Tomorrow"
-        case .thisWeek: "This week"
+        case .inbox: Screens.fixedNames[.inbox]!
+        case .tomorrow: Screens.fixedNames[.tomorrow]!
+        case .thisWeek: Screens.fixedNames[.thisWeek]!
         }
         let headed = list != .tomorrow
         let sections = [Markdown.Section(heading: "Overdue", tasks: due.overdue), .init(heading: "Today", tasks: due.today)]
@@ -103,7 +103,7 @@ struct NoDateScreen: View {
         let all = Views.noDateTasks(store.openTasks, today, newestFirst: newestFirst, in: store.timeZone)
         let tasks = ListFilters.filterTasks(all, filter, me: store.me)
         TaskListScreen(
-            title: "No date",
+            title: Screens.fixedNames[.noDate]!,
             isEmpty: all.isEmpty,
             emptyTitle: "Inbox zero",
             emptyHint: "Tap + to capture a task.",
@@ -111,9 +111,9 @@ struct NoDateScreen: View {
             open: tasks.count,
             header: ListHeaders.listHeader(.noDate),
             actions: ListActions(
-                noun: "No date",
-                name: "No date",
-                copy: { actions.copyAsMarkdown(Markdown.Document(title: "No date", sections: [.init(tasks: tasks)])) },
+                noun: Screens.fixedNames[.noDate]!,
+                name: Screens.fixedNames[.noDate]!,
+                copy: { actions.copyAsMarkdown(Markdown.Document(title: Screens.fixedNames[.noDate]!, sections: [.init(tasks: tasks)])) },
                 newestFirst: $newestFirst
             ),
             filter: $filter,

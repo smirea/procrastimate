@@ -1,4 +1,5 @@
 import { KINDS, SETTINGS_ID, type Kind, type Snapshot } from './model.ts';
+import { TABLE_OF } from './kinds.ts';
 import { entitiesOf, fieldsOf, type Fields } from './snapshot.ts';
 
 /**
@@ -13,15 +14,6 @@ export type RowOp = (typeof ROW_OPS)[number];
 
 export type RowWrite = { op: RowOp; kind: Kind; id: string; values?: Fields };
 
-export const TABLE_OF = {
-	task: 'tasks',
-	project: 'projects',
-	section: 'sections',
-	label: 'labels',
-	comment: 'comments',
-	read: 'reads',
-	settings: 'settings',
-} as const satisfies Record<Kind, string>;
 export type SyncedTable = (typeof TABLE_OF)[Kind];
 export const KIND_OF = Object.fromEntries(Object.entries(TABLE_OF).map(([kind, table]) => [table, kind])) as Record<
 	SyncedTable,
@@ -78,28 +70,6 @@ export function rowWrites(before: Snapshot, after: Snapshot): RowWrite[] {
 		for (const id of previous.keys()) if (!kept.has(id)) writes.push({ op: 'delete', kind, id });
 	}
 	return writes;
-}
-
-/**
- * Folds writes to one row into one: a patch folds into the write before it, keeping that write's place, later fields
- * winning. A put or a delete replaces what came before and moves to its own place, so a row deleted and created again
- * still follows the rows it points at. A patch after a delete changes nothing.
- */
-export function coalesce<T extends RowWrite>(writes: readonly T[]): T[] {
-	const out: (T | null)[] = [];
-	const at = new Map<string, number>();
-	for (const write of writes) {
-		const key = `${write.kind}:${write.id}`;
-		const index = at.get(key);
-		const prior = index === undefined ? null : out[index]!;
-		if (prior && write.op === 'patch') {
-			if (prior.op !== 'delete') out[index!] = { ...prior, values: { ...prior.values, ...write.values } };
-			continue;
-		}
-		if (index !== undefined) out[index] = null;
-		at.set(key, out.push(write) - 1);
-	}
-	return out.filter(write => write !== null);
 }
 
 function nameOf(snapshot: Snapshot, { kind, id }: Pick<RowWrite, 'kind' | 'id'>): string | undefined {

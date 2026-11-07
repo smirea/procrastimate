@@ -1,3 +1,4 @@
+import { DEVICE_KEYS } from '../src/lib/device.ts';
 import { expect, test } from './fixtures';
 
 test('System follows the device, Light or Dark overrides it, a theme color recolors the accent, and both survive a reload and paint the first frame', async ({
@@ -60,7 +61,7 @@ test('System follows the device, Light or Dark overrides it, a theme color recol
 	await expect(app.accentOption('Pink')).toHaveAttribute('aria-checked', 'true');
 
 	await app.accentOption('Frost').click();
-	expect(await page.evaluate(() => localStorage.getItem('procrastimate-accent'))).toBeNull();
+	expect(await page.evaluate(key => localStorage.getItem(key), DEVICE_KEYS.accent)).toBeNull();
 });
 
 test('a custom theme color derives a readable accent in each theme, survives a reload from the first frame, and a preset replaces it', async ({
@@ -97,9 +98,9 @@ test('a custom theme color derives a readable accent in each theme, survives a r
 	await expect.poll(() => app.accent()).toBe('#21bdab');
 	await expect(page.locator('style#custom-accent')).toHaveCount(0);
 	expect(
-		await page.evaluate(() => [
-			localStorage.getItem('procrastimate-accent'),
-			localStorage.getItem('procrastimate-accent-css'),
-		]),
+		await page.evaluate(
+			keys => keys.map(key => localStorage.getItem(key)),
+			[DEVICE_KEYS.accent, DEVICE_KEYS.accentCss],
+		),
 	).toEqual(['teal', null]);
 });

@@ -155,7 +155,6 @@ export class Reorder {
 		this.#follow();
 	};
 
-	/** Places the lifted row under the pointer, counting how far the list scrolled since the lift. */
 	#follow() {
 		const drag = this.drag!;
 		const scrolled = drag.scroller.scrollTop - drag.scrollStart;

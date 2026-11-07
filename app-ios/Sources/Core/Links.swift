@@ -81,7 +81,7 @@ public enum Links {
     }
 
     /// A link's icon, fetched by the server from the page the link opens. See `docs/decisions/link-previews.md`.
-    public static let faviconPath = "/api/favicon"
+    public static let faviconPath = SharedConstants.faviconPath
 
 
     /// The pasted text, trimmed, when it is one bare web URL and nothing else, the paste that becomes a titled link.

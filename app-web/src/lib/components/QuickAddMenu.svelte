@@ -33,7 +33,7 @@
 		<div class="w-64" role="menu" aria-label="Quick add actions">
 			{#each WEB_BUTTONS as button (button)}
 				{@const { name, icon: Icon } = BUTTON_INFO[button]}
-				{@const pinned = store.quickAddButtons.includes(button)}
+				{@const pinned = store.settings.quickAddButtons.includes(button)}
 				<div class="flex items-center">
 					<button
 						type="button"
@@ -55,7 +55,7 @@
 						aria-label={`Show ${name} in the row`}
 						aria-pressed={pinned}
 						onmousedown={(e) => e.preventDefault()}
-						onclick={() => store.setQuickAddButtons(toggleButton(store.quickAddButtons, button))}
+						onclick={() => store.setSettings({ quickAddButtons: toggleButton(store.settings.quickAddButtons, button) })}
 					>
 						<PushPin size={14} weight={pinned ? 'fill' : 'regular'} />
 					</button>

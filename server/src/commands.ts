@@ -17,7 +17,7 @@ import {
 } from '../../shared/model';
 import { parseQuickAdd } from '../../shared/quick-add';
 import { rowWrites } from '../../shared/rows';
-import { authorOnly, filterTree, managesSpace, scopeOf } from '../../shared/scope';
+import { authorOnly, filterTree, managesSpace, scopeOf } from './scope';
 import type {
 	AgentNewTask,
 	AgentTask,
@@ -64,7 +64,6 @@ import { wallDate, zonedDateKey } from '../../shared/zoned-time';
 import type { Access } from './space';
 import type { Db } from './db/sqlite';
 import type { Store } from './db/store';
-import type { Live } from './live';
 import { peopleById, personOf, unknownPerson } from './people';
 import { accessIn, entity, loadTree, seesTask, sightOf, storedZone } from './space';
 import { serverWrite, syncContext } from './writes';
@@ -76,7 +75,7 @@ import { serverWrite, syncContext } from './writes';
  * `memo-tasks.ts` writes the same way for Notouroboros.
  */
 
-export type Command = { db: Db; store: Store; live: Live; owner: string; actor: Actor; client: Client; now: number };
+export type Command = { db: Db; store: Store; owner: string; actor: Actor; client: Client; now: number };
 
 /** The owner, or a guest the space is shared with. Anyone else is turned away before reading anything. */
 export function requireAccess(db: Db, owner: string, actor: Actor): Access {
@@ -136,8 +135,8 @@ function withClients(db: Db, owner: string, tasks: readonly Task[]): AgentTask[]
 }
 
 export async function view({ db, owner, actor }: Command): Promise<SpaceView> {
-	const access = await requireAccess(db, owner, actor);
-	const visible = visibleOf(await loadTree(db, owner), access);
+	const access = requireAccess(db, owner, actor);
+	const visible = visibleOf(loadTree(db, owner), access);
 	return { ...visible, tasks: withClients(db, owner, visible.tasks) };
 }
 
@@ -165,7 +164,7 @@ async function run(
 	change: (data: StoreData, visible: Visible, zone: string, access: Access) => StoreData,
 	comment?: string,
 ): Promise<Snapshot> {
-	const { db, store, live, owner, actor, client, now } = command;
+	const { db, store, owner, actor, client, now } = command;
 	const access = requireAccess(db, owner, actor);
 	const { snapshot, zone } = loadSnapshot(db, owner, comment);
 	const visible = visibleOf(snapshot, access);
@@ -174,9 +173,8 @@ async function run(
 	const writes = rowWrites(snapshot, after).map(write => serverWrite(write, owner));
 	if (!writes.length) return after;
 	const manages = access.role === 'guest' && managesSpace(access.shares) ? [owner] : [];
-	const { rejected, head } = store.space.write(writes, syncContext(actor, client, { now, manages }), { atomic: true });
+	const { rejected } = store.space.write(writes, syncContext(actor, client, { now, manages }), { atomic: true });
 	if (rejected.length) throw new ORPCError('FORBIDDEN', { message: rejected[0]!.reason });
-	live.publish(head);
 	return after;
 }
 
@@ -285,7 +283,7 @@ export async function removeTask(command: Command, id: string): Promise<void> {
 }
 
 export async function listComments({ db, owner, actor }: Command, taskId: string): Promise<TaskComment[]> {
-	const access = await requireAccess(db, owner, actor);
+	const access = requireAccess(db, owner, actor);
 	const sight = sightOf(actor, access);
 	const seen = seesTask(db, owner, sight, taskId);
 	const rows = db

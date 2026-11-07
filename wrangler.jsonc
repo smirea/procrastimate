@@ -12,7 +12,7 @@
 		"not_found_handling": "single-page-application",
 		"run_worker_first": ["/api/*"],
 	},
-	// `server/src/crons.ts` names both: push delivery every minute, the JSON dump to R2 daily.
+	// `server/src/crons.ts` names each: push and webhook delivery every minute, the JSON dump to R2 daily.
 	"triggers": { "crons": ["* * * * *", "0 9 * * *"] },
 	"r2_buckets": [{ "binding": "BACKUPS", "bucket_name": "procrastimate-backups" }],
 	"durable_objects": {

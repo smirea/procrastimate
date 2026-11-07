@@ -1,3 +1,4 @@
+import { compareNames } from './order.ts';
 import type { Person } from './sharing.ts';
 import { projectsInOrder, type NewTask, type StoreData, type TaskPatch } from './store.ts';
 
@@ -60,8 +61,7 @@ export function fitPatch(data: Lists, patch: TaskPatch): TaskPatch {
 export type SharedSpaceData = { owner: Person; data: Pick<StoreData, 'tasks' | 'projects' | 'labels'> };
 export type SharedEntry = { kind: 'project' | 'label' | 'task'; id: string; name: string; owner: Person };
 
-const byName = (a: { name: string }, b: { name: string }) =>
-	a.name.localeCompare(b.name, 'en-US', { sensitivity: 'base' });
+const byName = (a: { name: string }, b: { name: string }) => compareNames(a.name, b.name);
 
 /**
  * What "Shared with me" lists: the spaces by their owner's name, and in each its projects in their order, its labels

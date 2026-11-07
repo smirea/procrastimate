@@ -53,7 +53,7 @@ struct SearchResultRow: View {
             if let notes = hit.matches[.notes]?.first { parts.append(Search.excerpt(notes).text) }
             if let parent = task.parentId.flatMap(store.task) { parts.append("Subtask of \(parent.title)") }
             parts += (hit.matches[.labels] ?? []).map(\.text)
-            if let completedAt = Triggers.completedAt(of: task, lookup: store.task) {
+            if let completedAt = store.completedAt(task) {
                 parts.append(Browse.completedLine(completedAt, today: today, in: clock.timeZone))
             } else if let due = task.due {
                 parts.append(Format.formatDue(due, today))
@@ -119,7 +119,7 @@ private struct TaskResult: View {
 
     var body: some View {
         let task = hit.task
-        let completedAt = Triggers.completedAt(of: task, lookup: store.task)
+        let completedAt = store.completedAt(task)
         let done = completedAt != nil
         let project = store.project(task.projectId)
         HStack(alignment: .top, spacing: 12) {

@@ -1,36 +1,20 @@
 import { page } from '$app/state';
-import { canAddTo, reusedDefaults, screenDefaults, type ListDefaults, type Screen } from 'shared/screens.ts';
+import {
+	canAddTo,
+	entryScreen,
+	reusedDefaults,
+	screenDefaults,
+	screenOfPath,
+	screenPath,
+	type Screen,
+} from 'shared/screens.ts';
 import type { ListEntry } from 'shared/lists.ts';
 import type { Task } from 'shared/task.ts';
 import { store } from './store.svelte.ts';
-import { clock } from './ui.svelte.ts';
+import { clock } from './clock.svelte.ts';
 
 /** The list screen the route shows. Nil on a page that lists no tasks, such as a public link. */
-export function currentScreen(): Screen | null {
-	const id = page.params.id ?? '';
-	switch (page.route.id) {
-		case '/inbox':
-			return { kind: 'inbox' };
-		case '/tomorrow':
-			return { kind: 'tomorrow' };
-		case '/this-week':
-			return { kind: 'this-week' };
-		case '/no-date':
-			return { kind: 'no-date' };
-		case '/completed':
-			return { kind: 'completed' };
-		case '/projects/[id]':
-			return { kind: 'project', id };
-		case '/labels/[id]':
-			return { kind: 'label', id };
-		case '/places/[key]':
-			return { kind: 'place', key: page.params.key ?? '' };
-		case '/events/[id]':
-			return { kind: 'event', id };
-		default:
-			return null;
-	}
-}
+export const currentScreen = (): Screen | null => screenOfPath(page.url.pathname);
 
 /** The space someone shared with this user that `screen`'s project or label lives in, if any. */
 function spaceOf(screen: Screen | null) {
@@ -63,9 +47,9 @@ export function quickAddDefaults(screen?: Screen) {
 	return own;
 }
 
-/** Quick add just saved `task` on the list at `path`. */
-export function reuseAdded(path: string, task: Task) {
-	reused = { path, task };
+/** Quick add just saved `task` on the open list. */
+export function reuseAdded(task: Task) {
+	reused = { path: page.url.pathname, task };
 }
 
 /** Leaving the list ends the reuse. */
@@ -74,24 +58,4 @@ export function forgetAdded(path: string) {
 }
 
 /** Where a top-level list from the catalog opens. */
-export function listHref(entry: Pick<ListEntry, 'kind' | 'id'>): string {
-	switch (entry.kind) {
-		case 'inbox':
-		case 'tomorrow':
-		case 'this-week':
-		case 'no-date':
-			return `/${entry.kind}`;
-		case 'project':
-			return `/projects/${entry.id}`;
-		case 'label':
-			return `/labels/${entry.id}`;
-		case 'place':
-			return `/places/${encodeURIComponent(entry.id)}`;
-		case 'event':
-			return `/events/${encodeURIComponent(entry.id)}`;
-		default: {
-			const never: never = entry.kind;
-			return never;
-		}
-	}
-}
+export const listHref = (entry: Pick<ListEntry, 'kind' | 'id'>) => screenPath(entryScreen(entry));

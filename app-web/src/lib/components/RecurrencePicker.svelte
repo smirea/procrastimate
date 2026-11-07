@@ -2,11 +2,23 @@
 	import { untrack } from 'svelte';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Check from 'phosphor-svelte/lib/Check';
-	import { alignToRecurrence, sortWeekdays, weekdayOf, weeklyOn, type Due, type Recurrence, type RecurrenceUnit, type Weekday } from 'shared/task.ts';
+	import type { Due, Recurrence, RecurrenceUnit, Weekday } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
-	import { customRepeat, repeatPresets } from '../repeat-options.ts';
+	import {
+		canToggleWeekday,
+		customRepeat,
+		isRepeatPreset,
+		MAX_CUSTOM_INTERVAL,
+		REPEAT_UNITS,
+		REPEAT_WEEK,
+		repeatAnchor,
+		repeatPresets,
+		repeatWeekdays,
+		setRepeat,
+		toggleWeekday,
+	} from 'shared/task-menus.ts';
 	import { WEEKDAY_NAMES, formatRecurrence, repeatLabel } from 'shared/format.ts';
-	import { clock } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
 
 	let {
 		recurrence,
@@ -21,45 +33,27 @@
 		open?: boolean;
 	} = $props();
 
-	const UNITS: RecurrenceUnit[] = ['day', 'weekday', 'week', 'month', 'year'];
-	const WEEK: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
-
 	let customInterval = $state<number | null>(2);
 	let customUnit = $state<RecurrenceUnit>('day');
 	/** An emptied number field binds `null`, which must never reach the task. */
-	const customValid = $derived(Number.isInteger(customInterval) && customInterval! >= 1 && customInterval! <= 365);
+	const customValid = $derived(
+		Number.isInteger(customInterval) && customInterval! >= 1 && customInterval! <= MAX_CUSTOM_INTERVAL,
+	);
 
-	/** Setting a repeat on an undated task dates it today, so presets read as they will apply. */
-	const anchor = $derived(due ?? { date: clock.today, time: null });
+	const anchor = $derived(repeatAnchor(due, clock.today));
 	const presets = $derived(repeatPresets(anchor.date));
 	let opened = $state<Due | null>(null);
 	$effect(() => {
 		if (open) opened = untrack(() => anchor);
 	});
 
-	/** Aligns from the due date the menu opened with, so toggle order never changes the result. A one-day set is stored as a plain weekly repeat. */
 	function set(next: Recurrence | null) {
-		if (!next) return onchange(null, due);
-		const from = opened ?? anchor;
-		const stored = next.unit === 'week' && next.days ? weeklyOn(next.interval, next.days) : next;
-		onchange(stored, { ...from, date: alignToRecurrence(from.date, next) ?? from.date });
+		const stored = setRepeat(next, opened ?? anchor, due);
+		onchange(stored.recurrence, stored.due);
 	}
 
-	/** A plain weekly repeat already repeats on its due weekday. Any other repeat starts with no days. */
-	const weekdays = $derived<readonly Weekday[]>(recurrence?.unit === 'week' ? (recurrence.days ?? [weekdayOf(anchor.date)]) : []);
-
-	function toggleDay(day: Weekday) {
-		const days = sortWeekdays(weekdays.includes(day) ? weekdays.filter(d => d !== day) : [...weekdays, day]);
-		set({ interval: recurrence?.unit === 'week' ? recurrence.interval : 1, unit: 'week', days });
-	}
-
-	const nthOf = (r: Recurrence) => (r.unit === 'month' && r.nth ? `${r.nth.week} ${r.nth.weekday}` : null);
-	const same = (a: Recurrence | null, b: Recurrence) =>
-		a?.interval === b.interval &&
-		a.unit === b.unit &&
-		!(a.unit === 'week' && a.days) &&
-		!(a.unit === 'month' && a.day) &&
-		nthOf(a) === nthOf(b);
+	const weekdays = $derived(repeatWeekdays(recurrence, anchor));
+	const toggleDay = (day: Weekday) => set(toggleWeekday(day, recurrence, anchor));
 </script>
 
 <Popover label="Repeat" bind:open>
@@ -79,13 +73,13 @@
 	{#snippet children({ close })}
 		<div class="w-60 touch:w-80">
 			<div class="mb-1 grid grid-cols-7 border-b border-ink/5 pb-1">
-				{#each WEEK as day (day)}
+				{#each REPEAT_WEEK as day (day)}
 					<button
 						type="button"
 						class="grid h-8 place-items-center touch:h-11"
 						aria-label={WEEKDAY_NAMES[day]}
 						aria-pressed={weekdays.includes(day)}
-						disabled={weekdays.length === 1 && weekdays[0] === day}
+						disabled={!canToggleWeekday(day, weekdays)}
 						onclick={() => toggleDay(day)}
 					>
 						<span
@@ -106,7 +100,7 @@
 					}}
 				>
 					<span class="flex-1">{formatRecurrence(preset, anchor)}</span>
-					{#if same(recurrence, preset)}<Check size={14} class="text-accent" />{/if}
+					{#if isRepeatPreset(preset, recurrence)}<Check size={14} class="text-accent" />{/if}
 				</button>
 			{/each}
 			{#if recurrence}
@@ -131,9 +125,9 @@
 				}}
 			>
 				<span class="text-muted">Every</span>
-				<input type="number" min="1" max="365" aria-label="Repeat interval" class="field w-14" bind:value={customInterval} />
+				<input type="number" min="1" max={MAX_CUSTOM_INTERVAL} aria-label="Repeat interval" class="field w-14" bind:value={customInterval} />
 				<select aria-label="Repeat unit" class="field min-w-0 flex-1" bind:value={customUnit}>
-					{#each UNITS as unit (unit)}<option value={unit}>{unit}s</option>{/each}
+					{#each REPEAT_UNITS as unit (unit)}<option value={unit}>{unit}s</option>{/each}
 				</select>
 				<button type="submit" class="btn btn-quiet px-2.5 disabled:opacity-40" disabled={!customValid}>Set</button>
 			</form>

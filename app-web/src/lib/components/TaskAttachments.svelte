@@ -10,7 +10,7 @@
 	import type { Task } from 'shared/task.ts';
 	import { isImage } from 'shared/values.ts';
 	import { attachments } from '../attachments/attachments.svelte.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 	import FileIcon from './FileIcon.svelte';
 
 	let { task, home, editable }: { task: Task; home: string | null; editable: boolean } = $props();

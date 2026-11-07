@@ -1,6 +1,6 @@
 import type { Task } from 'shared/task.ts';
 
-export type RowMenuTarget = {
+type RowMenuTarget = {
 	task: Task;
 	/** A repeating task's past completion in Completed. */
 	rolled?: boolean;

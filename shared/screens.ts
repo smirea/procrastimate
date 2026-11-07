@@ -1,5 +1,7 @@
 import type { AccessRow } from './db/schema.ts';
-import { addDays, type DateKey, type Label, type Task } from './task.ts';
+import type { ListEntry } from './lists.ts';
+import type { NotificationTarget } from './notifications.ts';
+import { addDays, type DateKey, type Label, type Project, type Task } from './task.ts';
 import { pickedLabels, placeKey, scheduledDue } from './triggers.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 import { weekEnd } from './views.ts';
@@ -18,6 +20,86 @@ export type Screen =
 	| { kind: 'label'; id: string }
 	| { kind: 'place'; key: string }
 	| { kind: 'event'; id: string };
+
+/** The fixed lists' names, which every client and the list catalog show. */
+export const FIXED_NAMES = {
+	inbox: 'Inbox',
+	tomorrow: 'Tomorrow',
+	'this-week': 'This week',
+	'no-date': 'No date',
+	completed: 'Completed',
+} as const;
+export type FixedScreen = keyof typeof FIXED_NAMES;
+
+const FIXED = Object.keys(FIXED_NAMES) as FixedScreen[];
+const PLURAL = { project: 'projects', label: 'labels', place: 'places', event: 'events' } as const;
+
+/** The web app's path for `screen`. A section or a day only opens quick add, so the path leaves it out. */
+export function screenPath(screen: Screen): string {
+	switch (screen.kind) {
+		case 'project':
+		case 'label':
+		case 'event':
+			return `/${PLURAL[screen.kind]}/${encodeURIComponent(screen.id)}`;
+		case 'place':
+			return `/places/${encodeURIComponent(screen.key)}`;
+		default:
+			return `/${screen.kind}`;
+	}
+}
+
+/** The screen a web app path shows, or null for a page that lists no tasks, such as a public link. */
+export function screenOfPath(path: string): Screen | null {
+	const [, first = '', second, ...rest] = path.split('/');
+	if (second === undefined) return FIXED.includes(first as FixedScreen) ? { kind: first as FixedScreen } : null;
+	if (!second || rest.length) return null;
+	const id = decodeURIComponent(second);
+	switch (first) {
+		case 'projects':
+			return { kind: 'project', id };
+		case 'labels':
+			return { kind: 'label', id };
+		case 'places':
+			return { kind: 'place', key: id };
+		case 'events':
+			return { kind: 'event', id };
+		default:
+			return null;
+	}
+}
+
+/** The screen a list from the catalog opens. */
+export function entryScreen({ kind, id }: Pick<ListEntry, 'kind' | 'id'>): Screen {
+	switch (kind) {
+		case 'project':
+		case 'label':
+		case 'event':
+			return { kind, id };
+		case 'place':
+			return { kind, key: id };
+		default:
+			return { kind };
+	}
+}
+
+/** Where a tapped notification opens the web app. A task opens its details over Inbox. */
+export function notificationHref(opens: NotificationTarget | null): string {
+	switch (opens?.kind) {
+		case undefined:
+		case 'inbox':
+			return '/inbox';
+		case 'task':
+			return `/inbox?${TASK_PARAM}=${encodeURIComponent(opens.id)}`;
+		case 'place':
+			return screenPath({ kind: 'place', key: opens.id });
+		case 'event':
+		case 'project':
+			return screenPath({ kind: opens.kind, id: opens.id });
+	}
+}
+
+/** The query parameter that opens a task's details over the list. */
+export const TASK_PARAM = 'task';
 
 /** What quick add and Ramble start with. An event stands in for the date and the repeat. */
 export type ListDefaults = {
@@ -149,4 +231,35 @@ export function screenHolds(screen: Screen | null, task: Task, today: DateKey, z
 			return never;
 		}
 	}
+}
+
+/**
+ * The screen whose tasks `screen` lists: a saved place's label screen lists the tasks at the place, which never carry
+ * the place as a label.
+ */
+export function listedScreen(screen: Screen | null, labels: readonly Label[]): Screen | null {
+	const place = screen?.kind === 'label' ? labels.find(label => label.id === screen.id)?.place : null;
+	return place ? { kind: 'place', key: placeKey(place) } : screen;
+}
+
+/**
+ * Where a task just added on `screen` shows: null when `screen` itself shows it, else its project, else Inbox when it
+ * has a day or No date when it has none.
+ */
+export function addedScreen(
+	screen: Screen | null,
+	task: Task,
+	labels: readonly Label[],
+	today: DateKey,
+	zone?: string,
+): Screen | null {
+	if (screenHolds(listedScreen(screen, labels), task, today, zone)) return null;
+	if (task.projectId) return { kind: 'project', id: task.projectId };
+	return { kind: scheduledDue(task, today, zone) ? 'inbox' : 'no-date' };
+}
+
+/** How the toast after a save names the list `addedScreen` chose. */
+export function addedName(screen: Screen, projects: readonly Project[]): string {
+	if (screen.kind === 'project') return projects.find(project => project.id === screen.id)?.name ?? 'its project';
+	return screen.kind in FIXED_NAMES ? FIXED_NAMES[screen.kind as FixedScreen] : 'its list';
 }

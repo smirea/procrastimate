@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { guestRefusal, type GuestRows } from './scope.ts';
+import { guestRefusal, type GuestRows } from './scope';
 
 const rows: GuestRows = [
 	{ kind: 'task', entityId: 'editable', role: 'edit' },

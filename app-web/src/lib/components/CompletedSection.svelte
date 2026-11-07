@@ -4,7 +4,7 @@
 	import type { Task } from 'shared/task.ts';
 	import CompletedList from './CompletedList.svelte';
 	import { completed, type ShownList } from '../completed.svelte.ts';
-	import { motion } from '../ui.svelte.ts';
+	import { motion } from '../motion.ts';
 
 	/** `tasks` are done ones, newest first, from `completedTasks` or `projectCompleted`. */
 	let { tasks, list, showProject = false }: { tasks: Task[]; list: ShownList; showProject?: boolean } = $props();

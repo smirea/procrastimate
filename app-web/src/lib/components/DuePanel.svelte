@@ -23,7 +23,8 @@
 	import { formatDate, formatTime } from 'shared/format.ts';
 	import { resolveTime } from 'shared/quick-add.ts';
 	import Calendar from './Calendar.svelte';
-	import { clock, mobile, motion } from '../ui.svelte.ts';
+	import { clock } from '../clock.svelte.ts';
+	import { mobile, motion } from '../motion.ts';
 
 	let { due, onchange, close }: { due: Due | null; onchange: (due: Due | null) => void; close: () => void } = $props();
 

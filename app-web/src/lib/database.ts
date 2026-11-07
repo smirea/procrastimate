@@ -6,7 +6,8 @@ import { access, comments, labels, projects, reads, sections, settings, tasks } 
 import { CHANGE_LOG, changeLogStatements, DATABASE_FILE_KEY } from 'shared/local-database.ts';
 import type { RowsRead, StoredRow, TableRead } from 'shared/local-rows.ts';
 import type { Kind } from 'shared/model.ts';
-import { entityIdOf, KIND_OF, rowIdOf, TABLE_OF, type RowWrite, type SyncedTable } from 'shared/rows.ts';
+import { KIND_OF, TABLE_OF, type SyncedTable } from 'shared/kinds.ts';
+import { entityIdOf, rowIdOf, type RowWrite } from 'shared/rows.ts';
 import { client } from './api.ts';
 
 /**
@@ -24,11 +25,7 @@ function open(): WebDatabase {
 		client: JSON.stringify(client()),
 		file: localStorage.getItem(DATABASE_FILE_KEY) ?? '',
 	});
-	if (!opened) {
-		opened = openSyncDatabase({ worker: new Worker(`${workerUrl}?${query}`, { type: 'module' }) });
-		// PowerSync's IndexedDB database from before sync-engine. Nothing reads it, so it only takes up the quota.
-		indexedDB.deleteDatabase('procrastimate.db');
-	}
+	opened ??= openSyncDatabase({ worker: new Worker(`${workerUrl}?${query}`, { type: 'module' }) });
 	return opened;
 }
 
@@ -55,8 +52,8 @@ export const localDatabase: WebDatabase = {
 };
 const db = drizzleSyncDatabase(localDatabase);
 
-export const localTables = { tasks, projects, sections, labels, comments, reads, settings, access } as const;
-export type AccessRow = typeof access.$inferSelect;
+const localTables = { tasks, projects, sections, labels, comments, reads, settings, access } as const;
+type AccessRow = typeof access.$inferSelect;
 
 /**
  * Every row change any writer made, in order: this tab, another tab, a sync, or a reset. Local only: the engine syncs

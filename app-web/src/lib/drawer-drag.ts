@@ -1,6 +1,6 @@
 import type { Attachment } from 'svelte/attachments';
 
-export type Settle = 'expand' | 'close' | 'back';
+type Settle = 'expand' | 'close' | 'back';
 
 /**
  * Where a released drag lands. `pull` is how far the finger moved, up negative, `velocity` its speed in px/ms at

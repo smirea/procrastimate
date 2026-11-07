@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { label, project, section, task } from 'shared/testing.ts';
-import { emptyData, homes, merged, sharedSpace, type SharedSpace } from './spaces.ts';
+import { emptyLists } from 'shared/snapshot.ts';
+import { homes, merged, sharedSpace, type SharedSpace } from './spaces.ts';
 
 const spaces: Record<string, SharedSpace> = {
 	ann: {
@@ -8,7 +9,7 @@ const spaces: Record<string, SharedSpace> = {
 		readOnly: new Set(),
 		access: [],
 		data: {
-			...emptyData(),
+			...emptyLists(),
 			tasks: [task('shared-task', { projectId: 'groceries', createdAt: 5 })],
 			projects: [project('groceries')],
 			sections: [section('aisle', 'groceries')],
@@ -17,7 +18,7 @@ const spaces: Record<string, SharedSpace> = {
 	},
 };
 const own = {
-	...emptyData(),
+	...emptyLists(),
 	tasks: [task('mine', { createdAt: 3 })],
 	projects: [project('work')],
 	sections: [section('later', 'work')],
@@ -39,6 +40,6 @@ test('sharedSpace marks the tasks whose access row says view as read only', () =
 		{ id: 'me:task:ours', grantee: 'me', owner: 'ann', kind: 'task', entityId: 'ours', role: 'edit' },
 		{ id: 'me:project:p', grantee: 'me', owner: 'ann', kind: 'project', entityId: 'p', role: 'view' },
 	] as const;
-	const space = sharedSpace('ann', { data: emptyData(), access: [...access] });
+	const space = sharedSpace('ann', { data: emptyLists(), access: [...access] });
 	expect([...space.readOnly]).toEqual(['hers']);
 });

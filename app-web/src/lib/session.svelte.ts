@@ -3,7 +3,7 @@ import { DEVICE_KEYS } from './device.ts';
 import { api, isUnauthorized } from './api.ts';
 import { identify, type SentryUser } from './sentry.ts';
 import { store } from './store.svelte.ts';
-import { toasts } from './ui.svelte.ts';
+import { toasts } from './toasts.svelte.ts';
 
 /** The session cookie is httpOnly, so a cached user id is what lets the app open offline. */
 
