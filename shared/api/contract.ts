@@ -484,25 +484,25 @@ export const contract = {
 			.input(z.object({ subscription: pushSubscriptionSchema }))
 			.output(okSchema),
 		/** Registers this device's subscription. A browser that paired again as a new device replaces its old entry. */
-		subscribe: signedIn
+		subscribe: allowed
 			.meta(openapi({ method: 'PUT', path: '/api/push/subscription' }))
 			.input(subscribeRequestSchema)
 			.output(okSchema),
-		unsubscribe: signedIn.meta(openapi({ method: 'DELETE', path: '/api/push/subscription' })).output(okSchema),
+		unsubscribe: allowed.meta(openapi({ method: 'DELETE', path: '/api/push/subscription' })).output(okSchema),
 		/** What the server will deliver to this device, soonest first. For inspecting a run, not a user path. */
-		schedule: signedIn.meta(openapi({ method: 'GET', path: '/api/push/schedule' })).output(pushScheduleResponseSchema),
+		schedule: allowed.meta(openapi({ method: 'GET', path: '/api/push/schedule' })).output(pushScheduleResponseSchema),
 	},
 	people: {
 		/**
 		 * An exact email match over every user, plus the caller's AI accounts, the people its space has met, and
 		 * whoever made or finished a task it sees, matched on a name prefix. There is no prefix search over every user, so nobody can list them.
 		 */
-		search: signedIn
+		search: allowed
 			.meta(openapi({ method: 'GET', path: '/api/people', inputStructure: 'detailed' }))
 			.input(z.object({ query: z.object({ q: z.string() }) }))
 			.output(peopleSchema),
 	},
-	me: signedIn.meta(openapi({ method: 'GET', path: '/api/me' })).output(personSchema),
+	me: allowed.meta(openapi({ method: 'GET', path: '/api/me' })).output(personSchema),
 	ai: {
 		list: allowed.meta(openapi({ method: 'GET', path: '/api/ai' })).output(aiAccountsSchema),
 		/** Also shares the owner's whole space with it, to edit. */
@@ -594,7 +594,7 @@ export const contract = {
 	},
 	sync: {
 		/** Human users only. */
-		token: signedIn.meta(openapi({ method: 'GET', path: '/api/sync/token' })).output(syncTokenSchema),
+		token: allowed.meta(openapi({ method: 'GET', path: '/api/sync/token' })).output(syncTokenSchema),
 	},
 	/** API tokens for the owner's AI accounts, and personal ones that act as the owner. Human owners only. */
 	tokens: {
