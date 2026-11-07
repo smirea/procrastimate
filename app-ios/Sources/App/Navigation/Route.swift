@@ -18,6 +18,20 @@ enum Route: Hashable {
     case event(id: String)
     case completed
 
+    init(_ screen: ListScreen) {
+        self = switch screen {
+        case .inbox: .inbox
+        case .tomorrow: .tomorrow
+        case .thisWeek: .thisWeek
+        case .noDate: .noDate
+        case let .project(id, _): .project(id: id)
+        case let .label(id): .label(id: id)
+        case let .place(key): .place(key: key)
+        case let .event(id): .event(id: id)
+        case .completed: .completed
+        }
+    }
+
     var screen: ListScreen {
         switch self {
         case .inbox: .inbox()

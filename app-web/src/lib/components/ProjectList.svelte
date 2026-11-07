@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { screenPath } from 'shared/screens.ts';
 	import { page } from '$app/state';
 	import { tick, type Snippet } from 'svelte';
 	import { flip } from 'svelte/animate';
@@ -29,7 +30,7 @@
 
 <ul bind:this={list} {@attach reorder.list} class="relative space-y-0.5">
 	{#each projects as project, index (project.id)}
-		{@const href = `/projects/${project.id}`}
+		{@const href = screenPath({ kind: 'project', id: project.id })}
 		{@const active = page.url.pathname === href}
 		<li
 			data-project-id={project.id}

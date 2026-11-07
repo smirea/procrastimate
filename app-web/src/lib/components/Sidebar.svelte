@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { screenPath } from 'shared/screens.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { slide } from 'svelte/transition';
@@ -57,7 +58,7 @@
 		const project = store.addProject(trimmed);
 		name = '';
 		adding = false;
-		void goto(`/projects/${project.id}`);
+		void goto(screenPath({ kind: 'project', id: project.id }));
 	}
 </script>
 

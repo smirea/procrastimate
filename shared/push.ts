@@ -20,25 +20,3 @@ export type PushMessage = { title: string; body: string; tag: string; opens: Not
 
 /** One notification per moment, so its tag is the moment. */
 export const pushTag = (push: Pick<ScheduledNotification, 'at'>) => `at:${push.at}`;
-
-/** Where a tapped notification opens the web app. A task opens its details over Inbox. */
-export function notificationHref(opens: NotificationTarget | null): string {
-	if (!opens) return '/inbox';
-	const id = encodeURIComponent(opens.id);
-	switch (opens.kind) {
-		case 'inbox':
-			return '/inbox';
-		case 'task':
-			return `/inbox?task=${id}`;
-		case 'place':
-			return `/places/${id}`;
-		case 'event':
-			return `/events/${id}`;
-		case 'project':
-			return `/projects/${id}`;
-		default: {
-			const never: never = opens.kind;
-			return never;
-		}
-	}
-}

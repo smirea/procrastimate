@@ -1,7 +1,6 @@
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
-import { screenHolds, type Screen } from 'shared/screens.ts';
-import { placeKey, scheduledDue } from 'shared/triggers.ts';
+import { addedName, addedScreen, screenPath } from 'shared/screens.ts';
 import { store } from './store.svelte.ts';
 import type { Task } from 'shared/task.ts';
 import { currentScreen } from './screen.ts';
@@ -27,11 +26,11 @@ let confirmation: number | null = null;
  * the last one's toast, so a batch leaves one.
  */
 export function confirmAdded(task: Task) {
-	const path = listOf(task);
+	const screen = addedScreen(currentScreen(), task, store.labels, clock.today);
 	if (confirmation !== null) toasts.dismiss(confirmation);
 	confirmation = null;
-	if (path === page.url.pathname) return reveal.show(task.id);
-	confirmation = toasts.show(`Added to ${listName(path, task)}`, {
+	if (!screen) return reveal.show(task.id);
+	confirmation = toasts.show(`Added to ${addedName(screen, store.projects)}`, {
 		label: 'Show',
 		run: () => {
 			if (sheets.current.kind === 'quick-add') sheets.close();
@@ -40,20 +39,7 @@ export function confirmAdded(task: Task) {
 	});
 }
 
-function listName(path: string, task: Task) {
-	if (path === '/inbox') return 'Inbox';
-	if (path === '/no-date') return 'No date';
-	return store.project(task.projectId)?.name ?? 'its project';
-}
-
-/** A saved place's screen is its label's, but it holds the tasks at the place. */
-function holding(screen: Screen | null): Screen | null {
-	const place = screen?.kind === 'label' ? store.label(screen.id)?.place : null;
-	return place ? { kind: 'place', key: placeKey(place) } : screen;
-}
-
 function listOf(task: Task) {
-	if (screenHolds(holding(currentScreen()), task, clock.today)) return page.url.pathname;
-	if (task.projectId) return `/projects/${task.projectId}`;
-	return scheduledDue(task, clock.today) ? '/inbox' : '/no-date';
+	const screen = addedScreen(currentScreen(), task, store.labels, clock.today);
+	return screen ? screenPath(screen) : page.url.pathname;
 }

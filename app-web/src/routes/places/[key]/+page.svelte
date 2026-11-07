@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { screenPath } from 'shared/screens.ts';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { untrack } from 'svelte';
@@ -28,7 +29,7 @@
 
 	// A saved place lives on its label's screen, so a link from before it was saved lands there.
 	$effect(() => {
-		if (saved) void goto(`/labels/${saved.id}`, { replace: true });
+		if (saved) void goto(screenPath({ kind: 'label', id: saved.id }), { replace: true });
 	});
 
 	function save() {

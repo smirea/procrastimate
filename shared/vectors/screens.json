@@ -2561,6 +2561,396 @@
 				"projectId": "home",
 				"sectionId": null
 			}
+		},
+		{
+			"fn": "addedScreen",
+			"test": "addedScreen › nothing moves when the open screen shows the new task",
+			"input": [
+				{
+					"kind": "inbox"
+				},
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 26,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-15",
+						"time": null
+					},
+					"event": null,
+					"github": [],
+					"id": "a",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a",
+					"titleMode": "parse"
+				},
+				[],
+				"2026-10-14"
+			],
+			"output": null
+		},
+		{
+			"fn": "addedScreen",
+			"test": "addedScreen › nothing moves when the open screen shows the new task",
+			"input": [
+				{
+					"id": "home",
+					"kind": "project"
+				},
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 27,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "a",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a",
+					"titleMode": "parse"
+				},
+				[],
+				"2026-10-14"
+			],
+			"output": null
+		},
+		{
+			"fn": "addedScreen",
+			"test": "addedScreen › a saved place’s label screen shows the tasks at the place",
+			"input": [
+				{
+					"id": "l-rewe",
+					"kind": "label"
+				},
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 28,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "a",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a",
+					"titleMode": "parse"
+				},
+				[
+					{
+						"color": "gray",
+						"createdAt": 1,
+						"id": "l-rewe",
+						"name": "l-rewe",
+						"place": {
+							"address": null,
+							"latitude": 52.5,
+							"longitude": 13.4,
+							"radius": 150
+						}
+					}
+				],
+				"2026-10-14"
+			],
+			"output": null
+		},
+		{
+			"fn": "addedScreen",
+			"test": "addedScreen › a saved place’s label screen shows the tasks at the place",
+			"input": [
+				{
+					"id": "l-rewe",
+					"kind": "label"
+				},
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 28,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "a",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": {
+						"address": null,
+						"latitude": 52.5,
+						"longitude": 13.4,
+						"name": "Rewe",
+						"radius": 150,
+						"trigger": "arrive"
+					},
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a",
+					"titleMode": "parse"
+				},
+				[],
+				"2026-10-14"
+			],
+			"output": {
+				"kind": "no-date"
+			}
+		},
+		{
+			"fn": "addedScreen",
+			"test": "addedScreen › elsewhere the task shows in its project, else Inbox with a day or No date without one",
+			"input": [
+				{
+					"kind": "no-date"
+				},
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 29,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-15",
+						"time": null
+					},
+					"event": null,
+					"github": [],
+					"id": "a",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": "home",
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a",
+					"titleMode": "parse"
+				},
+				[],
+				"2026-10-14"
+			],
+			"output": {
+				"id": "home",
+				"kind": "project"
+			}
+		},
+		{
+			"fn": "addedScreen",
+			"test": "addedScreen › elsewhere the task shows in its project, else Inbox with a day or No date without one",
+			"input": [
+				{
+					"kind": "no-date"
+				},
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 30,
+					"createdBy": null,
+					"due": {
+						"date": "2026-10-15",
+						"time": null
+					},
+					"event": null,
+					"github": [],
+					"id": "a",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a",
+					"titleMode": "parse"
+				},
+				[],
+				"2026-10-14"
+			],
+			"output": {
+				"kind": "inbox"
+			}
+		},
+		{
+			"fn": "addedScreen",
+			"test": "addedScreen › elsewhere the task shows in its project, else Inbox with a day or No date without one",
+			"input": [
+				{
+					"kind": "inbox"
+				},
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 31,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "a",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a",
+					"titleMode": "parse"
+				},
+				[],
+				"2026-10-14"
+			],
+			"output": {
+				"kind": "no-date"
+			}
+		},
+		{
+			"fn": "addedScreen",
+			"test": "addedScreen › elsewhere the task shows in its project, else Inbox with a day or No date without one",
+			"input": [
+				null,
+				{
+					"attachments": [],
+					"completedAt": null,
+					"completedBy": null,
+					"createdAt": 32,
+					"createdBy": null,
+					"due": null,
+					"event": null,
+					"github": [],
+					"id": "a",
+					"labelIds": [],
+					"lastCompletedAt": null,
+					"location": null,
+					"notes": "",
+					"order": 0,
+					"parentId": null,
+					"priority": 4,
+					"projectId": null,
+					"recurrence": null,
+					"reminders": [],
+					"sectionId": null,
+					"title": "a",
+					"titleMode": "parse"
+				},
+				[],
+				"2026-10-14"
+			],
+			"output": {
+				"kind": "no-date"
+			}
+		},
+		{
+			"fn": "addedName",
+			"test": "addedName › names a project, or the fixed list",
+			"input": [
+				{
+					"id": "home",
+					"kind": "project"
+				},
+				[
+					{
+						"createdAt": 1,
+						"icon": null,
+						"id": "home",
+						"name": "Home",
+						"order": 0
+					}
+				]
+			],
+			"output": "Home"
+		},
+		{
+			"fn": "addedName",
+			"test": "addedName › names a project, or the fixed list",
+			"input": [
+				{
+					"id": "gone",
+					"kind": "project"
+				},
+				[]
+			],
+			"output": "its project"
+		},
+		{
+			"fn": "addedName",
+			"test": "addedName › names a project, or the fixed list",
+			"input": [
+				{
+					"kind": "inbox"
+				},
+				[]
+			],
+			"output": "Inbox"
+		},
+		{
+			"fn": "addedName",
+			"test": "addedName › names a project, or the fixed list",
+			"input": [
+				{
+					"kind": "no-date"
+				},
+				[]
+			],
+			"output": "No date"
 		}
 	]
 }

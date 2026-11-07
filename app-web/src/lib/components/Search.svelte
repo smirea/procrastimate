@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { screenPath } from 'shared/screens.ts';
 	import { goto } from '$app/navigation';
 	import { fade, scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
@@ -85,11 +86,11 @@
 		switch (row.kind) {
 			case 'project':
 				sheets.close();
-				void goto(`/projects/${row.hit.item.id}`);
+				void goto(screenPath({ kind: 'project', id: row.hit.item.id }));
 				return;
 			case 'label':
 				sheets.close();
-				void goto(`/labels/${row.hit.item.id}`);
+				void goto(screenPath({ kind: 'label', id: row.hit.item.id }));
 				return;
 			case 'task':
 				sheets.openTask(row.hit.task.id);

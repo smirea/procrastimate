@@ -3,7 +3,8 @@ import { assets, immutable } from '$app/manifest';
 import { self } from '$app/service-worker';
 import { DEVICE_HEADER } from 'shared/auth.ts';
 import { notificationTargetSchema } from 'shared/notifications.ts';
-import { notificationHref, type PushMessage } from 'shared/push.ts';
+import type { PushMessage } from 'shared/push.ts';
+import { notificationHref } from 'shared/screens.ts';
 import { cachedInstallId } from '../lib/install-cache.ts';
 import databaseWorker from 'virtual:database-worker';
 

@@ -556,12 +556,7 @@ struct QuickAddSheet: View {
         guard let route = navigator.destination(of: task, labels: store.labels, today: clock.today, in: clock.timeZone) else {
             return navigator.flash(task.id)
         }
-        let name = switch route {
-        case let .project(id): store.project(id)?.name ?? "its project"
-        case .noDate: "No date"
-        default: "Inbox"
-        }
-        confirmation = toasts.show("Added to \(name)", action: .init(label: "Show") { [navigator, store, clock] in
+        confirmation = toasts.show("Added to \(Screens.addedName(route.screen, store.projects))", action: .init(label: "Show") { [navigator, store, clock] in
             if navigator.quickAdd != nil { navigator.sheet = nil }
             navigator.reveal(task, labels: store.labels, today: clock.today, in: clock.timeZone)
         })

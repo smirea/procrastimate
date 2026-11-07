@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { FIXED_NAMES } from 'shared/screens.ts';
 	import View from '#lib/components/View.svelte';
 	import TaskList from '#lib/components/TaskList.svelte';
 	import AddTaskButton from '#lib/components/AddTaskButton.svelte';
@@ -24,10 +25,10 @@
 	}
 </script>
 
-<svelte:head><title>No date · ProcrastiMate</title></svelte:head>
+<svelte:head><title>{FIXED_NAMES['no-date']} · ProcrastiMate</title></svelte:head>
 
 <View
-	name="No date"
+	name={FIXED_NAMES['no-date']}
 	open={tasks.length}
 	empty={all.length === 0}
 	emptyTitle="Inbox zero"

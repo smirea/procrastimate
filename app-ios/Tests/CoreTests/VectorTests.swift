@@ -609,6 +609,23 @@ private struct ScreenInput: Decodable {
     }
 }
 
+/// A `ListScreen` as TS writes a `Screen`.
+private func screenJSON(_ screen: ListScreen?) throws -> JSONValue {
+    guard let screen else { return .null }
+    let fields: [String: String] = switch screen {
+    case .inbox: ["kind": "inbox"]
+    case .tomorrow: ["kind": "tomorrow"]
+    case .thisWeek: ["kind": "this-week"]
+    case .noDate: ["kind": "no-date"]
+    case .completed: ["kind": "completed"]
+    case let .project(id, _): ["kind": "project", "id": id]
+    case let .label(id): ["kind": "label", "id": id]
+    case let .place(key): ["kind": "place", "key": key]
+    case let .event(id): ["kind": "event", "id": id]
+    }
+    return .object(fields.mapValues { .string($0) })
+}
+
 /// `SharedSpace` in TS: `{ access }`.
 private struct SharedSpaceInput: Decodable {
     let access: [Access]
@@ -621,6 +638,8 @@ private struct SharedSpaceInput: Decodable {
     case "screenDefaults": return try json(ListDefaultsJSON(Screens.defaults(screen, a(1), a(2, as: SharedSpaceInput?.self)?.access, today: a(3))))
     case "canAddTo": return try json(Screens.canAdd(to: screen, a(1, as: SharedSpaceInput?.self)?.access))
     case "screenHolds": return try json(Screens.holds(screen, a(1), a(2), in: a.zone))
+    case "addedScreen": return try screenJSON(Screens.added(screen, a(1), a(2), a(3), in: a.zone))
+    case "addedName": return try json(Screens.addedName(#require(screen), a(1)))
     default: throw unknown(fn)
     }
 }

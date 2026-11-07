@@ -14,11 +14,18 @@
 	import type { DateKey } from 'shared/task.ts';
 	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
-	import type { Screen } from 'shared/screens.ts';
+	import { FIXED_NAMES, type Screen } from 'shared/screens.ts';
 	import { dueCandidates, dueDays, type DueList } from 'shared/views.ts';
 	import { dayHeading } from 'shared/format.ts';
 
-	let { list, name, emptyTitle, emptyHint }: { list: DueList; name: string; emptyTitle: string; emptyHint: string } = $props();
+	let { list }: { list: DueList } = $props();
+
+	const EMPTY: Record<DueList, { title: string; hint: string }> = {
+		inbox: { title: 'Nothing scheduled', hint: 'Tasks with a date show up here by day.' },
+		tomorrow: { title: 'Nothing tomorrow', hint: 'Tasks due tomorrow show up here.' },
+		'this-week': { title: 'Nothing this week', hint: 'Tasks due by Sunday show up here by day.' },
+	};
+	const name = $derived(FIXED_NAMES[list]);
 
 	const key = $derived(filterKey({ kind: list }));
 	const due = $derived(dueDays(store.own.tasks, clock.today, list, { filter: listFilters.get(key), me: session.userId ?? '' }));
@@ -40,8 +47,8 @@
 	{name}
 	open={sections.reduce((n, s) => n + s.tasks.length, 0)}
 	{empty}
-	{emptyTitle}
-	{emptyHint}
+	emptyTitle={EMPTY[list].title}
+	emptyHint={EMPTY[list].hint}
 	canAdd={empty}
 	filter={{ list: key, tasks: candidates }}
 >

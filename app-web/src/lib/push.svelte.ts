@@ -1,7 +1,8 @@
 import { goto, replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import type { NotificationTarget } from 'shared/notifications.ts';
-import { notificationHref, pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
+import { pushSubscriptionSchema, type PushSubscriptionInfo } from 'shared/push.ts';
+import { notificationHref, TASK_PARAM } from 'shared/screens.ts';
 import { api, isUnauthorized } from './api.ts';
 import { DEVICE_KEYS, installId } from './device.ts';
 import { forgetInstallId, rememberInstallId } from './install-cache.ts';
@@ -178,11 +179,11 @@ export const push = new Push();
 
 /** Opens the task a notification was for when its tap launched the app on `?task=`. */
 export function openTaskFromUrl() {
-	const id = page.url.searchParams.get('task');
+	const id = page.url.searchParams.get(TASK_PARAM);
 	if (id === null) return;
 	openNotification({ kind: 'task', id });
 	const url = new URL(page.url.href);
-	url.searchParams.delete('task');
+	url.searchParams.delete(TASK_PARAM);
 	replaceState(url, page.state);
 }
 

@@ -4,12 +4,14 @@ import type { AccessRow } from './db/schema.ts';
 import type { DateKey, Task } from './task.ts';
 import type { TaskEvent, TaskLocation } from './values.ts';
 import { describe, recorded, test } from './vectors/record.ts';
-import { label, task as base } from './testing.ts';
+import { label, project, task as base } from './testing.ts';
 
 const screenDefaults = recorded('screens', screens.screenDefaults);
 const screenHolds = recorded('screens', screens.screenHolds);
 const canAddTo = recorded('screens', screens.canAddTo);
 const reusedDefaults = recorded('screens', screens.reusedDefaults);
+const addedScreen = recorded('screens', screens.addedScreen);
+const addedName = recorded('screens', screens.addedName);
 
 const today = '2026-10-14';
 
@@ -260,5 +262,70 @@ describe('reusedDefaults', () => {
 	test('takes the date of the sheet or screen, not the task', () => {
 		const saved = task('a', { projectId: 'home', due: { date: '2026-10-20', time: null } });
 		expect(reusedDefaults(saved, [], '2026-10-15').date).toBe('2026-10-15');
+	});
+});
+
+describe('addedScreen', () => {
+	const tomorrow = { date: '2026-10-15' as DateKey, time: null };
+
+	test('nothing moves when the open screen shows the new task', () => {
+		expect(addedScreen({ kind: 'inbox' }, task('a', { due: tomorrow }), [], today)).toBeNull();
+		expect(addedScreen({ kind: 'project', id: 'home' }, task('a', { projectId: 'home' }), [], today)).toBeNull();
+	});
+
+	test('a saved place’s label screen shows the tasks at the place', () => {
+		const place = label('l-rewe', { place: { address: null, latitude: 52.5, longitude: 13.4, radius: 150 } });
+		const atPlace = task('a', { location: rewe('Rewe') });
+		expect(addedScreen({ kind: 'label', id: 'l-rewe' }, atPlace, [place], today)).toBeNull();
+		expect(addedScreen({ kind: 'label', id: 'l-rewe' }, atPlace, [], today)).toEqual({ kind: 'no-date' });
+	});
+
+	test('elsewhere the task shows in its project, else Inbox with a day or No date without one', () => {
+		expect(addedScreen({ kind: 'no-date' }, task('a', { projectId: 'home', due: tomorrow }), [], today)).toEqual({
+			kind: 'project',
+			id: 'home',
+		});
+		expect(addedScreen({ kind: 'no-date' }, task('a', { due: tomorrow }), [], today)).toEqual({ kind: 'inbox' });
+		expect(addedScreen({ kind: 'inbox' }, task('a'), [], today)).toEqual({ kind: 'no-date' });
+		expect(addedScreen(null, task('a'), [], today)).toEqual({ kind: 'no-date' });
+	});
+});
+
+describe('addedName', () => {
+	test('names a project, or the fixed list', () => {
+		expect(addedName({ kind: 'project', id: 'home' }, [project('home', { name: 'Home' })])).toBe('Home');
+		expect(addedName({ kind: 'project', id: 'gone' }, [])).toBe('its project');
+		expect(addedName({ kind: 'inbox' }, [])).toBe('Inbox');
+		expect(addedName({ kind: 'no-date' }, [])).toBe('No date');
+	});
+});
+
+describe('screen paths', () => {
+	const every: screens.Screen[] = [
+		{ kind: 'inbox' },
+		{ kind: 'tomorrow' },
+		{ kind: 'this-week' },
+		{ kind: 'no-date' },
+		{ kind: 'completed' },
+		{ kind: 'project', id: 'p1' },
+		{ kind: 'label', id: 'l1' },
+		{ kind: 'place', key: '52.5000,13.4000' },
+		{ kind: 'event', id: 'ev/1 2' },
+	];
+
+	test('every screen’s path parses back to it', () => {
+		for (const screen of every) expect(screens.screenOfPath(screens.screenPath(screen))).toEqual(screen);
+	});
+
+	test('paths that list no tasks are no screen', () => {
+		for (const path of ['/', '/s/abc', '/projects', '/projects/', '/projects/a/b', '/settings'])
+			expect(screens.screenOfPath(path)).toBeNull();
+	});
+
+	test('a notification opens its list, or its task over Inbox', () => {
+		expect(screens.notificationHref(null)).toBe('/inbox');
+		expect(screens.notificationHref({ kind: 'task', id: 't 1' })).toBe('/inbox?task=t%201');
+		expect(screens.notificationHref({ kind: 'place', id: '52.5,13.4' })).toBe('/places/52.5%2C13.4');
+		expect(screens.notificationHref({ kind: 'project', id: 'p1' })).toBe('/projects/p1');
 	});
 });
