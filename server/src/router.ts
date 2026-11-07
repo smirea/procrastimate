@@ -2,9 +2,8 @@ import { implement, ORPCError } from '@orpc/server';
 import { contract, JSON_UTF8, MARKDOWN } from '../../shared/api/contract';
 import { CLIENT_HEADER, DEVICE_HEADER } from '../../shared/auth';
 import { taskActivity } from './activity';
-import { clientOf, requireActor, requireHuman, spaceOf } from './actor';
+import { clientOf, deviceIdFrom, requireActor, requireHuman, spaceOf } from './actor';
 import { originOf, type App } from './app';
-import { deviceIdFrom } from './actor';
 import { aiAccounts, authMethods, createAiUser, deleteUser } from './better-auth';
 import {
 	createComment,
@@ -87,7 +86,7 @@ async function command({ app, request }: Ctx, space?: string): Promise<Command> 
 
 async function shared(ctx: Ctx, space?: string) {
 	const cmd = await command(ctx, space);
-	return { ...cmd, access: await requireAccess(cmd.db, cmd.owner, cmd.actor), origin: originOf(ctx.request) };
+	return { ...cmd, access: requireAccess(cmd.db, cmd.owner, cmd.actor), origin: originOf(ctx.request) };
 }
 
 async function own({ app, request }: Ctx) {

@@ -135,8 +135,8 @@ function withClients(db: Db, owner: string, tasks: readonly Task[]): AgentTask[]
 }
 
 export async function view({ db, owner, actor }: Command): Promise<SpaceView> {
-	const access = await requireAccess(db, owner, actor);
-	const visible = visibleOf(await loadTree(db, owner), access);
+	const access = requireAccess(db, owner, actor);
+	const visible = visibleOf(loadTree(db, owner), access);
 	return { ...visible, tasks: withClients(db, owner, visible.tasks) };
 }
 
@@ -283,7 +283,7 @@ export async function removeTask(command: Command, id: string): Promise<void> {
 }
 
 export async function listComments({ db, owner, actor }: Command, taskId: string): Promise<TaskComment[]> {
-	const access = await requireAccess(db, owner, actor);
+	const access = requireAccess(db, owner, actor);
 	const sight = sightOf(actor, access);
 	const seen = seesTask(db, owner, sight, taskId);
 	const rows = db

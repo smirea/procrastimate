@@ -23,7 +23,15 @@ import { scheduledDays } from 'shared/triggers.ts';
 import type { AgentTask, SpaceView } from 'shared/sharing.ts';
 import { projectsInOrder, type TaskPatch } from 'shared/store.ts';
 import { toDateKey, toTimeOfDay, type DateKey, type Due, type Priority, type Task } from 'shared/task.ts';
-import { dueDays, inboxTasks, labelViewTasks, projectGroups, todayTasks, type DueDays } from 'shared/views.ts';
+import {
+	dueDays,
+	inboxTasks,
+	labelViewTasks,
+	noDateTasks,
+	projectGroups,
+	todayTasks,
+	type DueDays,
+} from 'shared/views.ts';
 import { agentClient, failureOf, showFailure, webUrl, type Failure } from './api.ts';
 import {
 	addedMessage,
@@ -94,7 +102,7 @@ function groupsOf(list: ListId, view: SpaceView, today: DateKey): Group[] {
 		case 'this-week':
 			return dayGroups(dueDays(tasks, today, list), today);
 		case 'no-date':
-			return [{ title: '', tasks: inboxTasks(tasks, today) }];
+			return [{ title: '', tasks: noDateTasks(tasks, today, true) }];
 		default:
 			return [];
 	}
