@@ -38,8 +38,7 @@ struct CompletedRow: View {
             .accessibilityIdentifier("completed-\(task.title)")
             .accessibilityAction { navigator.sheet = .details(taskID: task.id) }
         }
-        .taskSwipes(task, offered, toggle: { actions.reopen(task) }, pickDate: {})
-        .contextMenu { TaskMenu(task: task, offered: offered, toggle: { actions.reopen(task) }) }
+        .taskActions(task, offered, toggle: { actions.reopen(task) })
         .feedback(self)
     }
 

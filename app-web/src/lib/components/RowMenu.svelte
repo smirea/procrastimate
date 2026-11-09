@@ -7,16 +7,13 @@
 	import CheckCircle from 'phosphor-svelte/lib/CheckCircle';
 	import Copy from 'phosphor-svelte/lib/Copy';
 	import Trash from 'phosphor-svelte/lib/Trash';
-	import { WEEKDAY_NAMES, postponeOptions } from 'shared/format.ts';
 	import { rowActions } from 'shared/row-actions.ts';
-	import { weekdayOf, type Task } from 'shared/task.ts';
-	import { scheduledDays, scheduledDue } from 'shared/triggers.ts';
-	import { completeTask, deleteTask, postponeTask, reopenTask } from '../completion.ts';
+	import type { Task } from 'shared/task.ts';
+	import { completeTask, deleteTask, reopenTask } from '../completion.ts';
 	import { copyMarkdown } from '../copy.ts';
 	import { MARGIN, viewportHeight } from '../placement.ts';
-	import { rowMenu } from '../row-menu.svelte.ts';
+	import { postponer, rowMenu } from '../row-menu.svelte.ts';
 	import { store } from '../store.svelte.ts';
-	import { clock } from '../clock.svelte.ts';
 	import { motion } from '../motion.ts';
 	import { sheets } from '../sheets.svelte.ts';
 
@@ -27,7 +24,6 @@
 	const offered = $derived(
 		task && opened ? rowActions({ ...task, completedAt: store.completedAt(task) }, !store.canEdit(task.id), opened.rolled) : null,
 	);
-	const options = $derived(task && offered?.postpone ? postponeOptions(scheduledDue(task, clock.today), clock.today, scheduledDays(store.own.tasks, clock.today)) : []);
 
 	$effect(() => {
 		if (opened && !task) rowMenu.close();
@@ -139,7 +135,7 @@
 		oncontextmenu={(e) => e.preventDefault()}
 		{onkeydown}
 	>
-		{#if offered.toggle && !opened.only}
+		{#if offered.toggle}
 			<button type="button" role="menuitem" class="menu-item" onclick={() => run(toggle)}>
 				{#if offered.toggle === 'complete'}
 					<CheckCircle size={16} class="shrink-0" />Complete
@@ -148,33 +144,24 @@
 				{/if}
 			</button>
 		{/if}
-		{#if options.length}
-			<div role="group" aria-labelledby="row-menu-postpone" class="my-1 border-y border-ink/5 py-1">
-				<div id="row-menu-postpone" class="flex items-center gap-2 px-2.5 pt-1 pb-0.5 text-[12px] font-medium text-muted">
-					<CalendarPlus size={14} class="shrink-0" />Postpone
-				</div>
-				{#each options as option (option.date)}
-					<button type="button" role="menuitem" class="menu-item justify-between pl-8" onclick={() => run((target) => postponeTask(target, option.date))}>
-						{option.label}<span class="text-muted">{WEEKDAY_NAMES[weekdayOf(option.date)]}</span>
-					</button>
-				{/each}
-			</div>
+		{#if offered.postpone}
+			<button type="button" role="menuitem" class="menu-item" onclick={() => run((target) => postponer.open(target, placement.left, placement.top))}>
+				<CalendarPlus size={16} class="shrink-0" />Postpone
+			</button>
 		{/if}
-		{#if offered.delete && !opened.only}
+		{#if offered.delete}
 			<button type="button" role="menuitem" class="menu-item text-[var(--tone-overdue)]!" onclick={() => run(deleteTask)}>
 				<Trash size={16} class="shrink-0" />Delete
 			</button>
 		{/if}
-		{#if !opened.only}
-			<button
-				type="button"
-				role="menuitem"
-				class="menu-item"
-				onclick={() => run((target) => void copyMarkdown({ title: null, sections: [{ heading: null, tasks: [target] }] }))}
-			>
-				<Copy size={16} class="shrink-0" />Copy as Markdown
-			</button>
-		{/if}
+		<button
+			type="button"
+			role="menuitem"
+			class="menu-item"
+			onclick={() => run((target) => void copyMarkdown({ title: null, sections: [{ heading: null, tasks: [target] }] }))}
+		>
+			<Copy size={16} class="shrink-0" />Copy as Markdown
+		</button>
 	</div>
 {/if}
 

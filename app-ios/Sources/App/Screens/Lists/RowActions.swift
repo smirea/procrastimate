@@ -27,48 +27,16 @@ extension RowActions.Toggle {
     var menuImage: String { self == .complete ? "checkmark.circle" : "arrow.uturn.backward.circle" }
 }
 
-/// A row's context menu, from `RowActions`. `toggle` completes or reopens it the way the row animates that.
-struct TaskMenu: View {
-    @Environment(Store.self) private var store
-    @Environment(TaskActions.self) private var actions
-    @Environment(\.today) private var today
-
-    let task: TaskItem
-    let offered: RowActions
-    let toggle: () -> Void
-
-    var body: some View {
-        if let action = offered.toggle {
-            Button(action.label, systemImage: action.menuImage, action: toggle)
-        }
-        if offered.postpone {
-            Menu("Postpone", systemImage: "calendar.badge.clock") {
-                ForEach(store.postponeOptions(task, today), id: \.date) { option in
-                    Button(option.label) { actions.postpone(task, to: option.date) }
-                }
-            }
-        }
-        if offered.delete {
-            Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
-        }
-        Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(task) }
-    }
-}
-
 extension View {
-    /// A row's swipes, from `RowActions`: Complete or Reopen from the leading edge, Postpone from the trailing one.
-    /// Postpone's `Pick a date…` calls `pickDate`.
-    func taskSwipes(
-        _ task: TaskItem,
-        _ offered: RowActions,
-        toggle: @escaping () -> Void,
-        pickDate: @escaping () -> Void
-    ) -> some View {
-        modifier(TaskSwipes(task: task, offered: offered, toggle: toggle, pickDate: pickDate))
+    /// A row's actions, from `RowActions`: Complete or Reopen from the leading swipe, Postpone from the trailing one, and
+    /// the same in the context menu. Postpone opens quick add's date chooser on the row, with the postpone options as
+    /// its presets.
+    func taskActions(_ task: TaskItem, _ offered: RowActions, toggle: @escaping () -> Void) -> some View {
+        modifier(TaskActionsModifier(task: task, offered: offered, toggle: toggle))
     }
 }
 
-private struct TaskSwipes: ViewModifier {
+private struct TaskActionsModifier: ViewModifier {
     @Environment(Store.self) private var store
     @Environment(TaskActions.self) private var actions
     @Environment(\.today) private var today
@@ -76,9 +44,9 @@ private struct TaskSwipes: ViewModifier {
     let task: TaskItem
     let offered: RowActions
     let toggle: () -> Void
-    let pickDate: () -> Void
 
-    @State private var postponing = false
+    /// The date the chooser opened on, which its one toast offers to put back.
+    @State private var postponing: Due??
 
     func body(content: Content) -> some View {
         content
@@ -89,20 +57,46 @@ private struct TaskSwipes: ViewModifier {
                 }
             }
             .swipeActions(edge: .trailing, when: offered.postpone) {
-                Button("Postpone", systemImage: "calendar.badge.clock") { postponing = true }
+                Button("Postpone", systemImage: "calendar.badge.clock", action: postpone)
                     .tint(.toneWeek)
             }
-            .confirmationDialog("Postpone", isPresented: $postponing, titleVisibility: .visible) {
-                ForEach(store.postponeOptions(task, today), id: \.date) { option in
-                    Button("\(option.label) · \(Format.weekdayNames[Dates.weekdayOf(option.date)])") {
-                        actions.postpone(task, to: option.date)
-                    }
-                }
-                Button("Pick a date…", action: pickDate)
+            .contextMenu { menu }
+            .popover(isPresented: Binding(get: { postponing != nil }, set: { if !$0 { finish() } })) {
+                DuePopover(
+                    due: store.task(task.id)?.due,
+                    presets: store.postponeOptions(task, today),
+                    closesOnDay: true,
+                    onChange: { actions.setDue(task, $0) },
+                    close: finish
+                )
+                .presentationCompactAdaptation(.popover)
             }
             // Outside a `List`, as in task details, swipe actions keep the buttons and closures they were first built
             // with, so the row rebuilds whenever what they offer changes.
             .id(offered)
+    }
+
+    @ViewBuilder private var menu: some View {
+        if let action = offered.toggle {
+            Button(action.label, systemImage: action.menuImage, action: toggle)
+        }
+        if offered.postpone {
+            Button("Postpone", systemImage: "calendar.badge.clock", action: postpone)
+        }
+        if offered.delete {
+            Button("Delete", systemImage: "trash", role: .destructive) { actions.delete(task) }
+        }
+        Button("Copy as Markdown", systemImage: "doc.on.doc") { actions.copyAsMarkdown(task) }
+    }
+
+    private func postpone() {
+        postponing = .some(store.task(task.id)?.due)
+    }
+
+    private func finish() {
+        guard let original = postponing else { return }
+        postponing = nil
+        actions.toastPostponed(task, from: original)
     }
 }
 

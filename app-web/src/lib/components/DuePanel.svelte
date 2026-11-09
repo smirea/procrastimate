@@ -3,8 +3,12 @@
 	import CalendarDot from 'phosphor-svelte/lib/CalendarDot';
 	import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus';
 	import Clock from 'phosphor-svelte/lib/Clock';
+	import Couch from 'phosphor-svelte/lib/Couch';
+	import MoonStars from 'phosphor-svelte/lib/MoonStars';
 	import Prohibit from 'phosphor-svelte/lib/Prohibit';
+	import Sparkle from 'phosphor-svelte/lib/Sparkle';
 	import Sun from 'phosphor-svelte/lib/Sun';
+	import SunHorizon from 'phosphor-svelte/lib/SunHorizon';
 	import X from 'phosphor-svelte/lib/X';
 	import type { Component } from 'svelte';
 	import { fly } from 'svelte/transition';
@@ -20,13 +24,27 @@
 		type Due,
 		type TimeOfDay,
 	} from 'shared/task.ts';
-	import { formatDate, formatTime } from 'shared/format.ts';
+	import { WEEKDAY_NAMES, formatDate, formatTime, type PostponeOption } from 'shared/format.ts';
 	import { resolveTime } from 'shared/quick-add.ts';
 	import Calendar from './Calendar.svelte';
 	import { clock } from '../clock.svelte.ts';
 	import { mobile, motion } from '../motion.ts';
 
-	let { due, onchange, close }: { due: Due | null; onchange: (due: Due | null) => void; close: () => void } = $props();
+	let {
+		due,
+		onchange,
+		close,
+		presets: given,
+		closesOnDay = false,
+	}: {
+		due: Due | null;
+		onchange: (due: Due | null) => void;
+		close: () => void;
+		/** A row's postpone passes the postpone options; quick add and details use the three below. */
+		presets?: PostponeOption[];
+		/** A row's postpone also closes on a calendar day, since the row moves to it. */
+		closesOnDay?: boolean;
+	} = $props();
 
 	const SLOTS = Array.from({ length: 48 }, (_, i) => toTimeOfDay(Math.floor(i / 2), (i % 2) * 30));
 
@@ -40,11 +58,24 @@
 		return toTimeOfDay(date.getHours(), date.getMinutes());
 	});
 
-	const presets: { label: string; date: DateKey; icon: Component; tone: string }[] = $derived([
-		{ label: 'Today', date: today, icon: CalendarDot, tone: 'today' },
-		{ label: 'Tomorrow', date: addDays(today, 1), icon: Sun, tone: 'soon' },
-		{ label: 'Next week', date: addDays(today, 7 - mondayIndex(weekdayOf(today))), icon: CalendarPlus, tone: 'week' },
-	]);
+	const presets: PostponeOption[] = $derived(
+		given ?? [
+			{ label: 'Today', date: today },
+			{ label: 'Tomorrow', date: addDays(today, 1) },
+			{ label: 'Next week', date: addDays(today, 7 - mondayIndex(weekdayOf(today))) },
+		],
+	);
+
+	const STYLES: Record<string, { icon: Component; tone: string }> = {
+		Today: { icon: CalendarDot, tone: 'var(--tone-today)' },
+		Tomorrow: { icon: Sun, tone: 'var(--tone-soon)' },
+		'In 2 days': { icon: SunHorizon, tone: 'var(--tone-soon)' },
+		Weekend: { icon: Couch, tone: 'var(--tone-week)' },
+		'Next weekend': { icon: Couch, tone: 'var(--tone-week)' },
+		'Next week': { icon: CalendarPlus, tone: 'var(--tone-week)' },
+		'Next empty day': { icon: Sparkle, tone: 'var(--color-accent)' },
+	};
+	const style = (label: string) => STYLES[label] ?? { icon: MoonStars, tone: 'var(--tone-later)' };
 
 	const shortDay = (date: DateKey) =>
 		fromDateKey(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -58,6 +89,11 @@
 
 	function pickDate(date: DateKey) {
 		onchange({ date, time: due?.time ?? null });
+	}
+
+	function pickDay(date: DateKey) {
+		pickDate(date);
+		if (closesOnDay) close();
 	}
 
 	function pickTime(time: TimeOfDay) {
@@ -85,19 +121,22 @@
 <div class="w-72 touch:w-[19.75rem]">
 	<div class="grid grid-cols-4 gap-1.5 p-0.5">
 		{#each presets as preset (preset.label)}
+			{@const { icon: Icon, tone } = style(preset.label)}
 			<button
 				type="button"
 				class="tile press"
-				style="--tone: var(--tone-{preset.tone})"
+				style:--tone={tone}
 				data-current={due?.date === preset.date}
 				title={shortDay(preset.date)}
+				aria-label={preset.label}
 				onclick={() => {
 					pickDate(preset.date);
 					close();
 				}}
 			>
-				<preset.icon size={18} weight="duotone" style="color: var(--tone)" />
-				{preset.label}
+				<Icon size={18} weight="duotone" style="color: var(--tone)" />
+				<span class="label">{preset.label}</span>
+				<span class="text-[0.6875rem] font-normal text-muted">{WEEKDAY_NAMES[weekdayOf(preset.date)]}</span>
 			</button>
 		{/each}
 		<button
@@ -123,7 +162,7 @@
 			class:pointer-events-none={view === 'time'}
 			inert={view === 'time'}
 		>
-			<Calendar selected={due?.date ?? null} {today} onpick={pickDate} />
+			<Calendar selected={due?.date ?? null} {today} onpick={pickDay} />
 			<div class="mt-1 flex items-center gap-1 border-t border-ink/5 pt-1">
 				<button
 					type="button"
@@ -208,16 +247,23 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 0.1875rem;
+		gap: 0.125rem;
 		min-height: 3.25rem;
+		padding: 0.375rem 0.125rem;
 		border-radius: calc(var(--radius-popover) - 0.5rem);
 		background: color-mix(in srgb, var(--color-ink) 5%, transparent);
 		font-size: 0.75rem;
 		font-weight: 500;
-		white-space: nowrap;
+		line-height: 1.15;
+		text-align: center;
 		transition:
 			background 160ms var(--ease-spring),
 			scale 220ms var(--ease-spring);
+	}
+
+	/* `Next empty day` wraps onto two lines rather than widening the popover past a phone's width. */
+	.label {
+		text-wrap: balance;
 	}
 
 	.tile[data-current='true'] {

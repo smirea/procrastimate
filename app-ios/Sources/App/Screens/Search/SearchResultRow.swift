@@ -19,8 +19,7 @@ struct SearchResultRow: View {
                 if offered.toggle == .reopen { actions.reopen(hit.task) } else { actions.complete(hit.task) }
             }
             result
-                .taskSwipes(hit.task, offered, toggle: toggle, pickDate: open)
-                .contextMenu { TaskMenu(task: hit.task, offered: offered, toggle: toggle) }
+                .taskActions(hit.task, offered, toggle: toggle)
                 .feedback(self)
         } else {
             result.feedback(self)

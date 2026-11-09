@@ -71,13 +71,21 @@ final class TaskActions {
         copyAsMarkdown(Markdown.projectDocument(project, groups))
     }
 
-    /// Keeps the time of day, and leaves the repeat to count from the new date.
-    func postpone(_ task: TaskItem, to date: DateKey) {
-        withAnimation(.snappy) { store.updateTask(task.id, TaskPatch(due: .some(Due(date: date, time: task.due?.time)))) }
-        toasts.show(
-            "Moved “\(task.title)” to \(Format.formatDate(date, clock.today))",
-            undo: .postpone(.init(id: task.id, due: task.due)),
-            in: store
-        )
+    /// A row's date chooser writes each pick at once, so the row moves while it is open.
+    func setDue(_ task: TaskItem, _ due: Due?) {
+        guard store.task(task.id)?.due != due else { return }
+        withAnimation(.snappy) { store.updateTask(task.id, TaskPatch(due: .some(due))) }
+    }
+
+    /// One toast when the row's date chooser closes, whose Undo puts back the date it opened on, however many picks
+    /// came in between.
+    func toastPostponed(_ task: TaskItem, from original: Due?) {
+        guard let current = store.task(task.id), current.due != original else { return }
+        let message = current.due.map { due in
+            let when = due.time == original?.time ? Format.formatDate(due.date, clock.today) : Format.formatDue(due, clock.today)
+            return "Moved “\(task.title)” to \(when)"
+        }
+            ?? "Removed the date from “\(task.title)”"
+        toasts.show(message, undo: .postpone(.init(id: task.id, due: original)), in: store)
     }
 }
