@@ -27,13 +27,13 @@ extension WidgetList {
 }
 
 /// How a pin shows in the tab bar, its menus, and Settings.
-struct PinLabel {
+struct PinLabel: Equatable {
     let title: String
     let systemImage: String
 }
 
 /// The catalog's groups as pins, for the tab menus and Settings.
-struct PinGroup: Identifiable {
+struct PinGroup: Identifiable, Equatable {
     let title: String
     let pins: [Pin]
     var id: String { title }

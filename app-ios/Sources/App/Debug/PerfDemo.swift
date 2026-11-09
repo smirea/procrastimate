@@ -7,6 +7,9 @@ import UIKit
 /// `PROCRASTIMATE_PERF=<host path>` appends one line per main run loop pass longer than 8 ms to that file, and the word
 /// `script` then opens details, completes tasks, and switches tabs on a fixed schedule, marking each phase in
 /// `<path>.marks`, so the numbers carry no XCUITest or accessibility work. `visitall` opens every tab first.
+/// `pins` pins Inbox and three projects, as on Stefan's bar. `switch` pins them too and walks Inbox, the projects, and
+/// Browse three times (`rounds:<n>` for more), marking each switch in `<path>.marks` with the main thread's CPU time it
+/// took; the first round is the first visit to each tab after launch.
 enum PerfDemo {
     @MainActor
     static func run(store: Store, clock: AppClock, navigator: Navigator, actions: TaskActions) async {
@@ -17,11 +20,40 @@ enum PerfDemo {
         if let count = PlacesDemo.value("bulk").flatMap(Int.init), store.tasks.isEmpty {
             store.commit(data(count, today: clock.today, now: clock.now.epochMilliseconds))
         }
+        if PlacesDemo.has("switch") || PlacesDemo.has("pins") { navigator.setPins([.inbox] + store.projects.prefix(3).map { Pin.project(id: $0.id) }) }
+        if PlacesDemo.has("switch") { await switchTabs(path, navigator: navigator) }
         if PlacesDemo.has("script") { await script(path, store: store, clock: clock, navigator: navigator, actions: actions) }
         #endif
     }
 
     #if DEBUG
+    /// Main-thread CPU time, not wall time, so a comparison holds on a loaded Mac, where the stall log's wall-clock
+    /// passes swung by a factor of ten between identical runs.
+    static func mainCPU() -> Double {
+        var info = thread_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout<thread_basic_info>.size / MemoryLayout<integer_t>.size)
+        _ = withUnsafeMutablePointer(to: &info) { $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { thread_info(pthread_mach_thread_np(pthread_self()), thread_flavor_t(THREAD_BASIC_INFO), $0, &count) } }
+        return Double(info.user_time.seconds + info.system_time.seconds) * 1000 + Double(info.user_time.microseconds + info.system_time.microseconds) / 1000
+    }
+
+    @MainActor
+    private static func switchTabs(_ path: String, navigator: Navigator) async {
+        FileManager.default.createFile(atPath: "\(path).marks", contents: nil)
+        let marks = FileHandle(forWritingAtPath: "\(path).marks")
+        let tabs = navigator.pins.map(AppTab.pin) + [.browse]
+        try? await Task.sleep(for: .seconds(3))
+        for round in 0 ..< (PlacesDemo.value("rounds").flatMap(Int.init) ?? 3) {
+            for tab in tabs.dropFirst(round == 0 ? 1 : 0) {
+                let start = mainCPU()
+                navigator.tab = tab
+                try? await Task.sleep(for: .milliseconds(1000))
+                let line = "\(Int(Date().timeIntervalSince1970 * 1000))\t\(round == 0 ? "cold" : "warm")\t\(tab)\t\(String(format: "%.1f", mainCPU() - start))\n"
+                marks?.write(Data(line.utf8))
+            }
+        }
+        marks?.write(Data("done\n".utf8))
+    }
+
     @MainActor
     private static func script(_ path: String, store: Store, clock: AppClock, navigator: Navigator, actions: TaskActions) async {
         FileManager.default.createFile(atPath: "\(path).marks", contents: nil)

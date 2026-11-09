@@ -51,12 +51,12 @@ private struct SignedIn: View {
     }
 }
 
-/// Every tab stays in the window once visited, and switching only shows another. A `TabView` took each hidden tab out of
+/// Every tab stays in the window once mounted, and switching only shows another. A `TabView` took each hidden tab out of
 /// the window, so every switch ran a view controller transition and rebuilt the visible rows of the list it brought
 /// back, for a system tab bar the app hides anyway.
 private struct Tabs: View {
     @Environment(Navigator.self) private var navigator
-    @State private var visited: Set<AppTab> = []
+    @State private var mounted: Set<AppTab> = []
 
     var body: some View {
         ZStack {
@@ -65,19 +65,30 @@ private struct Tabs: View {
             }
             mounted(.browse) { TabStack(tab: .browse) { BrowseScreen().tracedScreen("Browse") } }
         }
+        .task { await mountHidden() }
     }
 
-    /// A tab mounts the first time it opens, as a `TabView`'s did.
     @ViewBuilder private func mounted(_ tab: AppTab, @ViewBuilder _ content: () -> some View) -> some View {
         let shown = navigator.tab == tab
-        if shown || visited.contains(tab) {
+        if shown || mounted.contains(tab) {
             content()
                 .id(navigator.resets[tab, default: 0])
                 .opacity(shown ? 1 : 0)
                 .allowsHitTesting(shown)
                 .accessibilityHidden(!shown)
                 .zIndex(shown ? 1 : 0)
-                .onAppear { visited.insert(tab) }
+                .onAppear { mounted.insert(tab) }
+        }
+    }
+
+    /// Building a tab's screen the first time costs 150 to 300 ms of main thread, nearly all of it SwiftUI making the
+    /// navigation stack, toolbar menus, and list cells, so a first tap on each tab hitched. The hidden tabs mount one at a
+    /// time once launch settles, with a gap between them for any tap, so a tap only ever shows a tab.
+    private func mountHidden() async {
+        try? await Task.sleep(for: .milliseconds(600))
+        for tab in navigator.pins.map(AppTab.pin) + [.browse] where !mounted.contains(tab) {
+            mounted.insert(tab)
+            try? await Task.sleep(for: .milliseconds(150))
         }
     }
 }
@@ -186,12 +197,12 @@ private struct TabBar: View {
 }
 
 /// Apart from `TabBar`, which reads the open sheet to hide while quick add is up, so opening details never rebuilds the
-/// tabs and their menus.
+/// tabs and their menus. It reads the store for the pins, badge, and swap menus but not the open tab, so a switch
+/// rebuilds only `TabItems` and never the list catalog behind the menus.
 private struct TabBarItems: View {
     @Environment(Navigator.self) private var navigator
     @Environment(Store.self) private var store
     @Environment(\.today) private var today
-    @Namespace private var selection
     @State private var width: CGFloat = 0
 
     private var inboxBadge: Int {
@@ -201,19 +212,21 @@ private struct TabBarItems: View {
 
     var body: some View {
         // Every list keeps its tab while it is empty, so the bar never changes under the user. A place or an event stops
-        // existing with its last open task, so its pin hides then, but not while it is open.
+        // existing with its last open task, so its pin hides then, but not while it is open. The open tab is read only
+        // for such a pin, so switching tabs does not rebuild this view.
         let pins = navigator.barPins(store).filter { store.exists($0, today: today) || navigator.tab == .pin($0) }
+        let items = pins.compactMap { pin in store.label(of: pin).map { TabItem(pin: pin, label: $0, badge: pin == .inbox ? inboxBadge : 0) } }
         let swaps = store.pinGroups(excluding: navigator.pins, today: today)
         let stacked = TabBarMetrics.stacked(tabs: navigator.barPins(store).count + 1, screen: width)
         GlassEffectContainer(spacing: TabBarMetrics.contentGap) {
             if stacked {
                 VStack(alignment: .trailing, spacing: TabBarMetrics.contentGap) {
                     addButton
-                    tabs(pins, swaps: swaps)
+                    TabItems(items: items, swaps: swaps)
                 }
             } else {
                 HStack(spacing: TabBarMetrics.contentGap) {
-                    tabs(pins, swaps: swaps)
+                    TabItems(items: items, swaps: swaps)
                     addButton
                 }
             }
@@ -224,21 +237,6 @@ private struct TabBarItems: View {
         .ignoresSafeArea(.all, edges: .bottom)
         .frame(maxWidth: .infinity)
         .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
-    }
-
-    private func tabs(_ pins: [Pin], swaps: [PinGroup]) -> some View {
-        HStack(spacing: 0) {
-            ForEach(pins, id: \.key) { pin in
-                if let label = store.label(of: pin) {
-                    pinItem(pin, label, swaps: swaps)
-                        .transition(.scale(scale: 0.6).combined(with: .opacity))
-                }
-            }
-            browseItem
-        }
-        .padding(TabBarMetrics.inset)
-        .animation(.snappy(duration: 0.25), value: pins)
-        .glassEffect(.regular.interactive(), in: .capsule)
     }
 
     private var addButton: some View {
@@ -256,20 +254,66 @@ private struct TabBarItems: View {
         // The open quick add card's identifier is also `Quick add`, so a test matching the label can hit the card.
         .accessibilityIdentifier("quick-add-button")
     }
+}
+
+private struct TabItem: Equatable {
+    let pin: Pin
+    let label: PinLabel
+    let badge: Int
+}
+
+/// The tabs themselves, the one view a switch rebuilds.
+private struct TabItems: View {
+    @Environment(Navigator.self) private var navigator
+    @Environment(Store.self) private var store
+    let items: [TabItem]
+    let swaps: [PinGroup]
+    @State private var width: CGFloat = 0
+
+    var body: some View {
+        let tabs = items.map { AppTab.pin($0.pin) } + [.browse]
+        let selected = tabs.firstIndex(of: navigator.tab)
+        HStack(spacing: 0) {
+            ForEach(items, id: \.pin.key) { item in
+                pinItem(item)
+                    .transition(.scale(scale: 0.6).combined(with: .opacity))
+            }
+            browseItem
+        }
+        .background(alignment: .leading) { selection(selected, of: tabs.count) }
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
+        .padding(TabBarMetrics.inset)
+        .animation(.snappy(duration: 0.25), value: items.map(\.pin))
+        .glassEffect(.regular.interactive(), in: .capsule)
+    }
+
+    /// One capsule behind the row that slides to the open tab. A capsule in each tab's label, matched with
+    /// `matchedGeometryEffect`, popped instead: a pin's label is a `Menu`'s, which UIKit hosts on its own, so the
+    /// labels share no geometry to animate between. The tabs split the row evenly, so the open one's frame is its index.
+    @ViewBuilder private func selection(_ index: Int?, of count: Int) -> some View {
+        if let index, count > 0 {
+            let tabWidth = width / CGFloat(count)
+            Capsule()
+                .fill(.ink.opacity(0.08))
+                .frame(width: tabWidth)
+                .offset(x: CGFloat(index) * tabWidth)
+                .animation(.snappy(duration: 0.25), value: index)
+                .animation(.snappy(duration: 0.25), value: count)
+        }
+    }
 
     /// Tapping an open pin at its root, or long pressing any pin, lists the screens it can switch to. A plain `Menu`
     /// opens on tap, and one with a primary action opens only on a long press.
-    @ViewBuilder private func pinItem(_ pin: Pin, _ label: PinLabel, swaps: [PinGroup]) -> some View {
-        let tab = AppTab.pin(pin)
+    @ViewBuilder private func pinItem(_ item: TabItem) -> some View {
+        let tab = AppTab.pin(item.pin)
         let selected = navigator.tab == tab
-        let badge = pin == .inbox ? inboxBadge : 0
-        let item = itemLabel(tab, label.title, label.systemImage, badge: badge)
-        let menu = swapMenu(pin, swaps: swaps)
+        let label = itemLabel(tab, item.label.title, item.label.systemImage, badge: item.badge)
+        let menu = swapMenu(item.pin)
         Group {
             if selected, navigator.paths[tab, default: []].isEmpty {
-                Menu { menu } label: { item }
+                Menu { menu } label: { label }
             } else {
-                Menu { menu } label: { item } primaryAction: {
+                Menu { menu } label: { label } primaryAction: {
                     if selected { navigator.paths[tab] = [] } else { navigator.tab = tab }
                 }
             }
@@ -278,10 +322,10 @@ private struct TabBarItems: View {
         // A menu opening up from the bar would put its first rows nearest the tab, so the fixed lists stay on top.
         .menuOrder(.fixed)
         .buttonStyle(.plain)
-        .itemAccessibility(label.title, badge: badge, selected: selected)
+        .itemAccessibility(item.label.title, badge: item.badge, selected: selected)
     }
 
-    @ViewBuilder private func swapMenu(_ pin: Pin, swaps: [PinGroup]) -> some View {
+    @ViewBuilder private func swapMenu(_ pin: Pin) -> some View {
         ForEach(swaps) { group in
             Section(group.title) {
                 ForEach(group.pins, id: \.key) { next in
@@ -329,13 +373,8 @@ private struct TabBarItems: View {
         }
         .foregroundStyle(selected ? Color.accent : Color.primary)
         .frame(maxWidth: .infinity, minHeight: 54)
-        .background {
-            if selected {
-                Capsule().fill(.ink.opacity(0.08)).matchedGeometryEffect(id: "selection", in: selection)
-            }
-        }
         .contentShape(.capsule)
-        .animation(.snappy(duration: 0.25), value: navigator.tab)
+        .animation(.snappy(duration: 0.25), value: selected)
     }
 }
 
