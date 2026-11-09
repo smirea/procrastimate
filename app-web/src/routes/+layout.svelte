@@ -15,6 +15,7 @@
 	import ShareSheet from '#lib/components/ShareSheet.svelte';
 	import TaskSheet from '#lib/components/TaskSheet.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
+	import PostponePanel from '#lib/components/PostponePanel.svelte';
 	import RowMenu from '#lib/components/RowMenu.svelte';
 	import ImageViewer from '#lib/components/ImageViewer.svelte';
 	import { store } from '#lib/store.svelte.ts';
@@ -225,6 +226,7 @@
 
 <ImageViewer />
 <RowMenu />
+<PostponePanel />
 <Toasts />
 {/if}
 

@@ -20,14 +20,23 @@ struct DueChip: View {
                 tone: due.map { Format.dueTone($0, today).color } ?? .muted
             )
         } content: { close in
-            DuePopover(due: due, onChange: onChange, close: close)
+            DuePopover(due: due, presets: Self.presets(today), onChange: onChange, close: close)
         }
+    }
+
+    static func presets(_ today: DateKey) -> [Format.PostponeOption] {
+        QuickAddDraft.datePresets(today).map { Format.PostponeOption(label: $0.label, date: $0.date) }
     }
 }
 
-private struct DuePopover: View {
+/// The one date chooser: quick add's and task details' date chip, and a row's Postpone, which passes the postpone
+/// options as its presets.
+struct DuePopover: View {
     @Environment(\.clock) private var clock
     let due: Due?
+    let presets: [Format.PostponeOption]
+    /// A row's postpone also closes on a calendar day, since the row moves to it.
+    var closesOnDay = false
     let onChange: (Due?) -> Void
     let close: () -> Void
 
@@ -35,17 +44,30 @@ private struct DuePopover: View {
     /// keeps landing on the next occurrence of each time scrolled past, not on the first one's day.
     @State private var timeEdit: (value: Date, base: Due?)?
 
+    /// Above quick add's keyboard a six-week month leaves less room than the popover needs, so it scrolls, from the top.
     var body: some View {
-        let today = clock.today
+        ScrollView {
+            content
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .frame(width: 340)
+        .feedback(self)
+    }
+
+    private var content: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 6) {
-                ForEach(Array(zip(QuickAddDraft.datePresets(today), Self.presetStyles)), id: \.0.label) { preset, style in
-                    presetTile(preset.label, systemImage: style.icon, tone: style.tone, current: due?.date == preset.date) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 4), spacing: 6) {
+                ForEach(presets, id: \.label) { preset in
+                    let style = Self.style(preset.label)
+                    presetTile(
+                        preset.label, weekday: Format.weekdayNames[Dates.weekdayOf(preset.date)],
+                        systemImage: style.icon, tone: style.tone, current: due?.date == preset.date
+                    ) {
                         onChange(Due(date: preset.date, time: due?.time))
                         close()
                     }
                 }
-                presetTile("No date", systemImage: "nosign", tone: .muted, current: false) {
+                presetTile("No date", weekday: nil, systemImage: "nosign", tone: .muted, current: false) {
                     onChange(nil)
                     close()
                 }
@@ -62,31 +84,46 @@ private struct DuePopover: View {
             }
         }
         .padding(8)
-        .frame(width: 340)
         .clipped()
         .animation(.snappy(duration: 0.25), value: timeEdit == nil)
-        .feedback(self)
     }
 
-    private static let presetStyles: [(icon: String, tone: Color)] = [
-        ("calendar", .toneToday), ("sun.max", .toneSoon), ("calendar.badge.plus", .toneWeek),
-    ]
+    private static func style(_ label: String) -> (icon: String, tone: Color) {
+        switch label {
+        case "Today": ("calendar", .toneToday)
+        case "Tomorrow": ("sun.max", .toneSoon)
+        case "In 2 days": ("sunrise", .toneSoon)
+        case "Weekend", "Next weekend": ("sofa", .toneWeek)
+        case "Next week": ("calendar.badge.plus", .toneWeek)
+        case "Next empty day": ("sparkles", .accent)
+        default: ("moon.stars", .toneLater)
+        }
+    }
 
     /// Tiles instead of rows keep the popover short enough to fit above the keyboard in quick add.
     private func presetTile(
-        _ label: String, systemImage: String, tone: Color, current: Bool, action: @escaping () -> Void
+        _ label: String, weekday: String?, systemImage: String, tone: Color, current: Bool, action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            VStack(spacing: 3) {
-                Image(systemName: systemImage).font(.body).foregroundStyle(tone)
-                Text(label).font(.caption.weight(.medium)).foregroundStyle(label == "No date" ? .muted : .ink).lineLimit(1)
+            VStack(spacing: 1) {
+                Image(systemName: systemImage).font(.callout).foregroundStyle(tone)
+                Text(label)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(label == "No date" ? .muted : .ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                if let weekday {
+                    Text(weekday).font(.caption2).foregroundStyle(.muted).lineLimit(1)
+                }
             }
+            .padding(.horizontal, 2)
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(current ? tone.opacity(0.14) : Color.ink.opacity(0.05), in: .rect(cornerRadius: 14))
             .contentShape(.rect(cornerRadius: 14))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
+        .accessibilityValue(weekday ?? "")
         .accessibilityAddTraits(current ? .isSelected : [])
     }
 
@@ -97,7 +134,10 @@ private struct DuePopover: View {
                 "Due date",
                 selection: Binding(
                     get: { Dates.fromDateKey(due?.date ?? today, in: clock.timeZone) },
-                    set: { onChange(Due(date: Dates.toDateKey($0, in: clock.timeZone), time: due?.time)) }
+                    set: {
+                        onChange(Due(date: Dates.toDateKey($0, in: clock.timeZone), time: due?.time))
+                        if closesOnDay { close() }
+                    }
                 ),
                 displayedComponents: .date
             )

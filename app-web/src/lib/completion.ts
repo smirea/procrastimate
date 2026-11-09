@@ -1,6 +1,6 @@
-import { completedToast, formatDate, reopenedToast } from 'shared/format.ts';
+import { completedToast, formatDate, formatDue, reopenedToast } from 'shared/format.ts';
 import type { Deleted, Undo } from 'shared/store.ts';
-import type { DateKey, Task } from 'shared/task.ts';
+import type { Due, Task } from 'shared/task.ts';
 import { store } from './store.svelte.ts';
 import { clock } from './clock.svelte.ts';
 import { toasts } from './toasts.svelte.ts';
@@ -30,15 +30,24 @@ export function reopenTask(task: Task) {
 	if (reopened.length) toastUndo(reopenedToast(task.title), { kind: 'reopen', reopened });
 }
 
-/** Keeps the time of day, and leaves the repeat to count from the new date. */
-export function postponeTask(task: Task, date: DateKey) {
-	store.updateTask(task.id, { due: { date, time: task.due?.time ?? null } });
-	toastUndo(`Moved “${task.title}” to ${formatDate(date, clock.today)}`, {
+/**
+ * One toast when a row's date chooser closes, whose Undo puts back the date it opened on, however many picks came in
+ * between.
+ */
+export function toastPostponed(task: Task, original: Due | null) {
+	const current = store.task(task.id)?.due ?? null;
+	if (sameDue(current, original)) return;
+	const when =
+		current &&
+		(current.time === original?.time ? formatDate(current.date, clock.today) : formatDue(current, clock.today));
+	toastUndo(when ? `Moved “${task.title}” to ${when}` : `Removed the date from “${task.title}”`, {
 		kind: 'postpone',
 		id: task.id,
-		due: task.due,
+		due: original,
 	});
 }
+
+const sameDue = (a: Due | null, b: Due | null) => a?.date === b?.date && a?.time === b?.time;
 
 /** Deleting a project, section, or label offers undo, which brings back its tasks and label assignments as they were. */
 export function toastDeleted(name: string, deleted: Deleted | undefined) {

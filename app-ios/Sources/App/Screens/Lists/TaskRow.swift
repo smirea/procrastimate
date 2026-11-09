@@ -34,7 +34,7 @@ struct TaskRow<Trailing: View>: View {
             row
             trailing
         }
-        .taskSwipes(task, offered, toggle: completeNow, pickDate: open)
+        .taskActions(task, offered, toggle: completeNow)
         .feedback(self)
     }
 
@@ -96,7 +96,6 @@ struct TaskRow<Trailing: View>: View {
                 .padding(.horizontal, -8)
                 .animation(.easeOut(duration: 0.6), value: navigator.revealed == task.id)
         }
-        .contextMenu { TaskMenu(task: task, offered: offered, toggle: completeNow) }
     }
 
     /// A list row's checkbox fills on the first frame, then the row leaves once the fill has played.

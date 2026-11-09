@@ -39,7 +39,7 @@
 	import { PRIORITIES } from '../priorities.ts';
 	import { completeTask, CHECK_PLAY_MS } from '../completion.ts';
 	import { progressOf } from 'shared/subtasks.ts';
-	import { rowMenu, taskMenu } from '../row-menu.svelte.ts';
+	import { postponer, taskMenu } from '../row-menu.svelte.ts';
 
 	let {
 		task,
@@ -250,7 +250,7 @@
 				type="button"
 				class="hit-area relative grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5"
 				aria-label={`Postpone ${task.title}`}
-				onclick={(event) => rowMenu.openBelow({ task }, event.currentTarget, 'postpone')}
+				onclick={(event) => postponer.openBelow(task, event.currentTarget)}
 			>
 				<CalendarPlus size={16} />
 			</button>

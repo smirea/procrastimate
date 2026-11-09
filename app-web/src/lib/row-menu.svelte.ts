@@ -1,4 +1,5 @@
-import type { Task } from 'shared/task.ts';
+import type { Due, Task } from 'shared/task.ts';
+import { GAP } from './placement.ts';
 
 type RowMenuTarget = {
 	task: Task;
@@ -15,22 +16,20 @@ type Opened = {
 	x: number;
 	y: number;
 	keyboard: boolean;
-	/** The row's postpone button opens the menu with its postpone group alone. */
-	only?: 'postpone';
 };
 
 /** One menu for every row, mounted once at the root, so a long list pays nothing per row until one opens. */
 class RowMenu {
 	current = $state<Opened | null>(null);
 
-	open({ task, rolled = false, toggle }: RowMenuTarget, x: number, y: number, keyboard = false, only?: 'postpone') {
-		this.current = { id: task.id, rolled, toggle, x, y, keyboard, only };
+	open({ task, rolled = false, toggle }: RowMenuTarget, x: number, y: number, keyboard = false) {
+		this.current = { id: task.id, rolled, toggle, x, y, keyboard };
 	}
 
-	/** From the keyboard or a row's button the menu drops below the anchor, with its first item focused. */
-	openBelow(target: RowMenuTarget, anchor: Element, only?: 'postpone') {
+	/** From the keyboard the menu drops below the anchor, with its first item focused. */
+	openBelow(target: RowMenuTarget, anchor: Element) {
 		const rect = anchor.getBoundingClientRect();
-		this.open(target, rect.left + 24, rect.bottom, true, only);
+		this.open(target, rect.left + 24, rect.bottom, true);
 	}
 
 	close() {
@@ -39,6 +38,34 @@ class RowMenu {
 }
 
 export const rowMenu = new RowMenu();
+
+type Postponing = {
+	id: string;
+	x: number;
+	y: number;
+	/** The date the chooser opened on, which its one toast offers to put back. */
+	original: Due | null;
+};
+
+/** A row's Postpone, from its button or its menu: quick add's date chooser at fixed coordinates, mounted once at the root. */
+class Postponer {
+	current = $state<Postponing | null>(null);
+
+	open(task: Task, x: number, y: number) {
+		this.current = { id: task.id, x, y, original: task.due };
+	}
+
+	openBelow(task: Task, anchor: Element) {
+		const rect = anchor.getBoundingClientRect();
+		this.open(task, rect.left, rect.bottom + GAP);
+	}
+
+	close() {
+		this.current = null;
+	}
+}
+
+export const postponer = new Postponer();
 
 const HOLD_MS = 450;
 const SLOP_PX = 10;
