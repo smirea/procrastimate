@@ -35,20 +35,39 @@
 	});
 
 	let panel = $state<HTMLDivElement>();
-	let placement = $state({ left: 0, top: 0 });
+	let placement = $state({ left: 0, top: 0, maxHeight: 0 });
 	let returnFocus: HTMLElement | null = null;
 
-	function show(node: HTMLDivElement) {
+	/** Kept inside the visible viewport, which shrinks when the phone keyboard opens for a typed time. */
+	function place(node: HTMLDivElement) {
 		const { x, y } = untrack(() => postponer.current!);
-		returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-		node.showPopover();
 		const viewportWidth = document.documentElement.clientWidth;
+		const maxHeight = viewportHeight() - 2 * MARGIN;
+		const height = Math.min(node.scrollHeight, maxHeight);
 		placement = {
 			left: Math.max(MARGIN, Math.min(x, viewportWidth - MARGIN - node.offsetWidth)),
-			top: Math.max(MARGIN, Math.min(y, viewportHeight() - MARGIN - node.offsetHeight)),
+			top: Math.max(MARGIN, Math.min(y, viewportHeight() - MARGIN - height)),
+			maxHeight,
 		};
+	}
+
+	function show(node: HTMLDivElement) {
+		returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+		node.showPopover();
+		place(node);
 		node.focus({ preventScroll: true });
 	}
+
+	$effect(() => {
+		if (!opened) return;
+		const refit = () => panel && place(panel);
+		window.visualViewport?.addEventListener('resize', refit);
+		window.addEventListener('resize', refit);
+		return () => {
+			window.visualViewport?.removeEventListener('resize', refit);
+			window.removeEventListener('resize', refit);
+		};
+	});
 
 	/** The toast waits for the close, so a run of picks and time changes reads as one move with one Undo. */
 	function close() {
@@ -94,9 +113,10 @@
 		role="dialog"
 		tabindex="-1"
 		aria-label={`Postpone ${task.title}`}
-		class="panel glass-strong max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-popover p-1.5 outline-none"
+		class="panel glass-strong overflow-y-auto overscroll-contain rounded-popover p-1.5 outline-none"
 		style:left={`${placement.left}px`}
 		style:top={`${placement.top}px`}
+		style:max-height={placement.maxHeight ? `${placement.maxHeight}px` : undefined}
 		transition:scale={motion({ start: 0.94, duration: 180, easing: cubicOut, opacity: 0 })}
 	>
 		<DuePanel due={task.due} {presets} closesOnDay onchange={change} {close} />
