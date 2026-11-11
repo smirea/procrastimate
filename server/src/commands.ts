@@ -197,8 +197,12 @@ function taskAfter({ db, owner }: Command, id: string): AgentTask {
 
 /** `text` is read like the app's quick add, against the space's projects and labels; explicit fields win over it. */
 export async function createTask(command: Command, input: AgentNewTask): Promise<AgentTask> {
-	const id = newId();
+	const id = input.id ?? newId();
 	await run(command, (data, visible, zone) => {
+		if (input.id && data.tasks.some(task => task.id === id)) {
+			visibleTask(visible, id);
+			return data;
+		}
 		const read = (text: string) =>
 			parseQuickAdd(text, {
 				now: wallDate(command.now, zone),
@@ -232,7 +236,11 @@ export async function createTask(command: Command, input: AgentNewTask): Promise
 			input.parentId ?? null,
 			creation,
 		);
-		return input.notes ? updateTask(added.data, id, { notes: input.notes }) : added.data;
+		const patch = {
+			...(input.notes && { notes: input.notes }),
+			...(input.attachments?.length && { attachments: input.attachments }),
+		};
+		return Object.keys(patch).length ? updateTask(added.data, id, patch) : added.data;
 	});
 	return taskAfter(command, id);
 }
