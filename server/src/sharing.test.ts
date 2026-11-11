@@ -649,6 +649,11 @@ describe('AI accounts', () => {
 
 		expect((await call(guest, 'POST', '/api/tasks', body)).status).toBe(403);
 		expect((await call(owner, 'POST', '/api/tasks', { id: 'not-a-uuid', title: 'x' })).status).toBe(400);
+
+		expect((await call(owner, 'DELETE', `/api/tasks?id=${id}`)).status).toBe(200);
+		const late = await call(owner, 'POST', '/api/tasks', body);
+		expect(late.status).toBe(410);
+		expect((await app.db.select().from(tasks).where(eq(tasks.id, id))).length).toBe(0);
 	});
 
 	test('the agent API refuses a date or a repeat beside an event, which stands in for both', async () => {

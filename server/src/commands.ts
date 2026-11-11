@@ -195,9 +195,19 @@ function taskAfter({ db, owner }: Command, id: string): AgentTask {
 	return withClients(db, owner, [entity(row) as Task])[0]!;
 }
 
+function wasDeleted({ db, owner }: Command, id: string): boolean {
+	return !!db
+		.select({ seq: log.seq })
+		.from(log)
+		.where(and(eq(log.userId, owner), eq(log.kind, 'task'), eq(log.id, id), eq(log.op, 'delete')))
+		.get();
+}
+
 /** `text` is read like the app's quick add, against the space's projects and labels; explicit fields win over it. */
 export async function createTask(command: Command, input: AgentNewTask): Promise<AgentTask> {
 	const id = input.id ?? newId();
+	// A retry whose first answer was lost can arrive after the task was deleted; the log still names it.
+	if (input.id && wasDeleted(command, id)) throw new ORPCError('GONE', { message: 'That task was deleted' });
 	await run(command, (data, visible, zone) => {
 		if (input.id && data.tasks.some(task => task.id === id)) {
 			visibleTask(visible, id);
