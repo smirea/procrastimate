@@ -630,6 +630,32 @@ describe('AI accounts', () => {
 		expect((await add({ title: 'Standup p1', titleMode: 'parse' })).titleMode).toBe('parse');
 	});
 
+	test('a create with a client-made id adds one task however often it is sent, with its attachments', async () => {
+		const id = crypto.randomUUID();
+		const attachments = [
+			{ id: crypto.randomUUID(), width: 1179, height: 2556 },
+			{ id: crypto.randomUUID(), name: 'feedback.json', type: 'application/json', bytes: 420 },
+		];
+		const body = { id, title: 'Shorter rows', attachments };
+		const first = await json<{ id: string; title: string; attachments: unknown[] }>(
+			call(owner, 'POST', '/api/tasks', body),
+		);
+		const again = await json<{ id: string; title: string }>(
+			call(owner, 'POST', '/api/tasks', { ...body, title: 'A retry never renames it' }),
+		);
+		expect({ id: first.id, attachments: first.attachments }).toEqual({ id, attachments });
+		expect({ id: again.id, title: again.title }).toEqual({ id, title: 'Shorter rows' });
+		expect((await app.db.select().from(tasks).where(eq(tasks.id, id))).length).toBe(1);
+
+		expect((await call(guest, 'POST', '/api/tasks', body)).status).toBe(403);
+		expect((await call(owner, 'POST', '/api/tasks', { id: 'not-a-uuid', title: 'x' })).status).toBe(400);
+
+		expect((await call(owner, 'DELETE', `/api/tasks?id=${id}`)).status).toBe(200);
+		const late = await call(owner, 'POST', '/api/tasks', body);
+		expect(late.status).toBe(410);
+		expect((await app.db.select().from(tasks).where(eq(tasks.id, id))).length).toBe(0);
+	});
+
 	test('the agent API refuses a date or a repeat beside an event, which stands in for both', async () => {
 		const { token } = await aiAccount(app, owner, 'Planner');
 		const headers = tokenHeaders(token);

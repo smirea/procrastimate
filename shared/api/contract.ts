@@ -128,6 +128,7 @@ export const agentContract = {
 		.output(spaceViewSchema),
 	tasks: {
 		create: found
+			.errors({ GONE: {} })
 			.meta(
 				openapi({
 					method: 'POST',
@@ -135,7 +136,7 @@ export const agentContract = {
 					inputStructure: 'detailed',
 					summary: 'Add a task',
 					description:
-						'`text` reads like the app’s quick add: dates, repeats, `p1` to `p4`, reminders, and `#Project` and `@label` for ones that exist. Explicit fields win over parsed ones.',
+						'`text` reads like the app’s quick add: dates, repeats, `p1` to `p4`, reminders, and `#Project` and `@label` for ones that exist. Explicit fields win over parsed ones. An `id` whose task was deleted answers 410 instead of bringing it back.',
 				}),
 			)
 			.input(z.object({ query: spaceQuery, body: agentNewTaskSchema }))

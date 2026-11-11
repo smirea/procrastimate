@@ -145,6 +145,10 @@ const taskShape = taskSchema.shape;
 
 export const agentNewTaskSchema = z
 	.object({
+		id: z.uuid().optional().meta({
+			description:
+				'A client-made UUID. Sending it again returns the task it made instead of adding another, so a client can retry a create whose answer it never got.',
+		}),
 		/** Read by the quick add parser, as the app's quick add reads it. */
 		text: z.string().optional(),
 		title: taskShape.title.optional(),
@@ -158,6 +162,12 @@ export const agentNewTaskSchema = z
 		parentId: taskShape.parentId.optional(),
 		labelIds: taskShape.labelIds.optional(),
 		priority: taskShape.priority.optional(),
+		attachments: taskShape.attachments
+			.optional()
+			.meta({
+				description:
+					"Upload each one's bytes to `/api/images` first, so the task never names bytes the server cannot serve.",
+			}),
 	})
 	.meta({ id: 'AgentNewTask', description: 'A task the agent command API adds. It needs `text` or `title`.' });
 export type AgentNewTask = z.infer<typeof agentNewTaskSchema>;
