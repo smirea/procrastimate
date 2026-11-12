@@ -130,7 +130,6 @@ struct ImageStrip: View {
 /// One image's bytes, fetched once and cached, with a quiet placeholder until they arrive.
 struct ImageThumb: View {
     @Environment(TaskAttachments.self) private var images
-    @Environment(\.space) private var space
     let image: ImageRef
     let size: TaskAttachments.Size
 
@@ -147,12 +146,31 @@ struct ImageThumb: View {
                     .overlay { Image(systemName: "photo").foregroundStyle(.faint) }
             }
         }
-        .task(id: image.id) {
-            if size == .full { await images.load(image.id, .thumb, space: space) }
-            while !Task.isCancelled, await !images.load(image.id, size, space: space) {
+        .loadsImage(image.id, size)
+        .feedback(self)
+    }
+}
+
+extension View {
+    /// Loads an image's bytes into `TaskAttachments`, the thumbnail first for a full image, asking again while the
+    /// server does not have them yet.
+    func loadsImage(_ id: String, _ size: TaskAttachments.Size) -> some View {
+        modifier(ImageLoader(id: id, size: size))
+    }
+}
+
+private struct ImageLoader: ViewModifier {
+    @Environment(TaskAttachments.self) private var images
+    @Environment(\.space) private var space
+    let id: String
+    let size: TaskAttachments.Size
+
+    func body(content: Content) -> some View {
+        content.task(id: id) {
+            if size == .full { await images.load(id, .thumb, space: space) }
+            while !Task.isCancelled, await !images.load(id, size, space: space) {
                 try? await Task.sleep(for: TaskAttachments.retryMissing)
             }
         }
-        .feedback(self)
     }
 }

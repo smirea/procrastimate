@@ -77,6 +77,8 @@
     <false/>
     <key>NSCameraUsageDescription</key>
     <string>ProcrastiMate uses the camera to attach photos to tasks.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>ProcrastiMate saves a task's image to your photo library when you choose Save Image.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>ProcrastiMate uses the microphone to turn speech into tasks.</string>
     <key>NSSpeechRecognitionUsageDescription</key>

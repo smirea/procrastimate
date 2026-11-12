@@ -52,6 +52,11 @@ test(
 		await thumbnails(app).first().click();
 		const viewer = page.getByRole('dialog', { name: 'Image' });
 		await expect(viewer.getByRole('img', { name: `Image 1 of ${title}` })).toHaveAttribute('width', '2048');
+		const downloading = page.waitForEvent('download');
+		await viewer.getByRole('link', { name: 'Download image' }).click();
+		const download = await downloading;
+		expect(download.suggestedFilename()).toMatch(new RegExp(`^${title}\\.(jpg|webp)$`));
+		expect((await readFile((await download.path())!)).byteLength).toBeGreaterThan(1000);
 		await page.keyboard.press('Escape');
 		await expect(viewer).toBeHidden();
 		await expect(app.details()).toBeVisible();

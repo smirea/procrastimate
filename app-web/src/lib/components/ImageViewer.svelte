@@ -5,6 +5,8 @@
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 	import CaretRight from 'phosphor-svelte/lib/CaretRight';
+	import DownloadSimple from 'phosphor-svelte/lib/DownloadSimple';
+	import Export from 'phosphor-svelte/lib/Export';
 	import { isImage } from 'shared/values.ts';
 	import { attachments } from '../attachments/attachments.svelte.ts';
 	import { store } from '../store.svelte.ts';
@@ -20,6 +22,30 @@
 	const url = $derived(image ? (attachments.url(image.id, 'full') ?? attachments.url(image.id, 'thumb')) : undefined);
 
 	let dialog = $state<HTMLElement>();
+	/** The shown image as a named file, built ahead of the click, since Safari shares only inside the click itself. */
+	let file = $state<File | null>(null);
+
+	const canShareFiles =
+		typeof navigator.canShare === 'function' && navigator.canShare({ files: [new File([''], 'image.jpg', { type: 'image/jpeg' })] });
+
+	$effect(() => {
+		file = null;
+		if (!url || !task || index < 0) return;
+		const name = `${task.title.replace(/[\\/:*?"<>|]/g, '-').trim() || 'Image'}${images.length > 1 ? ` ${index + 1}` : ''}`;
+		let current = true;
+		void fetch(url)
+			.then(response => response.blob())
+			.then(blob => {
+				const extension = blob.type === 'image/jpeg' ? 'jpg' : (blob.type.split('/')[1] ?? 'jpg');
+				if (current) file = new File([blob], `${name}.${extension}`, { type: blob.type });
+			});
+		return () => (current = false);
+	});
+
+	function share() {
+		// Closing the share sheet rejects with AbortError, which is not a failure.
+		if (file) navigator.share({ files: [file] }).catch(() => {});
+	}
 
 	$effect(() => {
 		if (viewing && !image) attachments.viewing = null;
@@ -68,6 +94,14 @@
 		<div class="flex items-center justify-between gap-2 px-3 pt-3">
 			<span class="px-2 text-[13px] text-white/70">{images.length > 1 ? `${index + 1} of ${images.length}` : ''}</span>
 			<div class="flex items-center gap-1">
+				{#if canShareFiles}
+					<button type="button" class="viewer-btn" aria-label="Share image" disabled={!file} onclick={share}><Export size={18} /></button>
+				{/if}
+				{#if file && url}
+					<a class="viewer-btn" aria-label="Download image" href={url} download={file.name}><DownloadSimple size={18} /></a>
+				{:else}
+					<button type="button" class="viewer-btn" aria-label="Download image" disabled><DownloadSimple size={18} /></button>
+				{/if}
 				{#if editable}
 					<button type="button" class="viewer-btn" aria-label="Delete image" onclick={() => attachments.remove(task.id, image.id)}>
 						<Trash size={18} />
@@ -113,6 +147,10 @@
 		transition:
 			scale 220ms var(--ease-spring),
 			background 160ms var(--ease-spring);
+	}
+
+	.viewer-btn:disabled {
+		opacity: 0.4;
 	}
 
 	.viewer-btn:active {
