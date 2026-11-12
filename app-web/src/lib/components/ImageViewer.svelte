@@ -22,18 +22,19 @@
 	const url = $derived(image ? (attachments.url(image.id, 'full') ?? attachments.url(image.id, 'thumb')) : undefined);
 
 	let dialog = $state<HTMLElement>();
-	/** The shown image as a named file, built ahead of the click, since Safari shares only inside the click itself. */
+	/** The full-size image, never the thumbnail, as a named file, built ahead of the click, since Safari shares only inside the click itself. */
 	let file = $state<File | null>(null);
+	const full = $derived(image ? attachments.url(image.id, 'full') : undefined);
 
 	const canShareFiles =
 		typeof navigator.canShare === 'function' && navigator.canShare({ files: [new File([''], 'image.jpg', { type: 'image/jpeg' })] });
 
 	$effect(() => {
 		file = null;
-		if (!url || !task || index < 0) return;
+		if (!full || !task || index < 0) return;
 		const name = `${task.title.replace(/[\\/:*?"<>|]/g, '-').trim() || 'Image'}${images.length > 1 ? ` ${index + 1}` : ''}`;
 		let current = true;
-		void fetch(url)
+		void fetch(full)
 			.then(response => response.blob())
 			.then(blob => {
 				const extension = blob.type === 'image/jpeg' ? 'jpg' : (blob.type.split('/')[1] ?? 'jpg');
@@ -97,8 +98,8 @@
 				{#if canShareFiles}
 					<button type="button" class="viewer-btn" aria-label="Share image" disabled={!file} onclick={share}><Export size={18} /></button>
 				{/if}
-				{#if file && url}
-					<a class="viewer-btn" aria-label="Download image" href={url} download={file.name}><DownloadSimple size={18} /></a>
+				{#if file && full}
+					<a class="viewer-btn" aria-label="Download image" href={full} download={file.name}><DownloadSimple size={18} /></a>
 				{:else}
 					<button type="button" class="viewer-btn" aria-label="Download image" disabled><DownloadSimple size={18} /></button>
 				{/if}
