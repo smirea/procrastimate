@@ -354,16 +354,18 @@ export class App {
 		await expect(this.taskInput()).toHaveValue('');
 	}
 
+	/** The card quick add shows for the task it just saved, which names the list it went to when the open one lacks it. */
+	addedCard = () => this.page.getByRole('status', { name: /^Added / });
+
 	/**
-	 * Leaves quick add for the list the last save went to, named by its `Added to` toast when another list holds it.
-	 * The sidebar gets there rather than the toast's `Show`, which can time out before a loaded phone WebKit taps it.
-	 * Each save dismisses the last one's toast, which hides itself from role queries as it leaves, so one is left.
+	 * Leaves quick add for the list the last save went to, which its card names when another list holds it. Each save
+	 * replaces the card, which hides the leaving one from role queries, so one is left.
 	 */
 	async showAdded() {
-		const toast = this.page.getByRole('status').filter({ hasText: /^Added to / });
-		const added = (await toast.count()) ? await toast.textContent() : null;
+		const card = this.addedCard();
+		const added = (await card.count()) ? await card.getAttribute('aria-label') : null;
 		await this.closeQuickAdd();
-		const list = added?.match(/^Added to (.+?)\s*Show$/)?.[1];
+		const list = added?.match(/^Added to (.+)$/)?.[1];
 		if (!list) return;
 		const nav = this.page.getByRole('navigation', { name: 'Main' });
 		if (!(await nav.isVisible())) await this.page.getByRole('button', { name: 'Open navigation' }).click();
@@ -437,10 +439,12 @@ export class App {
 	/**
 	 * Waits until no animation runs. A Svelte transition first plays a zero-length placeholder and starts the real
 	 * animation from its `finish` handler, so waiting once on the animations present returns mid-transition. Each
-	 * round waits on `finish` or `cancel` events, which fire after Svelte's handler has started what comes next.
+	 * round waits on `finish` or `cancel` events, which fire after Svelte's handler has started what comes next. A sheet
+	 * that just mounted starts its entrance on a later frame, so it first waits two frames for any transition still due.
 	 */
 	settle() {
 		return this.page.evaluate(async () => {
+			await new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done)));
 			const running = () => document.getAnimations().filter(animation => animation.playState === 'running');
 			for (let busy = running(); busy.length; busy = running()) {
 				await Promise.race(

@@ -25,8 +25,14 @@ final class Navigator {
     }
     /// Any sheet, such as quick add, cancels a task link still waiting for sync, so the task cannot replace it later.
     var sheet: Sheet? {
-        didSet { if sheet != nil { awaitedTask = nil } }
+        didSet {
+            if sheet != nil { awaitedTask = nil }
+            if !keepsAdded(from: oldValue) { added = nil }
+        }
     }
+    /// The task quick add last saved, which shows as a card above quick add and then over its own details. It lives only
+    /// while one of those is open, so any other sheet change drops it.
+    var added: String?
     /// Asks Browse to focus its search field, as Cmd-K does. Browse clears it once focused.
     var focusSearch = false
     /// Bumped when a tab goes back to its default state, so its screens rebuild at the top while it is out of sight.
@@ -150,7 +156,23 @@ final class Navigator {
         self.reused = nil
     }
 
-    /// The task just added from quick add. Its list scrolls to it and the row flashes, then this clears.
+    /// Opens the details of the task quick add saved, with its card floating over them.
+    func openAdded(_ taskID: String) {
+        sheet = nil
+        sheet = .details(taskID: taskID)
+        added = taskID
+    }
+
+    private func keepsAdded(from old: Sheet?) -> Bool {
+        guard let added, sheet == .details(taskID: added) else { return false }
+        switch old {
+        case .quickAdd: return true
+        case let .details(taskID): return taskID == added
+        default: return false
+        }
+    }
+
+    /// The task just added from Ramble. Its list scrolls to it and the row flashes, then this clears.
     private(set) var revealed: String?
 
     /// Shows the list a new task lands in and flashes its row.

@@ -47,6 +47,7 @@
 		timeOnly = false,
 		showAdded = false,
 		subtask = false,
+		card = false,
 		trailing,
 	}: {
 		task: Task;
@@ -58,6 +59,8 @@
 		 * undo, opens by sliding in, and wraps its whole title.
 		 */
 		subtask?: boolean;
+		/** The card quick add shows for the task it just saved: the row's display with no checkbox or row actions. */
+		card?: boolean;
 		trailing?: Snippet;
 	} = $props();
 
@@ -109,17 +112,19 @@
 	bind:this={row}
 	class="group flex items-start gap-3 rounded-2xl px-2 transition-colors duration-500 hover:bg-surface/60"
 	class:revealed
-	data-task={subtask ? undefined : task.title}
-	{@attach lookup.menus && taskMenu(() => ({ task, toggle: subtask || !done ? complete : undefined }))}
+	data-task={subtask || card ? undefined : task.title}
+	{@attach lookup.menus && !card && taskMenu(() => ({ task, toggle: subtask || !done ? complete : undefined }))}
 >
-	{#if editable}
+	{#if card}
+		<!-- The card shows the task, so it has no checkbox. -->
+	{:else if editable}
 		<Checkbox checked={checking || done} tone={PRIORITIES[task.priority].tone} label={`Complete ${task.title}`} class="mt-3 touch:mt-3.5" onclick={complete} />
 	{:else}
 		<span class="mt-3 size-[18px] shrink-0 rounded-full border-[1.5px] border-dashed border-faint/60 touch:mt-3.5 touch:size-5" aria-hidden="true"></span>
 	{/if}
 	<!-- The button sits under the text rather than around it, since HTML forbids a link inside a button. -->
-	<div class="relative min-w-0 flex-1 py-2.5 touch:min-h-11 touch:py-3">
-		<button type="button" class="absolute inset-0 rounded-xl" aria-label={task.title} onclick={() => lookup.open(task.id, subtask ? 'forward' : 'none')}></button>
+	<div class="relative min-w-0 flex-1 py-2.5 touch:min-h-11 touch:py-3" data-row-text>
+		<button type="button" class="absolute inset-0 rounded-xl" aria-label={card ? `Edit ${task.title}` : task.title} onclick={() => lookup.open(task.id, subtask ? 'forward' : 'none')}></button>
 		<div class="pointer-events-none relative">
 			<TitleFlow
 				title={task.title}
@@ -244,7 +249,7 @@
 	{#if showAdded}
 		<span class="shrink-0 pt-3 text-[12px] leading-5 text-faint touch:pt-3.5">{addedAgo(toDateKey(new Date(task.createdAt)), clock.today)}</span>
 	{/if}
-	{#if !task.event && editable && !done}
+	{#if !card && !task.event && editable && !done}
 		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<button
 				type="button"

@@ -9,10 +9,10 @@ test('Tomorrow and This week list their days, and quick add there lands on them'
 	await expect(app.row('Call mom')).toBeVisible();
 
 	await app.openQuickAdd();
-	await expect(app.quickAdd().getByText('Tomorrow')).toBeVisible();
+	await expect(app.quickAdd().getByRole('button', { name: 'Due Tomorrow' })).toBeVisible();
 	await app.taskInput().fill('Buy flowers');
 	await app.taskInput().press('Enter');
-	await expect(app.quickAdd().getByText('Tomorrow')).toBeVisible();
+	await expect(app.quickAdd().getByRole('button', { name: 'Due Tomorrow' })).toBeVisible();
 	await app.closeQuickAdd();
 	await expect(page.getByRole('heading', { level: 1, name: 'Tomorrow' })).toBeVisible();
 	await expect(app.row('Buy flowers')).toBeVisible();

@@ -9,6 +9,7 @@ struct TaskDetailsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(TaskAttachments.self) private var attachments
+    @Environment(Navigator.self) private var navigator
     @State private var root: String
     @State private var path: [String] = []
     @Namespace private var zoom
@@ -38,7 +39,15 @@ struct TaskDetailsSheet: View {
                 .navigationDestination(for: String.self) { TaskDetailsPage(taskID: $0, navigation: navigation) }
         }
         .overlay(alignment: .bottom) {
-            ToastStack().padding(.bottom, 76)
+            VStack(spacing: 8) {
+                ToastStack()
+                // Opened from quick add, the saved task floats above the Complete and Delete buttons until closed.
+                if let added = navigator.added, added == root, path.isEmpty {
+                    AddedTaskCard(taskID: added, rise: 40) { withAnimation(.snappy) { navigator.added = nil } }
+                        .padding(.horizontal, 16)
+                }
+            }
+            .padding(.bottom, 76)
         }
         // Once for the whole stack: a cover on each pushed page would have every page try to present it.
         .fullScreenCover(item: Bindable(attachments).viewing) {

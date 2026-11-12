@@ -43,7 +43,7 @@
 	import { QuickAddDraft } from '../quick-add-draft.svelte.ts';
 	import { parseSubtask, subtaskTask } from '../subtask-draft.ts';
 	import { NAME_SOURCES } from '../names.ts';
-	import { confirmAdded, showAdded } from '../show-added.ts';
+	import AddedTask from './AddedTask.svelte';
 	import { attachments, droppedFiles, isImageFile } from '../attachments/attachments.svelte.ts';
 	import FileIcon from './FileIcon.svelte';
 	import { reuseAdded } from '../screen.ts';
@@ -58,6 +58,7 @@
 	let rowReady = false;
 	let edges = $state({ start: false, end: false });
 	let input: SmartInput;
+	let field: HTMLDivElement | undefined;
 	let subtaskInput = $state<SmartInput>();
 	let subtaskList = $state<HTMLUListElement>();
 	/** Each line keeps its text, so its own plain text toggle can re-read it after it is added. */
@@ -186,11 +187,22 @@
 		return task;
 	}
 
-	/** Quick add stays open for the next task, which starts where this one went. */
+	/** Where the title's text sits, which the saved task's card grows out of. */
+	function typed() {
+		const text = field?.querySelector('textarea, input, [contenteditable]') ?? field;
+		if (!text) return null;
+		return { rect: text.getBoundingClientRect(), size: parseFloat(getComputedStyle(text).fontSize) };
+	}
+
+	/**
+	 * Quick add stays open for the next task, which starts where this one went. The saved task shows as a card by quick
+	 * add rather than in the list behind it, which stays still.
+	 */
 	function submit() {
+		const from = typed();
 		const task = save();
 		if (!task) return;
-		confirmAdded(task);
+		sheets.added = { id: task.id, from };
 		draft.restart(reusedDefaults(task, store.labels, draft.defaults.date));
 		opened = [];
 		picker = null;
@@ -205,11 +217,11 @@
 
 	/** The full editor is task details, so expanding saves the draft, even untitled, closes quick add, and opens it there. */
 	function expand() {
+		const from = typed();
 		const task = save({ untitled: true });
 		if (!task) return false;
-		sheets.close();
-		showAdded(task);
 		sheets.openTask(task.id);
+		sheets.added = { id: task.id, from };
 		return true;
 	}
 
@@ -325,8 +337,13 @@
 			<span class="h-[5px] w-9 rounded-full bg-ink/25"></span>
 		</div>
 	{/if}
+	{#if sheets.added}
+		<div class={['absolute inset-x-0', mobile.current ? 'bottom-full mb-4' : 'top-full mt-3']}>
+			<AddedTask added={sheets.added} placement={mobile.current ? 'above' : 'below'} />
+		</div>
+	{/if}
 	<div class="px-4 pt-8 pb-2 md:pt-4">
-		<div class="relative">
+		<div class="relative" bind:this={field}>
 			<SmartInput
 				bind:this={input}
 				bind:value={draft.text}
