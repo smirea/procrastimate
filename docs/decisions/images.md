@@ -44,6 +44,7 @@ Tasks can hold images and any other file. Web attaches them from a file picker, 
 ## Viewer
 
 - **iOS zooms out of the thumbnail and swipes down to close.** The viewer is a full-screen cover with the zoom navigation transition from the tapped thumbnail, which also gives the system's interactive swipe-down dismiss, as in Photos.
+- **Standard image affordances, from system parts.** iOS zooms in a `UIScrollView`: pinch, pan with bounce, double-tap to zoom in on the tapped point and back. At full size the image fits and the scroll view cannot scroll, so its pan gives way to the page swipe and the swipe down. A long press lifts the image with `Copy` and `Share…` (`UIContextMenuInteraction`), and the bar's share button is a `ShareLink`. Both hand over the full-size image, never the thumbnail, as JPEG bytes or a `UIImage`, so the sheet offers Save Image and Copy; web-attached images are stored as WebP, which other apps take less well, so the stored bytes are not passed on. Save Image needs `NSPhotoLibraryAddUsageDescription`. The web viewer has `Download image` (a link to the loaded bytes, named for the task) and, where the browser can share files, `Share image`; zoom and copy are the browser's own (pinch zoom, the image's context menu).
 
 ## Order and offline
 

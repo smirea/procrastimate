@@ -185,6 +185,7 @@ const grants: Record<string, { simctl: string } | { applesimutils: string }> = {
     NSLocationWhenInUseUsageDescription: { simctl: "location-always" },
     NSLocationAlwaysAndWhenInUseUsageDescription: { simctl: "location-always" },
     NSCalendarsFullAccessUsageDescription: { simctl: "calendar" },
+    NSPhotoLibraryAddUsageDescription: { simctl: "photos-add" },
 };
 
 async function grantPermissions(udid: string, bundle: string, plist: string) {
