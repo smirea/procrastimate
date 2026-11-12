@@ -1,4 +1,5 @@
 import Core
+import Feetback
 import SwiftUI
 
 /// The task quick add just saved, shown as its list row without the checkbox: above quick add, which keeps the list
@@ -29,6 +30,7 @@ struct AddedTaskCard: View {
             }
         }
         .animation(Self.arrival, value: taskID)
+        .feedback(self)
     }
 
     private func card(_ task: TaskItem) -> some View {
