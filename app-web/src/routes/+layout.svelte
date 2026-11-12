@@ -14,6 +14,7 @@
 	import SettingsSheet from '#lib/components/SettingsSheet.svelte';
 	import ShareSheet from '#lib/components/ShareSheet.svelte';
 	import TaskSheet from '#lib/components/TaskSheet.svelte';
+	import AddedTask from '#lib/components/AddedTask.svelte';
 	import Toasts from '#lib/components/Toasts.svelte';
 	import PostponePanel from '#lib/components/PostponePanel.svelte';
 	import RowMenu from '#lib/components/RowMenu.svelte';
@@ -222,6 +223,11 @@
 	<ShareSheet target={sheets.current.target} name={sheets.current.name} />
 {:else if openTask && sheets.current.kind === 'task'}
 	<TaskSheet task={openTask} arrival={sheets.current.arrival} />
+	{#if sheets.added?.id === openTask.id}
+		<div class={['added-beside fixed z-50', mobile.current ? 'floating' : 'beside']} out:fly={motion({ y: mobile.current ? 16 : 0, x: mobile.current ? 0 : 16, duration: 200, easing: cubicOut, opacity: 0 })}>
+			<AddedTask added={sheets.added} placement={mobile.current ? 'floating' : 'beside'} onclose={() => (sheets.added = null)} />
+		</div>
+	{/if}
 {/if}
 
 <ImageViewer />
@@ -231,6 +237,24 @@
 {/if}
 
 <style>
+	/* Left of the details drawer, level with its top. */
+	.added-beside.beside {
+		top: 0.75rem;
+		right: calc(min(440px, 100vw - 1.5rem) + 1.5rem);
+		width: min(360px, 100vw - min(440px, 100vw - 1.5rem) - 2.25rem);
+	}
+
+	/*
+	 * Floats over the bottom of the phone's details sheet, which docks where `.sheet` does, clear of its Complete and
+	 * Delete bar.
+	 */
+	.added-beside.floating {
+		left: max(1rem, env(safe-area-inset-left));
+		right: max(1rem, env(safe-area-inset-right));
+		bottom: calc(max(0.5rem, env(safe-area-inset-bottom), calc(var(--keyboard-inset, 0px) + 0.5rem)) + 4.75rem);
+		transition: bottom 240ms var(--ease-spring);
+	}
+
 	.app {
 		padding: 0 max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
 	}

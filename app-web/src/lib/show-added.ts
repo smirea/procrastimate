@@ -1,15 +1,14 @@
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
-import { addedName, addedScreen, screenPath } from 'shared/screens.ts';
+import { addedScreen, screenPath } from 'shared/screens.ts';
 import { store } from './store.svelte.ts';
 import type { Task } from 'shared/task.ts';
 import { currentScreen } from './screen.ts';
 import { clock } from './clock.svelte.ts';
-import { reveal, sheets } from './sheets.svelte.ts';
-import { toasts } from './toasts.svelte.ts';
+import { reveal } from './sheets.svelte.ts';
 
 /**
- * Shows a task just added from quick add or Ramble: the open list when it already shows the task, else its project,
+ * Shows a task just added from Ramble: the open list when it already shows the task, else its project,
  * else Inbox when it has a day or No date when it has none. The row then flashes. Returns the list's path.
  */
 export function showAdded(task: Task) {
@@ -18,27 +17,6 @@ export function showAdded(task: Task) {
 	if (path !== page.url.pathname) void goto(path, { reset: false });
 	reveal.show(task.id);
 	return path;
-}
-
-let confirmation: number | null = null;
-
-/**
- * Quick add stays open after a save, so nothing navigates: the open list flashes the row when it shows the task, and
- * otherwise a toast names the list it went to, with a `Show` that closes quick add and goes there. Each save replaces
- * the last one's toast, so a batch leaves one.
- */
-export function confirmAdded(task: Task) {
-	const screen = addedScreen(currentScreen(), task, store.labels, clock.today);
-	if (confirmation !== null) toasts.dismiss(confirmation);
-	confirmation = null;
-	if (!screen) return reveal.show(task.id);
-	confirmation = toasts.show(`Added to ${addedName(screen, store.projects)}`, {
-		label: 'Show',
-		run: () => {
-			if (sheets.current.kind === 'quick-add') sheets.close();
-			showAdded(task);
-		},
-	});
 }
 
 function listOf(task: Task) {

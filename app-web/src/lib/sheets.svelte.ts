@@ -15,8 +15,19 @@ export type Sheet =
 	/** `from` is the task whose details opened it, which closing returns to. */
 	| { kind: 'share'; target: ShareTarget; name: string; from: string | null };
 
+/**
+ * A task quick add saved, and the text it grows out of: the title field it was typed in, or the card it showed in
+ * before, as a rect and that text's size.
+ */
+export type Added = { id: string; from: { rect: DOMRect; size: number; card?: boolean } | null };
+
 class Sheets {
 	#current = $state<Sheet>({ kind: 'none' });
+	/**
+	 * The task quick add last saved, which shows as a preview card beside quick add and then beside its own details.
+	 * It lives only while one of those is open, so any other sheet change drops it.
+	 */
+	added = $state<Added | null>(null);
 
 	get current() {
 		return this.#current;
@@ -28,6 +39,12 @@ class Sheets {
 	 */
 	set current(next: Sheet) {
 		(globalThis.document?.activeElement as HTMLElement | null)?.blur();
+		const from = this.#current;
+		const keeps =
+			next.kind === 'task' &&
+			next.id === this.added?.id &&
+			(from.kind === 'quick-add' || (from.kind === 'task' && from.id === next.id));
+		if (!keeps) this.added = null;
 		this.#current = next;
 	}
 
@@ -71,7 +88,7 @@ class Sheets {
 
 export const sheets = new Sheets();
 
-/** The task quick add just saved. Its row scrolls into view and flashes, then this clears. */
+/** The task Ramble just saved. Its row scrolls into view and flashes, then this clears. */
 class Reveal {
 	id = $state<string | null>(null);
 

@@ -48,36 +48,39 @@ test('quick add parses a date, priority, reminder, #project, and @label and save
 	await expect(page.getByRole('dialog', { name: 'Reminders' })).toContainText('30m before');
 });
 
-test('quick add stays open after a save, flashes a row the list shows, and names any other list it went to', async ({
-	app,
-	page,
-}) => {
+test('quick add stays open after a save and shows the task as a card that opens its details', async ({ app, page }) => {
 	await app.openQuickAdd();
 	await app.taskInput().fill('Pay rent tomorrow');
 	await app.taskInput().press('Enter');
 	await expect(app.taskInput()).toHaveValue('');
 	await expect(app.taskInput()).toBeFocused();
 	await expect(app.quickAdd().getByRole('button', { name: 'Due Tomorrow' })).toBeHidden();
-	await expect(app.row('Pay rent')).toBeAttached();
-	await expect(page.getByText(/^Added to/)).toBeHidden();
+	const card = app.addedCard();
+	await expect(card).toHaveAccessibleName('Added task');
+	await expect(card).toContainText('Pay rent');
+	await expect(card).toContainText('Tomorrow');
+	await expect(card.getByRole('checkbox')).toHaveCount(0);
 
 	await app.taskInput().fill('Buy milk');
 	await app.quickAdd().getByRole('button', { name: 'Add task' }).click();
 	await expect(app.taskInput()).toHaveValue('');
 	await expect(app.taskInput()).toBeFocused();
-	await expect(page.getByText('Added to No date')).toBeVisible();
+	await expect(card).toHaveAccessibleName('Added to No date');
+	await expect(card).toContainText('Buy milk');
+	await expect(card).toHaveCount(1);
 	await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible();
 	await app.settle();
 	await page.screenshot({ path: 'test-results/quick-add/stay-open.png' });
 
-	await app.taskInput().fill('Water plants');
-	await app.taskInput().press('Enter');
-	await expect(page.getByText('Added to No date')).toHaveCount(1);
-	await page.getByRole('button', { name: 'Show' }).click();
+	await card.getByRole('button', { name: 'Edit Buy milk' }).click();
 	await expect(app.quickAdd()).toBeHidden();
-	await expect(page.getByRole('heading', { level: 1, name: 'No date' })).toBeVisible();
-	await expect(app.row('Buy milk')).toBeVisible();
-	await expect(app.row('Water plants')).toBeVisible();
+	await expect(app.details().getByRole('textbox', { name: 'Title' })).toHaveValue('Buy milk');
+	await expect(card).toContainText('Buy milk');
+	await app.settle();
+	await page.screenshot({ path: 'test-results/quick-add/card-by-details.png' });
+	await card.getByRole('button', { name: 'Close preview' }).click();
+	await expect(card).toBeHidden();
+	await expect(app.details()).toBeVisible();
 });
 
 test('plain text saves the title as typed, keeps picked values, and resets for the next task', async ({
@@ -304,10 +307,42 @@ test('expanding a titled draft saves it and opens it in task details', async ({ 
 	await expect(details.getByRole('textbox', { name: 'Title' })).toHaveValue('Plan trip');
 	await expect(details.getByRole('button', { name: 'Due Tomorrow' })).toBeVisible();
 	await expect(details.getByRole('button', { name: 'Priority 2' })).toBeVisible();
+	const card = app.addedCard();
+	await expect(card).toContainText('Plan trip');
+	const [cardBox, detailsBox] = [(await card.boundingBox())!, (await details.boundingBox())!];
+	expect(cardBox.x + cardBox.width).toBeLessThan(detailsBox.x);
 });
 
 test.describe('on a phone', () => {
 	test.use({ viewport: { width: 393, height: 852 } });
+
+	test('the added task shows above the sheet, and floats under its details with a close button', async ({
+		app,
+		page,
+	}) => {
+		await app.openQuickAdd();
+		await app.taskInput().fill('Call mom tomorrow 5pm p1');
+		await app.save();
+		const card = app.addedCard();
+		await expect(card).toContainText('Call mom');
+		await expect(card).toContainText('Tomorrow 5pm');
+		await app.settle();
+		const [cardBox, sheetBox] = [(await card.boundingBox())!, (await app.quickAdd().boundingBox())!];
+		expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(sheetBox.y);
+		await page.screenshot({ path: 'test-results/quick-add/phone-card.png' });
+
+		await card.getByRole('button', { name: 'Edit Call mom' }).click();
+		await expect(app.quickAdd()).toBeHidden();
+		await expect(app.details().getByRole('textbox', { name: 'Title' })).toHaveValue('Call mom');
+		await expect(card).toContainText('Call mom');
+		await app.settle();
+		const floating = (await card.boundingBox())!;
+		expect(floating.y + floating.height).toBeGreaterThan(852 - 200);
+		await page.screenshot({ path: 'test-results/quick-add/phone-floating.png' });
+		await card.getByRole('button', { name: 'Close preview' }).click();
+		await expect(card).toBeHidden();
+		await expect(app.details()).toBeVisible();
+	});
 
 	test('dragging the grabber follows the finger, and an empty draft dragged up opens in task details', async ({
 		app,

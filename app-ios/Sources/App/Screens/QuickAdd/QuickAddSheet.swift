@@ -12,7 +12,6 @@ struct QuickAddSheet: View {
     @Environment(Navigator.self) private var navigator
     @Environment(\.clock) private var clock
     @Environment(TaskAttachments.self) private var attachments
-    @Environment(Toasts.self) private var toasts
 
     /// Quick add names every space's projects and labels a task may land on, and a picked one moves the task there.
     private var spaceProjects: [Project] { store.everySpace.projects }
@@ -42,7 +41,6 @@ struct QuickAddSheet: View {
     /// How far the card can grow before it reaches the top, measured while it rests.
     @State private var room: CGFloat = 0
     @State private var saves = 0
-    @State private var confirmation: Int?
     @FocusState private var focused: Bool
     @FocusState private var subtaskFocused: Bool
 
@@ -137,6 +135,18 @@ struct QuickAddSheet: View {
         }
         // A tap between controls, or just beside the plain mic glyph, would otherwise reach the scrim and close the card.
         .contentShape(.rect)
+        // Above the card, so the list behind stays still while each saved task shows here. After the content shape,
+        // which would otherwise keep taps from reaching it outside the card.
+        .overlay(alignment: .top) {
+            if let added = navigator.added {
+                // A zero-height frame on the card's top edge, with the card hanging above it at its own height.
+                AddedTaskCard(taskID: added)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 10)
+                    .frame(height: 0, alignment: .bottom)
+            }
+        }
         .onGeometryChange(for: CGFloat.self, of: { $0.frame(in: .global).minY }) { top in
             if pull == 0 { room = max(0, top - 70) }
         }
@@ -530,7 +540,8 @@ struct QuickAddSheet: View {
     /// Quick add stays open for the next task, which starts where this one went, with the keyboard still up.
     private func submit() {
         guard let added = save() else { return }
-        confirm(added)
+        withAnimation(AddedTaskCard.arrival) { navigator.added = added.id }
+        announce(added)
         saves += 1
         focused = true
         withAnimation(.snappy(duration: 0.2)) {
@@ -546,28 +557,18 @@ struct QuickAddSheet: View {
         }
     }
 
-    /// Nothing navigates while quick add stays open: the open list flashes the row when it shows the task, and
-    /// otherwise a toast names the list it went to, with a `Show` that closes quick add and goes there. Each save
-    /// replaces the last one's toast, so a batch leaves one.
-    private func confirm(_ task: TaskItem) {
-        if let confirmation { toasts.dismiss(confirmation) }
-        confirmation = nil
-        guard let route = navigator.destination(of: task, labels: store.labels, today: clock.today, in: clock.timeZone) else {
-            return navigator.flash(task.id)
-        }
-        confirmation = toasts.show("Added to \(Screens.addedName(route.screen, store.projects))", action: .init(label: "Show") { [navigator, store, clock] in
-            if navigator.quickAdd != nil { navigator.sheet = nil }
-            navigator.reveal(task, labels: store.labels, today: clock.today, in: clock.timeZone)
-        })
+    /// The card stands in for the toast that used to name where the task went, so VoiceOver still hears it.
+    private func announce(_ task: TaskItem) {
+        let route = navigator.destination(of: task, labels: store.labels, today: clock.today, in: clock.timeZone)
+        let text = route.map { "Added to \(Screens.addedName($0.screen, store.projects))" } ?? "Added \(task.title)"
+        AccessibilityNotification.Announcement(text).post()
     }
 
     /// The full editor is task details, so expanding saves the draft, even untitled, closes quick add, and opens it there.
     @discardableResult
     private func expand() -> Bool {
         guard let added = save(untitled: true) else { return false }
-        navigator.sheet = nil
-        navigator.reveal(added, labels: store.labels, today: clock.today, in: clock.timeZone)
-        navigator.sheet = .details(taskID: added.id)
+        navigator.openAdded(added.id)
         return true
     }
 }

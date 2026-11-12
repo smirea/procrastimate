@@ -4,10 +4,11 @@ import SwiftUI
 
 /// Where a row sits. A list row leaves once checked, with an undo toast. A subtask row in its parent's details stays
 /// when done and toggles in place with no toast, since the checkbox is its own undo, opens by pushing, and wraps its
-/// whole title.
+/// whole title. The card quick add shows for the task it just saved has the row's display with no checkbox.
 enum TaskRowPlacement {
     case list
     case subtask(open: () -> Void)
+    case card
 }
 
 struct TaskRow<Trailing: View>: View {
@@ -40,11 +41,13 @@ struct TaskRow<Trailing: View>: View {
 
     private var row: some View {
         HStack(alignment: .top, spacing: 10) {
-            Checkbox(checked: checking || done, tone: task.priority.tone) { check() }
-                .accessibilityLabel("Complete \(task.title)")
-                .accessibilityValue(Format.priorityLabel(task.priority))
-                .accessibilityAddTraits(done ? .isSelected : [])
-                .disabled(offered.toggle == nil)
+            if !isCard {
+                Checkbox(checked: checking || done, tone: task.priority.tone) { check() }
+                    .accessibilityLabel("Complete \(task.title)")
+                    .accessibilityValue(Format.priorityLabel(task.priority))
+                    .accessibilityAddTraits(done ? .isSelected : [])
+                    .disabled(offered.toggle == nil)
+            }
             VStack(alignment: .leading, spacing: 2) {
                 TitleFlow(
                     title: Links.text(task.title),
@@ -68,7 +71,7 @@ struct TaskRow<Trailing: View>: View {
             .onTapGesture { open() }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)
-            .accessibilityIdentifier(isSubtask ? "subtask-\(task.title)" : "task-\(task.title)")
+            .accessibilityIdentifier(isCard ? "added-\(task.title)" : isSubtask ? "subtask-\(task.title)" : "task-\(task.title)")
             .accessibilityAction { open() }
             if let added {
                 Text(added)
@@ -122,9 +125,13 @@ struct TaskRow<Trailing: View>: View {
 
     private func open() {
         switch placement {
-        case .list: navigator.sheet = .details(taskID: task.id)
+        case .list, .card: navigator.sheet = .details(taskID: task.id)
         case .subtask(let open): open()
         }
+    }
+
+    private var isCard: Bool {
+        if case .card = placement { true } else { false }
     }
 
     private var isSubtask: Bool {
