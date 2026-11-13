@@ -155,7 +155,7 @@
 	<div class="relative min-w-0 flex-1 py-2.5 touch:min-h-11 touch:py-3" data-row-text>
 		<button type="button" class="absolute inset-0 rounded-xl" aria-label={card ? `Edit ${task.title}` : task.title} onclick={() => lookup.open(task.id, subtask ? 'forward' : 'none')}></button>
 		<div class="text pointer-events-none relative flex flex-wrap items-center gap-x-3" {@attach fit}>
-			<div class="min-w-0" data-row-title>
+			<div class="min-w-0 grow" data-row-title>
 				<TitleFlow
 					title={task.title}
 					labels={labelChips}
