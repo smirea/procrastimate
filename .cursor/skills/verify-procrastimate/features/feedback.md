@@ -6,7 +6,7 @@ Feedback freezes the screen into an editor, in every build on both clients. Stef
 
 - `shake-open` (iOS) drops an `Add Feedback` pill on a shake; tapping it within 5 s opens the editor over the current screen, with the whole scrolling list captured at full length.
 - `click-open` (web) opens the editor on Alt+Meta+click, with the clicked element selected and the app never getting the click.
-- `hold-open` (web) captures the screen at once when three fingers rest on it for 600 ms. A quicker three-finger tap, or fingers that slide, open nothing, and a finger that landed on a row first opens no row menu.
+- `hold-open` (web) is the package's three-finger hold: 100 ms in, a capsule grows at the top center, and at 700 ms the screen is captured and the editor opens. A quicker three-finger tap, or fingers that slide, open nothing, and a finger that landed on a row first opens no row menu.
 - `countdown-open` (web) is Settings' `Give feedback`: Settings closes, a `Feedback in 5` pill counts down, then the page is captured.
 - `tap-select` selects the smallest tagged component or accessibility element under a tap, and shows its parent, its `file:line`, and its data under the screenshot.
 - `export` shares the annotated image, the JSON report, or both in a ZIP. The JSON's `context` lists `Session`, `Sync`, `Navigation`, and `Store`.

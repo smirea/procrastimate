@@ -159,6 +159,11 @@
 		box-sizing: border-box;
 	}
 
+	html {
+		/* No pinch or double-tap zoom: the app is laid out for the phone already. */
+		touch-action: pan-x pan-y;
+	}
+
 	html,
 	body {
 		margin: 0;

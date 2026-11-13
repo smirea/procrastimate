@@ -10,63 +10,9 @@ type SyncStatus = Parameters<Parameters<typeof localDatabase.onStatus>[0]>[0];
 
 let engine: FeedbackEngine | undefined;
 
-const HOLD_FINGERS = 3;
-const HOLD_MS = 600;
-const SLOP_PX = 12;
-
 /**
- * Three fingers held still anywhere capture the screen under them, the phone's stand-in for Alt+Meta+click. One finger
- * holds for the row menu and two pinch, so three is free.
- */
-function holdThreeFingers(open: () => void): () => void {
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	let start: { x: number; y: number }[] = [];
-	const cancel = () => {
-		clearTimeout(timer);
-		timer = undefined;
-	};
-	const points = (touches: TouchList) => [...touches].map(touch => ({ x: touch.clientX, y: touch.clientY }));
-	const listeners = new AbortController();
-	const options = { capture: true, signal: listeners.signal };
-	window.addEventListener(
-		'touchstart',
-		event => {
-			cancel();
-			if (event.touches.length !== HOLD_FINGERS) return;
-			// Keeps Safari from zooming or offering its edit menu under the gesture.
-			event.preventDefault();
-			start = points(event.touches);
-			timer = setTimeout(() => {
-				timer = undefined;
-				navigator.vibrate?.(10);
-				open();
-			}, HOLD_MS);
-		},
-		{ ...options, passive: false },
-	);
-	window.addEventListener(
-		'touchmove',
-		event => {
-			if (timer === undefined) return;
-			const moved = points(event.touches).some((point, i) => {
-				const from = start[i];
-				return !from || Math.hypot(point.x - from.x, point.y - from.y) > SLOP_PX;
-			});
-			if (moved) cancel();
-		},
-		{ ...options, passive: true },
-	);
-	window.addEventListener('touchend', cancel, { ...options, passive: true });
-	window.addEventListener('touchcancel', cancel, { ...options, passive: true });
-	return () => {
-		cancel();
-		listeners.abort();
-	};
-}
-
-/**
- * Feedback in every build, as on iOS: Alt+Meta+click opens the editor on what was clicked, and on a phone so does a
- * three-finger hold. Its ProcrastiMate entry and GitHub Issue webhook post to this origin's own API with the session
+ * Feedback in every build, as on iOS: Alt+Meta+click opens the editor on what was clicked, and on a phone the
+ * package's own three-finger hold does. Its ProcrastiMate entry and GitHub Issue webhook post to this origin's own API with the session
  * cookie, so they need no token or proxy.
  */
 export function startFeedback(): () => void {
@@ -107,9 +53,7 @@ export function startFeedback(): () => void {
 		labels: store.labels.length,
 		comments: store.comments.length,
 	}));
-	const stopHold = holdThreeFingers(() => void engine?.present());
 	return () => {
-		stopHold();
 		stopStatus();
 		engine?.destroy();
 		engine = undefined;

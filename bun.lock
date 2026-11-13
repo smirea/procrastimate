@@ -521,7 +521,7 @@
 
     "@standard-server/shared": ["@standard-server/shared@0.10.2", "", {}, "sha512-ffbmIGnzTMjQfJOM91BkC8VvfhB+Rx70f6/dsVnrqjLXEW8GXGUmi8CGTP3Fz9j1G2N+Rum3r4KiewNUBZG7uQ=="],
 
-    "@stefan.inc/feedback-engine": ["@stefan.inc/feedback-engine@1.0.2", "", { "dependencies": { "dom-accessibility-api": "^0.7.1", "modern-screenshot": "^4.7.0", "oxc-parser": "^0.158.0" }, "peerDependencies": { "svelte": "^5.29.0" } }, "sha512-hZ51MdhvPf+aYxvyQm8KF6zAxf3sARz37iAxEUy8zNwnB8zs/XjSKs1nzv13t6tw1BHd0/gg/Ay/W6Z+AWU8IQ=="],
+    "@stefan.inc/feedback-engine": ["@stefan.inc/feedback-engine@1.2.0", "", { "dependencies": { "dom-accessibility-api": "^0.7.1", "modern-screenshot": "^4.7.0", "oxc-parser": "^0.158.0" }, "peerDependencies": { "svelte": "^5.29.0" } }, "sha512-Ajn3WqLROvcQkPFU/7VVgnfyNLrAU6y2/qbhaXekYNxTTfV3AcaeJaMIofmy+2vVfnDbYjOf2vgk4JAlzFLLng=="],
 
     "@sveltejs/acorn-typescript": ["@sveltejs/acorn-typescript@1.0.13", "", { "peerDependencies": { "acorn": "^8.9.0" } }, "sha512-wgKggnhZVL9Bfx1OaKKTrYY9BFRk6C8UAkQNUcIv1+llzYrIqy+RZm5HPKzn0NpEBvTVhTqB4kQyllZywsRBRQ=="],
 
