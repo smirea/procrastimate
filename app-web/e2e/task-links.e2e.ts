@@ -35,3 +35,25 @@ test('a task URL this account cannot see says so instead of opening a tab', asyn
 	await expect(page.getByRole('status').filter({ hasText: 'Can’t find that task' })).toBeVisible();
 	expect(context.pages()).toHaveLength(tabs);
 });
+
+test('a task URL on a public link’s page opens in a new tab, even signed in', async ({ app, page, context }) => {
+	await app.add('Pay rent');
+	const source = `See https://procrastimate.stf.lol/inbox?task=${await app.taskId('Pay rent')}`;
+	await app.add(source);
+	await app
+		.row(source)
+		.getByRole('button', { name: /^See/ })
+		.click({ position: { x: 24, y: 12 } });
+	await app.details().getByRole('button', { name: 'Share' }).click();
+	const sheet = page.getByRole('dialog', { name: 'Share' });
+	await sheet.getByRole('button', { name: 'Copy link' }).click();
+	const link = sheet.getByLabel('Link');
+	await expect(link).toHaveText(/\/s\/.+/);
+	await page.goto(new URL((await link.textContent())!).pathname);
+
+	const shared = page.getByRole('link', { name: /task=/ }).first();
+	await expect(shared).toBeVisible({ timeout: 15_000 });
+	await context.route('https://procrastimate.stf.lol/**', route => route.fulfill({ body: 'production' }));
+	const [tab] = await Promise.all([context.waitForEvent('page'), shared.click()]);
+	expect(tab.url()).toContain('task=');
+});

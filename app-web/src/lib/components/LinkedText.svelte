@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { linkify, taskLinkId } from 'shared/links.ts';
 	import type { Range } from 'shared/search.ts';
 	import Highlighted from './Highlighted.svelte';
@@ -12,13 +13,13 @@
 	const segments = $derived(linkify(text, ranges));
 
 	/**
-	 * The app's own task URL opens that task in place. A modified click, or the signed-out public page, still gets a
-	 * new tab.
+	 * The app's own task URL opens that task in place. A modified click, or a public link's page, which has no task
+	 * sheet or toasts, still gets a new tab.
 	 */
 	function open(e: MouseEvent, href: string) {
 		e.stopPropagation();
 		const id = taskLinkId(href, location.origin);
-		if (id === null || !store.loaded || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+		if (id === null || !store.loaded || page.route.id === '/s/[token]' || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 		e.preventDefault();
 		if (store.task(id)) sheets.openTask(id);
 		else toasts.show('Can’t find that task');
