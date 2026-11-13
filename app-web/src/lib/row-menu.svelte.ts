@@ -1,4 +1,5 @@
 import type { Due, Task } from 'shared/task.ts';
+import { fingers } from './fingers.ts';
 import { GAP } from './placement.ts';
 
 type RowMenuTarget = {
@@ -96,6 +97,7 @@ export const taskMenu = (target: () => RowMenuTarget) => (node: HTMLElement) => 
 		if (!touch || (event.target as Element).closest('[data-handle]')) return;
 		start = { x: event.clientX, y: event.clientY };
 		hold = setTimeout(() => {
+			if (fingers() > 1) return;
 			swallowClick = true;
 			navigator.vibrate?.(10);
 			rowMenu.open(target(), start.x, below());
