@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import type { Snippet } from 'svelte';
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -11,6 +12,7 @@
 		align = 'start',
 		label,
 		open = $bindable(false),
+		...rest
 	}: {
 		trigger: Snippet<[{ open: boolean; toggle: () => void }]>;
 		children: Snippet<[{ close: () => void }]>;
@@ -101,10 +103,11 @@
 	}
 </script>
 
-<div class="relative min-w-0" bind:this={root}>
+<div class="relative min-w-0" bind:this={root} {...rest}>
 	{@render trigger({ open, toggle })}
 	{#if open}
 		<div
+			{@attach feedback('Popover', () => ({ label }))}
 			bind:this={panel}
 			{@attach show}
 			popover="manual"

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { backOut, cubicOut } from 'svelte/easing';
@@ -369,6 +370,7 @@
 <svelte:window onkeydowncapture={onkeydown} />
 
 <div
+	{@attach feedback()}
 	role="dialog"
 	aria-label="Ramble"
 	aria-modal="true"

@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// What a public link's screen pushes for a tapped task, kept apart from other `String` destinations.

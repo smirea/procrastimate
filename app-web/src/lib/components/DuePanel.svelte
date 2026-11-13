@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
 	import CalendarDot from 'phosphor-svelte/lib/CalendarDot';
 	import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus';
@@ -118,7 +119,7 @@
 	}
 </script>
 
-<div class="w-72 touch:w-[19.75rem]">
+<div {@attach feedback()} class="w-72 touch:w-[19.75rem]">
 	<div class="grid grid-cols-4 gap-1.5 p-0.5">
 		{#each presets as preset (preset.label)}
 			{@const { icon: Icon, tone } = style(preset.label)}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import InlineEdit from './InlineEdit.svelte';
 	import { screenPath } from 'shared/screens.ts';
 	import { goto } from '$app/navigation';
@@ -57,7 +58,7 @@
 	}
 </script>
 
-<nav class="glass flex h-full flex-col rounded-panel p-3" aria-label="Main">
+<nav {@attach feedback()} class="glass flex h-full flex-col rounded-panel p-3" aria-label="Main">
 	<div class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain">
 		<div class="flex items-center justify-between px-2 pt-1">
 			<span class="text-[15px] font-semibold tracking-tight">ProcrastiMate</span>
@@ -195,7 +196,9 @@
 						Settings
 					</button>
 				{/snippet}
-				<Settings />
+				{#snippet children({ close })}
+					<Settings onclose={close} />
+				{/snippet}
 			</Popover>
 		{/if}
 	</div>

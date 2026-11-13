@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// Who made and finished the task, from the synced `createdBy` and `completedBy` and the people cache, so it shows

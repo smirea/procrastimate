@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import type { Snippet } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -50,7 +51,7 @@
 	);
 </script>
 
-<section in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>
+<section {@attach feedback(undefined, () => ({ name, subtitle, open, empty, filter: filter?.list }))} in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>
 	<header class="mb-5 flex items-end justify-between gap-4">
 		<div class="flex min-w-0 items-end gap-1.5">
 			{#if filter}<div class="-ml-2 shrink-0"><FilterMenu list={filter.list} tasks={filter.tasks} /></div>{/if}

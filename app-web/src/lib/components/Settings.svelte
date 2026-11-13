@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { fly, slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import ArrowSquareIn from 'phosphor-svelte/lib/ArrowSquareIn';
+	import ChatCircleDots from 'phosphor-svelte/lib/ChatCircleDots';
 	import Warning from 'phosphor-svelte/lib/Warning';
 	import type { ImportSummary } from 'shared/todoist.ts';
 	import AccentPicker from './AccentPicker.svelte';
@@ -20,6 +22,10 @@
 	import { motion } from '../motion.ts';
 	import { reportError } from '../sentry.ts';
 	import { readBackupZip } from '../todoist-import.ts';
+	import { feedbackCountdown } from '../feedback.ts';
+
+	/** Closes the sheet or the popover Settings is in. */
+	let { onclose }: { onclose: () => void } = $props();
 
 	type Status =
 		| { kind: 'idle' }
@@ -41,6 +47,12 @@
 	}
 
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+	/** Settings closes so the countdown captures the screen behind it, or whichever one is opened in time. */
+	function giveFeedback() {
+		onclose();
+		feedbackCountdown();
+	}
 
 	function signOut() {
 		void push.forget();
@@ -72,7 +84,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4 p-1.5 md:w-72">
+<div {@attach feedback()} class="flex flex-col gap-4 p-1.5 md:w-72">
 	<section class="flex flex-col gap-2">
 		<h3 class="heading">Theme</h3>
 		<Segmented
@@ -176,6 +188,10 @@
 
 	<section class="flex flex-col gap-1.5">
 		<h3 class="heading">Account</h3>
+		<button type="button" class="menu-item -mx-1.5 w-auto touch:h-11 touch:text-[15px]" onclick={giveFeedback}>
+			<ChatCircleDots size={18} class="text-muted" />
+			Give feedback
+		</button>
 		<button type="button" class="menu-item -mx-1.5 w-auto touch:h-11 touch:text-[15px]" onclick={signOut}>
 			Sign out
 		</button>

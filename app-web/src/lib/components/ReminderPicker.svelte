@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import Bell from 'phosphor-svelte/lib/Bell';
 	import X from 'phosphor-svelte/lib/X';
 	import type { DateKey, Due, Reminder, TimeOfDay } from 'shared/task.ts';
@@ -34,7 +35,7 @@
 	const presetLabel = (minutes: number) => formatReminder({ kind: 'before', minutes }, clock.today);
 </script>
 
-<Popover label="Reminders" bind:open>
+<Popover {@attach feedback()} label="Reminders" bind:open>
 	{#snippet trigger({ toggle })}
 		<button
 			type="button"

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import GithubLogo from 'phosphor-svelte/lib/GithubLogo';
@@ -30,7 +31,7 @@
 </script>
 
 {#if task.github.length || editable}
-	<div class="flex flex-wrap gap-1.5 px-4 pt-3" data-github>
+	<div {@attach feedback()} class="flex flex-wrap gap-1.5 px-4 pt-3" data-github>
 		{#each task.github as attached (githubUrl(attached))}
 			{@const item = githubItem(attached)}
 			{@const kind = item?.kind ?? attached.kind}

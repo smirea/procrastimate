@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import Bell from 'phosphor-svelte/lib/Bell';
 	import ChatCircle from 'phosphor-svelte/lib/ChatCircle';
 	import { scale } from 'svelte/transition';
@@ -109,6 +110,7 @@
 </script>
 
 <div
+	{@attach feedback()}
 	bind:this={row}
 	class="group flex items-start gap-3 rounded-2xl px-2 transition-colors duration-500 hover:bg-surface/60"
 	class:revealed

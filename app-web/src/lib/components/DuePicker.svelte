@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
 	import type { Due } from 'shared/task.ts';
 	import Popover from './Popover.svelte';
@@ -15,7 +16,7 @@
 	const today = $derived(clock.today);
 </script>
 
-<div class="flex items-center">
+<div {@attach feedback()} class="flex items-center">
 	<Popover label="Due date" bind:open>
 		{#snippet trigger({ toggle })}
 			<button

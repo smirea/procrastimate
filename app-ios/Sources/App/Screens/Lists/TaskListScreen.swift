@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// Every top-level list: its rows, the filter menu at the top left when the list has one, and the `…` menu at the top

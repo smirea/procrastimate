@@ -4,6 +4,7 @@
 </script>
 
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { onMount } from 'svelte';
 	import { waveHeights } from './wave.ts';
 
@@ -66,4 +67,4 @@
 	});
 </script>
 
-<canvas bind:this={canvas} class="block h-full w-full text-accent" aria-hidden="true"></canvas>
+<canvas {@attach feedback()} bind:this={canvas} class="block h-full w-full text-accent" aria-hidden="true"></canvas>

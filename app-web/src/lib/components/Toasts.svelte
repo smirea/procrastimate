@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -43,6 +44,7 @@
 >
 	{#each toasts.items as toast (toast.id)}
 		<div
+			{@attach feedback('Toast', () => toast)}
 			role="status"
 			class="glass-strong pointer-events-auto flex max-w-full items-center gap-2 rounded-full py-1.5 pr-1.5 pl-4 text-[13px] text-ink touch:text-[14px]"
 			animate:flip={motion({ duration: 200 })}

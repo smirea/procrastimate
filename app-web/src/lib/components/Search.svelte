@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { screenPath } from 'shared/screens.ts';
 	import { goto } from '$app/navigation';
 	import { fade, scale } from 'svelte/transition';
@@ -96,7 +97,7 @@
 	const labelColorOf = (name: string) => store.own.labels.find((l) => l.name === name)?.color ?? 'gray';
 </script>
 
-<Sheet label="Search" desktop="scale" class="flex-col-reverse overflow-hidden md:top-[14vh] md:left-1/2 md:max-h-[min(560px,72vh)] md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:flex-col md:rounded-panel">
+<Sheet {@attach feedback()} label="Search" desktop="scale" class="flex-col-reverse overflow-hidden md:top-[14vh] md:left-1/2 md:max-h-[min(560px,72vh)] md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:flex-col md:rounded-panel">
 	<div class="flex shrink-0 items-center gap-2.5 px-4 py-3 touch:py-2">
 		<MagnifyingGlass size={18} class="shrink-0 text-muted" />
 		<input

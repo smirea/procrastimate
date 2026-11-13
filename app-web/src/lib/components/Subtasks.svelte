@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { tick } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import { fly, slide } from 'svelte/transition';
@@ -82,7 +83,7 @@
 	}
 </script>
 
-<section aria-label="Subtasks">
+<section {@attach feedback()} aria-label="Subtasks">
 	<div class="mb-1 flex items-center justify-between px-2 text-[12px] text-muted">
 		<h2 class="font-medium tracking-wide uppercase">Subtasks</h2>
 		<div class="flex items-center gap-1">

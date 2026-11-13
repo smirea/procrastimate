@@ -29,6 +29,7 @@
 	import { openTaskFromUrl, push } from '#lib/push.svelte.ts';
 	import { session } from '#lib/session.svelte.ts';
 	import { runSentrySmoke } from '#lib/sentry.ts';
+	import { startFeedback } from '#lib/feedback.ts';
 	import SignIn from '#lib/components/SignIn.svelte';
 	import { startSync } from '#lib/sync.svelte.ts';
 	import { keepStorage } from '#lib/device.ts';
@@ -120,6 +121,11 @@
 			stopPush();
 			stopSync();
 		};
+	});
+
+	// Signed in only, since its ProcrastiMate entry posts with the session and a public link's visitor has none.
+	$effect(() => {
+		if (session.state === 'in' && !isPublic) return untrack(startFeedback);
 	});
 
 	$effect(() => {

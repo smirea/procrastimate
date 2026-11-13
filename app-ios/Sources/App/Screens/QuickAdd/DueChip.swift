@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// The date chip of quick add and task details. Its popover holds the presets, a calendar, and the time,

@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// Each value that changes on a tap (the tab, the open sheet, the store, the completion count) is read by the smallest

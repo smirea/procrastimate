@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import Check from 'phosphor-svelte/lib/Check';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import { scale } from 'svelte/transition';
@@ -67,7 +68,7 @@
 
 </script>
 
-<Popover label="Labels" bind:open>
+<Popover {@attach feedback()} label="Labels" bind:open>
 	{#snippet trigger({ toggle })}
 		{@const Chosen = labelIcon(chosen[0])}
 		<button

@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// Every task completed in the chosen range, under the day it was completed, newest first. The range is a preset

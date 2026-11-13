@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import type { Snippet } from 'svelte';
 	import ArrowDown from 'phosphor-svelte/lib/ArrowDown';
 	import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
@@ -140,7 +141,7 @@
 	{/if}
 {/snippet}
 
-<Popover {label} align="end">
+<Popover {@attach feedback()} {label} align="end">
 	{#snippet trigger({ toggle })}
 		<button
 			type="button"

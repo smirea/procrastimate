@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { untrack } from 'svelte';
 	import { fly, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
@@ -87,7 +88,7 @@
 </script>
 
 {#if list.length || editable}
-	<section class="flex flex-col gap-2 px-1" aria-label="Comments">
+	<section {@attach feedback()} class="flex flex-col gap-2 px-1" aria-label="Comments">
 		<h2 class="px-1 text-[12px] font-medium tracking-wide text-muted uppercase">Comments</h2>
 		{#if list.length}
 			<ol class="flex flex-col gap-1" aria-label="Comment list">

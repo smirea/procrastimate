@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import X from 'phosphor-svelte/lib/X';
@@ -83,6 +84,7 @@
 
 {#if task && image}
 	<div
+		{@attach feedback()}
 		bind:this={dialog}
 		role="dialog"
 		aria-modal="true"

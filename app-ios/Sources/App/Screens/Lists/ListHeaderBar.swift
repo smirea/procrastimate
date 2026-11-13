@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// What a list's `…` menu runs. `ListHeader` decides which entries show and in what order; each entry it names needs

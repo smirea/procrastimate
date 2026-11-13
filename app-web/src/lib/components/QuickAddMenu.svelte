@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import Camera from 'phosphor-svelte/lib/Camera';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import PushPin from 'phosphor-svelte/lib/PushPin';
@@ -15,7 +16,7 @@
 	}: { values: Partial<Record<WebButton, string>>; onrun: (button: WebButton) => void; oncamera: () => void } = $props();
 </script>
 
-<Popover label="Quick add actions" align="end">
+<Popover {@attach feedback()} label="Quick add actions" align="end">
 	{#snippet trigger({ open, toggle })}
 		<button
 			type="button"

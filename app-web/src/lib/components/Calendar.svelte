@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 	import CaretRight from 'phosphor-svelte/lib/CaretRight';
 	import { untrack } from 'svelte';
@@ -34,7 +35,7 @@
 		fromDateKey(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 </script>
 
-<div class="px-1">
+<div {@attach feedback()} class="px-1">
 	<div class="flex items-center justify-between pb-1 pl-1.5">
 		<span class="text-[13px] font-semibold touch:text-[15px]" aria-live="polite">{title}</span>
 		<div class="flex">

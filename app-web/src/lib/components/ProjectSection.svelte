@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import ArrowDown from 'phosphor-svelte/lib/ArrowDown';
 	import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
 	import Check from 'phosphor-svelte/lib/Check';
@@ -31,7 +32,7 @@
 	const badged = $derived(section.counter === 'badge');
 </script>
 
-<section class="mt-6" aria-label={section.name}>
+<section {@attach feedback()} class="mt-6" aria-label={section.name}>
 	<SectionHeading heading={section.name} {tasks} badge={badged} add={canAdd ? { kind: 'project', id: section.projectId, sectionId: section.id } : undefined}>
 		{#snippet title()}
 			{#if renaming}

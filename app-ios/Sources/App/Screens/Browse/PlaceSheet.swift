@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// Saves a place under a name with the radius it watches, or changes a saved place's radius. Either way the open tasks

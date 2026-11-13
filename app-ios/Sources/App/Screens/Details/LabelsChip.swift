@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// The labels chip and its popover, which stays open while labels are toggled or created, unlike a `Menu`.

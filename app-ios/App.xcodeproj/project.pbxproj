@@ -126,7 +126,7 @@
         A00000000000000000000054 = { isa = PBXTargetDependency; target = A00000000000000000000021; targetProxy = A00000000000000000000053; };
 
         /* The app's package dependencies, Sentry (a local package over sentry-cocoa's Sentry-Dynamic xcframework),
-           sync-engine with its GRDB, and Feetback (see docs/decisions/ios.md). Only the App target links them; Core stays Foundation-only. */
+           sync-engine with its GRDB, and Feedback (see docs/decisions/ios.md). Only the App target links them; Core stays Foundation-only. */
         A00000000000000000000050 = { isa = XCLocalSwiftPackageReference; relativePath = Packages/Sentry; };
         A00000000000000000000051 = { isa = XCSwiftPackageProductDependency; package = A00000000000000000000050; productName = "Sentry-Dynamic"; };
         A00000000000000000000052 = { isa = PBXBuildFile; productRef = A00000000000000000000051; };
@@ -144,7 +144,7 @@
             repositoryURL = "https://github.com/smirea/feedback-engine";
             requirement = { kind = branch; branch = master; };
         };
-        A000000000000000000000F1 = { isa = XCSwiftPackageProductDependency; package = A000000000000000000000F0; productName = Feetback; };
+        A000000000000000000000F1 = { isa = XCSwiftPackageProductDependency; package = A000000000000000000000F0; productName = Feedback; };
         A000000000000000000000F2 = { isa = PBXBuildFile; productRef = A000000000000000000000F1; };
 
         /* Shared: what both the app and the widget extension build, such as the widget intents, the app group, the Live

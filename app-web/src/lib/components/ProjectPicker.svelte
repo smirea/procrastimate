@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import InlineEdit from './InlineEdit.svelte';
 	import Tray from 'phosphor-svelte/lib/Tray';
 	import ProjectGlyph from './ProjectGlyph.svelte';
@@ -51,7 +52,7 @@
 	}
 </script>
 
-<div class="flex min-w-0 items-center">
+<div {@attach feedback()} class="flex min-w-0 items-center">
 	<Popover label="Project">
 		{#snippet trigger({ toggle })}
 			<button type="button" class="chip max-w-full" data-active={!!project} aria-label={`Project ${label}`} onclick={toggle}>
