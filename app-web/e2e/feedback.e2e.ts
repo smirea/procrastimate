@@ -41,6 +41,46 @@ test('Alt+Meta+click on a row posts feedback on it to ProcrastiMate as a task wi
 	await expect(app.row(name)).toBeVisible({ timeout: 10_000 });
 });
 
+test('the GitHub Issue entry shows only for the account the server allows, and posts the image and report', async ({
+	app,
+	page,
+}) => {
+	const title = unique('Oat milk');
+	await app.add(title);
+	const share = async () => {
+		await app
+			.row(title)
+			.getByRole('button', { name: title, exact: true })
+			.click({ modifiers: ['Alt', 'Meta'] });
+		await editor(page).waitFor();
+		await field(page).fill('Row is too tall');
+		await field(page).press('Enter');
+		await page.getByRole('button', { name: 'Share' }).click();
+		await page.getByRole('menuitem', { name: 'ProcrastiMate' }).waitFor();
+	};
+
+	// The suite's server names no account for issues, so this one is refused the entry.
+	await share();
+	await expect(page.getByRole('menuitem', { name: 'GitHub Issue' })).toHaveCount(0);
+	await page.keyboard.press('Escape');
+
+	await page.route('**/api/feedback/github', route => route.fulfill({ json: { enabled: true } }));
+	let posted: { parts: string[]; cookie: boolean } | undefined;
+	await page.route('**/api/feedback/issues', async route => {
+		const body = route.request().postDataBuffer()?.toString('latin1') ?? '';
+		posted = {
+			parts: [...body.matchAll(/name="(\w+)"/g)].map(match => match[1]!),
+			cookie: !!(await route.request().headerValue('cookie')),
+		};
+		await route.fulfill({ status: 201, json: { url: 'https://github.com/smirea/procrastimate/issues/1' } });
+	});
+	await app.reload();
+	await share();
+	await page.getByRole('menuitem', { name: 'GitHub Issue' }).click();
+	await expect(page.locator('.toast')).toContainText('Sent to GitHub Issue', { timeout: 15_000 });
+	expect(posted).toEqual({ parts: ['id', 'title', 'image', 'report'], cookie: true });
+});
+
 test('Give feedback in Settings closes it and counts down to a capture', async ({ app, page }) => {
 	await app.openSettings();
 	await app.settings().getByRole('button', { name: 'Give feedback' }).click();

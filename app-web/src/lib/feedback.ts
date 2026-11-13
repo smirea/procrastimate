@@ -1,5 +1,6 @@
-import { setupFeedbackEngine, type FeedbackEngine } from '@stefan.inc/feedback-engine/svelte';
+import { githubIcon, setupFeedbackEngine, type FeedbackEngine, type Webhook } from '@stefan.inc/feedback-engine/svelte';
 import { page } from '$app/state';
+import { api } from './api.ts';
 import { localDatabase } from './database.ts';
 import { session } from './session.svelte.ts';
 import { sheets } from './sheets.svelte.ts';
@@ -65,17 +66,26 @@ function holdThreeFingers(open: () => void): () => void {
 
 /**
  * Feedback in every build, as on iOS: Alt+Meta+click opens the editor on what was clicked, and on a phone so does a
- * three-finger hold. Its ProcrastiMate entry
- * posts to this origin's own API with the session cookie, so it needs no token or proxy.
+ * three-finger hold. Its ProcrastiMate entry and GitHub Issue webhook post to this origin's own API with the session
+ * cookie, so they need no token or proxy.
  */
 export function startFeedback(): () => void {
 	let sync: SyncStatus | undefined;
 	const stopStatus = localDatabase.onStatus(status => (sync = status));
+	// The editor reads the list each time its Share menu opens, so the entry the server allows can join it later.
+	const webhooks: Webhook[] = [];
 	engine = setupFeedbackEngine({
 		app: 'ProcrastiMate',
 		version: __APP_VERSION__,
 		procrastimate: { url: '', app: location.origin },
+		webhooks,
 	});
+	void api.feedback
+		.github()
+		.then(({ enabled }) => {
+			if (enabled) webhooks.push({ name: 'GitHub Issue', url: '/api/feedback/issues', image: githubIcon });
+		})
+		.catch(() => {});
 	engine.context('Session', () => ({
 		api: `${location.origin}/api`,
 		signedIn: session.state === 'in',

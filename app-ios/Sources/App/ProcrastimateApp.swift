@@ -111,6 +111,7 @@ struct ProcrastimateApp: App {
                     await Telemetry.smokeIfAsked()
                     sync.start()
                 }
+                .task(id: auth.signedIn) { await FeedbackIssues.refresh(signedIn: auth.signedIn) }
                 .onChange(of: store.people) { _, people in DeviceDefaults.people = people }
                 .onChange(of: store.tasks) { old, new in notifications.tasksChanged(from: old, to: new) }
                 .onChange(of: store.tasks) { _, _ in

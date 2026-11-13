@@ -70,6 +70,11 @@ export const pushKeySchema = z.object({ publicKey: z.string() }).meta({ id: 'Pus
 /** What the push service answered a test push with, or null when it never answered. */
 const pushStatusSchema = z.object({ status: z.number().int().nullable() });
 
+export const feedbackGithubSchema = z.object({ enabled: z.boolean() }).meta({ id: 'FeedbackGithub' });
+const feedbackPostSchema = z.object({ id: z.string(), title: z.string().min(1), image: z.file(), report: z.file() });
+export type FeedbackPost = z.infer<typeof feedbackPostSchema>;
+export const feedbackIssueSchema = z.object({ url: z.url() }).meta({ id: 'FeedbackIssue' });
+
 const signedIn = oc.errors({ UNAUTHORIZED: {}, SERVICE_UNAVAILABLE: {} });
 /** `FORBIDDEN` when the caller may not reach the space, or is an AI account on a human-only route. */
 const allowed = signedIn.errors({ FORBIDDEN: {} });
@@ -568,6 +573,25 @@ export const contract = {
 		.meta(openapi({ method: 'GET', path: '/api/github', inputStructure: 'detailed' }))
 		.input(z.object({ query: z.object({ url: z.string() }) }))
 		.output(githubItemSchema),
+	/**
+	 * The Feedback editor's GitHub Issue entry, for one account alone: the server's `FEEDBACK_GITHUB_USER_ID`, Stefan's.
+	 * See `docs/decisions/feedback.md`.
+	 */
+	feedback: {
+		/** Whether the caller gets the entry: true only for that account on a server with the token. */
+		github: allowed.meta(openapi({ method: 'GET', path: '/api/feedback/github' })).output(feedbackGithubSchema),
+		/**
+		 * The webhook the editor posts to, as feedback-engine's `docs/webhooks.md` describes: multipart `id`, `title`,
+		 * `image` (PNG), and `report` (`feedback.json`). Answers the new issue's `url`, and a failure's `message`, which
+		 * the editor shows. `FORBIDDEN` for every other account, `SERVICE_UNAVAILABLE` without the token, and
+		 * `BAD_GATEWAY` when GitHub refuses.
+		 */
+		issue: allowed
+			.errors({ BAD_GATEWAY: {} })
+			.meta(openapi({ method: 'POST', path: '/api/feedback/issues', successStatus: 201 }))
+			.input(feedbackPostSchema)
+			.output(feedbackIssueSchema),
+	},
 	/**
 	 * The icon of the page at `url`, after redirects, as image bytes, for the icon before a link. `api.ts` answers it before the router,
 	 * like image bytes. `NOT_FOUND`, cached for a day, when the site has none.

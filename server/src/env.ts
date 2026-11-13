@@ -15,6 +15,8 @@ const env = z.object({
   ELEVENLABS_API_KEY: optional(z.string()),
   GEMINI_API_KEY: optional(z.string()),
   GITHUB_TOKEN: optional(z.string()),
+  FEEDBACK_GITHUB_TOKEN: optional(z.string()),
+  FEEDBACK_GITHUB_USER_ID: optional(z.string()),
   RAMBLE_UPSTREAM: optional(z.string().regex(/^cassette$/)),
   BETTER_AUTH_SECRET: optional(z.string()),
   AUTH_RATE_LIMIT: optional(z.string().regex(/^off$/)),
