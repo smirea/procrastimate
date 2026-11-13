@@ -1,3 +1,30 @@
+<script module lang="ts">
+	let observer: ResizeObserver | undefined;
+
+	/**
+	 * The browser decides whether the title and meta share a line, since a wrapping flex row breaks on their natural
+	 * widths. This only reads where the meta landed and flips the date's order and the alignment, which moves nothing in
+	 * width, so it can't oscillate. The text's size catches a wrap, but meta that appears or grows within the title's
+	 * line changes no height, so the meta is observed too.
+	 */
+	function sync(text: HTMLElement) {
+		const title = text.querySelector<HTMLElement>('[data-row-title]');
+		const meta = text.querySelector<HTMLElement>('[data-row-meta]');
+		const inline = !!title && !!meta && meta.offsetTop < title.offsetTop + title.offsetHeight - 1;
+		if (inline) text.dataset.inline = '';
+		else delete text.dataset.inline;
+	}
+
+	/** Observes the row's text or its meta, and syncs the text either way. */
+	function fit(el: HTMLElement) {
+		observer ??= new ResizeObserver((entries) => {
+			for (const { target } of entries) sync((target.hasAttribute('data-row-meta') ? target.parentElement : target) as HTMLElement);
+		});
+		observer.observe(el);
+		return () => observer?.unobserve(el);
+	}
+</script>
+
 <script lang="ts">
 	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import Bell from 'phosphor-svelte/lib/Bell';
@@ -127,28 +154,30 @@
 	<!-- The button sits under the text rather than around it, since HTML forbids a link inside a button. -->
 	<div class="relative min-w-0 flex-1 py-2.5 touch:min-h-11 touch:py-3" data-row-text>
 		<button type="button" class="absolute inset-0 rounded-xl" aria-label={card ? `Edit ${task.title}` : task.title} onclick={() => lookup.open(task.id, subtask ? 'forward' : 'none')}></button>
-		<div class="pointer-events-none relative">
-			<TitleFlow
-				title={task.title}
-				labels={labelChips}
-				wrap={subtask}
-				class="text-[14px] leading-5 transition-colors {checking || done ? 'text-faint line-through' : 'text-ink'}"
-			/>
+		<div class="text pointer-events-none relative flex flex-wrap items-center gap-x-3" {@attach fit}>
+			<div class="min-w-0 grow" data-row-title>
+				<TitleFlow
+					title={task.title}
+					labels={labelChips}
+					wrap={subtask}
+					class="text-[14px] leading-5 transition-colors {checking || done ? 'text-faint line-through' : 'text-ink'}"
+				/>
+			</div>
 			{#if task.notes}
-				<div class="truncate text-[12px] leading-4 text-muted"><LinkedText text={preview} /></div>
+				<div class="basis-full truncate text-[12px] leading-4 text-muted"><LinkedText text={preview} /></div>
 			{/if}
 			{#if pending.length}
-				<ul class="truncate text-[12px] leading-4 text-muted" aria-label="Open subtasks">
+				<ul class="basis-full truncate text-[12px] leading-4 text-muted" aria-label="Open subtasks">
 					{#each pending as item (item.id)}
 						<li class="inline not-first:ml-3"><span class="text-faint" aria-hidden="true">〇</span> {item.title}</li>
 					{/each}
 				</ul>
 			{/if}
 			{#if due || task.recurrence || task.reminders.length || task.attachments.length || task.github.length || task.location || progress || commentBadge || parent || fromMemo || other || showProject}
-				<div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted">
+				<div class="meta mt-0.5 flex min-w-0 grow flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted" data-row-meta {@attach fit}>
 					{#if task.event && event && due}
 						<span
-							class="flex min-w-0 items-center gap-1"
+							class="due flex min-w-0 items-center gap-1"
 							aria-label={[event.when, `${event.lead}${task.event.series ? ' every' : ''} ${event.title}${event.trail ? ` ${event.trail}` : ''}`].filter(Boolean).join(', ')}
 						>
 							{#if event.when}<span class="shrink-0" style={`color: var(--tone-${dueTone(due, clock.today)})`}>{event.when}</span>{/if}
@@ -163,7 +192,7 @@
 							</span>
 						</span>
 					{:else if due && !(timeOnly && !due.time)}
-						<span class="flex items-center gap-1" style={`color: var(--tone-${dueTone(due, clock.today)})`}>
+						<span class="due flex items-center gap-1" style={`color: var(--tone-${dueTone(due, clock.today)})`}>
 							<CalendarBlank size={12} />
 							{timeOnly && due.time ? formatTime(due.time) : formatDue(due, clock.today)}
 						</span>
@@ -229,7 +258,7 @@
 						</span>
 					{/if}
 					{#if showProject}
-						<span class="ml-auto flex shrink-0 items-center gap-1">
+						<span class="project ml-auto flex shrink-0 items-center gap-1">
 							{#if project}<ProjectGlyph {project} size={12} />{project.name}{#if section}{` / ${section.name}`}{/if}{:else}<Tray size={12} />Inbox{/if}
 						</span>
 					{/if}
@@ -267,6 +296,20 @@
 </div>
 
 <style>
+	/* One line: the meta sits at the right with the date last. Two lines: it starts under the title, date first. */
+	.text:global([data-inline]) .meta {
+		margin-top: 0;
+		justify-content: flex-end;
+	}
+
+	.text:global([data-inline]) .due {
+		order: 1;
+	}
+
+	.text:global([data-inline]) .project {
+		margin-left: 0;
+	}
+
 	.revealed {
 		background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 	}
