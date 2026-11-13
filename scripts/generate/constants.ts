@@ -1,4 +1,4 @@
-import { FAVICON_PATH } from '../../shared/links';
+import { APP_ORIGIN, FAVICON_PATH, TASK_PARAM } from '../../shared/links';
 import { FILE_KIND_COLORS, FILE_MAX_BYTES, FILE_PART_BYTES, FILE_PART_TYPE, IMAGE_LIMITS } from '../../shared/images';
 import { MIN_ORDER_GAP } from '../../shared/order';
 import { RAMBLE_FINAL_COMMIT_MS, RAMBLE_STOP_WAIT_MARGIN_MS } from '../../shared/ramble/protocol';
@@ -19,6 +19,8 @@ const CONSTANTS = {
 	rambleFinalCommitMs: RAMBLE_FINAL_COMMIT_MS,
 	rambleStopWaitMarginMs: RAMBLE_STOP_WAIT_MARGIN_MS,
 	faviconPath: FAVICON_PATH,
+	appOrigin: APP_ORIGIN,
+	taskParam: TASK_PARAM,
 };
 
 const typeName = (key: string) => key[0]!.toUpperCase() + key.slice(1);

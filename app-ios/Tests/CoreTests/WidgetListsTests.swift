@@ -232,6 +232,8 @@ import Testing
         }
         #expect(AppLink(try #require(URL(string: "procrastimate://task/abc"))) == .task(id: "abc"))
         #expect(AppLink(try #require(URL(string: "https://procrastimate.stf.lol/task/abc"))) == nil)
+        #expect(AppLink(try #require(URL(string: "https://procrastimate.stf.lol/inbox?task=abc"))) == .task(id: "abc"))
+        #expect(AppLink(try #require(URL(string: "https://procrastimate.stf.lol/s/abc"))) == nil)
     }
 
     @Test func aDividerHeadsTheFirstRowAfterToday() throws {

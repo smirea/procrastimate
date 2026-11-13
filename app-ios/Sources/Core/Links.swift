@@ -83,6 +83,19 @@ public enum Links {
     /// A link's icon, fetched by the server from the page the link opens. See `docs/decisions/link-previews.md`.
     public static let faviconPath = SharedConstants.faviconPath
 
+    /// The task a link opens, when it is the app's own `?task=<id>` URL on any route: on the production origin, or on
+    /// `here`, the origin the web app runs on.
+    public static func taskLinkId(_ href: String, _ here: String? = nil) -> String? {
+        guard let parts = URLComponents(string: href), let scheme = parts.scheme?.lowercased(),
+              let host = parts.host?.lowercased(), !host.isEmpty else { return nil }
+        let defaultPort = ["http": 80, "https": 443][scheme]
+        let port = parts.port.flatMap { $0 == defaultPort ? nil : ":\($0)" } ?? ""
+        let origin = "\(scheme)://\(host)\(port)"
+        guard origin == SharedConstants.appOrigin || origin == here else { return nil }
+        let id = parts.queryItems?.first { $0.name == SharedConstants.taskParam }?.value
+        return id?.isEmpty == false ? id : nil
+    }
+
 
     /// The pasted text, trimmed, when it is one bare web URL and nothing else, the paste that becomes a titled link.
     public static func pastedUrl(_ pasted: String) -> String? {

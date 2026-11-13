@@ -1,5 +1,10 @@
 {
 	"applinks": {
-		"details": [{ "appIDs": ["FNYFHG5SV7.com.stefan.procrastimate"], "components": [{ "/": "/s/*" }] }]
+		"details": [
+			{
+				"appIDs": ["FNYFHG5SV7.com.stefan.procrastimate"],
+				"components": [{ "/": "/s/*" }, { "/": "*", "?": { "task": "?*" } }]
+			}
+		]
 	}
 }

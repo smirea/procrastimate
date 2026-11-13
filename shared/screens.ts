@@ -1,4 +1,5 @@
 import type { AccessRow } from './db/schema.ts';
+import { TASK_PARAM } from './links.ts';
 import type { ListEntry } from './lists.ts';
 import type { NotificationTarget } from './notifications.ts';
 import { addDays, type DateKey, type Label, type Project, type Task } from './task.ts';
@@ -97,9 +98,6 @@ export function notificationHref(opens: NotificationTarget | null): string {
 			return screenPath({ kind: opens.kind, id: opens.id });
 	}
 }
-
-/** The query parameter that opens a task's details over the list. */
-export const TASK_PARAM = 'task';
 
 /** What quick add and Ramble start with. An event stands in for the date and the repeat. */
 export type ListDefaults = {

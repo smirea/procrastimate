@@ -1,12 +1,29 @@
 <script lang="ts">
-	import { linkify } from 'shared/links.ts';
+	import { page } from '$app/state';
+	import { linkify, taskLinkId } from 'shared/links.ts';
 	import type { Range } from 'shared/search.ts';
 	import Highlighted from './Highlighted.svelte';
 	import { faviconFailed, faviconSrc } from '../link-preview.svelte.ts';
+	import { sheets } from '../sheets.svelte.ts';
+	import { store } from '../store.svelte.ts';
+	import { toasts } from '../toasts.svelte.ts';
 
 	let { text, ranges = [] }: { text: string; ranges?: readonly Range[] } = $props();
 
 	const segments = $derived(linkify(text, ranges));
+
+	/**
+	 * The app's own task URL opens that task in place. A modified click, or a public link's page, which has no task
+	 * sheet or toasts, still gets a new tab.
+	 */
+	function open(e: MouseEvent, href: string) {
+		e.stopPropagation();
+		const id = taskLinkId(href, location.origin);
+		if (id === null || !store.loaded || page.route.id === '/s/[token]' || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+		e.preventDefault();
+		if (store.task(id)) sheets.openTask(id);
+		else toasts.show('Can’t find that task');
+	}
 </script>
 
 {#each segments as segment, i (i)}{@const icon = segment.href && faviconSrc(segment.href)}{#if segment.href}<a
@@ -14,7 +31,7 @@
 			target="_blank"
 			rel="noopener noreferrer"
 			class="link"
-			onclick={(e) => e.stopPropagation()}
+			onclick={(e) => open(e, segment.href!)}
 			onkeydown={(e) => e.stopPropagation()}
 			>{#if icon}<img
 					class="favicon"

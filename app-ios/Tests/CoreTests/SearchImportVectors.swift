@@ -44,6 +44,7 @@ private struct SearchNames: Decodable {
     case "linkify": return try json(Links.linkify(a(0), a(1, as: [Range<Int>]?.self) ?? []))
     case "pastedUrl": return try json(Links.pastedUrl(a(0)))
     case "titleLink": return try json(Links.titleLink(a(0), a(1), a(2), a(3)))
+    case "taskLinkId": return try json(Links.taskLinkId(a(0), a(1, as: String?.self)))
     default: throw unknown(fn)
     }
 }
