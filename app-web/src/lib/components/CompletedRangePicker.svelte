@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import CalendarDots from 'phosphor-svelte/lib/CalendarDots';
 	import CaretDown from 'phosphor-svelte/lib/CaretDown';
 	import Check from 'phosphor-svelte/lib/Check';
@@ -27,7 +28,7 @@
 	}
 </script>
 
-<Popover label="Completed when" align="end">
+<Popover {@attach feedback()} label="Completed when" align="end">
 	{#snippet trigger({ toggle })}
 		<button type="button" class="btn btn-quiet shrink-0" aria-label={`Completed ${completedRangeLabel(range, clock.today)}`} onclick={() => open(toggle)}>
 			<CalendarDots size={14} weight="bold" />{completedRangeLabel(range, clock.today)}<CaretDown size={12} weight="bold" />

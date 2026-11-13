@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// Every open task at one place, each naming its project, like a label screen. A saved place is its label's screen,

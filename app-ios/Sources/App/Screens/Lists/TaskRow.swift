@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// Where a row sits. A list row leaves once checked, with an undo toast. A subtask row in its parent's details stays

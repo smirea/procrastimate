@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// The task quick add just saved, shown as its list row without the checkbox: above quick add, which keeps the list

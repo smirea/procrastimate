@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// A task's comments in its details: each with its author, time, and linked text, the user's own with edit and delete,

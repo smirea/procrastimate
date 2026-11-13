@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import type { Snippet } from 'svelte';
 	import Plus from 'phosphor-svelte/lib/Plus';
 	import type { Screen } from 'shared/screens.ts';
@@ -32,7 +33,7 @@
 	} = $props();
 </script>
 
-<div class="group mb-1 flex items-center justify-between gap-2 border-b border-ink/[0.07] pr-1 pb-1.5 pl-2">
+<div {@attach feedback()} class="group mb-1 flex items-center justify-between gap-2 border-b border-ink/[0.07] pr-1 pb-1.5 pl-2">
 	{#if title}
 		{@render title()}
 	{:else}

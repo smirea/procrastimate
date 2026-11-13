@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// A subtask typed into quick add, held until the parent saves. It keeps its text, so its own plain text toggle can

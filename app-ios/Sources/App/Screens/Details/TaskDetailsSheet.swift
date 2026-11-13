@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// Task details: a sheet with a `NavigationStack`, so opening a subtask pushes its details. A subtask opened directly,

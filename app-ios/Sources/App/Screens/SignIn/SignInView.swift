@@ -1,6 +1,6 @@
 import AuthenticationServices
 import CryptoKit
-import Feetback
+import Feedback
 import SwiftUI
 
 struct SignInView: View {

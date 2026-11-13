@@ -1,6 +1,6 @@
 import Core
 import Observation
-import Feetback
+import Feedback
 import SwiftUI
 
 @MainActor @Observable

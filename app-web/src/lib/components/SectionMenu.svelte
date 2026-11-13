@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import type { Snippet } from 'svelte';
 	import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
 	import Trash from 'phosphor-svelte/lib/Trash';
@@ -26,7 +27,7 @@
 	let confirmingDelete = $state(false);
 </script>
 
-<Popover label="Section actions">
+<Popover {@attach feedback()} label="Section actions">
 	{#snippet trigger({ open, toggle })}
 		<h2 class="min-w-0">
 			<button

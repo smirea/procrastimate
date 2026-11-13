@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// Ramble: a fullscreen drawer that listens, shows the waveform of the real mic level, and lets the spoken tasks,

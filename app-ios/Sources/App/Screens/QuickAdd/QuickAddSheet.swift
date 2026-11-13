@@ -1,6 +1,6 @@
 import Core
 import ImageIO
-import Feetback
+import Feedback
 import SwiftUI
 import UIKit
 

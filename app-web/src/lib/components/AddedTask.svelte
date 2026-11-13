@@ -13,6 +13,7 @@
 </script>
 
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { untrack } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -88,7 +89,7 @@
 	}
 </script>
 
-<div class="added grid" data-placement={placement}>
+<div {@attach feedback()} class="added grid" data-placement={placement}>
 	{#each shown as entry (entry.id)}
 		{@const task = store.task(entry.id)}
 		<!-- An untitled task expanded into details has nothing to show until it is named. -->

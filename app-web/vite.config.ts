@@ -6,6 +6,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import adapter from '@sveltejs/adapter-static';
 import tailwindcss from '@tailwindcss/vite';
 import { sentrySvelteKit } from '@sentry/sveltekit/vite';
+import { feedbackEngine } from '@stefan.inc/feedback-engine/vite';
 import { appVersion } from '../scripts/app-version.mts';
 import { sentryRelease } from '../scripts/sentry-release.mts';
 import { parseSentryTarget, SENTRY_DSN } from '../shared/sentry.ts';
@@ -83,6 +84,7 @@ export default defineConfig({
 		tailwindcss(),
 		sveltekit({
 			adapter: adapter({ fallback: 'index.html' }),
+			preprocess: [feedbackEngine()],
 		}),
 	],
 });

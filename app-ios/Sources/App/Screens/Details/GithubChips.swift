@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// The task's GitHub issues and pull requests, each with its live title and state, opening GitHub on tap, and a chip

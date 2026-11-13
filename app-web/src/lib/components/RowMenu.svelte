@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { untrack } from 'svelte';
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -121,6 +122,7 @@
 
 {#if opened && task && offered}
 	<div
+		{@attach feedback()}
 		bind:this={menu}
 		{@attach show}
 		popover="manual"

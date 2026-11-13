@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// Search results under Browse's search field. Arrow keys on a hardware keyboard move the selection and Return opens it.

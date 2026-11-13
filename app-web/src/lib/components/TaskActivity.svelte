@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { onMount } from 'svelte';
 	import { fly, slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -57,7 +58,7 @@
 </script>
 
 {#if shown}
-	<section class="flex flex-col gap-2 px-2" aria-label="Activity" transition:slide={motion({ duration: 180, easing: cubicOut })}>
+	<section {@attach feedback()} class="flex flex-col gap-2 px-2" aria-label="Activity" transition:slide={motion({ duration: 180, easing: cubicOut })}>
 		{#if createdBy || completedBy}
 			<p class="flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-muted">
 				{#if createdBy}<span class="inline-flex items-center gap-1">Created by <PersonName person={createdBy} you class="text-ink" /></span>{/if}

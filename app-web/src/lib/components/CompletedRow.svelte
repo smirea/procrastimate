@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import Check from 'phosphor-svelte/lib/Check';
 	import ProjectGlyph from './ProjectGlyph.svelte';
@@ -48,6 +49,7 @@
 </script>
 
 <div
+	{@attach feedback()}
 	class="group flex items-start gap-3 rounded-2xl px-2 hover:bg-surface/60"
 	data-task={task.title}
 	{@attach lookup.menus && taskMenu(() => ({ task, rolled, toggle: reopen }))}

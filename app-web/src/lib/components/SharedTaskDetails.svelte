@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import X from 'phosphor-svelte/lib/X';
@@ -56,6 +57,7 @@
 </script>
 
 <div
+	{@attach feedback()}
 	class="relative flex min-h-0 flex-1 flex-col"
 	in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}
 	role="group"

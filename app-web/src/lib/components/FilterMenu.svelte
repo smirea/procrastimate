@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import Check from 'phosphor-svelte/lib/Check';
 	import Flag from 'phosphor-svelte/lib/Flag';
 	import FunnelSimple from 'phosphor-svelte/lib/FunnelSimple';
@@ -42,7 +43,7 @@
 {/snippet}
 
 {#if options.people.length || options.priorities.length || active}
-	<Popover label="Filters">
+	<Popover {@attach feedback(undefined, () => ({ list, filter }))} label="Filters">
 		{#snippet trigger({ toggle })}
 			<button
 				type="button"

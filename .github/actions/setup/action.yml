@@ -11,3 +11,9 @@ runs:
     - name: Install dependencies
       shell: bash
       run: bun install --frozen-lockfile
+
+    # app-web asks for feedback-engine at `latest`, which the lockfile alone would freeze, so every build and deploy
+    # takes the newest release.
+    - name: Take the latest feedback-engine
+      shell: bash
+      run: bun update --filter app-web @stefan.inc/feedback-engine

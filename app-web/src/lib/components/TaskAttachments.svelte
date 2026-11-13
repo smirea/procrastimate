@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { flip } from 'svelte/animate';
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -31,7 +32,7 @@
 </script>
 
 {#if task.attachments.length || adding || editable}
-	<section aria-label="Attachments">
+	<section {@attach feedback()} aria-label="Attachments">
 		<ul class="flex flex-wrap gap-2" aria-label={`Attachments of ${task.title}`}>
 			{#each task.attachments as attachment (attachment.id)}
 				<li class="relative" animate:flip={motion({ duration: 220, easing: cubicOut })} in:scale={motion({ start: 0.85, duration: 220, easing: cubicOut })}>

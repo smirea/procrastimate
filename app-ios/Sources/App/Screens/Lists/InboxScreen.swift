@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// A dated list by day, overdue first: Inbox lists everything due, This week through Sunday, and Tomorrow only

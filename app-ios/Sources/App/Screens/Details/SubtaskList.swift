@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// A task's subtasks in its details, as list rows placed as subtasks, each dragging into order by its handle.

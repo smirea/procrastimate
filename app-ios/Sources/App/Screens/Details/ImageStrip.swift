@@ -1,6 +1,6 @@
 import Core
 import QuickLook
-import Feetback
+import Feedback
 import SwiftUI
 
 /// A task's attachments in details: image thumbnails that open full screen, file tiles that open in Quick Look, and an

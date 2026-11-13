@@ -1,6 +1,6 @@
 import Core
 import MapKit
-import Feetback
+import Feedback
 import SwiftUI
 
 /// The place chip and its sheet: an Apple Maps search with the Arrive, Leave, or During menu beside the field.

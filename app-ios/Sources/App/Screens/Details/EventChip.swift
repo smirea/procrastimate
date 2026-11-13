@@ -1,6 +1,6 @@
 import Core
 import EventKit
-import Feetback
+import Feedback
 import SwiftUI
 
 /// The calendar event chip and its sheet: upcoming events, which moment of the event the task is on, and for a

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import Key from 'phosphor-svelte/lib/Key';
@@ -54,7 +55,7 @@
 	}
 </script>
 
-<section class="flex flex-col gap-1.5" aria-label="Personal token">
+<section {@attach feedback()} class="flex flex-col gap-1.5" aria-label="Personal token">
 	<h3 class="heading">Personal token</h3>
 	<p class="px-1.5 text-[12px] text-muted">Acts as you through the API, for your own scripts and launchers. What it adds is yours.</p>
 	<div class="flex items-center gap-1 px-1.5 py-0.5">

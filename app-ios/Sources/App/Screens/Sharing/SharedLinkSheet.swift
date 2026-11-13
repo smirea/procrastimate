@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// What a public share link shows: the shared project, label, or task with its open tasks, read only and without

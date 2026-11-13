@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import Flag from 'phosphor-svelte/lib/Flag';
 	import Check from 'phosphor-svelte/lib/Check';
 	import { DEFAULT_PRIORITY, type Priority } from 'shared/task.ts';
@@ -15,7 +16,7 @@
 	const levels: Priority[] = [1, 2, 3, 4];
 </script>
 
-<div class="flex items-center">
+<div {@attach feedback()} class="flex items-center">
 	<Popover label="Priority" align={iconOnly ? 'end' : 'start'} bind:open>
 		{#snippet trigger({ toggle })}
 			<button

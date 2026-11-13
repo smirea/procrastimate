@@ -1,5 +1,5 @@
 import Core
-import Feetback
+import Feedback
 import SwiftUI
 
 /// A completed task: when it was completed, who did it when that was someone else, and a filled checkbox that reopens

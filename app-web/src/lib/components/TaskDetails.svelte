@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { onDestroy, untrack } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -173,6 +174,7 @@
 <svelte:window onpagehide={commitNotes} />
 <svelte:document onvisibilitychange={() => document.visibilityState === 'hidden' && commitNotes()} />
 <div
+	{@attach feedback()}
 	class="relative flex min-h-0 flex-1 flex-col"
 	in:fly={motion({ x: slideFrom[arrival], duration: arrival === 'none' ? 0 : 220, easing: cubicOut })}
 	{onpaste}

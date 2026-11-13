@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { untrack } from 'svelte';
 	import Repeat from 'phosphor-svelte/lib/Repeat';
 	import Check from 'phosphor-svelte/lib/Check';
@@ -56,7 +57,7 @@
 	const toggleDay = (day: Weekday) => set(toggleWeekday(day, recurrence, anchor));
 </script>
 
-<Popover label="Repeat" bind:open>
+<Popover {@attach feedback()} label="Repeat" bind:open>
 	{#snippet trigger({ toggle })}
 		<button
 			type="button"

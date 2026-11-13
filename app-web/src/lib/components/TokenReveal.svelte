@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { fly, slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import Check from 'phosphor-svelte/lib/Check';
@@ -25,7 +26,7 @@
 	}
 </script>
 
-<div class="token mx-1.5 mb-1 flex flex-col gap-1.5 rounded-xl p-2" transition:slide={motion({ duration: 200, easing: cubicOut })}>
+<div {@attach feedback()} class="token mx-1.5 mb-1 flex flex-col gap-1.5 rounded-xl p-2" transition:slide={motion({ duration: 200, easing: cubicOut })}>
 	<p class="text-[12px] text-muted">Copy it now. It will not be shown again.</p>
 	<div class="flex items-center gap-1.5">
 		{#if made === null}

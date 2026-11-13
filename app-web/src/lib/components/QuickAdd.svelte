@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { fly, scale, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
@@ -326,7 +327,7 @@
 	</span>
 {/snippet}
 
-<Sheet label="Quick add" desktop="scale" {onpaste} {ondragover} {ondrop} class="flex-col md:top-[14vh] md:left-1/2 md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:rounded-panel">
+<Sheet {@attach feedback()} label="Quick add" desktop="scale" {onpaste} {ondragover} {ondrop} class="flex-col md:top-[14vh] md:left-1/2 md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2 md:rounded-panel">
 	{#if mobile.current}
 		<div
 			class="absolute inset-x-0 -top-3 z-10 grid h-11 cursor-grab touch-none place-items-center active:cursor-grabbing"

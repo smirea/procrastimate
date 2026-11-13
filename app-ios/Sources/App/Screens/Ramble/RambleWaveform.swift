@@ -1,5 +1,5 @@
 import Foundation
-import Feetback
+import Feedback
 import SwiftUI
 import Synchronization
 

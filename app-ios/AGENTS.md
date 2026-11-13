@@ -2,7 +2,7 @@
 
 - Language: Swift 6, SwiftUI, iOS 27 only (the latest major, no fallbacks), iPhone first (iPad runs the same app). No macOS app.
 - Keep dependencies at zero unless `docs/decisions/ios.md` says otherwise.
-- Every build opens Feetback's feedback editor on shake (`Feetback.enable()` in `ProcrastimateApp.swift`). When you build or change a screen, sheet, row, or card, end its `body` with `.feedback(self)` and follow Feetback's accessibility skill: built-in accessibility first, then tags until a single tap on any region selects it. Read the latest with `gh api repos/smirea/feedback-engine/contents/skills/feetback-accessibility/SKILL.md -H 'Accept: application/vnd.github.raw'`. Trigger it on a simulator with `xcrun simctl notify_post <udid> com.apple.UIKit.SimulatorShake`.
+- Every build shows Feedback's Add Feedback pill on shake, which opens its editor (`Feedback.enable()` in `ProcrastimateApp.swift`). When you build or change a screen, sheet, row, or card, end its `body` with `.feedback(self)` and follow Feedback's accessibility skill: built-in accessibility first, then tags until a single tap on any region selects it. Read the latest with `gh api repos/smirea/feedback-engine/contents/skills/feedback-accessibility/SKILL.md -H 'Accept: application/vnd.github.raw'`. Trigger it on a simulator with `xcrun simctl notify_post <udid> com.apple.UIKit.SimulatorShake`.
 - Read `docs/decisions/ios.md` and `docs/ios-parity.md` before changing anything here. Each slice edits only its own parity rows and screen folders.
 
 # Layout

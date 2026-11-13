@@ -1,6 +1,6 @@
 import Core
 import EventKit
-import Feetback
+import Feedback
 import SwiftUI
 
 @main
@@ -72,11 +72,11 @@ struct ProcrastimateApp: App {
         _auth = State(initialValue: auth)
         _sync = State(initialValue: sync)
         _attachments = State(initialValue: attachments)
-        Feetback.enable()
-        Feetback.context("Session") { (api: AppEnvironment.apiURL.absoluteString, signedIn: auth.signedIn, user: Session.userID) }
-        Feetback.context("Sync") { (status: sync.engine.status, pendingWrites: sync.engine.pending) }
-        Feetback.context("Navigation") { (tab: navigator.tab, route: navigator.currentRoute, sheet: navigator.sheet) }
-        Feetback.context("Store") {
+        Feedback.enable()
+        Feedback.context("Session") { (api: AppEnvironment.apiURL.absoluteString, signedIn: auth.signedIn, user: Session.userID) }
+        Feedback.context("Sync") { (status: sync.engine.status, pendingWrites: sync.engine.pending) }
+        Feedback.context("Navigation") { (tab: navigator.tab, route: navigator.currentRoute, sheet: navigator.sheet) }
+        Feedback.context("Store") {
             (tasks: store.allTasks.count, projects: store.projects.count, labels: store.labels.count, spaces: store.spaces.count)
         }
     }

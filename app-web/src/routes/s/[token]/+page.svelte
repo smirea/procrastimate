@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -49,7 +50,7 @@
 <svelte:head><title>{title} · ProcrastiMate</title></svelte:head>
 <svelte:window onkeydown={(e) => e.key === 'Escape' && (opened = null)} />
 
-<main class="mx-auto min-h-dvh max-w-3xl px-4 pt-10 pb-24 md:px-8">
+<main {@attach feedback('SharedLinkScreen')} class="mx-auto min-h-dvh max-w-3xl px-4 pt-10 pb-24 md:px-8">
 	{#if status.kind === 'ready' && view}
 		<section in:fly={motion({ y: 6, duration: 220, easing: cubicOut })}>
 			<header class="mb-5">

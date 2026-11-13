@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { onMount } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import { slide } from 'svelte/transition';
@@ -75,7 +76,7 @@
 	}
 </script>
 
-<section class="flex flex-col gap-1.5" aria-label="AI accounts">
+<section {@attach feedback()} class="flex flex-col gap-1.5" aria-label="AI accounts">
 	<h3 class="heading">AI accounts</h3>
 	{#if loaded && accounts.rows.length === 0}
 		<p class="px-1.5 text-[12px] text-muted">An AI account can read and edit all your tasks with its own token.</p>
