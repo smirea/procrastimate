@@ -48,22 +48,7 @@ struct TaskRow<Trailing: View>: View {
                     .accessibilityAddTraits(done ? .isSelected : [])
                     .disabled(offered.toggle == nil)
             }
-            VStack(alignment: .leading, spacing: 2) {
-                TitleFlow(
-                    title: Links.text(task.title),
-                    labels: labels.map { TitleFlow.Chip(text: AttributedString($0.name), color: $0.color) },
-                    done: checking || done,
-                    lineLimit: isSubtask ? nil : 2
-                )
-                .font(.body)
-                if !task.notes.isEmpty {
-                    Links.text(task.notes, icon: 12).font(.footnote).foregroundStyle(.muted).lineLimit(1)
-                }
-                if !pending.isEmpty {
-                    PendingSubtasks(titles: pending.map(\.title))
-                }
-                details
-            }
+            text
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .contentShape(.rect)
@@ -99,6 +84,46 @@ struct TaskRow<Trailing: View>: View {
                 .padding(.horizontal, -8)
                 .animation(.easeOut(duration: 0.6), value: navigator.revealed == task.id)
         }
+    }
+
+    /// One line when the title and its details fit side by side, the details right-aligned with the date last. Otherwise
+    /// the details go under the title, date first. Notes or open subtasks always take their own lines.
+    @ViewBuilder private var text: some View {
+        if hasDetails, task.notes.isEmpty, pending.isEmpty {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    title(lineLimit: 1)
+                    Spacer(minLength: 0)
+                    details(dateLast: true)
+                }
+                stacked
+            }
+        } else {
+            stacked
+        }
+    }
+
+    private var stacked: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            title(lineLimit: isSubtask ? nil : 2)
+            if !task.notes.isEmpty {
+                Links.text(task.notes, icon: 12).font(.footnote).foregroundStyle(.muted).lineLimit(1)
+            }
+            if !pending.isEmpty {
+                PendingSubtasks(titles: pending.map(\.title))
+            }
+            details(dateLast: false)
+        }
+    }
+
+    private func title(lineLimit: Int?) -> some View {
+        TitleFlow(
+            title: Links.text(task.title),
+            labels: labels.map { TitleFlow.Chip(text: AttributedString($0.name), color: $0.color) },
+            done: checking || done,
+            lineLimit: lineLimit
+        )
+        .font(.body)
     }
 
     /// A list row's checkbox fills on the first frame, then the row leaves once the fill has played.
@@ -165,22 +190,26 @@ struct TaskRow<Trailing: View>: View {
             || commentBadge != nil || createdBy != nil
     }
 
-    @ViewBuilder private var details: some View {
+    @ViewBuilder private var when: some View {
+        if let event = task.event, !done {
+            EventDetail(
+                label: Triggers.eventLabel(event, today, in: store.timeZone),
+                series: event.series,
+                tone: due.map { Format.dueTone($0, today).color } ?? .muted
+            )
+        } else if let due, !(timeOnly && due.time == nil) {
+            Detail(
+                systemImage: "calendar",
+                text: timeOnly ? Format.formatTime(due.time!) : Format.formatDue(due, today)
+            )
+            .foregroundStyle(Format.dueTone(due, today).color)
+        }
+    }
+
+    @ViewBuilder private func details(dateLast: Bool) -> some View {
         if hasDetails {
             HStack(spacing: 10) {
-                if let event = task.event, !done {
-                    EventDetail(
-                        label: Triggers.eventLabel(event, today, in: store.timeZone),
-                        series: event.series,
-                        tone: due.map { Format.dueTone($0, today).color } ?? .muted
-                    )
-                } else if let due, !(timeOnly && due.time == nil) {
-                    Detail(
-                        systemImage: "calendar",
-                        text: timeOnly ? Format.formatTime(due.time!) : Format.formatDue(due, today)
-                    )
-                    .foregroundStyle(Format.dueTone(due, today).color)
-                }
+                if !dateLast { when }
                 if let location = task.location {
                     Detail(systemImage: "mappin.and.ellipse", text: Triggers.formatLocation(location))
                 }
@@ -231,9 +260,10 @@ struct TaskRow<Trailing: View>: View {
                         .accessibilityLabel("Subtask of \(parent.title)")
                 }
                 if showProject {
-                    Spacer(minLength: 0)
+                    if !dateLast { Spacer(minLength: 0) }
                     Detail(systemImage: project?.systemImage ?? "tray", text: store.placeName(task.projectId, task.sectionId))
                 }
+                if dateLast { when }
             }
             .font(.caption)
             .foregroundStyle(.muted)
