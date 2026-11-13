@@ -16,7 +16,7 @@
 		"@orpc/client": "2.0.0-beta.43",
 		"@orpc/contract": "2.0.0-beta.43",
 		"@orpc/openapi": "2.0.0-beta.43",
-		"@playwright/test": "^1.64.0",
+		"@playwright/test": "^1.65.0",
 		"@sentry/sveltekit": "11.8.0",
 		"@sqlite.org/sqlite-wasm": "^3.54.1-build1",
 		"@sveltejs/adapter-static": "^4.0.0",
