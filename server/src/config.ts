@@ -16,6 +16,10 @@ const SETTINGS = {
 	GEMINI_API_KEY: 'secret',
 	/** Reads GitHub issues and pull requests, private ones included. Without it public ones are read signed out. */
 	GITHUB_TOKEN: 'secret',
+	/** Files the Feedback editor's posts as issues in this repository; the `smirea-ai` account's `gh` token, which can write. */
+	FEEDBACK_GITHUB_TOKEN: 'secret',
+	/** The one user whose feedback becomes GitHub issues: Stefan's Better Auth id. */
+	FEEDBACK_GITHUB_USER_ID: 'secret',
 	GOOGLE_CLIENT_ID: 'secret',
 	GOOGLE_CLIENT_SECRET: 'secret',
 	GOOGLE_IOS_CLIENT_ID: 'secret',
@@ -88,6 +92,8 @@ export type Config = {
 	gemini: { apiKey: string } | null;
 	/** A token for GitHub's API. Null reads public repos signed out, and private ones not at all. */
 	githubToken: string | null;
+	/** Feedback filed as GitHub issues (`feedback-issues.ts`), for `userId` alone. Null turns the Share entry off. */
+	feedbackGithub: { token: string; userId: string } | null;
 	/** Reporting to `procrastimate-worker`, on only where the deploy passes `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`. */
 	sentry: SentryTarget | null;
 };
@@ -133,6 +139,8 @@ export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Co
 
 	const vapidKeys = group(['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY'], true);
 	if (vapidKeys) problems.push(...vapidProblems(vapidKeys.VAPID_PUBLIC_KEY, vapidKeys.VAPID_PRIVATE_KEY));
+
+	const feedbackGithub = group(['FEEDBACK_GITHUB_TOKEN', 'FEEDBACK_GITHUB_USER_ID'], false);
 
 	const googleWeb = group(['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'], false);
 
@@ -182,6 +190,10 @@ export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Co
 					: null,
 		gemini: geminiKey ? { apiKey: geminiKey } : null,
 		githubToken: read('GITHUB_TOKEN'),
+		feedbackGithub: feedbackGithub && {
+			token: feedbackGithub.FEEDBACK_GITHUB_TOKEN,
+			userId: feedbackGithub.FEEDBACK_GITHUB_USER_ID,
+		},
 		sentry: sentry.target,
 	};
 }

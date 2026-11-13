@@ -102,7 +102,7 @@ export type Schema = {
 
 type Operation = {
 	operationId: string;
-	requestBody?: { content: { 'application/json': { schema: Schema } } };
+	requestBody?: { content: { 'application/json'?: { schema: Schema } } };
 	responses: Record<string, { content?: { 'application/json'?: { schema: Schema } } }>;
 };
 
@@ -928,7 +928,9 @@ export function swiftModule(input: Input): string {
 	for (const [path, methods] of Object.entries(input.paths).sort(([a], [b]) => a.localeCompare(b))) {
 		for (const [method, operation] of Object.entries(methods)) {
 			const name = pascal(operation.operationId);
-			const body = operation.requestBody?.content['application/json'].schema;
+			// A multipart body, such as the Feedback editor's post, is sent by a package, never by the app's own client.
+			if (operation.requestBody && !operation.requestBody.content['application/json']) continue;
+			const body = operation.requestBody?.content['application/json']?.schema;
 			const success = Object.entries(operation.responses).find(([status]) => status.startsWith('2'))?.[1];
 			const output = success?.content?.['application/json']?.schema;
 			const inputType = body ? generator.type(body, `${name}Input`) : 'NoInput';
