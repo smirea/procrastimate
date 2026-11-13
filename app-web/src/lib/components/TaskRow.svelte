@@ -4,7 +4,8 @@
 	/**
 	 * The browser decides whether the title and meta share a line, since a wrapping flex row breaks on their natural
 	 * widths. This only reads where the meta landed and flips the date's order and the alignment, which moves nothing in
-	 * width, so it can't oscillate. Any wrap change also changes the text's height, so one observer on it suffices.
+	 * width, so it can't oscillate. The text's size catches a wrap, but meta that appears or grows within the title's
+	 * line changes no height, so the meta is observed too.
 	 */
 	function sync(text: HTMLElement) {
 		const title = text.querySelector<HTMLElement>('[data-row-title]');
@@ -14,12 +15,13 @@
 		else delete text.dataset.inline;
 	}
 
-	function fit(text: HTMLElement) {
+	/** Observes the row's text or its meta, and syncs the text either way. */
+	function fit(el: HTMLElement) {
 		observer ??= new ResizeObserver((entries) => {
-			for (const entry of entries) sync(entry.target as HTMLElement);
+			for (const { target } of entries) sync((target.hasAttribute('data-row-meta') ? target.parentElement : target) as HTMLElement);
 		});
-		observer.observe(text);
-		return () => observer?.unobserve(text);
+		observer.observe(el);
+		return () => observer?.unobserve(el);
 	}
 </script>
 
@@ -172,7 +174,7 @@
 				</ul>
 			{/if}
 			{#if due || task.recurrence || task.reminders.length || task.attachments.length || task.github.length || task.location || progress || commentBadge || parent || fromMemo || other || showProject}
-				<div class="meta mt-0.5 flex min-w-0 grow flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted" data-row-meta>
+				<div class="meta mt-0.5 flex min-w-0 grow flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-4 text-muted" data-row-meta {@attach fit}>
 					{#if task.event && event && due}
 						<span
 							class="due flex min-w-0 items-center gap-1"
