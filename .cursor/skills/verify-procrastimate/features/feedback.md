@@ -6,6 +6,7 @@ Feedback freezes the screen into an editor, in every build on both clients. Stef
 
 - `shake-open` (iOS) drops an `Add Feedback` pill on a shake; tapping it within 5 s opens the editor over the current screen, with the whole scrolling list captured at full length.
 - `click-open` (web) opens the editor on Alt+Meta+click, with the clicked element selected and the app never getting the click.
+- `hold-open` (web) captures the screen at once when three fingers rest on it for 600 ms. A quicker three-finger tap, or fingers that slide, open nothing, and a finger that landed on a row first opens no row menu.
 - `countdown-open` (web) is Settings' `Give feedback`: Settings closes, a `Feedback in 5` pill counts down, then the page is captured.
 - `tap-select` selects the smallest tagged component or accessibility element under a tap, and shows its parent, its `file:line`, and its data under the screenshot.
 - `export` shares the annotated image, the JSON report, or both in a ZIP. The JSON's `context` lists `Session`, `Sync`, `Navigation`, and `Store`.
@@ -15,11 +16,13 @@ Feedback freezes the screen into an editor, in every build on both clients. Stef
 ## How to get to it (user POV)
 
 - iOS: shake the iPhone on any screen, then tap `Add Feedback`. In the simulator, use **Device › Shake**.
-- Web: Option+Command+click anything, or on a phone open Settings and press `Give feedback`.
+- Web: Option+Command+click anything. On a phone, hold three fingers on the screen, or open Settings and press `Give feedback`.
 
 ## Driving it with Playwright (web)
 
-`app-web/e2e/feedback.e2e.ts` covers `click-open`, `tap-select`, `post-to-procrastimate`, and `countdown-open`: an Alt+Meta+click on a row's title selects `Text "<title>"`, `Select parent` steps to `TaskRow`, and `Share`, `ProcrastiMate`, `Add` creates a task in the Inbox with an image and `feedback.json`. `__feedbackEngine.present()` opens the editor without a click, and `__feedbackEngine.lastExport` holds the last export's files.
+`app-web/e2e/feedback.e2e.ts` covers `click-open`, `tap-select`, `post-to-procrastimate`, `countdown-open`, and `hold-open`: an Alt+Meta+click on a row's title selects `Text "<title>"`, `Select parent` steps to `TaskRow`, and `Share`, `ProcrastiMate`, `Add` creates a task in the Inbox with an image and `feedback.json`. `__feedbackEngine.present()` opens the editor without a click, and `__feedbackEngine.lastExport` holds the last export's files.
+
+The `phone` test in the same file holds three touch points through CDP's `Input.dispatchTouchEvent` in a `hasTouch` Chromium context: one on a row first, then all three. Playwright's WebKit has no multi-touch, so iOS Safari is checked by hand: on the phone, hold three fingers on any list for a moment and the editor opens over it.
 
 ## Driving it with agent-device and simctl (iOS)
 

@@ -24,7 +24,7 @@ Edit a task lets Stefan open a task and change its title, notes, due date, prior
 - Web: press Enter with a task selected. Planned: task selection by keyboard is not built yet.
 - iOS: tap a task in any list. The details sheet slides up.
 - Postpone on web: hover a row and choose the calendar-plus `Postpone <title>` button. On touch screens the button is always visible, so a phone taps it directly. The due picker opens below the button as a dialog named `Postpone <title>`, its tiles reading each option with its weekday.
-- Row menu on web: right click a row, long press it on touch, or focus it and press Shift+F10. Its `Postpone` item opens the same due picker where the menu was.
+- Row menu on web: right click a row, long press it with one finger on touch, or focus it and press Shift+F10. A second finger cancels the press, and three fingers held open Feedback instead (see [Give feedback](./feedback.md)). Its `Postpone` item opens the same due picker where the menu was.
 - Postpone on iOS: swipe a row left and tap `Postpone`, or long press it and choose `Postpone`. Quick add's due picker opens as a popover on the row, its tiles named by option (`In 2 days`, `Weekend`) with the weekday as their value. In an XCUITest a label such as `Tomorrow` can also match a heading, so tap one that shows once. The row's context menu also has `Delete`.
 
 ## Driving it with control-ui and the simulator

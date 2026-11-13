@@ -1,4 +1,5 @@
 import { tick } from 'svelte';
+import { fingers } from './fingers.ts';
 
 /** A mouse lifts a held row once it moves this far, so a click still activates it. */
 const MOUSE_SLOP = 4;
@@ -93,7 +94,7 @@ export class Reorder {
 			event.preventDefault();
 			this.#lift();
 		} else if (touch) {
-			this.#press.timer = window.setTimeout(() => this.#lift(), LONG_PRESS_MS);
+			this.#press.timer = window.setTimeout(() => (fingers() > 1 ? this.#release() : this.#lift()), LONG_PRESS_MS);
 		}
 	}
 

@@ -29,7 +29,7 @@ Projects let Stefan group tasks, open a project to see its tasks, and move a tas
 - Web: pick a project in quick add or in task details, or type `#Name` in quick add or the task details title.
 - Web: type `#` in quick add or the task details title to open project suggestions above the field.
 - Web: use `Project actions` in a project's header to rename or delete it, or to pick its icon from the `Project icon` grid.
-- Web: drag a project in the sidebar with the mouse, or long-press then drag on touch. With a project link focused, Alt+Up and Alt+Down move it.
+- Web: drag a project in the sidebar with the mouse, or long-press with one finger then drag on touch (a second finger cancels the lift). With a project link focused, Alt+Up and Alt+Down move it.
 - iOS: long-press a project in Browse and drag it.
 - iOS: open the Browse tab. `Add project` in the Projects header creates one.
 - iOS: use `Project actions` in a project's toolbar to rename or delete it, or its `Icon` submenu to pick an icon.

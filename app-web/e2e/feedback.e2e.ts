@@ -51,3 +51,37 @@ test('Give feedback in Settings closes it and counts down to a capture', async (
 	await page.getByRole('button', { name: 'Close' }).click();
 	await expect(editor(page)).toBeHidden();
 });
+
+test.describe('phone', () => {
+	test.use({ viewport: { width: 393, height: 852 }, hasTouch: true, isMobile: true });
+
+	test('a three-finger hold opens Feedback, even with a finger on a row, and a quick three-finger tap does not', async ({
+		app,
+		page,
+	}) => {
+		const title = unique('Oat milk');
+		await app.add(title);
+		const cdp = await page.context().newCDPSession(page);
+		const box = (await app.row(title).boundingBox())!;
+		const onRow = { x: box.x + box.width / 2, y: box.y + box.height / 2, id: 1 };
+		const fingers = [onRow, { x: 120, y: 500, id: 2 }, { x: 260, y: 500, id: 3 }];
+		const touch = (type: 'touchStart' | 'touchEnd', touchPoints: typeof fingers) =>
+			cdp.send('Input.dispatchTouchEvent', { type, touchPoints });
+
+		await touch('touchStart', fingers);
+		await page.waitForTimeout(150);
+		await touch('touchEnd', []);
+		await page.waitForTimeout(900);
+		await expect(editor(page)).toBeHidden();
+
+		// The first finger lands on the row alone, as a real hand's does, and the row menu's own hold must stand down.
+		await touch('touchStart', [onRow]);
+		await touch('touchStart', fingers);
+		await editor(page).waitFor({ timeout: 5000 });
+		await touch('touchEnd', []);
+		await expect(page.getByRole('menu', { name: title })).toHaveCount(0);
+		await expect(app.details()).toBeHidden();
+		await page.getByRole('button', { name: 'Close' }).tap();
+		await expect(editor(page)).toBeHidden();
+	});
+});
