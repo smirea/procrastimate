@@ -743,6 +743,104 @@
 				"A"
 			],
 			"output": null
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › \"https://procrastimate.stf.lol/inbox?task=t1\" opens \"t1\"",
+			"input": [
+				"https://procrastimate.stf.lol/inbox?task=t1"
+			],
+			"output": "t1"
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › \"https://procrastimate.stf.lol/projects/p1?task=t%201&x=2\" opens \"t 1\"",
+			"input": [
+				"https://procrastimate.stf.lol/projects/p1?task=t%201&x=2"
+			],
+			"output": "t 1"
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › \"https://PROCRASTIMATE.stf.lol/today?x=1&task=77346556-ea32-4070-a557-486df38f58f5\" opens \"77346556-ea32-4070-a557-486df38f58f5\"",
+			"input": [
+				"https://PROCRASTIMATE.stf.lol/today?x=1&task=77346556-ea32-4070-a557-486df38f58f5"
+			],
+			"output": "77346556-ea32-4070-a557-486df38f58f5"
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › \"https://procrastimate.stf.lol/inbox?task=\" opens null",
+			"input": [
+				"https://procrastimate.stf.lol/inbox?task="
+			],
+			"output": null
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › \"https://procrastimate.stf.lol/inbox\" opens null",
+			"input": [
+				"https://procrastimate.stf.lol/inbox"
+			],
+			"output": null
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › \"https://procrastimate.stf.lol/s/abc\" opens null",
+			"input": [
+				"https://procrastimate.stf.lol/s/abc"
+			],
+			"output": null
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › \"http://procrastimate.stf.lol/inbox?task=t1\" opens null",
+			"input": [
+				"http://procrastimate.stf.lol/inbox?task=t1"
+			],
+			"output": null
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › \"https://other.dev/inbox?task=t1\" opens null",
+			"input": [
+				"https://other.dev/inbox?task=t1"
+			],
+			"output": null
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › \"https://procrastimate.stf.lol.evil.com/inbox?task=t1\" opens null",
+			"input": [
+				"https://procrastimate.stf.lol.evil.com/inbox?task=t1"
+			],
+			"output": null
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › \"not a url\" opens null",
+			"input": [
+				"not a url"
+			],
+			"output": null
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › the origin the web app runs on counts too",
+			"input": [
+				"http://localhost:6120/inbox?task=t1",
+				"http://localhost:6120"
+			],
+			"output": "t1"
+		},
+		{
+			"fn": "taskLinkId",
+			"test": "taskLinkId › the origin the web app runs on counts too",
+			"input": [
+				"http://localhost:6121/inbox?task=t1",
+				"http://localhost:6120"
+			],
+			"output": null
 		}
 	]
 }

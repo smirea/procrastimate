@@ -137,6 +137,7 @@ struct ProcrastimateApp: App {
                 // An overlay sits outside the `.environment` calls above, so it gets the router itself; without it every
                 // launch traps on the missing `IntentRouter`.
                 .overlay(alignment: .top) { IntentReadout().environment(router) }
+                .environment(\.openURL, OpenURLAction(handler: openInApp))
                 .onOpenURL { open($0) }
                 .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
                     if let url = activity.webpageURL { open(url) }
@@ -179,6 +180,23 @@ struct ProcrastimateApp: App {
         UIApplication.shared.connectedScenes
             .compactMap { ($0 as? UIWindowScene)?.keyWindow }
             .contains { $0.rootViewController?.presentedViewController != nil }
+    }
+
+    /// A link in the app's text to the app's own web URLs opens in place, since iOS never hands a Universal Link back
+    /// to the app it was tapped in.
+    private func openInApp(_ url: URL) -> OpenURLAction.Result {
+        if auth.signedIn, let id = Links.taskLinkId(url.absoluteString) {
+            if store.task(id) == nil {
+                toasts.show("Can’t find that task")
+            } else {
+                navigator.open(.task(id: id), in: store, today: clock.today)
+            }
+        } else if let token = SharedLinks.token(in: url) {
+            navigator.sheet = .sharedLink(token: token)
+        } else {
+            return .systemAction
+        }
+        return .handled
     }
 
     private func open(_ url: URL) {

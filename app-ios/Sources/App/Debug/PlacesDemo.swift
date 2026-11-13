@@ -6,7 +6,7 @@ import UIKit
 /// DEBUG-only. The simulator has no way to tap, so `PROCRASTIMATE_DEMO` seeds place and event tasks through the store,
 /// adds calendar events through EventKit, and opens the screen to screenshot. Release builds omit it.
 ///
-/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row, a parent with open subtasks, and a saved place `gym`), `subtasks` (a parent due today with a subtask due today, and an undated parent with one), `filtered` (a priority 4 parent due today with a priority 1 subtask due today, another priority 1 task, and a completed parent with an open subtask), `move` (shifts the next Standup an hour later, then logs what the task holds),
+/// Space-separated words: `seed`, `rows` (labeled tasks with long titles, for the two-line row, a parent with open subtasks, and a saved place `gym`), `subtasks` (a parent due today with a subtask due today, and an undated parent with one), `filtered` (a priority 4 parent due today with a priority 1 subtask due today, another priority 1 task, and a completed parent with an open subtask), `move` (shifts the next Standup an hour later, then logs what the task holds), `tasklinks` (Pay rent, a task whose title links to it by its web URL, and one linking to a task that does not exist),
 /// `browse`, `sections` (see `SectionsDemo`), `details:<task title>`, `link:<share token>`, `sharing` (see `SharingDemo`), `sheet:location`, `sheet:event`, and
 /// `query:<words with + for spaces>` for the first location search.
 enum PlacesDemo {
@@ -41,6 +41,7 @@ enum PlacesDemo {
         if has("rows") { seedRows(store: store, clock: clock) }
         if has("subtasks") { seedSubtasks(store: store, clock: clock) }
         if has("filtered") { seedFiltered(store: store, clock: clock) }
+        if has("tasklinks") { seedTaskLinks(store: store, clock: clock) }
         if has("move") { await move(store: store, calendar: calendar) }
         if has("browse") { navigator.tab = .browse }
         if has("nodate") { navigator.open(.noDate) }
@@ -141,6 +142,15 @@ enum PlacesDemo {
             name: "Philz Coffee", address: "20686 Stevens Creek Blvd, Cupertino",
             latitude: 37.3229, longitude: -122.0322, radius: 150, trigger: .during
         ))))
+    }
+
+    @MainActor
+    private static func seedTaskLinks(store: Store, clock: AppClock) {
+        guard !store.tasks.contains(where: { $0.title == "Pay rent" }) else { return }
+        let today = Due(date: clock.today)
+        guard let rent = store.addTask(NewTask(title: "Pay rent", due: today)) else { return }
+        _ = store.addTask(NewTask(title: "See \(SharedConstants.appOrigin)/inbox?task=\(rent.id)", due: today))
+        _ = store.addTask(NewTask(title: "Ask \(SharedConstants.appOrigin)/inbox?task=gone", due: today))
     }
 
     @MainActor

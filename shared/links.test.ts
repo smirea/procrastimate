@@ -6,6 +6,7 @@ import { describe, recorded, test } from './vectors/record.ts';
 const linkify = recorded('links', links.linkify);
 const pastedUrl = recorded('links', links.pastedUrl);
 const titleLink = recorded('links', links.titleLink);
+const taskLinkId = recorded('links', links.taskLinkId);
 
 /** `[text](href)` for a link and the bare text otherwise, so a table row reads like what the user sees. */
 const shown = (segments: TextSegment[]) => segments.map(s => (s.href ? `[${s.text}](${s.href})` : s.text)).join('|');
@@ -135,5 +136,30 @@ describe('notesPreview', () => {
 		expect(links.notesPreview(`${pad} [the post](https://example.com/p1) after`)).toBe(
 			`${pad} [the post](https://example.com/p1)`,
 		);
+	});
+});
+
+describe('taskLinkId', () => {
+	test.each([
+		['https://procrastimate.stf.lol/inbox?task=t1', 't1'],
+		['https://procrastimate.stf.lol/projects/p1?task=t%201&x=2', 't 1'],
+		[
+			'https://PROCRASTIMATE.stf.lol/today?x=1&task=77346556-ea32-4070-a557-486df38f58f5',
+			'77346556-ea32-4070-a557-486df38f58f5',
+		],
+		['https://procrastimate.stf.lol/inbox?task=', null],
+		['https://procrastimate.stf.lol/inbox', null],
+		['https://procrastimate.stf.lol/s/abc', null],
+		['http://procrastimate.stf.lol/inbox?task=t1', null],
+		['https://other.dev/inbox?task=t1', null],
+		['https://procrastimate.stf.lol.evil.com/inbox?task=t1', null],
+		['not a url', null],
+	])('%p opens %p', (href, expected) => {
+		expect(taskLinkId(href)).toBe(expected);
+	});
+
+	test('the origin the web app runs on counts too', () => {
+		expect(taskLinkId('http://localhost:6120/inbox?task=t1', 'http://localhost:6120')).toBe('t1');
+		expect(taskLinkId('http://localhost:6121/inbox?task=t1', 'http://localhost:6120')).toBeNull();
 	});
 });

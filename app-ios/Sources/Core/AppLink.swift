@@ -1,7 +1,8 @@
 import Foundation
 
 /// The `procrastimate://` links the app opens: `task/<id>` from Notouroboros, and the rest from widgets and controls.
-/// A list travels as its `WidgetList.key`, which the app resolves against its own catalog.
+/// A list travels as its `WidgetList.key`, which the app resolves against its own catalog. The web app's task URLs,
+/// `https://procrastimate.stf.lol/<route>?task=<id>`, open as `task` too, from Universal Links and taps inside the app.
 public enum AppLink: Hashable, Sendable {
     case task(id: String)
     case list(key: String)
@@ -12,6 +13,10 @@ public enum AppLink: Hashable, Sendable {
     static let scheme = "procrastimate"
 
     public init?(_ url: URL) {
+        if let id = Links.taskLinkId(url.absoluteString) {
+            self = .task(id: id)
+            return
+        }
         guard url.scheme == Self.scheme, let host = url.host() else { return nil }
         let list = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "list" }?.value
         switch host {

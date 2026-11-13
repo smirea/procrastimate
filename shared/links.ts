@@ -73,6 +73,23 @@ export function linkify(text: string, ranges: readonly Range[] = []): TextSegmen
 /** A link's icon, fetched by the server from the page the link opens. See `docs/decisions/link-previews.md`. */
 export const FAVICON_PATH = '/api/favicon';
 
+/** The production web app, whose task URLs every client opens in place. */
+export const APP_ORIGIN = 'https://procrastimate.stf.lol';
+
+/** The query parameter that opens a task's details over the list. */
+export const TASK_PARAM = 'task';
+
+/**
+ * The task a link opens, when it is the app's own `?task=<id>` URL on any route: on the production origin, or on
+ * `here`, the origin the web app runs on.
+ */
+export function taskLinkId(href: string, here?: string): string | null {
+	if (!URL.canParse(href)) return null;
+	const url = new URL(href);
+	if (url.origin !== APP_ORIGIN && url.origin !== here) return null;
+	return url.searchParams.get(TASK_PARAM) || null;
+}
+
 /** The pasted text, trimmed, when it is one bare web URL and nothing else, the paste that becomes a titled link. */
 export function pastedUrl(pasted: string): string | null {
 	const text = pasted.trim();
