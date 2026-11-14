@@ -42,7 +42,7 @@
 		"lefthook": "^2.2.1",
 		"oxfmt": "^0.72.0",
 		"oxlint": "^1.87.0",
-		"sync-engine": "github:smirea/sync-engine#3355a5f",
+		"sync-engine": "github:smirea/sync-engine#0388496",
 		"tailwindcss": "^4.3.3",
 		"typescript": "^7.0.2",
 		"vite": "^8.3.4",

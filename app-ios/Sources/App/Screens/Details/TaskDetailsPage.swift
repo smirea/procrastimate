@@ -423,28 +423,26 @@ private struct ProjectMenu: View {
     let sectionId: String?
     let onChange: @MainActor (String?, String?) -> Void
 
-    @State private var creating = false
-
     var body: some View {
         let name = store.placeName(projectId, sectionId)
-        Menu {
-            PlaceMenuContent(
-                selection: Binding(
-                    get: { Place(projectId: projectId, sectionId: sectionId) },
-                    set: { onChange($0.projectId, $0.sectionId) }
-                ),
-                creating: $creating
-            )
-        } label: {
+        PlaceMenu(
+            selection: Place(projectId: projectId, sectionId: sectionId),
+            accessibilityLabel: "Project \(name)",
+            accessibilityIdentifier: "Project menu",
+            onChange: { onChange($0.projectId, $0.sectionId) }
+        ) {
             // Only the share and close buttons share the bar, so the name gets most of the width and truncates.
-            HStack(spacing: 6) {
+            // A bar's own `Menu` label set this font and tint; a plain view in the bar gets the bar's bold title font.
+            HStack(spacing: 10) {
                 Image(systemName: projectId == nil ? "tray" : store.project(projectId)?.systemImage ?? "number")
+                    .font(.subheadline)
                 Text(name).lineLimit(1).truncationMode(.tail)
             }
+            .font(.body.weight(.regular))
+            .foregroundStyle(.tint)
+            .padding(.horizontal, 6)
             .frame(maxWidth: 240, alignment: .leading)
+            .fixedSize(horizontal: true, vertical: false)
         }
-        .accessibilityLabel("Project \(name)")
-        .newProjectPrompt(isPresented: $creating) { onChange($0, nil) }
-        .accessibilityIdentifier("Project menu")
     }
 }

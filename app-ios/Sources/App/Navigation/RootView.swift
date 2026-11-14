@@ -464,7 +464,7 @@ private struct SheetView: View {
         switch sheet {
         case let .quickAdd(defaults): QuickAddSheet(defaults: defaults)
         case let .ramble(defaults): RambleDrawer(defaults: defaults)
-        case let .details(taskID): TaskDetailsSheet(stack: Subtasks.ancestorsOf(store.allTasks, taskID).map(\.id) + [taskID])
+        case let .details(taskID): TaskDetailsSheet(stack: store.ancestors(of: taskID).map(\.id) + [taskID])
         case .settings: SettingsSheet()
         case let .sharedLink(token): SharedLinkSheet(token: token)
         }

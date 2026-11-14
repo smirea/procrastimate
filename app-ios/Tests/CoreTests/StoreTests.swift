@@ -57,6 +57,23 @@ import Testing
         #expect(store.dictation == .elevenlabs)
     }
 
+    @Test func ancestorsRunFromTheRootDownToTheParentAcrossSpaces() {
+        var rows = StoredRows()
+        rows.tasks = [
+            Owned(owner: "ann", value: TaskItem(id: "trip", title: "Trip", createdAt: 1)),
+            Owned(owner: "ann", value: TaskItem(id: "charger", parentId: "trip", title: "Charger", createdAt: 2)),
+            Owned(owner: "ann", value: TaskItem(id: "cable", parentId: "charger", title: "Cable", createdAt: 3)),
+            Owned(owner: "me", value: TaskItem(id: "milk", title: "Milk", createdAt: 4)),
+        ]
+        let (store, _) = recordingStore(rows: rows)
+
+        #expect(store.ancestors(of: "cable").map(\.id) == ["trip", "charger"])
+        #expect(store.ancestors(of: "cable") == Subtasks.ancestorsOf(store.allTasks, "cable"))
+        #expect(store.ancestors(of: "trip").isEmpty)
+        #expect(store.ancestors(of: "milk").isEmpty)
+        #expect(store.ancestors(of: "gone").isEmpty)
+    }
+
     @Test func aLabelUndoneBeforeItsDeletedTaskComesBackOnIt() throws {
         let (store, _) = recordingStore()
         let calls = store.addLabel("calls")

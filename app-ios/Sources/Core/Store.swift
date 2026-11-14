@@ -182,6 +182,17 @@ public final class Store {
     /// A task's subtasks in sibling order, from the index, so a row never groups the whole list.
     public func children(of taskID: String) -> [TaskItem] { index.children[taskID] ?? [] }
 
+    /// From the root down to the task's parent, walked through the index, as `Subtasks.ancestorsOf` does over a list.
+    public func ancestors(of taskID: String) -> [TaskItem] {
+        var out: [TaskItem] = []
+        var parent = task(taskID)?.parentId.flatMap(task)
+        while let current = parent {
+            out.insert(current, at: 0)
+            parent = current.parentId.flatMap(task)
+        }
+        return out
+    }
+
     public func space(ofTask id: String) -> SpaceKey? { index.tasks[id] == nil ? nil : index.spaces[id] }
     public func space(ofProject id: String) -> SpaceKey? { index.projects[id] == nil ? nil : index.spaces[id] }
     public func space(ofLabel id: String) -> SpaceKey? { index.labels[id] == nil ? nil : index.spaces[id] }
