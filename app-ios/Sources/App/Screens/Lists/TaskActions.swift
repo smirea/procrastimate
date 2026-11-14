@@ -17,13 +17,12 @@ final class TaskActions {
         self.clock = clock
     }
 
-    @discardableResult
-    func complete(_ task: TaskItem) -> String? {
-        guard let completion = withAnimation(.snappy, { store.completeTask(task.id) }) else { return nil }
+    func complete(_ task: TaskItem) {
+        guard let completion = withAnimation(.snappy, { store.completeTask(task.id) }) else { return }
         completions += 1
-        let message = Format.completedToast(task.title, completion.next, clock.today)
-        toasts.show(message, undo: .completion(.init(previous: completion.previous)), in: store)
-        return message
+        toasts.show(
+            Format.completedToast(task.title, completion.next, clock.today), undo: .completion(.init(previous: completion.previous)), in: store
+        )
     }
 
     /// Reopening a subtask reopens its completed ancestors too, so undo puts back each one's `completedAt`. Undo writes

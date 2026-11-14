@@ -3,7 +3,7 @@ import Core
 
 extension CompleteTaskInAppIntent {
     func perform() async throws -> some IntentResult {
-        await IntentEffects.complete(id: taskID)
+        await IntentSession.current.complete(taskID)
         await WidgetSync.leave(taskID)
         return .result()
     }
@@ -14,7 +14,7 @@ extension CompleteTaskInAppIntent {
 extension CompleteWidgetTaskIntent {
     func perform() async throws -> some IntentResult {
         WidgetStore.check(taskID)
-        await IntentEffects.complete(id: taskID)
+        await IntentSession.current.complete(taskID)
         await WidgetSync.leave(taskID)
         return .result()
     }
@@ -22,7 +22,7 @@ extension CompleteWidgetTaskIntent {
 
 extension OpenAppLinkIntent {
     func perform() async throws -> some IntentResult {
-        await IntentEffects.open(link)
+        await IntentSession.current.open(link)
         return .result()
     }
 }

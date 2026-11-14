@@ -15,7 +15,6 @@ macOS `core` and `app` stay off until a release ([Workflow](decisions/workflow.m
 - **Slice** is the thread that ships the row (see [Thread split](#thread-split)). `S3→S5` means the logic comes from S3 and the UI from S5.
 - **XCUITest** and **Playwright** columns are the old scenario ids. Those UI tests are gone. Parser phrases, guards, recurrence math, ranking, and import mapping are proven by the shared test vectors. See [Testing](decisions/testing.md).
 - **iOS** `Built` means the feature is in the app. It no longer means a parity test is green.
-- **App Intents ship with the feature.** A new iOS feature that someone can do from outside the app includes its App Intents, shortcut phrases, and entities in the same change. The web column stays `n/a`: Siri, Shortcuts, and Spotlight are iOS. See [iOS app](decisions/ios.md#siri-shortcuts-and-spotlight).
 
 ## Checklist
 
@@ -242,25 +241,6 @@ Built on web and iOS as a fullscreen drawer that quick add's mic opens. The gram
 | `public-link`: `/s/<token>` read only without signing in, tasks open read-only details; Universal Links open it in the app                        | ✓   | Built (untested until the association file is deployed) | Sharing | `swift test` (link parser)                  | `sharing.e2e.ts`        | —          |
 | `ai-accounts`: create, generate a token shown once, delete                                                                                        | ✓   | Built                                                   | Sharing | throwaway tap project against a mock server | —                       | —          |
 | `personal-token`: generate a token that acts as the user, shown once; revoke all                                                                  | ✓   | Built                                                   | Sharing | `./sim test` against the worktree server    | `personal-token.e2e.ts` | —          |
-
-### Siri, Shortcuts, and Spotlight
-
-iOS only. The web client has no App Intents. New features that can be done from outside the app add their rows here in the same change. See [iOS app](decisions/ios.md#siri-shortcuts-and-spotlight).
-
-| Feature                                                                                                       | Web | iOS   | Slice   | XCUITest                                                                             | Playwright | Screenshot |
-| ------------------------------------------------------------------------------------------------------------- | --- | ----- | ------- | ------------------------------------------------------------------------------------ | ---------- | ---------- |
-| `intent-add`: Add Task parses the quick-add grammar, and Shortcuts fields fill only what the title left unset | n/a | Built | Intents | `AppIntentsParityTests.test_intent_add`, `test_intent_project_labels_and_parameters` | n/a        | —          |
-| `intent-complete`: completes the open task with that title                                                    | n/a | Built | Intents | `AppIntentsParityTests.test_intent_complete_and_spotlight`                           | n/a        | —          |
-| `intent-reopen`: reopens a completed task                                                                     | n/a | Built | Intents | `AppIntentsParityTests.test_intent_reopen`                                           | n/a        | —          |
-| `intent-open-view`: opens Inbox, Tomorrow, This week, No date, or Browse                                      | n/a | Built | Intents | Not covered                                                                          | n/a        | —          |
-| `intent-open-project`: opens a project                                                                        | n/a | Built | Intents | `AppIntentsParityTests.test_intent_project_labels_and_parameters`                    | n/a        | —          |
-| `intent-open-task`: opens a task                                                                              | n/a | Built | Intents | `AppIntentsParityTests.test_intent_open_task`                                        | n/a        | —          |
-| `intent-search`: opens Browse with the query and returns the matches                                          | n/a | Built | Intents | `AppIntentsParityTests.test_intent_search`                                           | n/a        | —          |
-| `intent-today`: lists tasks due today                                                                         | n/a | Built | Intents | `AppIntentsParityTests.test_intent_today_and_overdue`                                | n/a        | —          |
-| `intent-overdue`: lists overdue tasks                                                                         | n/a | Built | Intents | `AppIntentsParityTests.test_intent_today_and_overdue`                                | n/a        | —          |
-| `intent-spotlight`: Spotlight indexes open tasks and drops them once completed                                | n/a | Built | Intents | `AppIntentsParityTests.test_intent_complete_and_spotlight`                           | n/a        | —          |
-| `intent-delete-all`: deletes every task, project, and label                                                   | n/a | Built | Intents | —                                                                                    | n/a        | —          |
-| `intent-ramble`: Start Ramble opens quick add and starts the mic                                              | n/a | Built | R5      | —                                                                                    | n/a        | —          |
 
 ### Widgets and controls
 

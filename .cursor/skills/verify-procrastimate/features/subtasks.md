@@ -18,7 +18,7 @@ Subtasks let Stefan break a task into steps, such as `Pack for trip` with `Passp
 - `subtasks-search` finds a subtask in search by its own text, names its parent, and opens it with the back chip.
 - `subtasks-explode` turns a task's subtasks into tasks of their own from the `Subtask actions` menu on the Subtasks heading in task details: `Keep titles`, `Start with “<parent>:”`, or `Inherit labels, date, and priority`. The parent stays, and the toast's `Undo` nests them again.
 - `subtasks-dated` lists a dated subtask in the Inbox's day sections, marked with its parent's title, only while no task above it is listed in the same list: under a listed parent it shows as the parent's progress and preview instead. Projects and No date list only top-level tasks.
-- `subtasks-under-done-parent` sets aside every open task under a completed one, as if done, in every list, count, badge, widget, notification, and search, without changing its own completion; reopening the parent brings it back. Every row draws it done with the parent's completion date (search included), the parent's ring counts it done and its preview drops it, and Siri's Complete never picks it.
+- `subtasks-under-done-parent` sets aside every open task under a completed one, as if done, in every list, count, badge, widget, notification, and search, without changing its own completion; reopening the parent brings it back. Every row draws it done with the parent's completion date (search included), and the parent's ring counts it done and its preview drops it.
 - `subtasks-filtered` runs a dated list's filter menu before deciding subtask rows, so a filter that hides a parent lets its dated subtask show on its own row.
 
 ## How to get to it (user POV)

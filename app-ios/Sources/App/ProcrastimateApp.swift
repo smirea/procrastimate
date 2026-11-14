@@ -1,4 +1,5 @@
 import Core
+import CoreSpotlight
 import EventKit
 import Feedback
 import SwiftUI
@@ -15,13 +16,11 @@ struct ProcrastimateApp: App {
     @State private var sync: SyncClient
     @State private var attachments: TaskAttachments
     @State private var auth: Session
-    @State private var router: IntentRouter
     @State private var places: PlaceMonitor
     @State private var calendar: CalendarSync
     @State private var today: DateKey
     @Environment(\.scenePhase) private var scenePhase
     private let clock: AppClock
-    private let session: IntentSession
 
     init() {
         Telemetry.start()
@@ -34,7 +33,6 @@ struct ProcrastimateApp: App {
         let store = sync.store
         store.labelColorSuggester = { await LabelColorModel.color(for: $0) }
         let actions = TaskActions(store: store, toasts: toasts, clock: clock)
-        let router = IntentRouter()
         // The delegate must be set before launch finishes, so tapping a notification can cold-start into its task.
         let notifications = LocalNotifications(store: store, navigator: navigator, clock: clock)
         let auth = Session(sync: sync)
@@ -43,30 +41,20 @@ struct ProcrastimateApp: App {
         let attachments = TaskAttachments(store: store, toasts: toasts)
         // Created at launch so a relaunch for a place crossing finds its listener.
         let places = PlaceMonitor(store: store, clock: clock)
-        let session = IntentSession(
-            store: store,
-            navigator: navigator,
-            actions: actions,
-            toasts: toasts,
-            clock: clock,
-            router: router,
-            notifications: notifications,
-            places: places
-        )
-        session.install()
-        ProcrastimateShortcuts.updateAppShortcutParameters()
+        IntentSession(store: store, navigator: navigator, clock: clock, notifications: notifications, places: places).install()
+        // Tasks were in Spotlight until Siri, Shortcuts, and Spotlight support was dropped; this clears what an earlier
+        // build indexed, so no stale result stays in the phone's search.
+        CSSearchableIndex.default().deleteAllSearchableItems()
         _places = State(initialValue: places)
         _calendar = State(initialValue: CalendarSync(store: store, clock: clock))
         Task { await places.start() }
         self.clock = clock
-        self.session = session
         _today = State(initialValue: clock.today)
         _theme = State(initialValue: ThemeSettings.shared)
         _navigator = State(initialValue: navigator)
         _toasts = State(initialValue: toasts)
         _store = State(initialValue: store)
         _actions = State(initialValue: actions)
-        _router = State(initialValue: router)
         _notifications = State(initialValue: notifications)
         _importer = State(initialValue: TodoistImport(store: store, clock: clock))
         _auth = State(initialValue: auth)
@@ -104,22 +92,14 @@ struct ProcrastimateApp: App {
                     calendar.sync()
                     for await _ in NotificationCenter.default.notifications(named: .EKEventStoreChanged) { calendar.sync() }
                 }
-                .onChange(of: store.tasks) { _, _ in SpotlightIndex.schedule(session) }
-                .onChange(of: store.projects) { _, _ in SpotlightIndex.schedule(session) }
-                .onChange(of: store.labels) { _, _ in SpotlightIndex.schedule(session) }
-                .task { SpotlightIndex.schedule(session) }
                 .modifier(WidgetSync.Follow(store: store, theme: theme, auth: auth, clock: clock))
                 .task { await PerfDemo.run(store: store, clock: clock, navigator: navigator, actions: actions) }
-                .task { await IntentHarness.run() }
                 .task { await SharingDemo.run(sync: sync) }
                 .task {
                     SectionsDemo.run(store: store, navigator: navigator, clock: clock)
                     WidgetsDemo.run(store: store, clock: clock)
                     await PlacesDemo.run(store: store, calendar: calendar, navigator: navigator, clock: clock)
                 }
-                // An overlay sits outside the `.environment` calls above, so it gets the router itself; without it every
-                // launch traps on the missing `IntentRouter`.
-                .overlay(alignment: .top) { IntentReadout().environment(router) }
                 .onOpenURL { open($0) }
                 .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
                     if let url = activity.webpageURL { open(url) }
@@ -154,7 +134,6 @@ struct ProcrastimateApp: App {
             .environment(auth)
             .environment(sync)
             .environment(attachments)
-            .environment(router)
             .environment(places)
             .environment(calendar)
             .environment(\.clock, clock)

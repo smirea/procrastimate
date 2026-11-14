@@ -20,7 +20,7 @@ Ramble lets Stefan talk his tasks in. An empty quick add textbox shows a mic on 
 
 - Web and iOS: tap Add, then the mic inside the empty textbox.
 - Web keys in the drawer: Escape stops listening, then closes an open editor, then closes the drawer. Space toggles listening and Enter saves when no field has focus.
-- iOS: "Start Ramble in ProcrastiMate" from Siri or Shortcuts opens the drawer listening. The DEBUG launch word `PROCRASTIMATE_DEMO=ramble` does the same in the simulator.
+- iOS: the Ramble button in Control Center, or a Quick Add widget set to Ramble, opens the drawer listening. The DEBUG launch word `PROCRASTIMATE_DEMO=ramble` does the same in the simulator.
 
 ## Driving it with control-ui and the simulator
 
@@ -30,7 +30,7 @@ Ramble lets Stefan talk his tasks in. An empty quick add textbox shows a mic on 
 - On a paired device, open the drawer and say "Call mom tomorrow at 5pm priority one." The bars move with your voice, `Call mom` arrives with `Tomorrow 5pm` and `P1` chips. Stop, then `Add task` saves that one task.
 - Say "Finish the project report" with no project named `report`. The task keeps that title and no extra chips.
 - In smart mode, say "you signed up for a walk and you need to set an alarm". One task arrives with that whole sentence as its title, not `Set an alarm`.
-- Every space's names, as in quick add. On iOS, launch with `PROCRASTIMATE_DEMO=sharing`, `PROCRASTIMATE_INTENTS=ramble`, and the script `Water the tulips in project Garden. Next task, try the soup in project Recipes.`: `Water the tulips` gets `Garden` (Ann's, shared to edit), while `Recipes` (view only) stays in the second title. The second task's project picker lists `Garden` and not `Recipes`; picking `Garden` and `Add 2 tasks` puts both in Ann's Garden. On the web, `ramble.e2e.ts` shares one project to edit and another to view, and the rambled task picked into the first shows up on the owner's device.
+- Every space's names, as in quick add. On iOS, launch with `PROCRASTIMATE_DEMO="sharing ramble"` and the script `Water the tulips in project Garden. Next task, try the soup in project Recipes.`: `Water the tulips` gets `Garden` (Ann's, shared to edit), while `Recipes` (view only) stays in the second title. The second task's project picker lists `Garden` and not `Recipes`; picking `Garden` and `Add 2 tasks` puts both in Ann's Garden. On the web, `ramble.e2e.ts` shares one project to edit and another to view, and the rambled task picked into the first shows up on the owner's device.
 - With Dictation set to ElevenLabs and no key, or a refused socket, the drawer says Ramble needs a connection. Offline, or Dictation set to Native, uses the platform recognizer and does not open the socket.
 - In Brave online with Dictation set to Native, tap the mic. Recognition fails at once and capture moves to the ElevenLabs socket, so the mic keeps listening.
 - On iOS, tap just beside the mic glyph. The mic's whole rectangle is its hit area and the card has a content shape, so the tap opens the drawer instead of reaching the scrim.
@@ -47,4 +47,3 @@ Ramble lets Stefan talk his tasks in. An empty quick add textbox shows a mic on 
 - Two cassettes exist: `three-tasks` (the default) and `party` (a list with subtasks, a time, a priority, and a reminder). "That's all" stops listening and does not save. Closing the drawer discards the ramble.
 - `TZ=UTC GEMINI_API_KEY=… bun server/scripts/ramble-eval.ts -v --with grammar,gemini:gemini-3.5-flash-lite:minimal shared/fixtures/ramble-eval/todoist-dev.json` scores parsers (`-v` prints each miss). Tune on `dev`, `structure`, and `todoist-dev`; run `holdout` and `todoist-holdout` once at the end. On Gemini's free tier pass `--gap 4000`, and read latency from the median, since free-tier queueing adds seconds to the tail.
 - `Evals/LabelColorModel` beside it scores the label color model the same way: `bun run generate`, then `swift run -c release eval -v cases.json default model` from that folder, against 32 names that each accept one or more colors. See the labels feature.
-- App Shortcuts keep ten phrases. Start Ramble took the slot Delete All Data had. The delete intent is still there.
