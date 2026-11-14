@@ -74,11 +74,11 @@ const open = openTasks;
 const topLevel = (tasks: readonly Task[]) => open(tasks).filter(t => t.parentId === null);
 
 /**
- * The count a header over a list shows: its open rows once there are more than 4, since a glance covers a shorter list.
- * Pass the rows the list shows, so a subtask counts only where it has a row of its own.
+ * The count a header over a list shows: its open rows, or nothing for an empty list. Pass the rows the list shows, so a
+ * subtask counts only where it has a row of its own.
  */
 export function pendingCount(open: number): number | null {
-	return open > 4 ? open : null;
+	return open > 0 ? open : null;
 }
 
 /** Inbox tasks with no day. The Inbox view lists dated tasks from every project under their day instead. */
