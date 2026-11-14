@@ -83,27 +83,9 @@ struct ProcrastimateApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(navigator)
-                .environment(store)
-                .environment(toasts)
-                .environment(actions)
-                .environment(theme)
-                .environment(notifications)
-                .environment(importer)
-                .environment(auth)
-                .environment(sync)
-                .environment(attachments)
-                .environment(router)
-                .environment(places)
-                .environment(calendar)
-                .environment(\.clock, clock)
-                .environment(\.today, today)
+            provided(RootView())
+                .background { SheetWindow { provided(AppSheets()).environment(\.scenePhase, scenePhase) } }
                 .onAppear { theme.apply() }
-                // The scene's `.backgroundTask` below stops SwiftUI from applying the asset's global accent (everything
-                // went system blue), so the root sets it explicitly.
-                .tint(.accent)
-                .motionFollowsAccessibility()
                 .task { await notifications.run() }
                 .task {
                     await auth.start()
@@ -138,7 +120,6 @@ struct ProcrastimateApp: App {
                 // An overlay sits outside the `.environment` calls above, so it gets the router itself; without it every
                 // launch traps on the missing `IntentRouter`.
                 .overlay(alignment: .top) { IntentReadout().environment(router) }
-                .environment(\.openURL, OpenURLAction(handler: openInApp))
                 .onOpenURL { open($0) }
                 .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
                     if let url = activity.webpageURL { open(url) }
@@ -160,6 +141,31 @@ struct ProcrastimateApp: App {
         }
     }
 
+    /// What the root of each window reads: the tabs' window and the sheets' (see `SheetWindow`).
+    private func provided(_ view: some View) -> some View {
+        view
+            .environment(navigator)
+            .environment(store)
+            .environment(toasts)
+            .environment(actions)
+            .environment(theme)
+            .environment(notifications)
+            .environment(importer)
+            .environment(auth)
+            .environment(sync)
+            .environment(attachments)
+            .environment(router)
+            .environment(places)
+            .environment(calendar)
+            .environment(\.clock, clock)
+            .environment(\.today, today)
+            .environment(\.openURL, OpenURLAction(handler: openInApp))
+            // The scene's `.backgroundTask` below stops SwiftUI from applying the asset's global accent (everything
+            // went system blue), so each root sets it explicitly.
+            .tint(.accent)
+            .motionFollowsAccessibility()
+    }
+
     private func phaseChanged(from old: ScenePhase, to new: ScenePhase) {
         // On the way back, before `.active`, so stale tabs reset before the first frame shows.
         if new == .background {
@@ -179,7 +185,7 @@ struct ProcrastimateApp: App {
     /// screen presents.
     private static var presenting: Bool {
         UIApplication.shared.connectedScenes
-            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .flatMap { ($0 as? UIWindowScene)?.windows ?? [] }
             .contains { $0.rootViewController?.presentedViewController != nil }
     }
 

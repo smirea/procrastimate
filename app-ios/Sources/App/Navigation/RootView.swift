@@ -25,15 +25,26 @@ struct RootView: View {
                 SignInView()
             }
         }
-        // Outside the sign-in gate, so a share link opens its read-only page signed out too.
-        .sheet(item: Binding(
-            get: { navigator.quickAdd == nil && navigator.ramble == nil ? navigator.sheet : nil },
-            set: { if $0 != nil || (navigator.quickAdd == nil && navigator.ramble == nil) { navigator.sheet = $0 } }
-        )) { SheetView(sheet: $0) }
         // Signing out from Settings, or a rejected token, must not leave a signed-in sheet over the sign-in screen.
         .onChange(of: session.signedIn) { _, signedIn in
             if !signedIn, navigator.sheet?.keepsWhenSignedOut != true { navigator.sheet = nil }
         }
+    }
+}
+
+/// The open sheet, presented from the sheets' own window (see `SheetWindow`) and outside the sign-in gate, so a share
+/// link opens its read-only page signed out too.
+struct AppSheets: View {
+    @Environment(Navigator.self) private var navigator
+
+    var body: some View {
+        let sheet = navigator.quickAdd == nil && navigator.ramble == nil ? navigator.sheet : nil
+        Color.clear
+            .sheet(item: Binding(
+                get: { sheet },
+                set: { if $0 != nil || (navigator.quickAdd == nil && navigator.ramble == nil) { navigator.sheet = $0 } }
+            )) { SheetView(sheet: $0) }
+            .background { SheetCover(covering: sheet != nil) }
     }
 }
 
