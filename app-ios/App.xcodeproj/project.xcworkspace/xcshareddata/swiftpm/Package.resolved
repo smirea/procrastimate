@@ -7,7 +7,7 @@
       "location" : "https://github.com/smirea/feedback-engine",
       "state" : {
         "branch" : "master",
-        "revision" : "d2ad80d4f4104f73bcf1792db97906342a911191"
+        "revision" : "c8fc538891c20d26f4f9e2738a2f3fbe193d5060"
       }
     },
     {
@@ -25,7 +25,7 @@
       "location" : "https://github.com/smirea/sync-engine",
       "state" : {
         "branch" : "master",
-        "revision" : "3355a5f73603a6c29b5068f3db0082fe741b1d93"
+        "revision" : "0388496107bd4111a08f5da4823d32bc5301c02d"
       }
     }
   ],

@@ -9,7 +9,8 @@ import UIKit
 /// `<path>.marks`, so the numbers carry no XCUITest or accessibility work. `visitall` opens every tab first.
 /// `pins` pins Inbox and three projects, as on Stefan's bar. `switch` pins them too and walks Inbox, the projects, and
 /// Browse three times (`rounds:<n>` for more), marking each switch in `<path>.marks` with the main thread's CPU time it
-/// took; the first round is the first visit to each tab after launch.
+/// took; the first round is the first visit to each tab after launch. `details` opens and closes the first six Inbox tasks
+/// a second apart (`rounds:<n>`, 3 by default), marking each with the main thread's CPU time, against any signed-in data.
 enum PerfDemo {
     @MainActor
     static func run(store: Store, clock: AppClock, navigator: Navigator, actions: TaskActions) async {
@@ -22,6 +23,7 @@ enum PerfDemo {
         }
         if PlacesDemo.has("switch") || PlacesDemo.has("pins") { navigator.setPins([.inbox] + store.projects.prefix(3).map { Pin.project(id: $0.id) }) }
         if PlacesDemo.has("switch") { await switchTabs(path, navigator: navigator) }
+        if PlacesDemo.has("details") { await openDetails(path, store: store, clock: clock, navigator: navigator) }
         if PlacesDemo.has("script") { await script(path, store: store, clock: clock, navigator: navigator, actions: actions) }
         #endif
     }
@@ -49,6 +51,27 @@ enum PerfDemo {
                 try? await Task.sleep(for: .milliseconds(1000))
                 let line = "\(Int(Date().timeIntervalSince1970 * 1000))\t\(round == 0 ? "cold" : "warm")\t\(tab)\t\(String(format: "%.1f", mainCPU() - start))\n"
                 marks?.write(Data(line.utf8))
+            }
+        }
+        marks?.write(Data("done\n".utf8))
+    }
+
+    @MainActor
+    private static func openDetails(_ path: String, store: Store, clock: AppClock, navigator: Navigator) async {
+        FileManager.default.createFile(atPath: "\(path).marks", contents: nil)
+        let marks = FileHandle(forWritingAtPath: "\(path).marks")
+        try? await Task.sleep(for: .seconds(3))
+        let due = Views.dueDays(store.tasks, clock.today, .inbox, in: store.timeZone)
+        let tasks = (due.overdue + due.today + due.days.flatMap(\.tasks)).prefix(6)
+        for round in 0 ..< (PlacesDemo.value("rounds").flatMap(Int.init) ?? 3) {
+            for task in tasks {
+                for (phase, sheet) in [("open", Sheet.details(taskID: task.id)), ("close", nil)] {
+                    let start = mainCPU()
+                    navigator.sheet = sheet
+                    try? await Task.sleep(for: .milliseconds(1000))
+                    let line = "\(Int(Date().timeIntervalSince1970 * 1000))\t\(round)\t\(phase)\t\(String(format: "%.1f", mainCPU() - start))\n"
+                    marks?.write(Data(line.utf8))
+                }
             }
         }
         marks?.write(Data("done\n".utf8))

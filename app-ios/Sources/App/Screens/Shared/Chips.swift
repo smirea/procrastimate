@@ -131,44 +131,88 @@ extension Store {
     }
 }
 
-/// The rows of a project menu. A project with sections opens a submenu that lists `No section` and each section,
-/// since a menu cannot indent rows.
-struct PlaceMenuContent: View {
+/// The project menu: Inbox and the projects, where a project with sections opens a submenu that lists `No section` and
+/// each section, since a menu cannot indent rows, and `New project…`.
+///
+/// It is a UIKit menu built when it opens, laid over `label`. A SwiftUI `Menu` turned every project and section into a
+/// UIKit menu item, icon included, on each update of the view around it while closed: with 60 projects that was about
+/// 200 ms of every details open, and quick add paid it on each keystroke.
+struct PlaceMenu<Label: View>: View {
     @Environment(Store.self) private var store
     @Environment(\.space) private var space
     @Environment(\.namesFromEverySpace) private var everySpace
-    let selection: Binding<Place>
-    @Binding var creating: Bool
+    let selection: Place
     /// A ramble entry has no section, so its picker lists projects only.
     var showsSections = true
+    let accessibilityLabel: String
+    var accessibilityIdentifier: String?
+    let onChange: @MainActor (Place) -> Void
+    @ViewBuilder let label: () -> Label
+
+    @State private var creating = false
 
     var body: some View {
+        label()
+            .accessibilityHidden(true)
+            .overlay {
+                MenuButton(accessibilityLabel: accessibilityLabel, accessibilityIdentifier: accessibilityIdentifier, items: items)
+                    .padding(-6)
+            }
+            .newProjectPrompt(isPresented: $creating) { onChange(Place(projectId: $0)) }
+    }
+
+    private func items() -> [UIMenuElement] {
         let data = everySpace ? store.everySpace : store.data(in: space)
         let projects = everySpace ? data.projects : store.projects(in: space)
         let sections = showsSections ? data.sections : []
-        let sectioned = { (project: Project) in sections.contains { $0.projectId == project.id } }
-        Picker("Project", selection: selection) {
-            SwiftUI.Label("Inbox", systemImage: "tray").tag(Place())
-            ForEach(projects.filter { !sectioned($0) }) { project in
-                SwiftUI.Label(project.name, systemImage: project.systemImage).tag(Place(projectId: project.id))
-            }
+        let sectioned = Set(sections.map(\.projectId))
+        let pick = { (title: String, image: String, place: Place) in
+            UIAction(title: title, image: UIImage(systemName: image), state: place == selection ? .on : .off) { _ in onChange(place) }
         }
-        .pickerStyle(.inline)
-        ForEach(projects.filter(sectioned)) { project in
-            Menu {
-                Picker(project.name, selection: selection) {
-                    SwiftUI.Label("No section", systemImage: project.systemImage).tag(Place(projectId: project.id))
-                    ForEach(StoreRules.sectionsOf(sections, project.id)) { section in
-                        SwiftUI.Label(section.name, systemImage: "rectangle.split.1x2")
-                            .tag(Place(projectId: project.id, sectionId: section.id))
-                    }
+        let flat = [pick("Inbox", "tray", Place())]
+            + projects.filter { !sectioned.contains($0.id) }.map { pick($0.name, $0.systemImage, Place(projectId: $0.id)) }
+        var items: [UIMenuElement] = [UIMenu(options: [.displayInline, .singleSelection], children: flat)]
+        for project in projects where sectioned.contains(project.id) {
+            let rows = [pick("No section", project.systemImage, Place(projectId: project.id))]
+                + StoreRules.sectionsOf(sections, project.id).map {
+                    pick($0.name, "rectangle.split.1x2", Place(projectId: project.id, sectionId: $0.id))
                 }
-                .pickerStyle(.inline)
-            } label: {
-                SwiftUI.Label(project.name, systemImage: selection.wrappedValue.projectId == project.id ? "checkmark" : project.systemImage)
-            }
+            let icon = selection.projectId == project.id ? "checkmark" : project.systemImage
+            items.append(UIMenu(title: project.name, image: UIImage(systemName: icon), children: [
+                UIMenu(options: [.displayInline, .singleSelection], children: rows),
+            ]))
         }
-        if everySpace || space == .own { Button("New project…", systemImage: "plus") { creating = true } }
+        if everySpace || space == .own {
+            items.append(UIAction(title: "New project…", image: UIImage(systemName: "plus")) { _ in creating = true })
+        }
+        return items
+    }
+}
+
+/// A clear button that opens the menu `items` builds at that moment.
+private struct MenuButton: UIViewRepresentable {
+    let accessibilityLabel: String
+    let accessibilityIdentifier: String?
+    let items: @MainActor () -> [UIMenuElement]
+
+    @MainActor final class Coordinator {
+        var items: @MainActor () -> [UIMenuElement] = { [] }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> UIButton {
+        let button = UIButton(type: .system)
+        button.showsMenuAsPrimaryAction = true
+        let coordinator = context.coordinator
+        button.menu = UIMenu(children: [UIDeferredMenuElement.uncached { completion in completion(coordinator.items()) }])
+        return button
+    }
+
+    func updateUIView(_ button: UIButton, context: Context) {
+        context.coordinator.items = items
+        button.accessibilityLabel = accessibilityLabel
+        button.accessibilityIdentifier = accessibilityIdentifier
     }
 }
 
@@ -179,25 +223,16 @@ struct ProjectChip: View {
     var showsSections = true
     let onChange: @MainActor (String?, String?) -> Void
 
-    @State private var creating = false
-
     var body: some View {
         let name = store.placeName(projectId, sectionId)
-        Menu {
-            PlaceMenuContent(
-                selection: Binding(
-                    get: { Place(projectId: projectId, sectionId: sectionId) },
-                    set: { onChange($0.projectId, $0.sectionId) }
-                ),
-                creating: $creating,
-                showsSections: showsSections
-            )
-        } label: {
+        PlaceMenu(
+            selection: Place(projectId: projectId, sectionId: sectionId),
+            showsSections: showsSections,
+            accessibilityLabel: "Project \(name)",
+            onChange: { onChange($0.projectId, $0.sectionId) }
+        ) {
             Chip(systemImage: projectId == nil ? "tray" : store.project(projectId)?.systemImage ?? "number", text: name, tone: projectId == nil ? .muted : .ink)
-                .contentShape(.rect.inset(by: -6))
         }
-        .accessibilityLabel("Project \(name)")
-        .newProjectPrompt(isPresented: $creating) { onChange($0, nil) }
     }
 }
 
