@@ -2,15 +2,15 @@
 	let observer: ResizeObserver | undefined;
 
 	/**
-	 * The browser decides whether the title and meta share a line, since a wrapping flex row breaks on their natural
-	 * widths. This only reads where the meta landed and flips the date's order and the alignment, which moves nothing in
-	 * width, so it can't oscillate. The text's size catches a wrap, but meta that appears or grows within the title's
-	 * line changes no height, so the meta is observed too.
+	 * The browser decides whether the meta shares the row's last line (the title, or the last notes or subtask preview),
+	 * since a wrapping flex row breaks on natural widths. This only reads where the meta landed and flips the date's order
+	 * and the alignment, which moves nothing in width, so it can't oscillate. The text's size catches a wrap, but meta
+	 * that appears or grows within its line changes no height, so the meta is observed too.
 	 */
 	function sync(text: HTMLElement) {
-		const title = text.querySelector<HTMLElement>('[data-row-title]');
 		const meta = text.querySelector<HTMLElement>('[data-row-meta]');
-		const inline = !!title && !!meta && meta.offsetTop < title.offsetTop + title.offsetHeight - 1;
+		const last = meta?.previousElementSibling as HTMLElement | null | undefined;
+		const inline = !!last && !!meta && meta.offsetTop < last.offsetTop + last.offsetHeight - 1;
 		if (inline) text.dataset.inline = '';
 		else delete text.dataset.inline;
 	}
@@ -115,6 +115,9 @@
 	const other = $derived(task.createdBy !== null && task.createdBy !== session.userId);
 	const by = $derived(other ? store.person(task.createdBy) : undefined);
 
+	/** The last preview line keeps at least 8rem and gives the rest to meta that fits beside it, as on iOS. */
+	const previewLast = 'min-w-0 grow basis-32';
+
 	const revealed = $derived(reveal.id === task.id);
 	let row: HTMLElement;
 	$effect(() => {
@@ -155,7 +158,7 @@
 	<div class="relative min-w-0 flex-1 py-2.5 touch:min-h-11 touch:py-3" data-row-text>
 		<button type="button" class="absolute inset-0 rounded-xl" aria-label={card ? `Edit ${task.title}` : task.title} onclick={() => lookup.open(task.id, subtask ? 'forward' : 'none')}></button>
 		<div class="text pointer-events-none relative flex flex-wrap items-center gap-x-3" {@attach fit}>
-			<div class="min-w-0 grow" data-row-title>
+			<div class={['min-w-0 grow', (task.notes || pending.length) && 'basis-full']} data-row-title>
 				<TitleFlow
 					title={task.title}
 					labels={labelChips}
@@ -164,10 +167,10 @@
 				/>
 			</div>
 			{#if task.notes}
-				<div class="basis-full truncate text-[12px] leading-4 text-muted"><LinkedText text={preview} /></div>
+				<div class={['truncate text-[12px] leading-4 text-muted', pending.length ? 'basis-full' : previewLast]}><LinkedText text={preview} /></div>
 			{/if}
 			{#if pending.length}
-				<ul class="basis-full truncate text-[12px] leading-4 text-muted" aria-label="Open subtasks">
+				<ul class="truncate text-[12px] leading-4 text-muted {previewLast}" aria-label="Open subtasks">
 					{#each pending as item (item.id)}
 						<li class="inline not-first:ml-3"><span class="text-faint" aria-hidden="true">〇</span> {item.title}</li>
 					{/each}
@@ -296,9 +299,10 @@
 </div>
 
 <style>
-	/* One line: the meta sits at the right with the date last. Two lines: it starts under the title, date first. */
+	/* On the last line: the meta sits at the right with the date last. Its own line: it starts at the left, date first. */
 	.text:global([data-inline]) .meta {
 		margin-top: 0;
+		flex-grow: 0;
 		justify-content: flex-end;
 	}
 

@@ -177,6 +177,13 @@ enum PlacesDemo {
             let items = ["Passport", "Charger", "Socks", "Toothbrush", "Sunglasses", "Beach towel"].compactMap { store.addTask(NewTask(title: $0), parentId: trip.id) }
             _ = store.completeTask(items[1].id)
         }
+        if let food = store.addTask(NewTask(title: "Food Ideas:", due: today)) {
+            _ = store.addTask(NewTask(title: "natto"), parentId: food.id)
+        }
+        if let lease = store.addTask(NewTask(title: "Read the lease", due: today)) {
+            store.updateTask(lease.id, TaskPatch(notes: "Ask about late checkout, and whether the shuttle runs on Sundays before the museum opens"))
+            if let sign = store.addTask(NewTask(title: "Sign it"), parentId: lease.id) { _ = store.completeTask(sign.id) }
+        }
     }
 
     @MainActor
