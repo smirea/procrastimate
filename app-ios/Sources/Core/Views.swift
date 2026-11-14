@@ -49,10 +49,10 @@ public enum Views {
     /// subtasks too.
     static func topLevel(_ tasks: [TaskItem]) -> [TaskItem] { open(tasks).filter { $0.parentId == nil } }
 
-    /// The count a header over a list shows: its open rows once there are more than 4, since a glance covers a shorter
-    /// list. Pass the rows the list shows, so a subtask counts only where it has a row of its own.
+    /// The count a header over a list shows: its open rows, or nothing for an empty list. Pass the rows the list shows,
+    /// so a subtask counts only where it has a row of its own.
     public static func pendingCount(_ open: Int) -> Int? {
-        open > 4 ? open : nil
+        open > 0 ? open : nil
     }
 
     /// Inbox tasks with no day. The Inbox view lists dated tasks from every project under their day instead.

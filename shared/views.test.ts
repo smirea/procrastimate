@@ -400,8 +400,8 @@ describe('open counts', () => {
 });
 
 describe('pending count', () => {
-	test('shows only above 4 open rows', () => {
-		expect([0, 1, 4, 5, 12].map(n => pendingCount(n))).toEqual([null, null, null, 5, 12]);
+	test('shows any open rows and nothing for an empty list', () => {
+		expect([0, 1, 2, 5, 12].map(n => pendingCount(n))).toEqual([null, 1, 2, 5, 12]);
 	});
 });
 

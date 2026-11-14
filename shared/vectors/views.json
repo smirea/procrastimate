@@ -13835,7 +13835,7 @@
 		},
 		{
 			"fn": "pendingCount",
-			"test": "pending count › shows only above 4 open rows",
+			"test": "pending count › shows any open rows and nothing for an empty list",
 			"input": [
 				0
 			],
@@ -13843,23 +13843,23 @@
 		},
 		{
 			"fn": "pendingCount",
-			"test": "pending count › shows only above 4 open rows",
+			"test": "pending count › shows any open rows and nothing for an empty list",
 			"input": [
 				1
 			],
-			"output": null
+			"output": 1
 		},
 		{
 			"fn": "pendingCount",
-			"test": "pending count › shows only above 4 open rows",
+			"test": "pending count › shows any open rows and nothing for an empty list",
 			"input": [
-				4
+				2
 			],
-			"output": null
+			"output": 2
 		},
 		{
 			"fn": "pendingCount",
-			"test": "pending count › shows only above 4 open rows",
+			"test": "pending count › shows any open rows and nothing for an empty list",
 			"input": [
 				5
 			],
@@ -13867,7 +13867,7 @@
 		},
 		{
 			"fn": "pendingCount",
-			"test": "pending count › shows only above 4 open rows",
+			"test": "pending count › shows any open rows and nothing for an empty list",
 			"input": [
 				12
 			],

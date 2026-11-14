@@ -122,6 +122,7 @@ test('a section can show a pending count badge: due tasks like the Inbox badge, 
 	await app.nav('Home').click();
 	const region = page.getByRole('region', { name: 'Errands' });
 	await expect(region.locator('[data-badge]')).toHaveCount(0);
+	await expect(region.locator('[data-pending-count]')).toHaveText('3 open tasks');
 
 	await page.getByRole('button', { name: 'Errands', exact: true }).click();
 	const toggle = page.getByRole('menuitemcheckbox', { name: 'Show pending count' });
@@ -158,4 +159,7 @@ test('a section can show a pending count badge: due tasks like the Inbox badge, 
 	await expect(toggle).toHaveAttribute('aria-checked', 'true');
 	await toggle.click();
 	await expect(page.getByRole('region', { name: 'Errands' }).locator('[data-badge]')).toHaveCount(0);
+	await expect(page.getByRole('region', { name: 'Errands' }).locator('[data-pending-count]')).toHaveText(
+		'2 open tasks',
+	);
 });
