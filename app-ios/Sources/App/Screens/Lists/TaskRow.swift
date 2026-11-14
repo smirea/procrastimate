@@ -86,33 +86,58 @@ struct TaskRow<Trailing: View>: View {
         }
     }
 
-    /// One line when the title and its details fit side by side, the details right-aligned with the date last. Otherwise
-    /// the details go under the title, date first. Notes or open subtasks always take their own lines.
+    /// The details sit right-aligned on the row's last line, date last, when they fit there: beside the title, or beside
+    /// the last notes or subtask preview, which keeps at least 128 pt and truncates into the rest. Otherwise they take
+    /// their own line under it, date first.
     @ViewBuilder private var text: some View {
-        if hasDetails, task.notes.isEmpty, pending.isEmpty {
+        if hasDetails {
             ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    title(lineLimit: 1)
-                    Spacer(minLength: 0)
-                    details(dateLast: true)
-                }
-                stacked
+                lines(inline: true)
+                lines(inline: false)
             }
         } else {
-            stacked
+            lines(inline: false)
         }
     }
 
-    private var stacked: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            title(lineLimit: isSubtask ? nil : 2)
-            if !task.notes.isEmpty {
-                Links.text(task.notes, icon: 12).font(.footnote).foregroundStyle(.muted).lineLimit(1)
+    @ViewBuilder private func lines(inline: Bool) -> some View {
+        if inline, task.notes.isEmpty, pending.isEmpty {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                title(lineLimit: 1)
+                Spacer(minLength: 0)
+                details(dateLast: true)
             }
-            if !pending.isEmpty {
-                PendingSubtasks(titles: pending.map(\.title))
+        } else {
+            VStack(alignment: .leading, spacing: 2) {
+                // Lines above the last never decide the fit, so they report no ideal width.
+                title(lineLimit: isSubtask ? nil : 2)
+                    .frame(idealWidth: inline ? 0 : nil, maxWidth: inline ? .infinity : nil, alignment: .leading)
+                if !task.notes.isEmpty {
+                    let notes = Links.text(task.notes, icon: 12).font(.footnote).foregroundStyle(.muted).lineLimit(1)
+                    if pending.isEmpty {
+                        last(notes, inline: inline)
+                    } else {
+                        notes.frame(idealWidth: inline ? 0 : nil, maxWidth: inline ? .infinity : nil, alignment: .leading)
+                    }
+                }
+                if !pending.isEmpty {
+                    last(PendingSubtasks(titles: pending.map(\.title)), inline: inline)
+                }
+                if !inline { details(dateLast: false) }
             }
-            details(dateLast: false)
+        }
+    }
+
+    /// A preview line, carrying the details at its right when they sit on it. Its ideal width is the 128 pt it keeps, so
+    /// `ViewThatFits` takes this layout whenever that much is left beside the details.
+    @ViewBuilder private func last(_ preview: some View, inline: Bool) -> some View {
+        if inline {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                preview.frame(idealWidth: 128, maxWidth: .infinity, alignment: .leading)
+                details(dateLast: true)
+            }
+        } else {
+            preview
         }
     }
 
