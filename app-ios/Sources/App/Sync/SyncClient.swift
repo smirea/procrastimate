@@ -6,7 +6,7 @@ import SyncEngine
 
 /// The store over the local database, and sync-engine's client while a session token exists. Commits reach the
 /// database through one serial queue, in order. Every change to the synced tables, local or pulled, lands in the change
-/// log, and each read of it rebuilds only the spaces whose rows changed. App Intents and Spotlight use the same instance.
+/// log, and each read of it rebuilds only the spaces whose rows changed. The widget and control intents use the same instance.
 @MainActor @Observable
 final class SyncClient {
     /// The owner of rows written without a session token, as under the DEBUG launch flag. It never syncs.

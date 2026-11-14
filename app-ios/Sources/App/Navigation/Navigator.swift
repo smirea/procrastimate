@@ -205,11 +205,11 @@ final class Navigator {
         tab = pins.first { $0 != pin }.map(AppTab.pin) ?? .browse
     }
 
-    func showSearch(query: String = "") {
+    func showSearch() {
         sheet = nil
         paths[.browse] = []
         tab = .browse
-        searchQuery = query
+        searchQuery = ""
         focusSearch = true
     }
 

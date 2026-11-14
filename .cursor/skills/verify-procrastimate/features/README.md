@@ -4,8 +4,6 @@ This directory is the maintained source for verifying the user-facing behavior o
 
 The web and iOS clients cover adding, Ramble voice capture, viewing, editing, completing, subtasks, repeating, prioritizing, reminding, push notifications, labeling, searching, theming, settings, syncing between paired clients, importing from Todoist, sharing with other accounts, AI accounts, and public links, and commenting on tasks. The steps below are how to drive each feature by hand. A step that cites a test names a real Playwright spec in `app-web/e2e/`, a unit test, or a Swift test in `app-ios/Tests/`. `bun test scripts/feature-map-citations.test.ts`, part of `bun test` in CI, fails on any cited spec, test title, Swift test, Playwright project, or screenshot that does not exist. A step with no citation is proven by hand only. The repo has no XCUITest suite by decision: `./sim test` in a worktree runs throwaway XCUITests against the app instead. Keyboard task selection on the web is still planned. A `Planned:` step describes the intended user path and the observable result, with no harness commands or stable handles. Replace it with exact commands when its feature and harness ship.
 
-The iOS app works with Siri, Shortcuts, and Spotlight. Every new feature that someone can do from outside the app ships with App Intents in the same change. The web client is excluded: those are iOS system features, so they have no web steps.
-
 ## Baseline preconditions
 
 - Generate env values with `env-manager gen --local`, then start the web client and server with `bun run start` from the repo root.
@@ -77,6 +75,5 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [GitHub on tasks](./github.md) covers attaching GitHub issues and pull requests to a task, their live title and state in details, opening them on GitHub, the row's `#number`, and pasted GitHub links titled through GitHub's API.
 - [Notouroboros tasks](./notouroboros-tasks.md) covers tasks Notouroboros sends: the waveform icon on rows, the `Notouroboros` line in details, `procrastimate://task/<id>` links, and the shared session.
 - [Tinycast](./tinycast.md) covers the Mac launcher extension: the `Add Task` command, the `Tasks` list with its lists, search, and add row, and completing, dating, prioritizing, opening, and deleting from it.
-- [Siri, Shortcuts, and Spotlight](./app-intents.md) covers the iOS App Intents: adding and completing tasks, opening lists and projects, search, today's and overdue tasks, and Spotlight. Web is excluded.
 - [Give feedback](./feedback.md) covers the Feedback editor: the shake and its pill on iOS, Alt+Meta+click, a three-finger hold, and Settings' countdown on the web, picking a component, the image and JSON exports with their context, posting the feedback to a ProcrastiMate project, and filing it as a GitHub issue from Stefan's account.
 - [Widgets and controls](./widgets.md) covers the iOS Home Screen and Lock Screen widgets (Tasks, Progress, Quick Add), completing from a checkbox, opening tasks and lists, and the Control Center controls. Web is excluded.
