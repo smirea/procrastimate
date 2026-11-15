@@ -25,6 +25,7 @@ export function startFeedback(): () => void {
 		version: __APP_VERSION__,
 		procrastimate: { url: '', app: location.origin },
 		webhooks,
+		pinned: ['ProcrastiMate'],
 	});
 	void api.feedback
 		.github()

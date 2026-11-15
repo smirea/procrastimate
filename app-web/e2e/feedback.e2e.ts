@@ -76,6 +76,8 @@ test('the GitHub Issue entry shows only for the account the server allows, and p
 	});
 	await app.reload();
 	await share();
+	await expect(editor(page).getByRole('button', { name: 'ProcrastiMate', exact: true })).toBeVisible();
+	await expect(editor(page).getByRole('button', { name: 'GitHub Issue', exact: true })).toHaveCount(0);
 	await page.getByRole('menuitem', { name: 'GitHub Issue' }).click();
 	await expect(page.locator('.toast')).toContainText('Sent to GitHub Issue', { timeout: 15_000 });
 	expect(posted).toEqual({ parts: ['id', 'title', 'image', 'report'], cookie: true });

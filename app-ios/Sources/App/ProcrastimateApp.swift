@@ -61,6 +61,7 @@ struct ProcrastimateApp: App {
         _sync = State(initialValue: sync)
         _attachments = State(initialValue: attachments)
         Feedback.enable()
+        Feedback.pinned = ["ProcrastiMate"]
         Feedback.context("Session") { (api: AppEnvironment.apiURL.absoluteString, signedIn: auth.signedIn, user: Session.userID) }
         Feedback.context("Sync") { (status: sync.engine.status, pendingWrites: sync.engine.pending) }
         Feedback.context("Navigation") { (tab: navigator.tab, route: navigator.currentRoute, sheet: navigator.sheet) }
