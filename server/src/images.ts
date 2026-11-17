@@ -1,12 +1,12 @@
 import type { R2Bucket } from '@cloudflare/workers-types';
 import { and, eq, notExists, sql, type SQL } from 'drizzle-orm';
 import { access as accessTable, orphans, tasks } from '../../shared/db/schema';
-import { byteKeySchema, type ByteKey } from '../../shared/images';
+import type { ByteKey } from '../../shared/images';
 import { readActor, spaceOf } from './actor';
 import type { App } from './app';
 import type { Db } from './db/sqlite';
 import { errorResponse } from './errors';
-import { imagesRoute, type Grant } from './image-bytes';
+import { imagesRoute, sizeOf, type Grant } from './image-bytes';
 import { identify } from './sentry';
 import { managesSpace } from './scope';
 import { accessIn, seenBy, sightOf } from './space';
@@ -45,10 +45,10 @@ export async function authorizeImages(request: Request, app: App): Promise<Grant
 	const { db } = app;
 	const query = new URL(request.url).searchParams;
 	const id = query.get('id') ?? '';
-	const size = byteKeySchema.safeParse(query.get('size'));
-	if (!IMAGE_ID.test(id) || !size.success) return errorResponse('BAD_REQUEST', 'Needs an attachment id and size');
+	const size = sizeOf(request);
+	if (!IMAGE_ID.test(id) || !size) return errorResponse('BAD_REQUEST', 'Needs an attachment id and size');
 	const owner = spaceOf(actor, query.get('space'));
-	const grant = { key: objectKey(owner, id, size.data) };
+	const grant = { key: objectKey(owner, id, size) };
 	if (actor.kind === 'human' && actor.id === owner) return grant;
 	const access = accessIn(db, owner, actor);
 	if (access?.role !== 'guest') return errorResponse('FORBIDDEN', 'Not shared with you');

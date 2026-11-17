@@ -13,6 +13,7 @@ import {
 	uploadCompletionSchema,
 	type uploadBegunSchema,
 	type uploadedPartSchema,
+	type ByteKey,
 	type ImageSize,
 } from '../../shared/images';
 import { errorResponse } from './errors';
@@ -29,6 +30,18 @@ export type Grant = { key: string };
 export type Authorize = (request: Request) => Promise<Grant | Response>;
 
 export const isImageRoute = (request: Request) => new URL(request.url).pathname === IMAGES_PATH;
+
+/**
+ * The object a request names. `feedback-engine` through 1.6, on the web and iOS and in every app that embeds it,
+ * uploads its report the way files went up before the bucket: as `part0`, `part1`, and so on, 1.5 MB each. A report is
+ * nearly always one part, so `part0` is taken as the whole file and a second part is refused. Delete this once
+ * `feedback-engine` sends `file` and the apps have it.
+ */
+export function sizeOf(request: Request): ByteKey | null {
+	const size = new URL(request.url).searchParams.get('size');
+	if (size === 'part0' && request.method === 'PUT') return 'file';
+	return byteKeySchema.safeParse(size).data ?? null;
+}
 
 /**
  * An id's bytes never change. `no-transform` here and `Content-Encoding: identity` on every answer keep Cloudflare from
@@ -48,7 +61,7 @@ export async function imagesRoute(request: Request, bucket: R2Bucket, authorize:
 	const grant = await authorize(request);
 	if (grant instanceof Response) return grant;
 	const query = new URL(request.url).searchParams;
-	const size = byteKeySchema.parse(query.get('size'));
+	const size = sizeOf(request)!;
 	const upload = query.get('upload');
 	if (request.method === 'GET' || request.method === 'HEAD') return read(request, bucket, grant.key, query);
 	if (size !== 'file') {
@@ -155,7 +168,7 @@ async function putImage(request: Request, bucket: R2Bucket, key: string, size: I
  * whatever it claims to be.
  */
 export function fileMetadata(file: { name: string; type: string }): R2HTTPMetadata {
-	const name = file.name.slice(0, 255) || 'file';
+	const name = file.name.slice(0, 255);
 	const type = previewType({ name, type: file.type });
 	const encoded = encodeURIComponent(name).replace(
 		/['()*]/g,
@@ -163,7 +176,8 @@ export function fileMetadata(file: { name: string; type: string }): R2HTTPMetada
 	);
 	return {
 		contentType: type ?? FILE_TYPE,
-		contentDisposition: `${type ? 'inline' : 'attachment'}; filename*=UTF-8''${encoded}`,
+		// An upload that names no file leaves the name to the client, which knows it from the task.
+		contentDisposition: `${type ? 'inline' : 'attachment'}${name ? `; filename*=UTF-8''${encoded}` : ''}`,
 		cacheControl: CACHE,
 	};
 }

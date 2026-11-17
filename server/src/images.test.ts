@@ -60,7 +60,7 @@ describe('/api/images', () => {
 		expect(again.status).toBe(304);
 		expect((await put(owner, crypto.randomUUID(), 'full', JPEG, 'image/webp')).status).toBe(415);
 		expect((await put(owner, crypto.randomUUID(), 'thumb', new Uint8Array(200_001))).status).toBe(413);
-		expect((await put(owner, id, 'part0', JPEG)).status).toBe(400);
+		expect((await put(owner, id, 'parts', JPEG)).status).toBe(400);
 		expect((await get(owner, 'missing-image-id', 'thumb')).status).toBe(404);
 		expect((await app.fetch(path(id, 'full'))).status).toBe(401);
 	});
@@ -92,6 +92,17 @@ describe('/api/images', () => {
 		expect([tail.headers.get('content-range'), await tail.text()]).toEqual(['bytes 7-9/10', '789']);
 		expect((await get(owner, notes, 'file', {}, { range: 'bytes=50-60' })).status).toBe(416);
 		expect((await put(owner, crypto.randomUUID(), 'file', new Uint8Array(16 * 1024 * 1024 + 1))).status).toBe(413);
+	});
+
+	test('a report feedback-engine uploads as part0 is stored as the whole file, and a second part is refused', async () => {
+		const id = crypto.randomUUID();
+		const report = new TextEncoder().encode('{"notes":[]}');
+		expect((await put(owner, id, 'part0', report, 'application/octet-stream')).status).toBe(200);
+		expect((await put(owner, id, 'part1', report, 'application/octet-stream')).status).toBe(400);
+		const served = await get(owner, id, 'file');
+		expect(served.headers.get('content-disposition')).toBe('attachment');
+		expect(await served.text()).toBe('{"notes":[]}');
+		expect((await get(owner, id, 'part0')).status).toBe(400);
 	});
 
 	test('a long file goes up in parts, resumes, and reads back whole', async () => {
