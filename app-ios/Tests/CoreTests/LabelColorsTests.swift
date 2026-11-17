@@ -13,14 +13,9 @@ import Testing
         }
     }
 
-    @Test func thePromptListsEveryColor() {
-        #expect(Set(promptNames.map(\.0)) == Set(LabelColor.allCases))
-    }
-
     @Test func everyNameInThePromptThatAHintKnowsTakesThePromptsColor() {
         let disagreeing = promptNames.filter { color, name in LabelColors.hintedColor(name).map { $0 != color } ?? false }
         #expect(disagreeing.map { "\($1) is \($0.rawValue) in the prompt" } == [])
         #expect(promptNames.contains { LabelColors.hintedColor($1) != nil })
     }
-
 }

@@ -3,7 +3,7 @@ import { integer, sqliteTable, text, type SQLiteTable } from 'drizzle-orm/sqlite
 import { drizzleSyncDatabase, openSyncDatabase, type WebDatabase } from 'sync-engine/client-web';
 import workerUrl from './sync/worker.ts?worker&url';
 import { access, comments, labels, projects, reads, sections, settings, tasks } from 'shared/db/schema.ts';
-import { CHANGE_LOG, changeLogStatements, DATABASE_FILE_KEY } from 'shared/local-database.ts';
+import { CHANGE_LOG, changeLogStatements } from 'shared/local-database.ts';
 import type { RowsRead, StoredRow, TableRead } from 'shared/local-rows.ts';
 import type { Kind } from 'shared/model.ts';
 import { KIND_OF, TABLE_OF, type SyncedTable } from 'shared/kinds.ts';
@@ -21,10 +21,7 @@ let opened: WebDatabase | null = null;
  * fails that use, which the store reports as a database it could not open, instead of failing the page's imports.
  */
 function open(): WebDatabase {
-	const query = new URLSearchParams({
-		client: JSON.stringify(client()),
-		file: localStorage.getItem(DATABASE_FILE_KEY) ?? '',
-	});
+	const query = new URLSearchParams({ client: JSON.stringify(client()) });
 	opened ??= openSyncDatabase({ worker: new Worker(`${workerUrl}?${query}`, { type: 'module' }) });
 	return opened;
 }

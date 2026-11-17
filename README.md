@@ -10,7 +10,6 @@ bun run start:client
 bun run start:server
 bun test                       # unit tests
 bun run check                  # typecheck root and app-web
-bun run test:e2e               # Playwright desktop and iPhone suites (bunx playwright install --with-deps chromium webkit once)
 bun run preview                # build and serve the production Worker locally with wrangler dev
 ```
 

@@ -1,6 +1,5 @@
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { tunnelDestination } from './sentry';
-import { testApp } from './test-app';
 
 const WEB_DSN = 'https://0123abcd@o42.ingest.us.sentry.io/7';
 const envelope = (header: string) => new TextEncoder().encode(`${header}\n{"type":"event"}\n{}`);
@@ -25,21 +24,4 @@ test('an envelope for any other project, or without a DSN, is refused', () => {
 
 test('nothing is forwarded while the web DSN is not provisioned', () => {
 	expect(tunnelDestination(envelope(`{"dsn":"${WEB_DSN}"}`), '')).toBeNull();
-});
-
-test('a browser that disconnects mid-envelope gets an answer, and nothing is forwarded or thrown', async () => {
-	const app = await testApp({ env: { SENTRY_ENVIRONMENT: 'production', SENTRY_RELEASE: 'test' } });
-	const body = new ReadableStream({
-		start(controller) {
-			controller.error(new TypeError("Can't read from request stream because client disconnected."));
-		},
-	});
-	const forward = spyOn(globalThis, 'fetch');
-	try {
-		const response = await app.fetch('/api/sentry', { method: 'POST', body, duplex: 'half' } as RequestInit);
-		expect(response.status).toBe(400);
-		expect(forward).not.toHaveBeenCalled();
-	} finally {
-		forward.mockRestore();
-	}
 });

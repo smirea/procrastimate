@@ -27,7 +27,7 @@ Preconditions:
 - **Task.** Open `Pay rent` and choose `Copy task as Markdown`. The button turns into a check, the toast reads `Copied as Markdown`, and the clipboard holds `- Pay rent` with `  - Find checkbook` under it.
 - **Section.** In Inbox, hover `Today` and choose `Copy Today as Markdown`. The clipboard starts with `## Today`, then a blank line, then the same two lines.
 - **View.** In Inbox, choose `Copy Inbox as Markdown`. The clipboard holds `# Inbox`, the `## Today` section, and `## Tomorrow` with `- Call mom`.
-- **Project.** In `Work`, choose `Copy Work as Markdown`. The clipboard starts with `# Work`. A project with sections copies its loose tasks first, then `## <section>` with each section's tasks, skipping empty ones. Test: `sections group a project, take tasks from quick add and details, and rename, reorder, and delete` in `e2e/sections.e2e.ts`.
+- **Project.** In `Work`, choose `Copy Work as Markdown`. The clipboard starts with `# Work`. A project with sections copies its loose tasks first, then `## <section>` with each section's tasks, skipping empty ones.
 - **iOS.** Long-press `Pay rent` and choose `Copy as Markdown`. `xcrun simctl pbpaste booted` prints the same text as the web task copy.
 
 ## Gotchas

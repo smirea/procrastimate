@@ -95,7 +95,7 @@ class Store {
 	#rows = new LocalRows('');
 	/** The newest change in the database's log that memory reflects; null reads everything next. */
 	#cursor: number | null = null;
-	/** What the reads cost so far, for the end-to-end specs. */
+	/** What the reads cost so far, which `window.procrastimate.reads()` shows to whoever verifies sync by hand. */
 	readStats = { reloads: 0, rows: 0, ms: 0 };
 	#switching: Promise<void> = Promise.resolve();
 	/** Until the database belongs to the signed-in user, a read could show another account's rows as theirs. */

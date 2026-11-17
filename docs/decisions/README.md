@@ -28,7 +28,7 @@ ProcrastiMate's concepts, goals, paradigms, and high-level system decisions, one
 - [Production hosting](production-hosting.md): the Cloudflare Worker, the `App` and `Ramble` Durable Objects, the crons, secrets, deploys, and free-tier fit.
 - [Persistence](persistence.md): the clients' sync-engine databases, source keys, the server's SQLite, its additive migration, backups, and restore.
 - [Sync](sync.md): sync-engine, one space for every user with the server's rules as its hooks, per-reader pulls, last-write conflicts, and how readers resolve dangling references.
-- [Testing](testing.md): unit tests, end-to-end tests, and the feature map.
+- [Testing](testing.md): which tests may exist, where they run, and the feature map.
 - [iOS app](ios.md): the native SwiftUI app, its architecture, the Swift port and shared test vectors, local notifications, macOS CI, and paired parity tests. Its checklist and thread split are in [iOS parity](../ios-parity.md).
 - [Auth](auth.md): Better Auth sessions, Google and Apple, and per-user data.
 - [Sharing](sharing.md): spaces, actors, shares, public links, AI accounts and their tokens, and who did what.

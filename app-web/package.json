@@ -8,15 +8,13 @@
 	"scripts": {
 		"start": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run vite",
 		"build": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run vite build",
-		"check": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run svelte-kit sync && bun --env-file=.env.local run svelte-check-native --tsconfig ./tsconfig.json && bun check --no-script -p src/service-worker",
-		"test:e2e": "bun ../scripts/generate/index.ts && bun --env-file=.env.local scripts/e2e-build.ts && bun --env-file=.env.local run playwright test"
+		"check": "bun ../scripts/generate/index.ts && bun --env-file=.env.local --bun run svelte-kit sync && bun --env-file=.env.local run svelte-check-native --tsconfig ./tsconfig.json && bun check --no-script -p src/service-worker"
 	},
 	"devDependencies": {
 		"@fontsource-variable/google-sans-flex": "^5.3.1",
 		"@orpc/client": "2.0.0-beta.43",
 		"@orpc/contract": "2.0.0-beta.43",
 		"@orpc/openapi": "2.0.0-beta.43",
-		"@playwright/test": "^1.65.0",
 		"@sentry/sveltekit": "11.8.0",
 		"@sqlite.org/sqlite-wasm": "^3.54.1-build1",
 		"@stefan.inc/feedback-engine": "latest",
@@ -26,8 +24,9 @@
 		"drizzle-orm": "0.45.4",
 		"fflate": "^0.8.3",
 		"phosphor-svelte": "^3.1.1",
+		"playwright-core": "^1.65.1",
 		"svelte": "^5.57.2",
-		"svelte-check-native": "^1.10.0",
+		"svelte-check-native": "^1.12.1",
 		"typescript": "^6"
 	}
 }

@@ -13,8 +13,6 @@
 		"**/*.gen.ts",
 		".svelte-kit",
 		"**/.svelte-kit",
-		"test-results",
-		"playwright-report",
 		"shared/vectors/*.json",
 		"app-web/env.ts",
 		"server/src/env.ts",

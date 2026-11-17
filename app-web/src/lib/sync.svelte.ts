@@ -147,7 +147,7 @@ export async function settled(): Promise<void> {
 	}
 }
 
-/** Read by the end-to-end specs. A store that has not read the database yet still owes the time zone it notes on loading, so it counts as pending. */
+/** Read through `window.procrastimate` when verifying sync by hand. A store that has not read the database yet still owes the time zone it notes on loading, so it counts as pending. */
 async function pending(): Promise<number> {
 	if (!store.loaded) return 1;
 	await store.written();

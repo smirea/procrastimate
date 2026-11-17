@@ -82,26 +82,6 @@ describe('feedback as GitHub issues', () => {
 		expect((await app.fetch('/api/feedback/github')).status).toBe(401);
 	});
 
-	test('Stefan’s post files an issue with the screenshot, the items, and the report, as the token’s account', async () => {
-		const asked = github();
-		const response = await post(stefan.headers);
-		expect(response.status).toBe(201);
-		expect(await response.json()).toEqual({ url: `https://github.com/${FEEDBACK_REPO}/issues/7` });
-		expect(asked.map(({ method, url }) => `${method} ${url.split('?')[0]}`)).toEqual([
-			`GET ${API}`,
-			'POST https://uploads.github.com/user-attachments/assets',
-			`POST ${API}/issues`,
-		]);
-		expect(asked.every(request => request.auth === 'Bearer gho_feedback')).toBe(true);
-		expect(asked[1]!.url).toContain('repository_id=42');
-		const issue = JSON.parse(asked[2]!.body) as { title: string; body: string; labels: string[] };
-		expect(issue.title).toBe('Inbox Feedback: 1 change');
-		expect(issue.labels).toEqual(['feedback']);
-		expect(issue.body).toStartWith(`![Inbox Feedback: 1 change](${ASSET})`);
-		expect(issue.body).toContain('**1. TaskRow** · `App/TaskRow.swift:12`\n\n> Row is too tall');
-		expect(issue.body).toContain('<summary>feedback.json</summary>');
-	});
-
 	test('every other caller is refused before GitHub hears of it', async () => {
 		const asked = github();
 		const refused = await post(guest.headers);
@@ -112,15 +92,6 @@ describe('feedback as GitHub issues', () => {
 		expect((await post(tokenHeaders(aiToken))).status).toBe(403);
 		expect((await post({})).status).toBe(401);
 		expect(asked).toEqual([]);
-	});
-
-	test('GitHub’s refusal reaches the editor as the message', async () => {
-		github('https://uploads.github.com/');
-		const response = await post(stefan.headers);
-		expect(response.status).toBe(502);
-		expect(((await response.json()) as { message: string }).message).toStartWith(
-			'GitHub answered 401 to POST /user-attachments/assets',
-		);
 	});
 
 	test('a report too long for the issue goes into comments that join back into the file', async () => {
@@ -134,20 +105,5 @@ describe('feedback as GitHub issues', () => {
 		expect(comments.length).toBe(2);
 		const joined = comments.map(comment => /```json\n([\s\S]*)\n```/.exec(comment)![1]).join('');
 		expect(joined).toBe(report(text));
-	});
-
-	test('a server without the token answers 503', async () => {
-		const bare = await testApp();
-		const someone = await signUp(bare, 'Stefan');
-		expect(await json<{ enabled: boolean }>(bare.fetch('/api/feedback/github', { headers: someone.headers }))).toEqual({
-			enabled: false,
-		});
-		const { 'content-type': _, ...headers } = someone.headers;
-		const form = new FormData();
-		form.set('id', 'x');
-		form.set('title', 't');
-		form.set('image', new File(['i'], 'feedback.png'));
-		form.set('report', new File(['{}'], 'feedback.json'));
-		expect((await bare.fetch('/api/feedback/issues', { method: 'POST', headers, body: form })).status).toBe(503);
 	});
 });

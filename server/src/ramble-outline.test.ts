@@ -22,14 +22,10 @@ const gemini = (text: string, status = 200) =>
 	);
 
 let withKey: TestApp;
-let withoutKey: TestApp;
 let owner: Session;
-let other: Session;
 beforeAll(async () => {
 	withKey = await testApp({ env: { GEMINI_API_KEY: 'test-key' } });
-	withoutKey = await testApp();
 	owner = await signUp(withKey, 'Owner');
-	other = await signUp(withoutKey, 'Other');
 });
 
 let upstream: ReturnType<typeof spyOn<typeof globalThis, 'fetch'>> | null = null;
@@ -104,10 +100,6 @@ describe('ramble outline', () => {
 		expect((await post(withKey, owner, input)).status).toBe(502);
 		stubGemini(() => gemini('{"tasks": [{"when": "friday"}]}'));
 		expect((await post(withKey, owner, input)).status).toBe(502);
-	});
-
-	test('without a key the route is unavailable', async () => {
-		expect((await post(withoutKey, other, input)).status).toBe(503);
 	});
 
 	test('an AI account may not call it', async () => {

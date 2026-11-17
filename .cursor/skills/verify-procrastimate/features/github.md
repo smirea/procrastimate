@@ -18,7 +18,6 @@ A task carries GitHub issues and pull requests as metadata. Task details show ea
 
 ## Driving it
 
-- **Web.** `a pasted pull request link attaches it to the task, shows its live title and state, opens GitHub in a new tab, and comes off again` in `e2e/github.e2e.ts` covers `attach`, `live-state`, `open`, `remove`, and `row-number` with `/api/github` stubbed. `an attached issue GitHub cannot read shows its repo and number` in `e2e/github.e2e.ts` covers the fallback.
 - **Server.** `GET /api/github` in `server/src/github.test.ts` covers the API states, the token header, the page-title fallback, and the null answer. Against real GitHub, sign up on the worktree's server and `curl -b <cookies> "localhost:<CLIENT_PORT>/api/github?url=https://github.com/smirea/procrastimate/pull/309"` answers its title, `merged`, and `pull`. A private repo answers nulls without `GITHUB_TOKEN`.
 - **iOS.** With the worktree's server running, `./sim test` a throwaway XCUITest that signs in with an email account on that server, launches with `PROCRASTIMATE_DEMO="seed details:Buy+oat+milk"`, taps `Add a GitHub issue or pull request`, types the link into the alert, and taps `Attach`. The chip's label reads `Pull request procrastimate#309, <title>, Merged`, tapping it brings Safari to the foreground, and `Remove procrastimate#309` takes it off. The `No date` row then shows `#309`.
 - **Paste titles.** The same as `edit-link-paste` in [Edit task](./edit-task.md), with a GitHub pull request link: the title reads `[<PR title>](<link>)`.

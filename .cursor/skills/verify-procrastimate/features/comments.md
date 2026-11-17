@@ -30,5 +30,3 @@ Preconditions: two accounts in two browser contexts, the owner with a project sh
 3. Open the task. Expect the comment by `Gus` and `Gus commented` in Activity. Close it and expect the gray bubble with `1`.
 4. Post a reply as the owner, edit it, and delete it. Expect `edited` after the edit and an undo toast after the delete.
 5. Change the share to `view` and reload the guest. Expect the comments with no `Add a comment` field.
-
-`app-web/e2e/sharing.e2e.ts` covers steps 1 to 3 on the web. iOS: `PROCRASTIMATE_SIGNED_IN=1 PROCRASTIMATE_DEMO=sharing` seeds Ann's Garden with unread comments on `Plant the tulip bulbs` and `Buy a new hose`.
