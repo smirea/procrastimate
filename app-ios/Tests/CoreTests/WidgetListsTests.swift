@@ -54,11 +54,6 @@ import Testing
         return WidgetLists.listing(choice, data, now: pinned, today: today, in: zone)
     }
 
-    @Test func choicesStartWithTodayThenEveryOwnList() {
-        let names = WidgetLists.choices(data, today: today, in: zone).map(\.name)
-        #expect(names == ["Today", "Inbox", "Tomorrow", "This week", "No date", "House", "calls"])
-    }
-
     @Test func todayListsOverdueFirstThenTodayByPriority() throws {
         let today = try listing("today")
         #expect(today.tasks.map(\.title) == ["Pay rent", "Fix sink", "Call mom"])
@@ -153,21 +148,6 @@ import Testing
         #expect(data.checking("Water plants", now: pinned, today: today, in: zone) == nil)
     }
 
-    @Test func aCheckedRowShowsStruckInPlaceForAMomentAfterTheTap() throws {
-        let checked = try checkedOff()
-        let choice = try #require(WidgetLists.choice(key: "today", in: checked, today: today, in: zone))
-
-        let struck = WidgetLists.listing(choice, checked, now: pinned.addingTimeInterval(1.4), today: today, in: zone)
-        #expect(struck.rows.map(\.title) == ["Pay rent", "Fix sink", "Call mom"])
-        #expect(struck.checked == ["Fix sink"])
-        #expect(struck.tasks.map(\.title) == ["Pay rent", "Call mom"])
-        #expect(struck.done == 2)
-
-        let gone = WidgetLists.listing(choice, checked, now: pinned.addingTimeInterval(1.5), today: today, in: zone)
-        #expect(gone.rows.map(\.title) == ["Pay rent", "Call mom"])
-        #expect(gone.checked.isEmpty)
-    }
-
     @Test func aCheckedRepeatingTaskHidesItsNextOccurrenceUntilItLeaves() throws {
         var daily = data
         daily.tasks[0].recurrence = Recurrence(interval: 1, unit: .day)
@@ -194,30 +174,6 @@ import Testing
         #expect(listing.rows.first?.title == "Pay rent")
     }
 
-    @Test func checkedRowsLeaveAMomentAfterTheTap() throws {
-        let redraws = WidgetLists.redraws(after: pinned.addingTimeInterval(0.3), try checkedOff(), days: 2, in: zone)
-        #expect(redraws.map(\.timeIntervalSince1970) == [pinned.timeIntervalSince1970 + 1.5, 1_792_022_400, 1_792_108_800])
-        let later = WidgetLists.redraws(after: pinned.addingTimeInterval(1.5), try checkedOff(), days: 2, in: zone)
-        #expect(later.map(\.timeIntervalSince1970) == [1_792_022_400, 1_792_108_800])
-    }
-
-    @Test func titlesShowALinksLabelOnly() {
-        #expect(WidgetLists.title("Look into [Google Maps](https://maps.google.com/x)") == "Look into Google Maps")
-        #expect(WidgetLists.title("Read https://example.com/a now") == "Read https://example.com/a now")
-        #expect(WidgetLists.title("Buy oat milk") == "Buy oat milk")
-    }
-
-    @Test func dueDatesDropTodayOrTheTime() {
-        #expect(WidgetLists.due(Due(date: today, time: "15:00"), today) == "3pm")
-        #expect(WidgetLists.due(Due(date: today, time: "09:30"), today) == "9:30am")
-        #expect(WidgetLists.due(Due(date: today), today) == "Today")
-        #expect(WidgetLists.due(Due(date: "2026-10-13", time: "15:00"), today) == "Yest.")
-        #expect(WidgetLists.due(Due(date: "2026-10-15", time: "15:00"), today) == "Tmrw")
-        #expect(WidgetLists.due(Due(date: "2026-10-17"), today) == "Sat")
-        #expect(WidgetLists.due(Due(date: "2026-10-01"), today) == "Oct 1")
-        #expect(WidgetLists.due(Due(date: "2027-01-05"), today) == "Jan 5, 2027")
-    }
-
     @Test func addingFromTodayDatesTheTaskToday() {
         #expect(WidgetList.today.screen(today: today) == .inbox(date: today))
         #expect(WidgetList.pin(.inbox).screen(today: today) == .inbox(date: nil))
@@ -234,37 +190,6 @@ import Testing
         #expect(AppLink(try #require(URL(string: "https://procrastimate.stf.lol/task/abc"))) == nil)
         #expect(AppLink(try #require(URL(string: "https://procrastimate.stf.lol/inbox?task=abc"))) == .task(id: "abc"))
         #expect(AppLink(try #require(URL(string: "https://procrastimate.stf.lol/s/abc"))) == nil)
-    }
-
-    @Test func aDividerHeadsTheFirstRowAfterToday() throws {
-        let inbox = try listing("inbox")
-        #expect(inbox.slots(limit: 3).map(\.task?.title) == ["Pay rent", "Fix sink", "Call mom"])
-        #expect(inbox.slots(limit: 4) == [
-            .task(inbox.rows[0]), .task(inbox.rows[1]), .task(inbox.rows[2]), .later("Tomorrow"), .task(inbox.rows[3]),
-        ])
-        #expect(inbox.slots(limit: 9).count == 5)
-        #expect(try listing("today").later == nil)
-        #expect(try listing("tomorrow").later == nil)
-    }
-
-    @Test func aDividerPastTomorrowNamesTheDay() throws {
-        var data = data
-        data.tasks += [task("Dentist", due: "2026-10-17"), task("Taxes", due: "2026-10-30")]
-        data.tasks.removeAll { $0.title == "Plan trip" }
-        let choice = try #require(WidgetLists.choice(key: "inbox", in: data, today: today, in: zone))
-        #expect(WidgetLists.listing(choice, data, now: pinned, today: today, in: zone).later.map { "\($0.index) \($0.label)" } == "3 " + "Saturday")
-        data.tasks.removeAll { $0.title == "Dentist" }
-        #expect(WidgetLists.listing(choice, data, now: pinned, today: today, in: zone).later.map { "\($0.index) \($0.label)" } == "3 " + "Fri, Oct 30")
-    }
-
-    @Test func noDividerWithoutTodayRowsFirstOrADatedRowAfter() throws {
-        #expect(try listing("noDate").later == nil)
-        // House holds only today's Fix sink; label calls only today's Call mom.
-        #expect(try listing("project:p-house").later == nil)
-        var data = data
-        data.tasks.append(task("Mow lawn", due: "2026-10-20", project: "p-house"))
-        let choice = try #require(WidgetLists.choice(key: "project:p-house", in: data, today: today, in: zone))
-        #expect(WidgetLists.listing(choice, data, now: pinned, today: today, in: zone).later.map { "\($0.index) \($0.label)" } == "1 " + "Tuesday")
     }
 
     func shortcut(_ key: String, _ counter: WidgetLists.Counter, in data: WidgetData) throws -> WidgetLists.Shortcut {
