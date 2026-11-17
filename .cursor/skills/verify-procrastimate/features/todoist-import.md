@@ -21,19 +21,16 @@
 
 Preconditions:
 
-- The baseline state and the synthetic backup from `shared/fixtures/todoist-backup.mts`, zipped by `todoistBackupZip()` in `e2e/fixtures.ts`. Never use a real backup. The repo is public.
-- Automated proof: `bun test shared/todoist.test.ts shared/csv.test.ts` for the reader, and `bun run test:e2e -- e2e/sections.e2e.ts` for the import into sections.
+- The baseline state and the synthetic backup from `shared/fixtures/todoist-backup.mts`, zipped. Never use a real backup. The repo is public.
 
 - **Import.** Open Settings, click `Import from Todoist`, and pick the backup in the file chooser. The `Import summary` status reads `2 projects`, `12 tasks`, `0 skipped`, and `2 sections and 3 labels added`, and `Import warnings` lists 2 warnings: an unreadable `every! 3 days` and a German date.
-- **Result.** After a reload, Inbox lists `Call the dentist` (Oct 22, p1, one reminder), `cancel [meetup.com](https://meetup.com)`, `Renew passport #Travel` (repeats yearly from Mar 2, 2027 11am), `Water plants` (label `home`, notes from its description and comment), and `Fix bike` (notes `Todoist date: every! 3 days`). `Long Term` lists `Visit Japan` under the `Someday` section and both `Read Dune` under `Reading`, with `Visit Japan` showing `0 of 1 subtasks done` and `Book flights` as its subtask. `Job` shows `Quarterly review` with the `work` and `deep-work` labels. Test: `a Todoist backup imports once with its sections, a second import skips every task, and a wrong file changes nothing` in `e2e/import.e2e.ts`.
+- **Result.** After a reload, Inbox lists `Call the dentist` (Oct 22, p1, one reminder), `cancel [meetup.com](https://meetup.com)`, `Renew passport #Travel` (repeats yearly from Mar 2, 2027 11am), `Water plants` (label `home`, notes from its description and comment), and `Fix bike` (notes `Todoist date: every! 3 days`). `Long Term` lists `Visit Japan` under the `Someday` section and both `Read Dune` under `Reading`, with `Visit Japan` showing `0 of 1 subtasks done` and `Book flights` as its subtask. `Job` shows `Quarterly review` with the `work` and `deep-work` labels.
 - **Re-import.** Import the same backup again. The summary reads `0 projects`, `0 tasks`, and `12 skipped`, and every list keeps one copy of each task.
 - **Wrong file.** Pick a file that is not a zip. An alert reads `This is not a Todoist backup zip.` and no task is added.
-- **Automated.** Wrong file, import, summary and its two warnings, re-import, and the lists after a reload holding one copy of each task: `a Todoist backup imports once, a second import skips every task, and a wrong file changes nothing` in `e2e/import.e2e.ts`.
 - **Reader.** CSV edge cases (byte order mark, quoted commas and newlines, CRLF), priority, indent, reminders, labels, and every date example. Tests in `shared/todoist.test.ts` and `shared/csv.test.ts`.
 - **iOS.** `Import from Todoist` opens the document picker limited to zips. Picking `todoist-backup.zip` under On My iPhone › ProcrastiMate shows `2 projects`, `12 tasks`, `0 skipped`, `2 sections and 3 labels added`, and the same two warnings as the web, the Inbox lists the same five tasks, a second import shows `12 skipped`, and `not-a-backup.zip` shows `This is not a Todoist backup zip.` and changes nothing. Put the synthetic zip and a non-zip file named `not-a-backup.zip` into the simulator app's Documents folder first. `VectorTests` replays the import dedupe from `shared/vectors/todoist.json`. The CSV reader, Todoist reader, and merge are already in `Core`: `swift test` in `app-ios/` replays `shared/vectors/csv.json` and `todoist.json` in `VectorTests`, including Todoist date phrases read by `QuickAdd`.
 
 ## Gotchas
 
-- Playwright's file chooser bypasses the OS picker. Wait for the `filechooser` event before clicking `Import from Todoist`.
 - Dates without a year resolve against the pinned clock, Wednesday, October 14 2026, so `Oct 22` is 2026 and `Oct 13` would be 2027.
 - A project named like a label, such as `Work` next to `@work`, makes sidebar link names ambiguous. The fixture uses `Job` for that reason.

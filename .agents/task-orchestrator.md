@@ -22,8 +22,8 @@ Repo config for the global `task-orchestrator` skill (`~/code/ai-files/skills/ta
 
 - Read `docs/decisions/README.md`.
 - T3's setup also ran `bun run generate` and made a git-ignored `./sim`. Your server runs on your own ports from `.env.override` over a SQLite file in your worktree's `.data/`; nothing is shared.
-- Plain `bun run start` signs in against the in-memory auth database. E2E tests sign in on their own.
-- The machine is loaded, so run e2e specs one or two at a time, and only those that cover the change.
+- Plain `bun run start` signs in against the in-memory auth database.
+- There are no browser tests. Verify UI in the running app, and run only the unit tests that cover the change.
 
 ## iOS: boot a simulator only to look at the app
 

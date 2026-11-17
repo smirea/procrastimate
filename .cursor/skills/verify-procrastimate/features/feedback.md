@@ -20,11 +20,9 @@ Feedback freezes the screen into an editor, in every build on both clients. Stef
 - iOS: shake the iPhone on any screen, then tap `Add Feedback`. In the simulator, use **Device › Shake**.
 - Web: Option+Command+click anything. On a phone, hold three fingers on the screen, or open Settings and press `Give feedback`.
 
-## Driving it with Playwright (web)
+`__feedbackEngine.present()` opens the editor without a click, and `__feedbackEngine.lastExport` holds the last export's files.
 
-`app-web/e2e/feedback.e2e.ts` covers `click-open`, `tap-select`, `post-to-procrastimate`, `post-to-github`, `countdown-open`, and `hold-open`: an Alt+Meta+click on a row's title selects `Text "<title>"`, `Select parent` steps to `TaskRow`, and `Share`, `ProcrastiMate`, `Add` creates a task in the Inbox with an image and `feedback.json`. `__feedbackEngine.present()` opens the editor without a click, and `__feedbackEngine.lastExport` holds the last export's files.
-
-The `phone` test in the same file holds three touch points through CDP's `Input.dispatchTouchEvent` in a `hasTouch` Chromium context: one on a row first, then all three. Playwright's WebKit has no multi-touch, so iOS Safari is checked by hand: on the phone, hold three fingers on any list for a moment and the editor opens over it.
+On a phone, hold three fingers on any list for a moment and the editor opens over it.
 
 ## Driving it with agent-device and simctl (iOS)
 
@@ -42,7 +40,7 @@ Preconditions:
 
 ## Filing a GitHub issue (both clients)
 
-A local run has no entry until the server names the signed-in account. Sign up, then restart the server with `FEEDBACK_GITHUB_TOKEN="$(gh auth token --user smirea-ai)" FEEDBACK_GITHUB_USER_ID=<the account's id from the sign-up response> bun src/index.ts` in `server/`. Share then lists `GitHub Issue` after `ProcrastiMate`; choosing it shows `Sent to GitHub Issue` and a real issue lands in `smirea/procrastimate`, so close it afterwards. A second account signed in to the same server lists no `GitHub Issue`. `app-web/e2e/feedback.e2e.ts` covers the web without GitHub: the suite's server names no account, so the entry is missing, and with `/api/feedback/github` and the post stubbed it posts `id`, `title`, `image`, and `report` with the session cookie. `server/src/feedback-issues.test.ts` covers the gate and the issue's body against a fake GitHub.
+A local run has no entry until the server names the signed-in account. Sign up, then restart the server with `FEEDBACK_GITHUB_TOKEN="$(gh auth token --user smirea-ai)" FEEDBACK_GITHUB_USER_ID=<the account's id from the sign-up response> bun src/index.ts` in `server/`. Share then lists `GitHub Issue` after `ProcrastiMate`; choosing it shows `Sent to GitHub Issue` and a real issue lands in `smirea/procrastimate`, so close it afterwards. A second account signed in to the same server lists no `GitHub Issue`. `server/src/feedback-issues.test.ts` covers the gate and the issue's body against a fake GitHub.
 
 ## Gotchas
 

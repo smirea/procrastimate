@@ -18,5 +18,5 @@ Signed out, both clients open on the sign-in screen: the ProcrastiMate sloth, wi
 
 ## Driving it
 
-- Web: `e2e/auth.e2e.ts` waits for the `ProcrastiMate` heading, signs up, and lands on the Inbox. It also reloads signed in and expects `/api/sync/token` as the only auth or sync request.
+- Web: wait for the `ProcrastiMate` heading, sign up, and land on the Inbox. A signed-in reload makes `/api/sync/token` its only auth or sync request.
 - iOS: `SIMCTL_CHILD_PROCRASTIMATE_RESET=1 xcrun simctl launch <udid> com.stefan.procrastimate`, then take a screenshot. To see `signin-error`, build Debug with `API_URL=http:/$()/127.0.0.1:1`: the card shows `Could not reach the server` and the `NSURLErrorDomain Code=-1004` detail under it. Watch the log with `xcrun simctl spawn <udid> log stream --level error --predicate 'category == "errors"'`.

@@ -18,8 +18,6 @@ Notouroboros, Stefan's voice memo app, extracts tasks from each memo and sends t
 - iOS: tap a task in Notouroboros to open it in ProcrastiMate.
 - Web: the same rows show the waveform icon, and task details show `Notouroboros` without a link.
 
-## Driving it with curl, simctl, and Playwright
-
 Preconditions:
 
 - The server runs with sign-in on: `API_PORT=6141 BETTER_AUTH_SECRET=<any 32 chars> bun src/index.ts` in `server/`. The account lives in memory.
