@@ -11,6 +11,7 @@ Feedback freezes the screen into an editor, in every build on both clients. Stef
 - `tap-select` selects the smallest tagged component or accessibility element under a tap, and shows its parent, its `file:line`, and its data under the screenshot.
 - `export` shares the annotated image, the JSON report, or both in a ZIP. The JSON's `context` lists `Session`, `Sync`, `Navigation`, and `Store`.
 - `post-to-procrastimate` adds a task named after the screen followed by `Feedback` to the picked project, with the image and `feedback.json` attached. The web posts to its own origin's API with the session cookie.
+- `post-failure` (iOS) shows a red toast, `Couldn't add to ProcrastiMate` with the reason under it, when a post cannot be sent. It stays until tapped, and the tap opens a sheet with the message, `Copy Error`, the details open, and `Retry`. On the web the `Add to ProcrastiMate` sheet stays open and shows the failure itself.
 - `post-to-github` (Stefan's account only) is the Share menu's `GitHub Issue`: it files the feedback as an issue labeled `feedback` in `smirea/procrastimate`, opened by `smirea-ai`, and the toast `Sent to GitHub Issue` links to it. Any other account has no such entry, and the server refuses its post.
 - `discard-prompt` asks before closing the editor with items never shared.
 
@@ -37,6 +38,7 @@ Preconditions:
 - **Tap select.** Press a point on a task row in the screenshot with a plain coordinate press (no `--settle`). The selection reads the row's combined button, with `Select parent, TaskRow` and `App/TaskRow.swift` with a line number, and the task's data starting `task: Task(id: …`.
 - **Export.** Type a note, press `Add feedback`, then `Share` and `JSON`. Read `"$(xcrun simctl get_app_container <udid> com.stefan.procrastimate data)/tmp/feedback.json"`; its `context` has the four entries above. Replay its taps with Feedback's `skills/feedback-accessibility/scripts/taps.py`: on the seeded Inbox about a quarter of the grid falls through, all of it in the gaps between rows.
 - **Post to ProcrastiMate.** `Share`, then `ProcrastiMate`. The sheet `Add to ProcrastiMate` lists `Inbox` and the account's projects. Pick one and press `Add`. `GET /api/view` lists the task in that project with two attachments, an image and `feedback.json`, and the project's screen in the app shows it with `2` beside the paperclip.
+- **Post failure.** Make the server refuse uploads for the run: add `if (request.method === 'PUT') return errorResponse('BAD_REQUEST', 'Refused');` after the grant check in `imagesRoute` (`server/src/image-bytes.ts`), which `bun run start:server` reloads. Post as above. The red toast is still there after 8 s; press it at its center, about `200 154`. The sheet `ProcrastiMate` shows the message, `Copy Error`, and `Details` open with `Status: 400`; `agent-device clipboard read` after `Copy Error` prints all of it. Remove the line, press `Retry`, and the toast `Added to Inbox in ProcrastiMate` follows.
 
 ## Filing a GitHub issue (both clients)
 
@@ -44,6 +46,8 @@ A local run has no entry until the server names the signed-in account. Sign up, 
 
 ## Gotchas
 
+- agent-device refuses to press `Add Feedback` by label, calling it covered by the navigation bar. Press the pill at `201 94` about a second after the shake, then check the snapshot starts with `Close` and `Feedback`: a press that misses lands in the app instead.
+- A task posted to a project deleted after the sheet loaded lands in the Inbox, so that does not make a post fail.
 - Only a coordinate press reaches the editor's canvas reliably. A snapshot or `--settle` between presses has stopped the canvas from receiving taps.
 - Dismissing the system share sheet does not mark items shared, so `Close` then asks `Discard feedback?`.
 - At a tab root the list hides its navigation bar, so the posted task is named `ProcrastiMate Feedback` rather than after the list.
