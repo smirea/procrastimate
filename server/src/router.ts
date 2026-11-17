@@ -404,7 +404,7 @@ export const router = os.router({
 		}),
 	},
 	images: {
-		// `api.ts` answers image requests before the router, so this never runs.
+		// Whoever holds the bucket answers image requests before the router (`image-bytes.ts`), so this never runs.
 		get: os.images.get.handler(() => {
 			throw new ORPCError('NOT_FOUND', { message: 'Image requests never reach the router' });
 		}),

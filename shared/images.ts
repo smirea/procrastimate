@@ -2,9 +2,8 @@ import { z } from 'zod';
 import type { LabelColor } from './label-colors.ts';
 
 /**
- * Task attachments. A task lists `Attachment`s; the bytes of each live in the server's `images` table, fetched by id
- * from `IMAGES_PATH`: an image as one row per size, any other file as the parts it was split into. See
- * `docs/decisions/images.md`.
+ * Task attachments. A task lists `Attachment`s; the bytes of each live in a private R2 bucket, read and written through
+ * `IMAGES_PATH`: an image as one object per size, any other file as one `file` object. See `docs/decisions/images.md`.
  */
 
 export const IMAGES_PATH = '/api/images';
@@ -18,41 +17,54 @@ export const IMAGE_TYPES = ['image/webp', 'image/jpeg'] as const;
 export const imageTypeSchema = z.enum(IMAGE_TYPES).meta({ id: 'ImageType' });
 export type ImageType = z.infer<typeof imageTypeSchema>;
 
-/**
- * What clients encode to and the server accepts. One row must fit every store: the Durable Object's SQLite caps a
- * row at 2 MB, and Turso's server refused a single 8 MB blob where 4 MB went through. `edge` is the longest side in
- * pixels.
- */
+/** What clients encode to and the server accepts. `edge` is the longest side in pixels. */
 export const IMAGE_LIMITS = {
 	full: { edge: 2048, bytes: 1_500_000 },
 	thumb: { edge: 320, bytes: 200_000 },
 } as const satisfies Record<ImageSize, { edge: number; bytes: number }>;
 
-/** A file is stored in parts that each fit one row, under the same 2 MB cap images stay under. */
-export const FILE_PART_BYTES = 1_500_000;
-export const FILE_MAX_BYTES = 25_000_000;
+/** One stored object of an attachment: an image's size, or a file's bytes. */
+export const BYTE_KEYS = [...IMAGE_SIZES, 'file'] as const;
+export const byteKeySchema = z.enum(BYTE_KEYS);
+export type ByteKey = z.infer<typeof byteKeySchema>;
+
+/**
+ * A file at most this long goes up in one request; a longer one in parts this long, the last one shorter. R2 takes
+ * multipart parts of one size, at least 5 MiB, and a Worker request carries at most 100 MB.
+ */
+export const FILE_PART_BYTES = 16 * 1024 * 1024;
+export const FILE_MAX_BYTES = 2_000_000_000;
 export const FILE_MAX_PARTS = Math.ceil(FILE_MAX_BYTES / FILE_PART_BYTES);
-/** The server stores and answers every file part as opaque bytes, so a page never renders an uploaded file as itself. */
-export const FILE_PART_TYPE = 'application/octet-stream';
+/** What a file is stored as unless `previewType` names a type a browser shows safely. */
+export const FILE_TYPE = 'application/octet-stream';
+
+/** What beginning a multipart upload answers: the upload its parts go to, or null when the file is already stored. */
+export const uploadBegunSchema = z.object({ upload: z.string().nullable() }).meta({ id: 'UploadBegun' });
+/** What storing one part answers. */
+export const uploadedPartSchema = z.object({ etag: z.string() }).meta({ id: 'UploadedPart' });
+/** What completes a multipart upload: every part's etag, in order. */
+export const uploadCompletionSchema = z.object({ parts: z.array(z.string()) }).meta({ id: 'UploadCompletion' });
 
 export const filePartCount = (bytes: number) => Math.max(1, Math.ceil(bytes / FILE_PART_BYTES));
 
-/** One row of the bytes table: an image's size, or the `n`th part of a file. */
-export type PartKey = `part${number}`;
-export type ByteKey = ImageSize | PartKey;
-export const partKey = (index: number): PartKey => `part${index}`;
-const PART_KEY = /^part(\d{1,2})$/;
-/** What a request's `size` names, before `parseByteKey` checks a part's number. */
-export const byteKeySchema = z.string().regex(/^(full|thumb|part\d{1,2})$/);
-
-export function parseByteKey(
-	value: string | null,
-): { key: ImageSize; part: null } | { key: PartKey; part: number } | null {
-	const size = imageSizeSchema.safeParse(value);
-	if (size.success) return { key: size.data, part: null };
-	const match = value?.match(PART_KEY);
-	const part = match ? Number(match[1]) : NaN;
-	return part < FILE_MAX_PARTS ? { key: partKey(part), part } : null;
+/**
+ * The type a file is served as when a browser may show it in a tab, or null when it only downloads. Anything that can
+ * run script there, such as HTML or SVG, downloads, since the tab shares the app's origin.
+ */
+export function previewType(file: { name: string; type: string }): string | null {
+	switch (fileKind(file)) {
+		case 'pdf':
+			return 'application/pdf';
+		case 'text':
+			return 'text/plain;charset=utf-8';
+		case 'audio':
+		case 'video':
+			return /^(audio|video)\/[\w.+-]+$/.test(file.type) ? file.type : null;
+		case 'image':
+			return /^image\/(png|jpeg|gif|webp|avif)$/.test(file.type) ? file.type : null;
+		default:
+			return null;
+	}
 }
 
 /** The scaled size that fits `edge`, never upscaled. */
@@ -69,9 +81,11 @@ export function sniffImageType(bytes: Uint8Array): ImageType | null {
 	return null;
 }
 
-export const imageUrl = (space: string | null, id: string, key: ByteKey) => {
+/** `download` answers the bytes as a download under the file's name, whatever its type. */
+export const imageUrl = (space: string | null, id: string, key: ByteKey, { download = false } = {}) => {
 	const query = new URLSearchParams({ id, size: key });
 	if (space) query.set('space', space);
+	if (download) query.set('download', '1');
 	return `${IMAGES_PATH}?${query}`;
 };
 

@@ -4,11 +4,13 @@ import { config, withLocalStandIns } from './config';
 import { restoreDump } from './db/backup';
 import { bunStore } from './db/bun-store';
 import { serveDev } from './dev-server';
+import { localBucket } from './local-bucket';
 import env from './env';
 
 /**
  * The Bun entry, which never reports to Sentry: only deploys do. Values env-manager leaves empty get the local
- * stand-ins. The database is a git-ignored SQLite file in `.data/`, one per checkout, so worktrees never share one;
+ * stand-ins. The database is a git-ignored SQLite file in `.data/`, one per checkout, so worktrees never share one,
+ * with the attachments bucket in a folder beside it;
  * `PROCRASTIMATE_DATABASE` names another file, or `:memory:`, and `PROCRASTIMATE_RESTORE` a dump to load into it while
  * it holds no user.
  */
@@ -26,7 +28,8 @@ if (restore) {
 	const counts = restoreDump(store.db, JSON.parse(await Bun.file(restore).text()), Date.now());
 	console.log('Restored', restore, JSON.stringify(counts));
 }
-const server = await serveDev(API_PORT, parsed, store);
+const bucket = localBucket(file === ':memory:' ? null : `${file}.bucket`);
+const server = await serveDev(API_PORT, parsed, store, bucket);
 
 console.log('Server running at:', server.url.href);
 console.log('Database:', file, `(head ${store.space.head()})`);

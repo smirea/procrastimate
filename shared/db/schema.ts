@@ -1,6 +1,5 @@
-import { customType, index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
-import type { ByteKey } from '../images.ts';
 import { DICTATION_CHOICES, RAMBLE_MODES } from '../dictation.ts';
 import { DEFAULT_QUICK_ADD_BUTTONS } from '../quick-add-buttons.ts';
 import { ACCESS_KINDS, KINDS, type Kind } from '../kinds.ts';
@@ -48,7 +47,7 @@ export const tasks = sqliteTable(
 		/** Set only on iOS. A task with an event has no due date or repeat; the event's times stand in for both. */
 		event: json('event').$type<ColumnValue<'tasks', 'event'>>(),
 		/**
-		 * Attached images and files, as one last-writer-wins list like `labelIds`. The bytes are in `images`, never here.
+		 * Attached images and files, as one last-writer-wins list like `labelIds`. The bytes are in the bucket, never here.
 		 * The column keeps the name it had when it held only images.
 		 */
 		attachments: json('images').$type<ColumnValue<'tasks', 'attachments'>>().notNull().default([]),
@@ -347,35 +346,18 @@ export const webhooks = sqliteTable(
 	table => [primaryKey({ columns: [table.userId, table.id] }), uniqueIndex('webhooks_url').on(table.userId, table.url)],
 );
 
-/** bun:sqlite reads a blob as a `Uint8Array` and a Durable Object as an `ArrayBuffer`. */
-const bytes = customType<{ data: Uint8Array<ArrayBuffer>; driverData: Uint8Array | ArrayBuffer }>({
-	dataType: () => 'blob',
-	toDriver: value => value,
-	fromDriver: value =>
-		value instanceof ArrayBuffer
-			? new Uint8Array(value)
-			: new Uint8Array(value.buffer as ArrayBuffer, value.byteOffset, value.byteLength),
-});
-
 /**
- * The bytes of task attachments, never synced: one row per size of an image, one per part of a file (`ByteKey`). A
- * Durable Object row holds at most 2 MB, which `IMAGE_LIMITS` and `FILE_PART_BYTES` stay under. A row is garbage
- * once no task lists its id;
- * `orphanedAt` is when a sweep first saw that, and a later sweep deletes it after a grace period.
+ * Attachments whose bytes sit in the bucket while no task lists their id, never synced. `orphanedAt` is when a sweep
+ * first saw that; a later sweep deletes the bytes after a grace period, and the row with them.
  */
-export const images = sqliteTable(
-	'images',
+export const orphans = sqliteTable(
+	'orphans',
 	{
 		userId: text('user_id').notNull(),
 		id: text('id').notNull(),
-		size: text('size').$type<ByteKey>().notNull(),
-		/** An image's type, or `FILE_PART_TYPE` for a file part. */
-		type: text('type').notNull(),
-		bytes: bytes('bytes').$type<ColumnValue<'images', 'bytes'>>().notNull(),
-		createdAt: millis('created_at').notNull(),
-		orphanedAt: millis('orphaned_at'),
+		orphanedAt: millis('orphaned_at').notNull(),
 	},
-	table => [primaryKey({ columns: [table.userId, table.id, table.size] })],
+	table => [primaryKey({ columns: [table.userId, table.id] })],
 );
 
 type Row<T extends { $inferSelect: object }> = Omit<T['$inferSelect'], 'userId'>;

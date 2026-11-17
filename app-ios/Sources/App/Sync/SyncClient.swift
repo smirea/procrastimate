@@ -72,7 +72,7 @@ final class SyncClient {
             headers: [AppClient.header: AppClient.value],
             beforePush: {
                 guard let token = SessionToken.read() else { return }
-                try await TaskAttachments.uploadQueued(token: token)
+                try await TaskAttachments.uploadQueuedImages(token: token)
             }
         )
         self.engine = engine

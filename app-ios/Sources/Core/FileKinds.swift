@@ -1,6 +1,6 @@
 import Foundation
 
-/// What a file attachment is, for its icon, and how it is split for the server. Mirrors `shared/images.ts`, whose
+/// What a file attachment is, for its icon, and how a long one is split to upload. Mirrors `shared/images.ts`, whose
 /// tests record the vectors `VectorTests` replays.
 public enum FileKind: String, CaseIterable, Sendable {
     case pdf, document, spreadsheet, presentation, archive, audio, video, image, code, text, other
@@ -12,11 +12,9 @@ public enum FileKind: String, CaseIterable, Sendable {
 }
 
 public enum FileKinds {
-    /// Each part fits one server row, under the 2 MB a Durable Object row holds.
+    /// A file at most this long uploads in one request, a longer one in parts this long.
     public static let partBytes = SharedConstants.filePartBytes
     public static let maxBytes = SharedConstants.fileMaxBytes
-    /// The server stores and answers every part as opaque bytes.
-    public static let partType = SharedConstants.filePartType
 
     public static func partCount(_ bytes: Int) -> Int { max(1, (bytes + partBytes - 1) / partBytes) }
 

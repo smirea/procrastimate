@@ -1,7 +1,6 @@
 import type { R2Bucket } from '@cloudflare/workers-types';
 import { getTableColumns, getTableName, sql, type Column } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
-import { base64Decode, base64Encode } from '../jwt';
 import { user } from './auth-schema';
 import { SERVER_TABLES } from './migrate';
 import type { Db } from './sqlite';
@@ -14,24 +13,19 @@ export const RESTORE_KEY = 'restore/pending.json';
 /** Every table but the engine's bookkeeping, which a restore starts fresh. */
 type Dump = { at: string; tables: Record<string, Record<string, unknown>[]> };
 
-/** Bytes become base64 so the dump stays JSON; everything else is what Drizzle reads. */
-const encode = (_key: string, value: unknown) =>
-	value instanceof Uint8Array ? { $bytes: base64Encode(value) } : value;
-
 /** The whole database as one JSON document, read in one transaction, so every table comes from the same moment. */
 export function dumpJson(db: Db, at: Date): string {
 	return db.transaction(tx => {
 		const tables: Dump['tables'] = {};
 		for (const table of SERVER_TABLES) tables[getTableName(table)] = tx.select().from(table).all();
-		return JSON.stringify({ at: at.toISOString(), tables } satisfies Dump, encode);
+		return JSON.stringify({ at: at.toISOString(), tables } satisfies Dump);
 	});
 }
 
-/** A dumped value as its column takes it again: dates from their JSON text, bytes from base64. */
+/** A dumped value as its column takes it again: dates from their JSON text. */
 function decode(column: Column, value: unknown): unknown {
 	if (value === null || value === undefined) return value;
 	if (column.columnType === 'SQLiteTimestamp') return new Date(value as string);
-	if (typeof value === 'object' && value !== null && '$bytes' in value) return base64Decode(String(value.$bytes));
 	return value;
 }
 

@@ -26,6 +26,18 @@ enum ImageEncoder {
         return Encoded(width: width, height: height, full: full, thumb: thumb)
     }
 
+    /// A small upright picture to show at once, while `encode` runs. Decoding a full-size photo on the main actor
+    /// stalls it, so callers run this off it too.
+    static func preview(_ data: Data) -> CGImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 336,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    }
+
     /// The first JPEG under `bytes`, at falling quality, then at a smaller scale.
     private static func fit(_ source: CGImageSource, edge: Int, bytes: Int) throws -> (Data, Int, Int) {
         var edge = edge

@@ -13,6 +13,7 @@ const HAND_WRITTEN: Record<string, string> = {
 	Pin: "An iOS tab bar pin, kept in this device's UserDefaults and never synced.",
 	WidgetData: "The iOS widgets' copy of the user's lists, written to this device's app group and never synced.",
 	Checked: 'A row the iOS widgets just checked off, kept in WidgetData for a moment so it leaves struck through.',
+	QueuedUpload: 'A file in the iOS upload queue, with how far its upload got, kept on this device and never synced.',
 	RecentPick: "A place picked in the iOS Location sheet, kept in this device's UserDefaults and never synced.",
 };
 

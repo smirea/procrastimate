@@ -4,7 +4,6 @@ import { SENTRY_TUNNEL_PATH } from '../../shared/sentry';
 import { clientOf, forgetSession, readActor } from './actor';
 import type { App } from './app';
 import { errorResponse } from './errors';
-import { imagesRoute, isImageRoute } from './images';
 import { faviconRoute, isFaviconRoute } from './link-preview';
 import { router } from './router';
 import { reportError, reportRpcError, sentryTunnel } from './sentry';
@@ -59,7 +58,7 @@ async function liveRoute(request: Request, app: App): Promise<Response> {
 }
 
 /**
- * One fetch handler for `/api/*` but Ramble's socket. `dev-server.ts` serves it with Bun and the `App` Durable Object
+ * One fetch handler for `/api/*` but Ramble's socket and attachment bytes. `dev-server.ts` serves it with Bun and the `App` Durable Object
  * on Cloudflare, so it stays free of Bun and Node APIs. A request that moved the space's head, whether a sync, a
  * command, or a share that changed `access` rows, tells every sync socket once it is answered.
  */
@@ -71,13 +70,15 @@ export async function handle(request: Request, app: App): Promise<Response> {
 	return response;
 }
 
-/** The Sentry tunnel, sync and its live socket, image bytes, link icons, the contract's procedures, then Better Auth. */
+/**
+ * The Sentry tunnel, sync and its live socket, link icons, the contract's procedures, then Better Auth. Attachment
+ * bytes never come here: whoever holds the bucket answers them (`image-bytes.ts`).
+ */
 async function route(request: Request, app: App): Promise<Response> {
 	const url = new URL(request.url);
 	if (request.method === 'POST' && url.pathname === SENTRY_TUNNEL_PATH) return sentryTunnel(request, app.config);
 	if (request.method === 'POST' && url.pathname === '/api/sync') return syncRoute(request, app);
 	if (url.pathname === '/api/live') return liveRoute(request, app);
-	if (isImageRoute(request)) return imagesRoute(request, app);
 	if (isFaviconRoute(request)) return faviconRoute(request, app);
 	const { matched, response } = await rpc.handle(request, { context: { app, request } });
 	if (matched) return response;

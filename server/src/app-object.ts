@@ -12,10 +12,12 @@ import { user } from './db/auth-schema';
 import { backupDatabase, RESTORE_KEY, restoreDump } from './db/backup';
 import type { Db } from './db/sqlite';
 import { openStore } from './db/store';
-import { sweepImages } from './images';
+import { authorizeImages, sweepImages } from './images';
+import { moveLegacyImages } from './legacy-image-rows';
 import { headMessage, liveProtocol, protocolHeaders, type Live } from './live';
 import { deliverDue, pushSender } from './push';
 import { dbRambleData } from './ramble';
+import { reportError } from './sentry';
 import { deliverWebhooks, fetchWebhook } from './webhooks';
 
 /**
@@ -26,6 +28,7 @@ import { deliverWebhooks, fetchWebhook } from './webhooks';
 export class AppObject extends DurableObject<Env> {
 	private readonly app: Promise<App>;
 	private readonly db: Db;
+	private legacyImages: 'waiting' | 'moving' | 'moved' = 'waiting';
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx as never, env);
@@ -59,6 +62,7 @@ export class AppObject extends DurableObject<Env> {
 
 	override async fetch(request: Request): Promise<Response> {
 		const app = await this.app;
+		this.moveLegacyImages();
 		const url = new URL(request.url);
 		if (!url.pathname.startsWith('/internal/')) return handle(request, app);
 		const ramble = dbRambleData(this.db);
@@ -66,6 +70,10 @@ export class AppObject extends DurableObject<Env> {
 		switch (url.pathname) {
 			case INTERNAL.actor:
 				return Response.json(await readActor(request, app));
+			case INTERNAL.images: {
+				const grant = await authorizeImages(request, app);
+				return grant instanceof Response ? grant : Response.json(grant);
+			}
 			case INTERNAL.cron:
 				return Response.json(
 					await this.crons[cronNamed(url.searchParams.get('cron') ?? '')](app, Number(url.searchParams.get('at'))),
@@ -98,7 +106,28 @@ export class AppObject extends DurableObject<Env> {
 		console.log(`Restored ${RESTORE_KEY}: ${JSON.stringify(counts)}`);
 	}
 
-	/** Every minute the due pushes and webhooks go out; at 09:00 UTC the database is dumped to R2 and orphaned image bytes swept. */
+	/**
+	 * One batch of the move beside each request, one at a time, until it answers that nothing is left. An attachment
+	 * not moved yet answers `404` and its client asks again.
+	 */
+	private moveLegacyImages(): void {
+		const { ATTACHMENTS, BACKUPS } = this.env;
+		if (this.legacyImages !== 'waiting' || !ATTACHMENTS || !BACKUPS) return;
+		this.legacyImages = 'moving';
+		this.ctx.waitUntil(
+			moveLegacyImages(this.db, ATTACHMENTS, BACKUPS, new Date())
+				.then(said => {
+					if (said) console.log(said);
+					this.legacyImages = said ? 'waiting' : 'moved';
+				})
+				.catch(error => {
+					this.legacyImages = 'waiting';
+					reportError(error);
+				}),
+		);
+	}
+
+	/** Every minute the due pushes and webhooks go out; at 09:00 UTC the database is dumped to R2 and orphaned attachment bytes swept. */
 	private readonly crons: Record<CronName, (app: App, at: number) => Promise<string>> = {
 		delivery: async (app, at) => {
 			const [sent, hooks] = await Promise.all([
@@ -111,8 +140,9 @@ export class AppObject extends DurableObject<Env> {
 		},
 		backup: async (app, at) => {
 			if (!this.env.BACKUPS) throw new Error('The BACKUPS R2 binding is missing');
+			if (!this.env.ATTACHMENTS) throw new Error('The ATTACHMENTS R2 binding is missing');
 			const key = await backupDatabase(app.db, this.env.BACKUPS, new Date(at));
-			sweepImages(app.db, at);
+			await sweepImages(app.db, this.env.ATTACHMENTS, at);
 			return `Backed up the database to ${key}`;
 		},
 	};

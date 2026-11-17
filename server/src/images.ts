@@ -1,31 +1,21 @@
-import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
-import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
-import { images, tasks } from '../../shared/db/schema';
-import {
-	FILE_PART_BYTES,
-	FILE_PART_TYPE,
-	IMAGE_LIMITS,
-	IMAGES_PATH,
-	imageTypeSchema,
-	parseByteKey,
-	sniffImageType,
-	type ImageType,
-} from '../../shared/images';
+import type { R2Bucket } from '@cloudflare/workers-types';
+import { and, eq, notExists, sql, type SQL } from 'drizzle-orm';
+import { access as accessTable, orphans, tasks } from '../../shared/db/schema';
+import type { ByteKey } from '../../shared/images';
 import { readActor, spaceOf } from './actor';
 import type { App } from './app';
 import type { Db } from './db/sqlite';
-import { chunks } from './db/chunks';
 import { errorResponse } from './errors';
+import { imagesRoute, sizeOf, type Grant } from './image-bytes';
 import { identify } from './sentry';
-import { accessIn, seenBy, sightOf, type Sight } from './space';
+import { managesSpace } from './scope';
+import { accessIn, seenBy, sightOf } from './space';
 
 /**
- * Attachment bytes, apart from sync. A task lists its attachments' ids in its synced `attachments` field; the bytes
- * sit in the `images` table, never synced, written and read one row at a time: an image's sizes, a file's parts. See
- * `docs/decisions/images.md`.
+ * Who may read and write attachment bytes, and which bytes are garbage: the half of attachments that needs the
+ * database. The bytes themselves sit in the bucket, which `image-bytes.ts` reads and writes once this has granted the
+ * request. See `docs/decisions/images.md`.
  */
-
-export const isImageRoute = (request: Request) => new URL(request.url).pathname === IMAGES_PATH;
 
 /**
  * How long bytes outlive the last task that listed them. Long enough for undo, a device that deleted a task offline
@@ -33,122 +23,121 @@ export const isImageRoute = (request: Request) => new URL(request.url).pathname 
  */
 export const IMAGE_GRACE_MS = 2 * 24 * 60 * 60 * 1000;
 
-/**
- * The daily cron's sweep over every user: reads which images exist and which a live task lists, two queries, then
- * marks the unlisted, clears the mark of the listed again, and drops what stayed unlisted past the grace period.
- * Nothing on the write path reads the `images` table.
- */
-export function sweepImages(db: Db, now: number): void {
-	const states = db.select({ userId: images.userId, id: images.id, orphanedAt: images.orphanedAt }).from(images).all();
-	const listed = db
-		.select({ userId: tasks.userId, attachments: tasks.attachments })
-		.from(tasks)
-		.where(sql`json_array_length(${tasks.attachments}) > 0`)
-		.all();
-	const referenced = new Set(listed.flatMap(row => row.attachments.map(item => `${row.userId}:${item.id}`)));
-	for (const [owner, rows] of Map.groupBy(states, row => row.userId)) {
-		const mark: string[] = [];
-		const unmark: string[] = [];
-		const drop: string[] = [];
-		for (const { id, orphanedAt } of rows) {
-			if (referenced.has(`${owner}:${id}`)) {
-				if (orphanedAt !== null) unmark.push(id);
-			} else if (orphanedAt === null) mark.push(id);
-			else if (orphanedAt <= now - IMAGE_GRACE_MS) drop.push(id);
-		}
-		const own = eq(images.userId, owner);
-		for (const part of chunks(mark)) {
-			db.update(images)
-				.set({ orphanedAt: now })
-				.where(and(own, inArray(images.id, part)))
-				.run();
-		}
-		for (const part of chunks(unmark)) {
-			db.update(images)
-				.set({ orphanedAt: null })
-				.where(and(own, inArray(images.id, part)))
-				.run();
-		}
-		for (const part of chunks(drop)) {
-			db.delete(images)
-				.where(and(own, inArray(images.id, part), sql`NOT ${listsImage(sql`${tasks.userId} = ${owner}`, images.id)}`))
-				.run();
-		}
-	}
-}
-
-/** Whether a task matching `where` lists attachment `id` in its JSON `attachments` array. */
-const listsImage = (where: SQL, id: SQL | SQLiteColumn | string) =>
-	sql`EXISTS (SELECT 1 FROM ${tasks}, json_each(${tasks.attachments}) AS listed WHERE ${where} AND json_extract(listed.value, '$.id') = ${id})`;
-
 const IMAGE_ID = /^[A-Za-z0-9_-]{8,80}$/;
 
+export const objectKey = (owner: string, id: string, size: ByteKey) => `${owner}/${id}/${size}`;
+
 /**
- * `GET` answers the bytes of one image size or file part, cached for good since an id's bytes never change; `PUT`
- * stores the raw body. A file part is opaque bytes both ways, so the page never renders an upload as HTML. The owner reads
- * every image the space stored, anyone else the ones a task they see lists, checked in the same select as the bytes.
- * A guest uploads with any edit share: an upload reaches the server before the write that lists it, often for a task
- * the server has not seen yet, so it cannot be tied to one; the write itself is still checked.
+ * Grants a request for attachment bytes, or answers why not. The owner reads every object the space stored, anyone
+ * else the ones a task they see lists. Only humans write, a guest with any edit share: an upload reaches the server
+ * before the write that lists it, often for a task the server has not seen yet, so it cannot be tied to one; the write
+ * itself is still checked. But a file is listed before its bytes arrive, so everyone who sees its task knows the id
+ * while the upload runs, and the first bytes stored under an id stay. So a guest never writes to an id listed by a
+ * task it cannot edit, or it could put its own bytes behind an attachment it can only see.
  */
-export async function imagesRoute(request: Request, app: App): Promise<Response> {
-	if (request.method !== 'GET' && request.method !== 'PUT') return errorResponse('NOT_FOUND', 'Not found');
+export async function authorizeImages(request: Request, app: App): Promise<Grant | Response> {
+	const reads = request.method === 'GET' || request.method === 'HEAD';
+	if (!reads && request.method !== 'PUT' && request.method !== 'POST') return errorResponse('NOT_FOUND', 'Not found');
 	const actor = await readActor(request, app);
 	if (!actor) return errorResponse('UNAUTHORIZED', 'Not signed in');
-	if (request.method === 'PUT' && actor.kind !== 'human') return errorResponse('FORBIDDEN', 'Not for AI accounts');
+	if (!reads && actor.kind !== 'human') return errorResponse('FORBIDDEN', 'Not for AI accounts');
 	identify(actor);
 	const { db } = app;
 	const query = new URL(request.url).searchParams;
-	const owner = spaceOf(actor, query.get('space'));
-	let sight: Sight | null = null;
-	let write = true;
-	if (actor.kind !== 'human' || actor.id !== owner) {
-		const access = accessIn(db, owner, actor);
-		if (access?.role !== 'guest') return errorResponse('FORBIDDEN', 'Not shared with you');
-		sight = sightOf(actor, access);
-		write = access.shares.some(share => share.role === 'edit');
-	}
 	const id = query.get('id') ?? '';
-	const byteKey = parseByteKey(query.get('size'));
-	if (!IMAGE_ID.test(id) || !byteKey) return errorResponse('BAD_REQUEST', 'Needs an image id and size');
-	const { key, part } = byteKey;
-	if (request.method === 'GET') {
-		const seen = sight ? seenBy(db, sight, owner, tasks.id) : undefined;
-		const listed = sight ? listsImage(and(eq(tasks.userId, owner), seen)!, id) : undefined;
-		const image = db
-			.select({ type: images.type, bytes: images.bytes })
-			.from(images)
-			.where(and(eq(images.userId, owner), eq(images.id, id), eq(images.size, key), listed))
+	const size = sizeOf(request);
+	if (!IMAGE_ID.test(id) || !size) return errorResponse('BAD_REQUEST', 'Needs an attachment id and size');
+	const owner = spaceOf(actor, query.get('space'));
+	const grant = { key: objectKey(owner, id, size) };
+	if (actor.kind === 'human' && actor.id === owner) return grant;
+	const access = accessIn(db, owner, actor);
+	if (access?.role !== 'guest') return errorResponse('FORBIDDEN', 'Not shared with you');
+	const lists = sql`EXISTS (SELECT 1 FROM json_each(${tasks.attachments}) AS listed WHERE json_extract(listed.value, '$.id') = ${id})`;
+	const listedWhere = (condition: SQL | undefined) =>
+		db
+			.select({ id: tasks.id })
+			.from(tasks)
+			.where(and(eq(tasks.userId, owner), lists, condition))
+			.limit(1)
 			.get();
-		if (!image) return errorResponse('NOT_FOUND', 'No such image');
-		return new Response(image.bytes, {
-			headers: {
-				'Content-Type': part === null ? image.type : FILE_PART_TYPE,
-				'Content-Length': String(image.bytes.byteLength),
-				'Cache-Control': 'private, max-age=31536000, immutable',
-				'X-Content-Type-Options': 'nosniff',
-				...(part !== null && { 'Content-Disposition': 'attachment' }),
-			},
-		});
+	if (reads) {
+		return listedWhere(seenBy(db, sightOf(actor, access), owner, tasks.id))
+			? grant
+			: errorResponse('NOT_FOUND', 'No such attachment');
 	}
-	if (!write) return errorResponse('FORBIDDEN', 'Not yours to edit');
-	const limit = byteKey.part === null ? IMAGE_LIMITS[byteKey.key].bytes : FILE_PART_BYTES;
-	if (Number(request.headers.get('content-length') ?? 0) > limit) {
-		return errorResponse('PAYLOAD_TOO_LARGE', `A part is at most ${limit} bytes`);
-	}
-	const bytes = new Uint8Array(await request.arrayBuffer());
-	if (bytes.byteLength > limit) return errorResponse('PAYLOAD_TOO_LARGE', `A part is at most ${limit} bytes`);
-	let type: ImageType | typeof FILE_PART_TYPE = FILE_PART_TYPE;
-	if (part === null) {
-		const declared = imageTypeSchema.safeParse(request.headers.get('content-type'));
-		if (!declared.success || sniffImageType(bytes) !== declared.data) {
-			return errorResponse('UNSUPPORTED_MEDIA_TYPE', 'Images are WebP or JPEG');
+	const refused = errorResponse('FORBIDDEN', 'Not yours to edit');
+	if (!access.shares.some(share => share.role === 'edit')) return refused;
+	if (managesSpace(access.shares)) return grant;
+	const edits = db
+		.select({ one: sql`1` })
+		.from(accessTable)
+		.where(
+			and(
+				eq(accessTable.grantee, actor.id),
+				eq(accessTable.owner, owner),
+				eq(accessTable.kind, 'task'),
+				eq(accessTable.entityId, tasks.id),
+				eq(accessTable.role, 'edit'),
+			),
+		);
+	return listedWhere(notExists(edits)) ? refused : grant;
+}
+
+/** Both halves in one process, as the Bun server and the tests run them. */
+export const localImages = (request: Request, app: App, bucket: R2Bucket) =>
+	imagesRoute(request, bucket, () => authorizeImages(request, app));
+
+/**
+ * The daily cron's sweep over every user: lists the bucket, reads which attachments a live task lists, then marks the
+ * unlisted in `orphans`, clears the mark of the listed again, and deletes what stayed unlisted past the grace period.
+ * Nothing on the upload path writes to the database, so the bucket's listing is what exists.
+ */
+export async function sweepImages(db: Db, bucket: R2Bucket, now: number): Promise<void> {
+	const stored = new Map<string, string[]>();
+	let cursor: string | undefined;
+	do {
+		const page = await bucket.list({ cursor });
+		for (const { key } of page.objects) {
+			const ref = key.slice(0, key.lastIndexOf('/'));
+			stored.set(ref, [...(stored.get(ref) ?? []), key]);
 		}
-		type = declared.data;
+		cursor = page.truncated ? page.cursor : undefined;
+	} while (cursor);
+
+	const referenced = new Set(
+		db
+			.select({ userId: tasks.userId, attachments: tasks.attachments })
+			.from(tasks)
+			.where(sql`json_array_length(${tasks.attachments}) > 0`)
+			.all()
+			.flatMap(row => row.attachments.map(item => `${row.userId}/${item.id}`)),
+	);
+	const marks = new Map(
+		db
+			.select()
+			.from(orphans)
+			.all()
+			.map(row => [`${row.userId}/${row.id}`, row.orphanedAt]),
+	);
+	const unmark = (ref: string) => {
+		const [userId, id] = ref.split('/') as [string, string];
+		db.delete(orphans)
+			.where(and(eq(orphans.userId, userId), eq(orphans.id, id)))
+			.run();
+	};
+	const drop: string[] = [];
+	for (const ref of stored.keys()) {
+		const mark = marks.get(ref);
+		if (referenced.has(ref)) {
+			if (mark !== undefined) unmark(ref);
+		} else if (mark === undefined) {
+			const [userId, id] = ref.split('/') as [string, string];
+			db.insert(orphans).values({ userId, id, orphanedAt: now }).run();
+		} else if (mark <= now - IMAGE_GRACE_MS) drop.push(ref);
 	}
-	// Ids are client-made UUIDs and an id's bytes never change, so a put for an existing id is a retry and keeps them.
-	db.insert(images)
-		.values({ userId: owner, id, size: key, type, bytes, createdAt: Date.now(), orphanedAt: null })
-		.onConflictDoNothing()
-		.run();
-	return Response.json({ ok: true });
+	for (const ref of marks.keys()) if (!stored.has(ref)) unmark(ref);
+
+	const keys = drop.flatMap(ref => stored.get(ref)!);
+	for (let from = 0; from < keys.length; from += 1000) await bucket.delete(keys.slice(from, from + 1000));
+	for (const ref of drop) unmark(ref);
 }

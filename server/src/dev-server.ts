@@ -1,3 +1,4 @@
+import type { R2Bucket } from '@cloudflare/workers-types';
 import type { Server } from 'bun';
 import { RAMBLE_SOCKET_PATH } from '../../shared/ramble/protocol';
 import { readActor } from './actor';
@@ -6,6 +7,8 @@ import { createApp } from './app';
 import type { Config } from './config';
 import type { Store } from './db/store';
 import { errorResponse } from './errors';
+import { isImageRoute } from './image-bytes';
+import { localImages } from './images';
 import { headMessage, liveProtocol, protocolHeaders, type Live } from './live';
 import { dbRambleData, rambleEntry, rambleRoute, upstreamOf, upstreamUrl, type ConnectUpstream } from './ramble';
 import type { OpenSocket } from './ramble-gemini';
@@ -68,12 +71,17 @@ const bunSocket: OpenSocket = (url, events) =>
 	});
 
 /**
- * The Bun dev server: the `App` object's handler on Bun's HTTP server, with Ramble's socket, which the Worker routes
- * to its own object, served here.
+ * The Bun dev server: the `App` object's handler on Bun's HTTP server, with what the Worker keeps off that object
+ * served here: Ramble's socket and attachment bytes.
  * Bun upgrades through `server.upgrade` and needs the fetch handler to answer nothing, so an accepted upgrade
  * returns a marker response that `fetch` swaps for `undefined`. No idle timeout, since sync sockets stay open.
  */
-export async function serveDev(port: number, settings: Config, store: Store): Promise<Server<SocketData>> {
+export async function serveDev(
+	port: number,
+	settings: Config,
+	store: Store,
+	bucket: R2Bucket,
+): Promise<Server<SocketData>> {
 	const upgraded = new WeakSet<Response>();
 	let server: Server<SocketData> | undefined;
 	const upgrade = (request: Request, protocol: string | null, start: SocketData['start']) => {
@@ -91,6 +99,7 @@ export async function serveDev(port: number, settings: Config, store: Store): Pr
 		idleTimeout: 0,
 		port,
 		async fetch(request) {
+			if (isImageRoute(request)) return localImages(request, app, bucket);
 			const response =
 				new URL(request.url).pathname === RAMBLE_SOCKET_PATH
 					? await rambleEntry(request, await readActor(request, app), ramble)

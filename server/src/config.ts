@@ -55,6 +55,8 @@ export type Env = { [K in Setting]?: string } & {
 	APP?: DurableObjectNamespace;
 	RAMBLE?: DurableObjectNamespace;
 	BACKUPS?: R2Bucket;
+	/** Attachment bytes. */
+	ATTACHMENTS?: R2Bucket;
 };
 
 /** The auth secret every local run shares, the Bun server, `wrangler dev`, and tests alike. */

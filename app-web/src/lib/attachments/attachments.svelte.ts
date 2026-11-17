@@ -1,13 +1,4 @@
-import {
-	FILE_MAX_BYTES,
-	FILE_PART_BYTES,
-	fileKind,
-	filePartCount,
-	imageUrl,
-	partKey,
-	type ByteKey,
-	type ImageSize,
-} from 'shared/images.ts';
+import { FILE_MAX_BYTES, FILE_PART_BYTES, FILE_TYPE, imageUrl, previewType, type ImageSize } from 'shared/images.ts';
 import { formatBytes } from 'shared/format.ts';
 import { newId } from 'shared/id.ts';
 import { isImage, type Attachment, type FileRef } from 'shared/values.ts';
@@ -16,11 +7,13 @@ import { store } from '../store.svelte.ts';
 import { toastUndo } from '../completion.ts';
 import { toasts } from '../toasts.svelte.ts';
 import { encodeImage } from './encode.ts';
-import { imageKey, keepNew, readBytes, writeBytes } from './local.ts';
+import { imageKey, keepNew, pendingUploads, readBytes, writeBytes } from './local.ts';
+import { UPLOADS_CHANNEL, type UploadMessage } from './upload.ts';
 
 /**
- * The database worker sends the queued bytes before every sync that carries writes (`upload.ts`), so the server
- * never hears of an attachment it cannot serve. See `docs/decisions/images.md`.
+ * Attachments on the page. An attached file shows at once, from the bytes it was picked as; the task lists it once
+ * those bytes are safe on the device and queued. The database worker uploads the queue (`upload.ts`): an image before
+ * the sync that lists it, a file in the background. See `docs/decisions/images.md`.
  */
 
 /** How long a missing image waits before it is asked for again, as when another device has not uploaded it yet. */
@@ -32,25 +25,12 @@ export const droppedFiles = (data: DataTransfer | null) => [...(data?.files ?? [
 /** Whether a file is kept as an image, re-encoded. SVG keeps its vectors as a file, which a canvas re-encode would flatten. */
 export const isImageFile = (file: File) => file.type.startsWith('image/') && file.type !== 'image/svg+xml';
 
-/**
- * The types a file may open as in a new tab. Anything that can run script there, such as HTML or SVG, downloads
- * instead, since the tab shares the app's origin.
- */
-function previewType(file: FileRef): string | null {
-	switch (fileKind(file)) {
-		case 'pdf':
-			return 'application/pdf';
-		case 'text':
-			return 'text/plain;charset=utf-8';
-		case 'audio':
-		case 'video':
-			return /^(audio|video)\/[\w.+-]+$/.test(file.type) ? file.type : null;
-		case 'image':
-			return /^image\/(png|jpeg|gif|webp|avif)$/.test(file.type) ? file.type : null;
-		default:
-			return null;
-	}
-}
+const fileRef = (id: string, file: File): FileRef => ({
+	id,
+	name: file.name.slice(0, 255) || 'File',
+	type: file.type,
+	bytes: file.size,
+});
 
 class Refused extends Error {}
 
@@ -58,9 +38,31 @@ class Attachments {
 	#urls = $state<Record<string, string>>({});
 	#misses = new Map<string, number>();
 	#loading = new Set<string>();
-	adding = $state<Record<string, number>>({});
+	#channel = new BroadcastChannel(UPLOADS_CHANNEL);
+	/** What each task is attaching, shown as tiles until the task lists it. An image not yet measured has no size. */
+	adding = $state<Record<string, Attachment[]>>({});
+	/** The bytes sent of each file still in the upload queue. */
+	uploading = $state<Record<string, number>>({});
 	opening = $state<Record<string, boolean>>({});
 	viewing = $state<{ taskId: string; id: string } | null>(null);
+
+	constructor() {
+		this.#channel.addEventListener('message', ({ data }: MessageEvent<UploadMessage>) => {
+			if (data.kind === 'progress') this.uploading[data.id] = data.sent;
+			else if (data.kind === 'done') delete this.uploading[data.id];
+		});
+		void pendingUploads()
+			.then(pending => {
+				for (const { id, size } of pending) if (size === 'file') this.uploading[id] ??= 0;
+			})
+			.catch(() => undefined);
+	}
+
+	/** How far a long file's upload is, from 0 to 1, or undefined once the server has it. */
+	progress(file: FileRef): number | undefined {
+		const sent = this.uploading[file.id];
+		return sent === undefined || file.bytes <= FILE_PART_BYTES ? undefined : sent / file.bytes;
+	}
 
 	url(id: string, size: ImageSize): string | undefined {
 		return this.#urls[imageKey(id, size)];
@@ -81,17 +83,14 @@ class Attachments {
 		}
 	}
 
-	/**
-	 * The bytes of one row, from the device or else the server. A fetched image size is cached; a fetched file part is
-	 * not, since files run to 25 MB and are opened rarely, and the browser's HTTP cache keeps them anyway.
-	 */
-	async #bytes(space: string | null, id: string, key: ByteKey): Promise<Blob | null> {
-		const local = await readBytes(id, key).catch(() => undefined);
+	/** An image size, from the device or else the server, which is then kept on the device so it shows offline. */
+	async #bytes(space: string | null, id: string, size: ImageSize): Promise<Blob | null> {
+		const local = await readBytes(id, size).catch(() => undefined);
 		if (local) return local;
-		const response = await fetch(imageUrl(space, id, key), { credentials: 'include' });
+		const response = await fetch(imageUrl(space, id, size), { credentials: 'include' });
 		if (!response.ok) return null;
 		const blob = await response.blob();
-		if (key === 'full' || key === 'thumb') await writeBytes(id, key, blob).catch(() => undefined);
+		await writeBytes(id, size, blob).catch(() => undefined);
 		return blob;
 	}
 
@@ -104,15 +103,39 @@ class Attachments {
 
 	#show(key: string, blob: Blob) {
 		this.#misses.delete(key);
-		this.#urls = { ...this.#urls, [key]: URL.createObjectURL(blob) };
+		const shown = this.#urls[key];
+		this.#urls[key] = URL.createObjectURL(blob);
+		if (shown) URL.revokeObjectURL(shown);
 	}
 
+	/**
+	 * Shows every file at once, then keeps each on the device and lists it on the task, in order. A file the app
+	 * cannot take is refused before it shows.
+	 */
 	async attach(taskId: string, files: Iterable<File>) {
 		const space = store.homeOf(taskId);
+		const picked: { id: string; file: File }[] = [];
 		for (const file of files) {
-			this.adding = { ...this.adding, [taskId]: (this.adding[taskId] ?? 0) + 1 };
+			const name = file.name || 'File';
+			if (!file.size) toasts.show(`${name} is empty`);
+			else if (!isImageFile(file) && file.size > FILE_MAX_BYTES) {
+				toasts.show(`${name} is over ${formatBytes(FILE_MAX_BYTES)}`);
+			} else picked.push({ id: newId(), file });
+		}
+		const shown = picked.map(({ id, file }): Attachment => {
+			if (!isImageFile(file)) return fileRef(id, file);
+			this.#show(imageKey(id, 'thumb'), file);
+			return { id, width: 0, height: 0 };
+		});
+		this.adding[taskId] = [...(this.adding[taskId] ?? []), ...shown];
+		const settle = (id: string, as?: Attachment) => {
+			const rest = (this.adding[taskId] ?? []).flatMap(item => (item.id !== id ? [item] : as ? [as] : []));
+			if (rest.length) this.adding[taskId] = rest;
+			else delete this.adding[taskId];
+		};
+		for (const { id, file } of picked) {
 			try {
-				const attachment = await this.#keep(space, file);
+				const attachment = await this.#keep(space, id, file, () => settle(id, fileRef(id, file)));
 				const task = store.task(taskId);
 				if (task) store.updateTask(taskId, { attachments: [...task.attachments, attachment] });
 			} catch (error) {
@@ -122,14 +145,16 @@ class Attachments {
 					toasts.show('Could not attach that file');
 				}
 			} finally {
-				this.adding = { ...this.adding, [taskId]: (this.adding[taskId] ?? 1) - 1 };
+				settle(id);
 			}
 		}
 	}
 
-	/** An image becomes its two encoded sizes; anything else, an image no canvas decodes included, its own bytes. */
-	async #keep(space: string | null, file: File): Promise<Attachment> {
-		const id = newId();
+	/**
+	 * An image becomes its two encoded sizes; anything else, an image no canvas decodes included (`undecoded`), its
+	 * own bytes, uploaded in the background.
+	 */
+	async #keep(space: string | null, id: string, file: File, undecoded: () => void): Promise<Attachment> {
 		const encoded = isImageFile(file) ? await encodeImage(file).catch(() => null) : null;
 		if (encoded) {
 			await keepNew(space, id, [
@@ -140,43 +165,41 @@ class Attachments {
 			this.#show(imageKey(id, 'thumb'), encoded.sizes.thumb);
 			return { id, width: encoded.width, height: encoded.height };
 		}
-		const name = file.name.slice(0, 255) || 'File';
-		if (!file.size) throw new Refused(`${name} is empty`);
-		if (file.size > FILE_MAX_BYTES) throw new Refused(`${name} is over ${formatBytes(FILE_MAX_BYTES)}`);
-		const parts = Array.from(
-			{ length: filePartCount(file.size) },
-			(_, index) =>
-				[partKey(index), file.slice(index * FILE_PART_BYTES, (index + 1) * FILE_PART_BYTES)] as [ByteKey, Blob],
-		);
-		await keepNew(space, id, parts);
-		return { id, name, type: file.type, bytes: file.size };
+		const kept = fileRef(id, file);
+		if (isImageFile(file)) {
+			undecoded();
+			if (file.size > FILE_MAX_BYTES) throw new Refused(`${kept.name} is over ${formatBytes(FILE_MAX_BYTES)}`);
+		}
+		await keepNew(space, id, [['file', file]], { name: kept.name, type: kept.type });
+		this.uploading[id] = 0;
+		this.#channel.postMessage({ kind: 'queued' } satisfies UploadMessage);
+		return kept;
 	}
 
 	/**
-	 * Opens a file in a new tab when the browser shows its kind safely, else downloads it under its name. The tab opens
-	 * before the bytes load, inside the click, or the browser would block it as a popup.
+	 * Opens a file in a new tab when the browser shows its kind safely, else downloads it under its name: from the
+	 * device while it still waits to upload, else from the server, which streams it. The tab opens inside the click,
+	 * before anything is awaited, or the browser would block it as a popup.
 	 */
 	async open(taskId: string, file: FileRef) {
 		const space = store.homeOf(taskId);
 		const type = previewType(file);
 		const tab = type ? window.open('', '_blank') : null;
-		this.opening = { ...this.opening, [file.id]: true };
+		this.opening[file.id] = true;
 		try {
-			const parts: Blob[] = [];
-			for (let index = 0; index < filePartCount(file.bytes); index++) {
-				const part = await this.#bytes(space, file.id, partKey(index));
-				if (!part) throw new Refused(`${file.name} has not finished uploading`);
-				parts.push(part);
+			const local = await readBytes(file.id, 'file').catch(() => undefined);
+			let url: string;
+			if (local) {
+				url = URL.createObjectURL(new Blob([local], { type: type ?? FILE_TYPE }));
+				setTimeout(() => URL.revokeObjectURL(url), 60_000);
+			} else {
+				const path = imageUrl(space, file.id, 'file', { download: !type });
+				const head = await fetch(path, { method: 'HEAD', credentials: 'include' });
+				if (!head.ok) throw new Refused(`${file.name} has not finished uploading`);
+				url = new URL(path, location.href).href;
 			}
-			const blob = new Blob(parts, { type: type ?? 'application/octet-stream' });
-			if (blob.size !== file.bytes) throw new Refused(`${file.name} has not finished uploading`);
-			const url = URL.createObjectURL(blob);
-			setTimeout(() => URL.revokeObjectURL(url), 60_000);
 			if (tab) tab.location.href = url;
-			else {
-				const link = Object.assign(document.createElement('a'), { href: url, download: file.name });
-				link.click();
-			}
+			else Object.assign(document.createElement('a'), { href: url, download: file.name }).click();
 		} catch (error) {
 			tab?.close();
 			if (error instanceof Refused) toasts.show(error.message);
@@ -185,7 +208,7 @@ class Attachments {
 				toasts.show(`Could not open ${file.name}`);
 			}
 		} finally {
-			this.opening = { ...this.opening, [file.id]: false };
+			delete this.opening[file.id];
 		}
 	}
 

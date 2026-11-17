@@ -5,6 +5,7 @@ import { RAMBLE_SOCKET_PATH } from '../../shared/ramble/protocol';
 import { AppObject } from './app-object';
 import { appFetch, appStub } from './app-stub';
 import { config, type Env } from './config';
+import { imagesRoute, isImageRoute, type Grant } from './image-bytes';
 import { rambleEntry, type RambleRoute } from './ramble';
 import { Ramble as RambleObject, RAMBLE_ACTOR_HEADER } from './ramble-object';
 import { sentryOptions } from './sentry';
@@ -12,7 +13,8 @@ import { sentryOptions } from './sentry';
 /**
  * The Cloudflare entry `wrangler.jsonc` names. Static assets never reach it. `/api/*` goes to the one `App` object,
  * except Ramble's socket, which the Worker authenticates through `App` and hands to the user's `Ramble` object, so
- * an hour of audio frames never runs on the object every request waits on.
+ * an hour of audio frames never runs on the object every request waits on, and attachment bytes, which the Worker
+ * streams to and from the bucket itself once `App` has granted the request.
  */
 
 export const App = instrumentDurableObjectWithSentry(sentryOptions, AppObject);
@@ -35,10 +37,23 @@ async function ramble(request: Request, env: Env): Promise<Response> {
 	return rambleEntry(request, (await answer.json()) as Actor | null, toRambleObject(env));
 }
 
+/** `App` decides who may touch which object, from the request's headers and query alone: the body never reaches it. */
+async function images(request: Request, env: Env): Promise<Response> {
+	if (!env.ATTACHMENTS) throw new Error('The ATTACHMENTS R2 binding is missing');
+	return imagesRoute(request, env.ATTACHMENTS, async () => {
+		const query = Object.fromEntries(new URL(request.url).searchParams);
+		// A `HEAD` is asked as the `GET` it reads like, since its answer would carry no grant.
+		const method = request.method === 'HEAD' ? 'GET' : request.method;
+		const answer = await appFetch(env, 'images', query, { method, headers: request.headers });
+		return answer.ok ? ((await answer.json()) as Grant) : answer;
+	});
+}
+
 async function fetch(request: Request, env: Env): Promise<Response> {
 	// Before routing, so a misconfigured deploy fails every request with the missing key named.
 	config(env);
 	if (new URL(request.url).pathname === RAMBLE_SOCKET_PATH) return ramble(request, env);
+	if (isImageRoute(request)) return images(request, env);
 	return appStub(env).fetch(request as never) as unknown as Promise<Response>;
 }
 

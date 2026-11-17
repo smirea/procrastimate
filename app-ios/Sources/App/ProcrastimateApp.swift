@@ -156,6 +156,7 @@ struct ProcrastimateApp: App {
         guard new == .active else { return }
         today = clock.today
         sync.resume()
+        FileUploads.shared.kick()
         calendar.sync()
         Task { await notifications.detect() }
         Task { await places.sync() }

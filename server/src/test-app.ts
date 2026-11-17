@@ -3,12 +3,16 @@ import type { SyncResponse, Write } from 'sync-engine/core';
 import { CLIENT_HEADER, DEVICE_HEADER } from '../../shared/auth';
 import { tasks } from '../../shared/db/schema';
 import type { Person, ShareView } from '../../shared/sharing';
+import type { R2Bucket } from '@cloudflare/workers-types';
 import { handle } from './api';
 import { createApp, type App } from './app';
 import { config, withLocalStandIns, type Env } from './config';
 import { bunStore } from './db/bun-store';
 import type { Live } from './live';
 import { errorResponse } from './errors';
+import { isImageRoute } from './image-bytes';
+import { localImages } from './images';
+import { localBucket } from './local-bucket';
 
 /**
  * The server under test: a fresh in-memory SQLite database per `testApp()`, migrated like the Bun server's, behind
@@ -21,6 +25,10 @@ export const ORIGIN = 'https://procrastimate.test';
 export async function testEnv(overrides: Partial<Env> = {}): Promise<Env> {
 	return { ...(await withLocalStandIns({})), ...overrides };
 }
+
+let bucket: R2Bucket | undefined;
+/** One bucket for the whole test run; ids keep tests apart. */
+export const testBucket = () => (bucket ??= localBucket(null));
 
 export type TestApp = App & {
 	fetch: (path: string, init?: RequestInit) => Promise<Response>;
@@ -43,7 +51,10 @@ export async function testApp(options: { env?: Partial<Env> } = {}): Promise<Tes
 	const app = await createApp(config(env), store, live);
 	return {
 		...app,
-		fetch: (path, init) => handle(new Request(`${ORIGIN}${path}`, init), app),
+		fetch: (path, init) => {
+			const request = new Request(`${ORIGIN}${path}`, init);
+			return isImageRoute(request) ? localImages(request, app, testBucket()) : handle(request, app);
+		},
 		statements,
 		published,
 	};
