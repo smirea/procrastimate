@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, jest, test } from 'bun:test';
 import type { RambleTask } from 'shared/ramble.ts';
 import type { RambleOutline } from 'shared/ramble/outline.ts';
 import { Outliner, smartTasks } from './outliner.ts';
@@ -21,7 +21,14 @@ function fakeServer() {
 	return { calls, request };
 }
 
-const tick = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms));
+/** Moves the fake clock, then lets the promises it settled run. */
+async function tick(ms = 0) {
+	jest.advanceTimersByTime(ms);
+	for (let i = 0; i < 10; i++) await Promise.resolve();
+}
+
+beforeEach(() => jest.useFakeTimers());
+afterEach(() => jest.useRealTimers());
 
 describe('Outliner', () => {
 	test('sends once the words settle, one request at a time, then the newest transcript', async () => {
@@ -45,11 +52,14 @@ describe('Outliner', () => {
 	test('nonstop speech is still read once the longest wait passes', async () => {
 		const server = fakeServer();
 		const outliner = new Outliner(server.request, () => {}, 20, 40);
-		for (let i = 1; i <= 8; i++) {
+		for (let i = 1; i <= 3; i++) {
 			outliner.update(`word `.repeat(i));
 			await tick(10);
 		}
-		expect(server.calls.length).toBeGreaterThanOrEqual(1);
+		expect(server.calls).toHaveLength(0);
+		outliner.update('word word word word');
+		await tick(10);
+		expect(server.calls).toHaveLength(1);
 	});
 
 	test('stopping on a transcript already outlined answers at once', async () => {
@@ -78,7 +88,9 @@ describe('Outliner', () => {
 	test('a slow answer times out to null, one failure retries, and a second in a row turns it off', async () => {
 		const server = fakeServer();
 		const outliner = new Outliner(server.request, () => {}, 1);
-		expect(await outliner.settle('pay rent', 5)).toBe(null);
+		const slow = outliner.settle('pay rent', 5);
+		await tick(5);
+		expect(await slow).toBe(null);
 		server.calls[0]!.answer(false);
 		await tick();
 		expect(outliner.off).toBe(false);

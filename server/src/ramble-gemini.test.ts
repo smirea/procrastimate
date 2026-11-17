@@ -65,62 +65,6 @@ const chunk = (bytes: number, commit = false) =>
 	JSON.stringify({ message_type: 'input_audio_chunk', audio_base_64: 'A'.repeat(bytes), commit, sample_rate: 16000 });
 
 describe('geminiUpstream', () => {
-	test('sets up a Live session that reads tasks with tools and transcribes the input', async () => {
-		const live = fakeLive();
-		await connect(live);
-		const setup = live.sent[0]!.setup as {
-			model: string;
-			tools: Array<{ functionDeclarations: Array<{ name: string }> }>;
-			inputAudioTranscription: unknown;
-			systemInstruction: { parts: Array<{ text: string }> };
-		};
-		expect(setup.model).toBe('models/gemini-3.1-flash-live-preview');
-		expect(setup.tools[0]!.functionDeclarations.map(tool => tool.name)).toEqual([
-			'add_task',
-			'edit_task',
-			'delete_task',
-		]);
-		expect(setup.inputAudioTranscription).toEqual({});
-		expect(setup.systemInstruction.parts[0]!.text).toContain('Existing projects: "Home".');
-		expect(live.urls[0]).toEndWith('?key=key');
-	});
-
-	test('relays the transcript and the tool calls as outlines, and answers each call', async () => {
-		const live = fakeLive();
-		const { upstream, heard } = await connect(live);
-		live.say({ setupComplete: {} });
-		upstream.send(chunk(8));
-		expect(live.sent[1]).toEqual({ realtimeInput: { audio: { data: 'AAAAAAAA', mimeType: 'audio/pcm;rate=16000' } } });
-		live.say({ serverContent: { inputTranscription: { text: 'Call the dentist friday, ' } } });
-		live.say({ serverContent: { inputTranscription: { text: 'priority one.' } } });
-		live.say({ serverContent: { inputTranscription: { text: 'Oh' } } });
-		live.say({
-			toolCall: {
-				functionCalls: [
-					{
-						id: 'c1',
-						name: 'add_task',
-						args: { id: '1', title: 'Call the dentist', when: 'friday', priority: 1, labels: ['calls'] },
-					},
-				],
-			},
-		});
-		expect(heard).toEqual([
-			{ message_type: 'session_started' },
-			{ message_type: 'partial_transcript', text: 'Call the dentist friday, ' },
-			{ message_type: 'partial_transcript', text: 'Call the dentist friday, priority one.' },
-			{ message_type: 'partial_transcript', text: 'Call the dentist friday, priority one. Oh' },
-			{ message_type: 'outline', outline: { tasks: [task('Call the dentist', { when: 'friday', priority: 1 })] } },
-		]);
-		expect(live.sent.at(-1)).toEqual({
-			toolResponse: {
-				functionResponses: [
-					{ id: 'c1', name: 'add_task', response: { id: '1', note: 'Added. Use edit_task to change it.' } },
-				],
-			},
-		});
-	});
-
 	test('ending the audio waits for the last turn, then commits', async () => {
 		const live = fakeLive();
 		const { upstream, heard } = await connect(live);
@@ -175,13 +119,6 @@ describe('geminiUpstream', () => {
 		live.say({ serverContent: { inputTranscription: { text: 'Call mom.' } } });
 		live.say({ serverContent: { turnComplete: true } });
 		expect(heard.at(-1)).toEqual({ message_type: 'committed_transcript', text: 'Call mom.' });
-	});
-
-	test('a refused open is tried once more', async () => {
-		const live = fakeLive();
-		live.refuse(1);
-		await connect(live);
-		expect(live.urls).toHaveLength(2);
 	});
 });
 

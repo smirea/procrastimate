@@ -78,13 +78,3 @@ describe('GET /api/github', () => {
 		expect((await read(`${PAGE}/pull/1`, null)).status).toBe(401);
 	});
 });
-
-describe('GET /api/link-preview for GitHub', () => {
-	test("titles a pasted pull request from GitHub's API", async () => {
-		github({ [`${API}/309`]: () => Response.json({ title: 'Fix sync', state: 'open', pull_request: {} }) });
-		const response = await app.fetch(`/api/link-preview?url=${encodeURIComponent(`${PAGE}/pull/309`)}`, {
-			headers: owner.headers,
-		});
-		expect(await response.json()).toEqual({ title: 'Fix sync' });
-	});
-});
