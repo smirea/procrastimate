@@ -11,8 +11,7 @@ const UNSYNCED_GRACE = 3000;
 
 /**
  * The tasks with a write in the engine's outbox that the server has not acknowledged, read from the outbox itself,
- * after every local write and every sync. The grace runs on timers rather than clock readings, since the end-to-end
- * specs pin the clock.
+ * after every local write and every sync.
  */
 class Unsynced {
 	#run: object | null = null;

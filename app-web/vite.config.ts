@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
@@ -47,15 +47,6 @@ export default defineConfig({
 		},
 	},
 	plugins: [
-		{
-			// `E2E_WORKER=1` reads it, since a build with Sentry baked in fails every test's Sentry guard.
-			name: 'sentry-build-marker',
-			apply: 'build',
-			buildStart() {
-				mkdirSync('.svelte-kit', { recursive: true });
-				writeFileSync('.svelte-kit/sentry-target.json', JSON.stringify(sentry.target));
-			},
-		},
 		{
 			// `$app/manifest` names the database worker's entry but not the chunks and wasm it loads, and the service
 			// worker must precache them to open the database offline. Its build runs after the client's has been written

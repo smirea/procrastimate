@@ -66,8 +66,8 @@ let localVapid: ReturnType<typeof generateVapidKeys> | undefined;
 
 /**
  * `env` with what env-manager leaves empty in a local run filled in: a fixed auth secret, no sign-in rate limit, and a
- * VAPID pair made once per process. Local sign-ups come in bursts from one address: every smoke run, every e2e
- * worker, every agent's test user.
+ * VAPID pair made once per process. Local sign-ups come in bursts from one address: every smoke run and every
+ * agent's test user.
  */
 export async function withLocalStandIns<T extends Env>(env: T): Promise<T> {
 	const filled = { ...env, BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET || LOCAL_AUTH_SECRET };

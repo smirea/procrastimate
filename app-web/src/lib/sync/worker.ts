@@ -17,7 +17,7 @@ const RETRY_CAP_MS = 3000;
 startSyncWorker({
 	schema: syncSchema,
 	endpoint: `${self.location.origin}${SYNC_ENDPOINT}`,
-	filename: query.get('file') || DATABASE_FILE,
+	filename: DATABASE_FILE,
 	token: null,
 	headers: client ? { [CLIENT_HEADER]: client } : {},
 	// PowerSync retried every 2 s here; the engine's default 15 s cap left an edit made offline waiting that long after

@@ -1,11 +1,11 @@
 /**
  * Runs the unit tests related to the files lefthook passes in: every `*.test.ts` whose imports reach a changed file,
- * followed through the import graph, plus the colocated test of a changed file. Web end-to-end specs are skipped.
+ * followed through the import graph, plus the colocated test of a changed file.
  * `swift test` runs when the iOS app's inputs changed, as `scripts/app-paths.txt` lists them.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const root = join(import.meta.dir, '..');
 const SOURCE_DIRS = ['shared', 'server', 'app-web/src', 'scripts'];
@@ -20,8 +20,6 @@ const files = process.argv
 	.flatMap(arg => arg.split(/\s+/))
 	.map(file => file.trim().replaceAll('\\', '/').replace(/^\.\//, ''))
 	.filter(Boolean);
-
-const isE2E = (file: string) => file.includes('/e2e/') || file.endsWith('.e2e.ts');
 
 function walk(dir: string, out: string[]) {
 	for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -79,8 +77,8 @@ function dependents(changed: readonly string[]): Set<string> {
 	return seen;
 }
 
-const changed = files.filter(file => !isE2E(file) && /\.(ts|mts|svelte)$/.test(file)).map(file => join(root, file));
-const selected = [...dependents(changed)].filter(file => file.endsWith('.test.ts') && !isE2E(relative(root, file)));
+const changed = files.filter(file => /\.(ts|mts|svelte)$/.test(file)).map(file => join(root, file));
+const selected = [...dependents(changed)].filter(file => file.endsWith('.test.ts'));
 const ios = files.some(file => APP_PATHS.some(pattern => pattern.test(file)) && !file.endsWith('.md'));
 
 if (selected.length > 0) {

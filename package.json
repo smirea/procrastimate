@@ -13,7 +13,7 @@
 		"worktree:setup": "bun run generate && bun scripts/worktree-sim.ts install",
 		"generate:watch": "bun --watch --no-clear-screen scripts/generate/index.ts",
 		"vectors": "VECTORS=record TZ=America/New_York bun test shared",
-		"test:e2e": "bun run --cwd app-web test:e2e",
+		"test:swift": "bun run generate && cd app-ios && swift test",
 		"check": "bun run generate && bun check --no-script && bun run --cwd app-web check && bun run --cwd app-tinycast check",
 		"start": "bun run generate && concurrently --raw -k -s first \"bun run start:server\" \"bun run start:client\" \"bun run generate:watch\"",
 		"start:client": "bun run --cwd app-web start",

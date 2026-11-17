@@ -11,8 +11,7 @@ export const motion = <T extends { duration?: number }>(params: T): T =>
 
 /**
  * Attach to a list item or group that animates out: `{@attach leaving}`. A row moving between lists exists twice while it
- * animates. Svelte makes the leaving copy inert, which not every screen reader honors and Playwright's role queries
- * ignore, so this mirrors `inert` into `aria-hidden`, and Svelte clearing `inert` when the item comes back clears it too.
+ * animates. Svelte makes the leaving copy inert, which not every screen reader honors, so this mirrors `inert` into `aria-hidden`, and Svelte clearing `inert` when the item comes back clears it too.
  */
 export function leaving(node: HTMLElement) {
 	const observer = new MutationObserver(() => {

@@ -25,32 +25,12 @@
 				"server/scripts/**",
 				"app-web/scripts/**",
 				".claude/**",
-				"**/playwright.config.ts",
 				"**/*.test.ts",
-				"app-web/e2e/**",
-				"app-web/perf/**",
 				"shared/vectors/record.ts",
 				"server/src/index.ts"
 			],
 			"rules": {
 				"node/no-process-env": "off"
-			}
-		},
-		{
-			"files": ["app-web/e2e/**/*.e2e.ts"],
-			"rules": {
-				"no-restricted-imports": [
-					"error",
-					{
-						"paths": [
-							{
-								"name": "@playwright/test",
-								"importNames": ["test"],
-								"message": "Import `test` (or `quietTest`) from ./fixtures, whose auto fixture fails any test that reaches Sentry."
-							}
-						]
-					}
-				]
 			}
 		}
 	],
@@ -63,8 +43,6 @@
 		"**/*.generated.ts",
 		"**/*.gen.ts",
 		".svelte-kit",
-		"**/.svelte-kit",
-		"test-results",
-		"playwright-report"
+		"**/.svelte-kit"
 	]
 }

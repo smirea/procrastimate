@@ -1,9 +1,9 @@
 /**
  * Renders the app icons in `static/icons/` and the iOS `AppIcon` from `scripts/app-icon.svg`, and `static/favicon.ico`
- * from the simpler `static/icons/favicon.svg`, with Playwright's Chromium.
+ * from the simpler `static/icons/favicon.svg`, in Google Chrome through playwright-core.
  * Run `bun scripts/icons.ts` from `app-web/` after editing either SVG.
  */
-import { chromium } from '@playwright/test';
+import { chromium } from 'playwright-core';
 
 const dir = new URL('../static/icons/', import.meta.url);
 const svg = await Bun.file(new URL('app-icon.svg', import.meta.url)).text();
@@ -32,7 +32,7 @@ const variants = [
 	{ file: '../../../app-ios/Sources/App/Assets.xcassets/Logo.imageset/Logo.png', size: 480, look: 'bare' },
 ] as const;
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ channel: 'chrome' });
 const page = await browser.newPage({ deviceScaleFactor: 1 });
 for (const variant of variants) {
 	const { file, size, look } = variant;

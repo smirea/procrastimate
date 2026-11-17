@@ -12,9 +12,9 @@ import { mkdtempSync } from 'node:fs';
 import { DEVICE_KEYS } from '../src/lib/device.ts';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { chromium, expect, type Page } from '@playwright/test';
+import { chromium, type Page } from 'playwright-core';
 import { DEVICE_HEADER } from '../../shared/auth';
-import { DELIVERY_CRON } from '../../server/src/crons';
+import { CRONS } from '../../server/src/crons';
 import { SEND_HOLD_MS } from '../../server/src/push-schedule';
 
 const BASE_URL = process.argv[2] ?? 'http://localhost:8787';
@@ -108,13 +108,12 @@ page.on('response', response => {
 await page.goto('/inbox');
 const nav = page.getByRole('navigation', { name: 'Main' });
 const settings = page.getByRole('dialog', { name: 'Settings' });
-await expect
-	.poll(() => page.evaluate(key => localStorage.getItem(key), DEVICE_KEYS.user), { timeout: 15_000 })
-	.toBeTruthy();
+await page.waitForFunction(key => localStorage.getItem(key), DEVICE_KEYS.user, { timeout: 15_000 });
 log('PASS sync is on');
 await nav.getByRole('button', { name: 'Settings' }).click();
-const on = await expect(settings.getByText('Notifications: On', { exact: true }))
-	.toBeVisible({ timeout: 20_000 })
+const on = await settings
+	.getByText('Notifications: On', { exact: true })
+	.waitFor({ timeout: 20_000 })
 	.then(() => true)
 	.catch(() => false);
 check(on, 'Notifications: On', on ? undefined : await pushFailure(page));
@@ -147,12 +146,12 @@ async function add(title: string) {
 	await page.keyboard.press('q');
 	const quickAdd = page.getByRole('dialog', { name: 'Quick add' });
 	const input = quickAdd.getByRole('textbox', { name: 'Task name' });
-	await expect(input).toBeFocused();
+	await input.waitFor();
 	await input.fill(title);
 	await input.press('Enter');
-	await expect(input).toHaveValue('');
+	await page.waitForFunction(field => (field as HTMLInputElement).value === '', await input.elementHandle());
 	await page.keyboard.press('Escape');
-	await expect(quickAdd).toBeHidden();
+	await quickAdd.waitFor({ state: 'hidden' });
 }
 
 async function openTask(title: string) {
@@ -209,7 +208,7 @@ const test = await context.request.post('/api/push/test', { data: { subscription
 check(test.ok(), 'test push accepted', test.status());
 if (LOCAL) {
 	const fired = await context.request.get(
-		`/cdn-cgi/handler/scheduled?cron=${encodeURIComponent(DELIVERY_CRON)}&time=${target.getTime()}`,
+		`/cdn-cgi/handler/scheduled?cron=${encodeURIComponent(CRONS.delivery.schedule)}&time=${target.getTime()}`,
 	);
 	check(fired.ok(), 'fired the delivery cron on wrangler dev', fired.status());
 }
