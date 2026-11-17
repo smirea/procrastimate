@@ -290,7 +290,7 @@ struct QuickAddSheet: View {
         Task {
             defer { loadingImages -= 1 }
             for data in await load() {
-                let preview = await Task.detached(priority: .userInitiated) { DraftImage.preview(data) }.value
+                let preview = await Task.detached(priority: .userInitiated) { ImageEncoder.preview(data) }.value
                 drafted.append(DraftImage(data: data, preview: preview.map(UIImage.init)))
             }
         }
@@ -303,9 +303,10 @@ struct QuickAddSheet: View {
         Task {
             defer { loadingImages -= 1 }
             for file in await load() {
-                let data = file.data
-                let preview = file.isImage ? await Task.detached(priority: .userInitiated) { DraftImage.preview(data) }.value : nil
-                if let preview {
+                let image = file.isImage
+                    ? await Task.detached(priority: .userInitiated) { file.data().flatMap { data in ImageEncoder.preview(data).map { (data, $0) } } }.value
+                    : nil
+                if let (data, preview) = image {
                     drafted.append(DraftImage(data: data, preview: UIImage(cgImage: preview)))
                 } else {
                     draftedFiles.append(file)
@@ -577,17 +578,6 @@ private struct DraftImage: Identifiable, Equatable {
     let id = UUID()
     let data: Data
     let preview: UIImage?
-
-    /// Decoding a full-size photo on the main actor stalls the card, so callers run this off it.
-    nonisolated static func preview(_ data: Data) -> CGImage? {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
-        let options: [CFString: Any] = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceThumbnailMaxPixelSize: 336,
-        ]
-        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
-    }
 
     static func == (a: DraftImage, b: DraftImage) -> Bool { a.id == b.id }
 }

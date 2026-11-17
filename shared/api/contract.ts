@@ -452,7 +452,7 @@ export const agentContract = {
 			.input(z.object({ query: taskQuery }))
 			.output(okSchema),
 	},
-	/** Uploading, `PUT /api/images`, stays outside the contract: its body is raw bytes, and AI accounts do not upload. */
+	/** Uploading, `PUT` and `POST /api/images`, stays outside the contract: its body is raw bytes, and AI accounts do not upload. */
 	images: {
 		get: found
 			.meta(
@@ -462,7 +462,7 @@ export const agentContract = {
 					inputStructure: 'detailed',
 					summary: 'An image on a task',
 					description:
-						'`id` is an image id from a task’s `attachments`, and `size` is `full` (at most 2048 px on its long side) or `thumb` (320 px). Answers the JPEG or WebP bytes. An image is visible when a task you can see lists it. A file attachment’s parts are `size=part0`, `part1`, and so on, as opaque bytes.',
+						'`id` is an image id from a task’s `attachments`, and `size` is `full` (at most 2048 px on its long side) or `thumb` (320 px). Answers the JPEG or WebP bytes. An attachment is visible when a task you can see lists it. Any other file is `size=file`, answered whole or by `Range`.',
 				}),
 			)
 			.input(z.object({ query: spaceQuery.extend({ id: z.string(), size: byteKeySchema }) }))

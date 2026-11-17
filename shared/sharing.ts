@@ -162,12 +162,10 @@ export const agentNewTaskSchema = z
 		parentId: taskShape.parentId.optional(),
 		labelIds: taskShape.labelIds.optional(),
 		priority: taskShape.priority.optional(),
-		attachments: taskShape.attachments
-			.optional()
-			.meta({
-				description:
-					"Upload each one's bytes to `/api/images` first, so the task never names bytes the server cannot serve.",
-			}),
+		attachments: taskShape.attachments.optional().meta({
+			description:
+				"Upload each one's bytes to `/api/images` first, so the task never names bytes the server cannot serve.",
+		}),
 	})
 	.meta({ id: 'AgentNewTask', description: 'A task the agent command API adds. It needs `text` or `title`.' });
 export type AgentNewTask = z.infer<typeof agentNewTaskSchema>;

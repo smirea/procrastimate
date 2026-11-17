@@ -16,37 +16,36 @@ struct ImageStrip: View {
     @State private var source: ImageSource?
     @State private var previewing: URL?
 
-    private var adding: Int { attachments.adding[task.id] ?? 0 }
+    /// The task's attachments, then the ones still being kept on the device, which show before the task lists them.
+    private var tiles: [(attachment: Attachment, adding: Bool)] {
+        let listed = Set(task.attachments.map(\.id))
+        let adding = (attachments.adding[task.id] ?? []).filter { !listed.contains($0.id) }
+        return task.attachments.map { ($0, false) } + adding.map { ($0, true) }
+    }
 
     var body: some View {
         let images = task.attachments.compactMap(\.image)
-        if !task.attachments.isEmpty || adding > 0 || !locked {
+        let tiles = tiles
+        if !tiles.isEmpty || !locked {
             FlowLayout(spacing: 8) {
-                ForEach(task.attachments) { attachment in
+                ForEach(tiles, id: \.attachment.id) { attachment, adding in
                     Group {
                         switch attachment {
+                        case let .image(image) where adding: addingImageTile(image)
                         case let .image(image): imageTile(image, index: images.firstIndex(of: image) ?? 0, count: images.count)
-                        case let .file(file): fileTile(file)
+                        case let .file(file): fileTile(file).disabled(adding)
                         }
                     }
                     .contextMenu {
-                        if !locked {
+                        if !locked, !adding {
                             Button("Delete", systemImage: "trash", role: .destructive) { attachments.remove(task.id, attachment.id) }
                         }
                     }
                     .transition(.scale(scale: 0.85).combined(with: .opacity))
                 }
-                ForEach(0 ..< adding, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(.ink.opacity(0.06))
-                        .frame(width: 72, height: 72)
-                        .overlay { ProgressView() }
-                        .accessibilityLabel("Adding attachment")
-                }
                 if !locked { addTile }
             }
-            .animation(.snappy, value: task.attachments)
-            .animation(.snappy, value: adding)
+            .animation(.snappy, value: tiles.map(\.attachment.id))
             .imageSource($source) { load in
                 Task { await attachments.attach(task.id, await load()) }
             } onFiles: { load in
@@ -70,9 +69,24 @@ struct ImageStrip: View {
         .accessibilityLabel("Open image \(index + 1) of \(count)")
     }
 
+    /// An image still being encoded: its quick preview, or a quiet tile until that is ready.
+    private func addingImageTile(_ image: ImageRef) -> some View {
+        Group {
+            if let preview = attachments.image(image.id, .thumb) {
+                Image(uiImage: preview).resizable().aspectRatio(contentMode: .fill)
+            } else {
+                Rectangle().fill(.ink.opacity(0.05))
+            }
+        }
+        .frame(width: 72, height: 72)
+        .clipShape(.rect(cornerRadius: 16))
+        .accessibilityLabel("Adding image")
+    }
+
     private func fileTile(_ file: FileRef) -> some View {
         let kind = FileKinds.kind(name: file.name, type: file.type)
         let size = Format.formatBytes(file.bytes)
+        let progress = attachments.progress(file)
         return Button {
             Task { previewing = await attachments.open(file, space: space) }
         } label: {
@@ -89,9 +103,11 @@ struct ImageStrip: View {
                     }
                     .frame(height: 22)
                     Spacer(minLength: 0)
-                    Text(size)
+                    Text(progress.map { "\(Int($0 * 100))% of \(size)" } ?? size)
                         .font(.caption2)
+                        .monospacedDigit()
                         .foregroundStyle(.muted)
+                        .contentTransition(.numericText())
                 }
                 Spacer(minLength: 0)
                 Text(file.name)
@@ -103,6 +119,17 @@ struct ImageStrip: View {
             .padding(8)
             .frame(width: 112, height: 72, alignment: .leading)
             .background(kind.color.fill.opacity(0.5), in: .rect(cornerRadius: 16))
+            .overlay(alignment: .bottomLeading) {
+                if let progress {
+                    Rectangle()
+                        .fill(.accent)
+                        .frame(width: 112 * progress, height: 2)
+                        .animation(.snappy, value: progress)
+                        .accessibilityLabel("Uploading \(file.name)")
+                        .accessibilityValue("\(Int(progress * 100)) percent")
+                }
+            }
+            .clipShape(.rect(cornerRadius: 16))
             .contentShape(.rect(cornerRadius: 16))
         }
         .buttonStyle(.plain)

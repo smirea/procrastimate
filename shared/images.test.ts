@@ -24,21 +24,22 @@ describe('fileKind', () => {
 });
 
 describe('filePartCount', () => {
-	test('one part per 1.5 MB, and at least one', () => {
+	test('one part per 16 MiB, and at least one', () => {
 		expect(filePartCount(1)).toBe(1);
-		expect(filePartCount(1_500_000)).toBe(1);
-		expect(filePartCount(1_500_001)).toBe(2);
-		expect(filePartCount(25_000_000)).toBe(17);
+		expect(filePartCount(16_777_216)).toBe(1);
+		expect(filePartCount(16_777_217)).toBe(2);
+		expect(filePartCount(2_000_000_000)).toBe(120);
 	});
 });
 
-describe('parseByteKey', () => {
-	test('an image size, or a file part under the most a file can have', () => {
-		expect(images.parseByteKey('thumb')).toEqual({ key: 'thumb', part: null });
-		expect(images.parseByteKey('part0')).toEqual({ key: 'part0', part: 0 });
-		expect(images.parseByteKey('part16')).toEqual({ key: 'part16', part: 16 });
-		expect(images.parseByteKey('part17')).toBeNull();
-		expect(images.parseByteKey('part')).toBeNull();
-		expect(images.parseByteKey(null)).toBeNull();
+describe('previewType', () => {
+	test('a file opens in a tab only as a type that cannot run script there', () => {
+		expect(images.previewType({ name: 'lease.pdf', type: 'text/html' })).toBe('application/pdf');
+		expect(images.previewType({ name: 'notes.txt', type: '' })).toBe('text/plain;charset=utf-8');
+		expect(images.previewType({ name: 'clip.mp4', type: 'video/mp4' })).toBe('video/mp4');
+		expect(images.previewType({ name: 'clip.mp4', type: 'text/html' })).toBeNull();
+		expect(images.previewType({ name: 'logo.svg', type: 'image/svg+xml' })).toBeNull();
+		expect(images.previewType({ name: 'page.html', type: 'text/html' })).toBeNull();
+		expect(images.previewType({ name: 'archive.zip', type: 'application/zip' })).toBeNull();
 	});
 });

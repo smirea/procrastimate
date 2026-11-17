@@ -234,7 +234,7 @@ const file = (name: string, mimeType: string, bytes: number) => ({
 });
 
 test(
-	'files attach with their icon, name, and size, open or download on another device whole from their parts, and delete with undo',
+	'files attach with their icon, name, and size, open or download on another device, and delete with undo',
 	{ tag: '@webkit' },
 	async ({ devices }) => {
 		const a = await devices.open();
@@ -268,12 +268,17 @@ test(
 		const popup = b.page.waitForEvent('popup');
 		await b.app.details().getByRole('button', { name: 'Open Minutes.txt, 3.2 MB' }).click();
 		const tab = await popup;
-		await expect.poll(() => tab.url()).toMatch(/^blob:/);
+		await expect.poll(() => tab.url()).toMatch(/\/api\/images\?/);
 		const opened = await tab.evaluate(async () => {
-			const blob = await (await fetch(location.href)).blob();
-			return { size: blob.size, type: blob.type };
+			const whole = await fetch(location.href);
+			const ranged = await fetch(location.href, { headers: { range: 'bytes=10-19' } });
+			return {
+				size: (await whole.blob()).size,
+				type: whole.headers.get('content-type'),
+				ranged: [ranged.status, (await ranged.blob()).size],
+			};
 		});
-		expect(opened).toEqual({ size: 3_200_000, type: expect.stringMatching(/^text\/plain/) });
+		expect(opened).toEqual({ size: 3_200_000, type: 'text/plain;charset=utf-8', ranged: [206, 10] });
 		await tab.close();
 
 		const download = b.page.waitForEvent('download');
@@ -290,6 +295,33 @@ test(
 		await expect(minutesTile).toBeVisible();
 	},
 );
+
+test('a file longer than one part uploads in parts in the background and downloads whole on another device', async ({
+	devices,
+}) => {
+	const a = await devices.open();
+	const b = await devices.open();
+	const title = unique('Archive the footage');
+	await a.app.add(title);
+	await openDetails(a.app, title);
+	const footage = {
+		name: 'footage.zip',
+		mimeType: 'application/zip',
+		buffer: Buffer.alloc(34_000_000, 'procrastimate'),
+	};
+	await a.app.details().locator('input[type="file"]').setInputFiles(footage);
+	const tile = a.app.details().getByRole('button', { name: 'Open footage.zip, 34 MB' });
+	await expect(tile).toBeVisible();
+	await expect(tile.getByRole('progressbar')).toHaveCount(0, { timeout: 30_000 });
+
+	await expect(b.app.row(title).getByRole('img', { name: '1 attachment' })).toBeVisible({ timeout: 15_000 });
+	await openDetails(b.app, title);
+	const download = b.page.waitForEvent('download');
+	await b.app.details().getByRole('button', { name: 'Open footage.zip, 34 MB' }).click();
+	const saved = await download;
+	expect(saved.suggestedFilename()).toBe('footage.zip');
+	expect((await readFile((await saved.path())!)).equals(footage.buffer)).toBe(true);
+});
 
 test('a file dropped into quick add with no title saves named for it', async ({ app }) => {
 	await app.openQuickAdd();

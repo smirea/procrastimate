@@ -17,8 +17,16 @@
 	let { task, home, editable }: { task: Task; home: string | null; editable: boolean } = $props();
 
 	let picker = $state<HTMLInputElement>();
-	const adding = $derived(attachments.adding[task.id] ?? 0);
 	const imageIds = $derived(task.attachments.filter(isImage).map(image => image.id));
+	/** The task's attachments, then the ones still being kept on the device, which show before the task lists them. */
+	const tiles = $derived.by(() => {
+		const listed = new Set(task.attachments.map(attachment => attachment.id));
+		const adding = (attachments.adding[task.id] ?? []).filter(attachment => !listed.has(attachment.id));
+		return [
+			...task.attachments.map(attachment => ({ attachment, adding: false })),
+			...adding.map(attachment => ({ attachment, adding: true })),
+		];
+	});
 
 	$effect(() => {
 		for (const id of imageIds) void attachments.load(home, id, 'thumb');
@@ -31,18 +39,19 @@
 	}
 </script>
 
-{#if task.attachments.length || adding || editable}
+{#if tiles.length || editable}
 	<section {@attach feedback()} aria-label="Attachments">
 		<ul class="flex flex-wrap gap-2" aria-label={`Attachments of ${task.title}`}>
-			{#each task.attachments as attachment (attachment.id)}
+			{#each tiles as { attachment, adding } (attachment.id)}
 				<li class="relative" animate:flip={motion({ duration: 220, easing: cubicOut })} in:scale={motion({ start: 0.85, duration: 220, easing: cubicOut })}>
 					{#if isImage(attachment)}
 						{@const url = attachments.url(attachment.id, 'thumb')}
 						<button
 							type="button"
 							class="tile press"
-							aria-label={`Open image ${imageIds.indexOf(attachment.id) + 1} of ${imageIds.length}`}
-							onclick={() => (attachments.viewing = { taskId: task.id, id: attachment.id })}
+							aria-label={adding ? 'Adding image' : `Open image ${imageIds.indexOf(attachment.id) + 1} of ${imageIds.length}`}
+							aria-busy={adding || undefined}
+							onclick={() => !adding && (attachments.viewing = { taskId: task.id, id: attachment.id })}
 						>
 							{#if url}
 								<img src={url} alt="" class="size-full object-cover" draggable="false" />
@@ -51,24 +60,30 @@
 							{/if}
 						</button>
 					{:else}
+						{@const progress = attachments.progress(attachment)}
 						<button
 							type="button"
 							class="tile file press"
 							aria-label={`Open ${attachment.name}, ${formatBytes(attachment.bytes)}`}
 							title={attachment.name}
-							aria-busy={attachments.opening[attachment.id] || undefined}
-							onclick={() => void attachments.open(task.id, attachment)}
+							aria-busy={attachments.opening[attachment.id] || adding || undefined}
+							onclick={() => !adding && void attachments.open(task.id, attachment)}
 						>
 							<FileIcon name={attachment.name} type={attachment.type} size={26} />
 							<span class="flex min-w-0 flex-col items-start text-left">
 								<span class="line-clamp-2 text-[12.5px] leading-tight font-medium [overflow-wrap:anywhere] text-ink">{attachment.name}</span>
-								<span class="mt-0.5 text-[11px] text-faint tabular-nums">{formatBytes(attachment.bytes)}</span>
+								<span class="mt-0.5 text-[11px] text-faint tabular-nums">
+									{#if progress !== undefined}{Math.floor(progress * 100)}% of {/if}{formatBytes(attachment.bytes)}
+								</span>
 							</span>
+							{#if progress !== undefined}
+								<span class="progress" style:scale={`${progress} 1`} role="progressbar" aria-label={`Uploading ${attachment.name}`} aria-valuenow={Math.floor(progress * 100)}></span>
+							{/if}
 							{#if attachments.opening[attachment.id]}
 								<span class="absolute inset-0 grid place-items-center rounded-2xl bg-surface/70"><span class="spinner"></span></span>
 							{/if}
 						</button>
-						{#if editable}
+						{#if editable && !adding}
 							<button
 								type="button"
 								class="remove hit-area absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full bg-ink text-surface shadow-sm"
@@ -80,9 +95,6 @@
 						{/if}
 					{/if}
 				</li>
-			{/each}
-			{#each { length: adding }, index (index)}
-				<li class="tile animate-pulse" aria-label="Adding attachment" in:scale={motion({ start: 0.85, duration: 220, easing: cubicOut })}></li>
 			{/each}
 			{#if editable}
 				<li>
@@ -116,6 +128,15 @@
 		gap: 0.5rem;
 		width: 10.5rem;
 		padding: 0 0.75rem 0 0.625rem;
+	}
+
+	.progress {
+		position: absolute;
+		inset: auto 0 0 0;
+		height: 2px;
+		background: var(--color-accent);
+		transform-origin: left;
+		transition: scale 300ms ease;
 	}
 
 	.add {

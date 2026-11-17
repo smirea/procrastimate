@@ -14,7 +14,11 @@
 	},
 	// `server/src/crons.ts` names each: push and webhook delivery every minute, the JSON dump to R2 daily.
 	"triggers": { "crons": ["* * * * *", "0 9 * * *"] },
-	"r2_buckets": [{ "binding": "BACKUPS", "bucket_name": "procrastimate-backups" }],
+	"r2_buckets": [
+		{ "binding": "BACKUPS", "bucket_name": "procrastimate-backups" },
+		// Private: nothing but the Worker reads it, and `server/src/image-bytes.ts` answers every byte.
+		{ "binding": "ATTACHMENTS", "bucket_name": "procrastimate-attachments" },
+	],
 	"durable_objects": {
 		"bindings": [
 			{ "name": "APP", "class_name": "App" },

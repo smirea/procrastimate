@@ -1,5 +1,5 @@
 import { APP_ORIGIN, FAVICON_PATH, TASK_PARAM } from '../../shared/links';
-import { FILE_KIND_COLORS, FILE_MAX_BYTES, FILE_PART_BYTES, FILE_PART_TYPE, IMAGE_LIMITS } from '../../shared/images';
+import { FILE_KIND_COLORS, FILE_MAX_BYTES, FILE_PART_BYTES, IMAGE_LIMITS } from '../../shared/images';
 import { MIN_ORDER_GAP } from '../../shared/order';
 import { RAMBLE_FINAL_COMMIT_MS, RAMBLE_STOP_WAIT_MARGIN_MS } from '../../shared/ramble/protocol';
 import { MAX_CUSTOM_INTERVAL, REMINDER_PRESETS } from '../../shared/task-menus';
@@ -10,7 +10,6 @@ const CONSTANTS = {
 	imageLimits: IMAGE_LIMITS,
 	filePartBytes: FILE_PART_BYTES,
 	fileMaxBytes: FILE_MAX_BYTES,
-	filePartType: FILE_PART_TYPE,
 	fileKindColors: FILE_KIND_COLORS,
 	minOrderGap: MIN_ORDER_GAP,
 	maxRecurrenceInterval: MAX_RECURRENCE_INTERVAL,

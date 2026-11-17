@@ -12,7 +12,7 @@ public typealias Due = API.Due
 public typealias Reminder = API.Reminder
 /// An image on a task. The bytes are on the server, fetched by `id`.
 public typealias ImageRef = API.ImageRef
-/// Any other file on a task, stored on the server in `FileKinds.partCount(bytes)` parts.
+/// Any other file on a task.
 public typealias FileRef = API.FileRef
 public typealias Attachment = API.Attachment
 public typealias RecurrenceUnit = API.RecurrenceUnit

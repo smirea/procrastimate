@@ -8,6 +8,7 @@ const APP_NAME = 'main';
 export const INTERNAL = {
 	actor: '/internal/actor',
 	cron: '/internal/cron',
+	images: '/internal/images',
 	rambleZone: '/internal/ramble/zone',
 	rambleKeyterms: '/internal/ramble/keyterms',
 	rambleStored: '/internal/ramble/stored',
