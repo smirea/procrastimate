@@ -32,6 +32,8 @@ struct QuickAddSheet: View {
     /// Images and files wait here until the task exists, then attach through task details' offline upload path.
     @State private var drafted: [DraftImage] = []
     @State private var draftedFiles: [PickedFile] = []
+    /// Drafted files a saved task took, which `TaskAttachments` discards; the rest are discarded with the draft.
+    @State private var attaching: Set<UUID> = []
     @State private var imageSource: ImageSource?
     /// Images and files still loading, or images making their thumbnail. Saving waits for them, so none is lost.
     @State private var loadingImages = 0
@@ -120,6 +122,9 @@ struct QuickAddSheet: View {
         .animation(.snappy(duration: 0.2), value: subtasksOpen)
         .animation(.snappy(duration: 0.2), value: drafted)
         .animation(.snappy(duration: 0.2), value: draftedFiles)
+        .onDisappear {
+            for file in draftedFiles where !attaching.contains(file.id) { file.discard() }
+        }
         .imageSource($imageSource) { addImages($0) } onFiles: { addFiles($0) }
         .padding(.horizontal, 16)
         .padding(.top, 20)
@@ -251,6 +256,7 @@ struct QuickAddSheet: View {
                             .frame(maxWidth: 140, alignment: .leading)
                         Button {
                             draftedFiles.removeAll { $0.id == file.id }
+                            file.discard()
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 9, weight: .bold))
@@ -307,6 +313,7 @@ struct QuickAddSheet: View {
                     ? await Task.detached(priority: .userInitiated) { file.data().flatMap { data in ImageEncoder.preview(data).map { (data, $0) } } }.value
                     : nil
                 if let (data, preview) = image {
+                    file.discard()
                     drafted.append(DraftImage(data: data, preview: UIImage(cgImage: preview)))
                 } else {
                     draftedFiles.append(file)
@@ -528,6 +535,7 @@ struct QuickAddSheet: View {
         guard let added else { return nil }
         let sources = drafted.map(\.data)
         let files = draftedFiles
+        attaching.formUnion(files.map(\.id))
         if !sources.isEmpty || !files.isEmpty {
             Task { [attachments] in
                 await attachments.attach(added.id, sources)

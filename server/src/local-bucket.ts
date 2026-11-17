@@ -59,6 +59,9 @@ export function localBucket(dir: string | null): R2Bucket {
 			const { etag } = await write(part(uploadId, partNumber), value);
 			return { partNumber, etag };
 		},
+		async abort() {
+			rmSync(join(root, 'uploads', uploadId), { recursive: true, force: true });
+		},
 		async complete(parts: { partNumber: number; etag: string }[]) {
 			const begun = Bun.file(join(root, 'uploads', uploadId, 'meta.json'));
 			if (!(await begun.exists())) {

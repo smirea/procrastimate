@@ -161,6 +161,27 @@ describe('/api/images', () => {
 		);
 	});
 
+	test('a guest cannot store bytes under an attachment listed by a task it cannot edit, as while its upload is pending', async () => {
+		const guest = await signUp(app, 'Racer');
+		const [pending, own, viewed, edited] = Array.from({ length: 4 }, () => crypto.randomUUID());
+		const file = (id: string) => JSON.stringify([{ id, name: 'lease.pdf', type: 'application/pdf', bytes: 7 }]);
+		const task = (id: string, title: string, lists: string) => ({
+			op: 'put',
+			table: 'tasks',
+			id,
+			values: taskRow(id, owner.person.id, title, { attachments: file(lists) }),
+		});
+		await upload(app, owner, [task(viewed, 'Viewed', pending), task(edited, 'Edited', own)]);
+		await shareWith(app, owner, { kind: 'task', id: viewed }, guest.person.id, 'view');
+		await shareWith(app, owner, { kind: 'task', id: edited }, guest.person.id, 'edit');
+		const space = { space: owner.person.id, name: 'lease.pdf', type: 'application/pdf' };
+		expect((await put(guest, pending, 'file', JPEG, 'application/octet-stream', space)).status).toBe(403);
+		expect((await post(guest, pending, space)).status).toBe(403);
+		expect((await put(guest, own, 'file', JPEG, 'application/octet-stream', space)).status).toBe(200);
+		expect((await put(owner, pending, 'file', WEBP, 'application/octet-stream')).status).toBe(200);
+		expect(await bytesOf(await get(guest, pending, 'file', { space: owner.person.id }))).toEqual(WEBP);
+	});
+
 	test('the cron’s sweep marks unlisted attachments, clears the mark when listed again, and deletes them after the grace period', async () => {
 		const bucket = localBucket(null);
 		const other = await signUp(app, 'Sweeper');

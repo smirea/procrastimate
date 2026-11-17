@@ -17,7 +17,13 @@ struct PickedFile: Sendable, Identifiable, Equatable {
     var kind: FileKind { FileKinds.kind(name: name, type: type) }
 
     /// The whole file, for the image path, which decodes a picture.
-    func data() -> Data? { try? Data(contentsOf: url, options: .mappedIfSafe) }
+    func data() -> Data? { try? Data(contentsOf: url) }
+
+    /// Removes the copy. Whoever holds a picked file calls this once it is done with it: attached, turned into an
+    /// image, or dropped from a draft. A file moved into the upload queue has already left the folder.
+    func discard() {
+        try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+    }
 
     static func == (a: PickedFile, b: PickedFile) -> Bool { a.id == b.id }
 }
@@ -37,9 +43,7 @@ enum PickedFiles {
                 defer { if scoped { url.stopAccessingSecurityScopedResource() } }
                 let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentTypeKey])
                 if let size = values?.fileSize, size > FileKinds.maxBytes { return .failure(.tooLarge) }
-                let copy = URL.temporaryDirectory
-                    .appending(path: "picked/\(UUID().uuidString)", directoryHint: .isDirectory)
-                    .appending(path: name)
+                let copy = folder.appending(path: UUID().uuidString, directoryHint: .isDirectory).appending(path: name)
                 do {
                     try FileManager.default.createDirectory(at: copy.deletingLastPathComponent(), withIntermediateDirectories: true)
                     try FileManager.default.copyItem(at: url, to: copy)
@@ -47,8 +51,10 @@ enum PickedFiles {
                     return .failure(.unreadable)
                 }
                 let bytes = (try? copy.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
-                if bytes == 0 { return .failure(.empty) }
-                if bytes > FileKinds.maxBytes { return .failure(.tooLarge) }
+                guard bytes > 0, bytes <= FileKinds.maxBytes else {
+                    try? FileManager.default.removeItem(at: copy.deletingLastPathComponent())
+                    return .failure(bytes == 0 ? .empty : .tooLarge)
+                }
                 let type = (values?.contentType ?? UTType(filenameExtension: url.pathExtension))?.preferredMIMEType ?? ""
                 return .success(PickedFile(name: name, type: type, url: copy, bytes: bytes))
             }.value
@@ -63,6 +69,13 @@ enum PickedFiles {
     }
 
     enum Refusal: Error { case tooLarge, empty, unreadable }
+
+    private nonisolated static var folder: URL { URL.temporaryDirectory.appending(path: "picked", directoryHint: .isDirectory) }
+
+    /// Removes every copy, at launch: no draft outlives the app, so whatever a crash or a kill left behind is garbage.
+    nonisolated static func clear() {
+        try? FileManager.default.removeItem(at: folder)
+    }
 }
 
 extension FileKind {

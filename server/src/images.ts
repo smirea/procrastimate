@@ -1,6 +1,6 @@
 import type { R2Bucket } from '@cloudflare/workers-types';
-import { and, eq, sql } from 'drizzle-orm';
-import { orphans, tasks } from '../../shared/db/schema';
+import { and, eq, notExists, sql, type SQL } from 'drizzle-orm';
+import { access as accessTable, orphans, tasks } from '../../shared/db/schema';
 import { byteKeySchema, type ByteKey } from '../../shared/images';
 import { readActor, spaceOf } from './actor';
 import type { App } from './app';
@@ -8,6 +8,7 @@ import type { Db } from './db/sqlite';
 import { errorResponse } from './errors';
 import { imagesRoute, type Grant } from './image-bytes';
 import { identify } from './sentry';
+import { managesSpace } from './scope';
 import { accessIn, seenBy, sightOf } from './space';
 
 /**
@@ -30,7 +31,9 @@ export const objectKey = (owner: string, id: string, size: ByteKey) => `${owner}
  * Grants a request for attachment bytes, or answers why not. The owner reads every object the space stored, anyone
  * else the ones a task they see lists. Only humans write, a guest with any edit share: an upload reaches the server
  * before the write that lists it, often for a task the server has not seen yet, so it cannot be tied to one; the write
- * itself is still checked.
+ * itself is still checked. But a file is listed before its bytes arrive, so everyone who sees its task knows the id
+ * while the upload runs, and the first bytes stored under an id stay. So a guest never writes to an id listed by a
+ * task it cannot edit, or it could put its own bytes behind an attachment it can only see.
  */
 export async function authorizeImages(request: Request, app: App): Promise<Grant | Response> {
 	const reads = request.method === 'GET' || request.method === 'HEAD';
@@ -49,22 +52,35 @@ export async function authorizeImages(request: Request, app: App): Promise<Grant
 	if (actor.kind === 'human' && actor.id === owner) return grant;
 	const access = accessIn(db, owner, actor);
 	if (access?.role !== 'guest') return errorResponse('FORBIDDEN', 'Not shared with you');
-	if (!reads) {
-		return access.shares.some(share => share.role === 'edit') ? grant : errorResponse('FORBIDDEN', 'Not yours to edit');
+	const lists = sql`EXISTS (SELECT 1 FROM json_each(${tasks.attachments}) AS listed WHERE json_extract(listed.value, '$.id') = ${id})`;
+	const listedWhere = (condition: SQL | undefined) =>
+		db
+			.select({ id: tasks.id })
+			.from(tasks)
+			.where(and(eq(tasks.userId, owner), lists, condition))
+			.limit(1)
+			.get();
+	if (reads) {
+		return listedWhere(seenBy(db, sightOf(actor, access), owner, tasks.id))
+			? grant
+			: errorResponse('NOT_FOUND', 'No such attachment');
 	}
-	const listed = db
-		.select({ id: tasks.id })
-		.from(tasks)
+	const refused = errorResponse('FORBIDDEN', 'Not yours to edit');
+	if (!access.shares.some(share => share.role === 'edit')) return refused;
+	if (managesSpace(access.shares)) return grant;
+	const edits = db
+		.select({ one: sql`1` })
+		.from(accessTable)
 		.where(
 			and(
-				eq(tasks.userId, owner),
-				seenBy(db, sightOf(actor, access), owner, tasks.id),
-				sql`EXISTS (SELECT 1 FROM json_each(${tasks.attachments}) AS listed WHERE json_extract(listed.value, '$.id') = ${id})`,
+				eq(accessTable.grantee, actor.id),
+				eq(accessTable.owner, owner),
+				eq(accessTable.kind, 'task'),
+				eq(accessTable.entityId, tasks.id),
+				eq(accessTable.role, 'edit'),
 			),
-		)
-		.limit(1)
-		.get();
-	return listed ? grant : errorResponse('NOT_FOUND', 'No such attachment');
+		);
+	return listedWhere(notExists(edits)) ? refused : grant;
 }
 
 /** Both halves in one process, as the Bun server and the tests run them. */

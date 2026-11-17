@@ -40,6 +40,7 @@ final class TaskAttachments {
     init(store: Store, toasts: Toasts) {
         self.store = store
         self.toasts = toasts
+        PickedFiles.clear()
         for id in AttachmentFiles.queuedFiles().map(\.id) { uploading[id] = 0 }
         progress = NotificationCenter.default.addObserver(forName: FileUploads.progressed, object: nil, queue: .main) { [weak self] note in
             guard let id = note.userInfo?["id"] as? String else { return }
@@ -95,6 +96,7 @@ final class TaskAttachments {
             file.isImage ? .image(ImageRef(id: id, width: 1, height: 1)) : .file(Self.ref(id, file))
         }
         for (id, file) in picked {
+            defer { file.discard() }
             do {
                 if file.isImage, let data = await Task.detached(priority: .userInitiated, operation: { file.data() }).value,
                    (try? await attachImage(taskID, id, data)) != nil

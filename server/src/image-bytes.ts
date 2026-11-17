@@ -212,6 +212,15 @@ async function complete(request: Request, bucket: R2Bucket, key: string, upload:
 	if (count < 1 || count > FILE_MAX_PARTS)
 		return errorResponse('BAD_REQUEST', 'Needs the etag of every part, in order');
 	const parts = completion.data!.parts.map((etag, index) => ({ partNumber: index + 1, etag }));
+	// R2 completes over an object that is already there, so a second upload of an id is dropped here. This is a check,
+	// not a lock; `authorizeImages` is what keeps one person from racing another's upload.
+	if (await bucket.head(key)) {
+		await bucket
+			.resumeMultipartUpload(key, upload)
+			.abort()
+			.catch(() => undefined);
+		return stored();
+	}
 	try {
 		await bucket.resumeMultipartUpload(key, upload).complete(parts);
 		return stored();
