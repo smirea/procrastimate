@@ -26,7 +26,7 @@
 		"phosphor-svelte": "^3.1.1",
 		"playwright-core": "^1.65.1",
 		"svelte": "^5.57.2",
-		"svelte-check-native": "^1.10.0",
+		"svelte-check-native": "^1.12.1",
 		"typescript": "^6"
 	}
 }
