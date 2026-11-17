@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 // Imported rather than read so `bun --watch` regenerates when it changes. Read generator inputs the same way.
 import indexCss from '../../app-web/src/index.css' with { type: 'text' };
@@ -37,7 +37,10 @@ function write(path: string, next: string) {
 	if (read(file) === next) return;
 	written.push(relative(root, file));
 	mkdirSync(dirname(file), { recursive: true });
-	writeFileSync(file, next);
+	// The pre-commit jobs each run this at once, so a rename keeps another job from reading a half-written file.
+	const temporary = `${file}.${process.pid}.tmp`;
+	writeFileSync(temporary, next);
+	renameSync(temporary, file);
 }
 
 write('shared/db/generated/zod.ts', zodModule());

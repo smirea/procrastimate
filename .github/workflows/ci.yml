@@ -16,38 +16,31 @@ env:
   CLIENT_PORT: 6120
 
 jobs:
+  # One job per check, all parallel: a run takes as long as its slowest check. The hook calls the same scripts.
   checks:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: lint, script: 'lint:ci' }
+          - { name: typecheck, script: check }
+          - { name: test, script: test }
+          - { name: vectors, script: 'vectors:check' }
+          - { name: build, script: 'build:worker' }
     steps:
-      # Full history: scripts/app-version.mts counts the commits for the version the build shows.
+      # The build needs full history: scripts/app-version.mts counts the commits for the version the build shows.
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: ${{ matrix.name == 'build' && '0' || '1' }}
       - uses: ./.github/actions/setup
 
-      - name: Typecheck
-        run: bun run check
-
-      - name: Unit tests
-        run: bun test
-
-      # porcelain also lists new, untracked vector files, which git diff would miss.
-      - name: Test vectors are up to date
-        run: |
-          bun run vectors
-          stale=$(git status --porcelain shared/vectors)
-          if [ -n "$stale" ]; then
-            echo "$stale"
-            echo "::error::shared/vectors is stale. Run 'bun run vectors' and commit the result."
-            exit 1
-          fi
-
-      - name: Build
-        run: bun run build
-
-      - name: Validate Worker bundle
-        run: bunx wrangler deploy --dry-run
+      - name: Run ${{ matrix.script }}
+        env:
+          SCRIPT: ${{ matrix.script }}
+        run: bun run "$SCRIPT"
 
   deploy:
     needs: [checks]

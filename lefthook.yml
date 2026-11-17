@@ -13,14 +13,30 @@ pre-commit:
               && bunx oxfmt --no-error-on-unmatched-pattern {staged_files}
             stage_fixed: true
           - name: typecheck
-            glob: '*.{js,mjs,mts,ts,svelte,json,jsonc}'
+            glob: '*.{js,mjs,mts,ts,tsx,svelte,json,jsonc}'
             run: bun run check
+          # The whole suite: it takes 3 seconds, and selecting by diff misses a test whose input is not an import, such as
+          # theme-contrast reading index.css. Git exports GIT_DIR and GIT_INDEX_FILE to hooks, so a test that runs git in
+          # a temp directory would act on this repository unless they are unset first.
           - name: test
-            glob: '*.{js,ts,jsx,tsx,svelte,swift}'
-            run: bun --no-env-file scripts/test-changed.ts {staged_files}
-
-pre-push:
-  commands:
-    test:
-      glob: '*.{js,ts,jsx,tsx,svelte,swift}'
-      run: bun --no-env-file scripts/test-changed.ts {push_files}
+            glob: '*.{js,mjs,mts,ts,tsx,svelte,json,jsonc,css}'
+            run: unset $(git rev-parse --local-env-vars); bun run test
+          - name: vectors
+            glob: 'shared/**'
+            run: unset $(git rev-parse --local-env-vars); bun run vectors:check
+          # Swift sources and the iOS inputs scripts/app-paths.txt lists, which a glob cannot read.
+          - name: swift
+            glob:
+              - '*.swift'
+              - 'app-ios/**'
+              - 'shared/**'
+              - 'scripts/generate/**'
+              - 'scripts/app-version.mts'
+              - 'app-web/src/index.css'
+              - 'package.json'
+              - 'bun.lock'
+            exclude:
+              - '*.md'
+            run: >-
+              unset $(git rev-parse --local-env-vars);
+              if command -v swift >/dev/null; then bun run test:swift; else echo 'swift is not installed; CI runs it.'; fi
