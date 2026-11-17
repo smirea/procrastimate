@@ -13,7 +13,6 @@ import {
 	uploadCompletionSchema,
 	type uploadBegunSchema,
 	type uploadedPartSchema,
-	type ByteKey,
 	type ImageSize,
 } from '../../shared/images';
 import { errorResponse } from './errors';
@@ -30,18 +29,6 @@ export type Grant = { key: string };
 export type Authorize = (request: Request) => Promise<Grant | Response>;
 
 export const isImageRoute = (request: Request) => new URL(request.url).pathname === IMAGES_PATH;
-
-/**
- * The object a request names. `feedback-engine` through 1.6, on the web and iOS and in every app that embeds it,
- * uploads its report the way files went up before the bucket: as `part0`, `part1`, and so on, 1.5 MB each. A report is
- * nearly always one part, so `part0` is taken as the whole file and a second part is refused. Delete this once
- * `feedback-engine` sends `file` and the apps have it.
- */
-export function sizeOf(request: Request): ByteKey | null {
-	const size = new URL(request.url).searchParams.get('size');
-	if (size === 'part0' && request.method === 'PUT') return 'file';
-	return byteKeySchema.safeParse(size).data ?? null;
-}
 
 /**
  * An id's bytes never change. `no-transform` here and `Content-Encoding: identity` on every answer keep Cloudflare from
@@ -61,7 +48,7 @@ export async function imagesRoute(request: Request, bucket: R2Bucket, authorize:
 	const grant = await authorize(request);
 	if (grant instanceof Response) return grant;
 	const query = new URL(request.url).searchParams;
-	const size = sizeOf(request)!;
+	const size = byteKeySchema.parse(query.get('size'));
 	const upload = query.get('upload');
 	if (request.method === 'GET' || request.method === 'HEAD') return read(request, bucket, grant.key, query);
 	if (size !== 'file') {
@@ -131,9 +118,6 @@ async function read(request: Request, bucket: R2Bucket, key: string, query: URLS
 	return new Response(body, { status: 206, headers });
 }
 
-const declaredFile = (query: URLSearchParams) =>
-	fileMetadata({ name: query.get('name') ?? '', type: query.get('type') ?? '' });
-
 const tooLarge = (limit: number) => errorResponse('PAYLOAD_TOO_LARGE', `At most ${limit} bytes`);
 
 /** The request's body for the bucket, streamed when its length is declared, since the bucket needs one. */
@@ -143,8 +127,6 @@ async function bodyOf(request: Request, limit: number): Promise<ReadableStream |
 	const bytes = await request.arrayBuffer();
 	return bytes.byteLength > limit ? tooLarge(limit) : bytes;
 }
-
-export const imageMetadata = (type: string): R2HTTPMetadata => ({ contentType: type, cacheControl: CACHE });
 
 const stored = () => Response.json({ ok: true });
 const onlyNew = { onlyIf: new Headers({ 'If-None-Match': '*' }) as never };
@@ -158,7 +140,7 @@ async function putImage(request: Request, bucket: R2Bucket, key: string, size: I
 	if (!declared.success || sniffImageType(bytes) !== declared.data) {
 		return errorResponse('UNSUPPORTED_MEDIA_TYPE', 'Images are WebP or JPEG');
 	}
-	await bucket.put(key, bytes, { ...onlyNew, httpMetadata: imageMetadata(declared.data) });
+	await bucket.put(key, bytes, { ...onlyNew, httpMetadata: { contentType: declared.data, cacheControl: CACHE } });
 	return stored();
 }
 
@@ -167,9 +149,9 @@ async function putImage(request: Request, bucket: R2Bucket, key: string, size: I
  * type its upload declares: the bytes are never sniffed (`nosniff`), so an HTML file cannot run in the app's origin
  * whatever it claims to be.
  */
-export function fileMetadata(file: { name: string; type: string }): R2HTTPMetadata {
-	const name = file.name.slice(0, 255);
-	const type = previewType({ name, type: file.type });
+function fileMetadata(query: URLSearchParams): R2HTTPMetadata {
+	const name = (query.get('name') ?? '').slice(0, 255);
+	const type = previewType({ name, type: query.get('type') ?? '' });
 	const encoded = encodeURIComponent(name).replace(
 		/['()*]/g,
 		char => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
@@ -185,14 +167,14 @@ export function fileMetadata(file: { name: string; type: string }): R2HTTPMetada
 async function putFile(request: Request, bucket: R2Bucket, key: string, query: URLSearchParams): Promise<Response> {
 	const body = await bodyOf(request, FILE_PART_BYTES);
 	if (body instanceof Response) return body;
-	await bucket.put(key, body as never, { ...onlyNew, httpMetadata: declaredFile(query) });
+	await bucket.put(key, body as never, { ...onlyNew, httpMetadata: fileMetadata(query) });
 	return stored();
 }
 
 /** `upload: null` says the file is already stored, as when a retry begins again after its completion was lost. */
 async function begin(bucket: R2Bucket, key: string, query: URLSearchParams): Promise<Response> {
 	if (await bucket.head(key)) return Response.json({ upload: null } satisfies z.infer<typeof uploadBegunSchema>);
-	const upload = await bucket.createMultipartUpload(key, { httpMetadata: declaredFile(query) });
+	const upload = await bucket.createMultipartUpload(key, { httpMetadata: fileMetadata(query) });
 	return Response.json({ upload: upload.uploadId } satisfies z.infer<typeof uploadBegunSchema>);
 }
 

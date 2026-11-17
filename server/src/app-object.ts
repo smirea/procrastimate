@@ -13,11 +13,9 @@ import { backupDatabase, RESTORE_KEY, restoreDump } from './db/backup';
 import type { Db } from './db/sqlite';
 import { openStore } from './db/store';
 import { authorizeImages, sweepImages } from './images';
-import { moveLegacyImages } from './legacy-image-rows';
 import { headMessage, liveProtocol, protocolHeaders, type Live } from './live';
 import { deliverDue, pushSender } from './push';
 import { dbRambleData } from './ramble';
-import { reportError } from './sentry';
 import { deliverWebhooks, fetchWebhook } from './webhooks';
 
 /**
@@ -28,7 +26,6 @@ import { deliverWebhooks, fetchWebhook } from './webhooks';
 export class AppObject extends DurableObject<Env> {
 	private readonly app: Promise<App>;
 	private readonly db: Db;
-	private legacyImages: 'waiting' | 'moving' | 'moved' = 'waiting';
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx as never, env);
@@ -62,7 +59,6 @@ export class AppObject extends DurableObject<Env> {
 
 	override async fetch(request: Request): Promise<Response> {
 		const app = await this.app;
-		this.moveLegacyImages();
 		const url = new URL(request.url);
 		if (!url.pathname.startsWith('/internal/')) return handle(request, app);
 		const ramble = dbRambleData(this.db);
@@ -104,27 +100,6 @@ export class AppObject extends DurableObject<Env> {
 		const counts = restoreDump(this.db, await pending.json(), Date.now());
 		await bucket.delete(RESTORE_KEY);
 		console.log(`Restored ${RESTORE_KEY}: ${JSON.stringify(counts)}`);
-	}
-
-	/**
-	 * One batch of the move beside each request, one at a time, until it answers that nothing is left. An attachment
-	 * not moved yet answers `404` and its client asks again.
-	 */
-	private moveLegacyImages(): void {
-		const { ATTACHMENTS, BACKUPS } = this.env;
-		if (this.legacyImages !== 'waiting' || !ATTACHMENTS || !BACKUPS) return;
-		this.legacyImages = 'moving';
-		this.ctx.waitUntil(
-			moveLegacyImages(this.db, ATTACHMENTS, BACKUPS, new Date())
-				.then(said => {
-					if (said) console.log(said);
-					this.legacyImages = said ? 'waiting' : 'moved';
-				})
-				.catch(error => {
-					this.legacyImages = 'waiting';
-					reportError(error);
-				}),
-		);
 	}
 
 	/** Every minute the due pushes and webhooks go out; at 09:00 UTC the database is dumped to R2 and orphaned attachment bytes swept. */
