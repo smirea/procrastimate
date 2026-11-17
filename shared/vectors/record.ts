@@ -8,6 +8,8 @@ import { join } from 'node:path';
  * `shared/vectors/<module>.json`. Outside record mode `recorded` returns the function itself.
  */
 const RECORDING = process.env.VECTORS === 'record';
+/** `bun run vectors:check` records into a temporary directory and compares, so the check never rewrites the tree. */
+const OUT = process.env.VECTORS_DIR || import.meta.dir;
 
 type Case = { fn: string; test: string; input: unknown[]; output: unknown };
 
@@ -36,7 +38,7 @@ function write(module: string) {
 	written.set(module, list.length);
 	const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const file = { module, timeZone, cases: list };
-	writeFileSync(join(import.meta.dir, `${module}.json`), `${JSON.stringify(file, null, '\t')}\n`);
+	writeFileSync(join(OUT, `${module}.json`), `${JSON.stringify(file, null, '\t')}\n`);
 }
 
 /** Call at a test file's top level: the file's `afterAll` writes the module's vectors, since `bun test` skips exit hooks. */

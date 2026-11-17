@@ -6,7 +6,7 @@
 - **Rebase only on a real conflict.** Rebase a PR only when GitHub reports a conflict. PR CI already tests the merge with `master`, so do not rebase every open PR after each merge.
 - **Decisions live one file per area.** Each area of `docs/decisions/` is its own file, so parallel PRs don't conflict. Record a decision in the matching area file, and add a new file when no area fits.
 - **Run only the relevant tests locally.** Run the unit tests that cover the change. The full suite runs in CI.
-- **iOS CI runs only where the app can change.** The macOS `core` (`swift test`) and `app` (API URL and build checks) jobs in `.github/workflows/ios.yml` run on a pull request whose diff touches `app-ios/`, `shared/`, the Swift generator, or the other inputs its `changes` job lists, and on a manual `workflow_dispatch`. They skip `master`, since TestFlight archives every such merge. The Linux `core-linux` job runs `swift test` on every pull request and push. A job skipped by `if` reports success, so a required check of that name does not block the merge.
+- **iOS CI runs only where the app can change.** The macOS `core` (`swift test`) and `app` (API URL and build checks) jobs in `.github/workflows/ios.yml` run on a pull request whose diff touches `app-ios/`, `shared/`, the Swift generator, or the other inputs its `changes` job lists, and on a manual `workflow_dispatch`. They skip `master`, since TestFlight archives every such merge. A job skipped by `if` reports success, so a required check of that name does not block the merge.
 - **Screenshots only for UI changes.** Attach 2 to 4.
 
 ## Clients
