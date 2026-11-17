@@ -31,10 +31,10 @@ jobs:
           - { name: vectors, script: 'vectors:check' }
           - { name: build, script: 'build:worker' }
     steps:
-      # The build needs full history: scripts/app-version.mts counts the commits for the version the build shows.
+      # Full history: the Vite config, which the build and svelte-kit sync load, counts the commits for the version.
       - uses: actions/checkout@v6
         with:
-          fetch-depth: ${{ matrix.name == 'build' && '0' || '1' }}
+          fetch-depth: 0
       - uses: ./.github/actions/setup
 
       - name: Run ${{ matrix.script }}
