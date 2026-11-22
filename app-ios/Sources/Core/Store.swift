@@ -260,13 +260,16 @@ public final class Store {
         return people.first { $0.id == id }
     }
 
+    /// Only the people search carries an email, so a person seen without one keeps the email already known.
     public func rememberPeople(_ known: [Person]) {
         var next = people
-        for person in known {
-            if let index = next.firstIndex(where: { $0.id == person.id }) {
+        for seen in known {
+            if let index = next.firstIndex(where: { $0.id == seen.id }) {
+                var person = seen
+                person.email = seen.email ?? next[index].email
                 next[index] = person
             } else {
-                next.append(person)
+                next.append(seen)
             }
         }
         if next != people { people = next }

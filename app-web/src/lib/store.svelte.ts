@@ -665,13 +665,24 @@ class Store {
 		return this.person(home) ?? { id: home, name: 'Someone', kind: 'human', ownerId: null };
 	}
 
-	/** Keeps the latest name and kind of everyone seen, so authorship shows offline. */
+	/**
+	 * Keeps the latest name and kind of everyone seen, so authorship shows offline. Only the people search carries an
+	 * email, so a person seen without one keeps the email already known.
+	 */
 	rememberPeople(people: readonly Person[]) {
 		const byId = new Map(this.people.map(p => [p.id, p]));
 		let changed = false;
-		for (const person of people) {
-			const known = byId.get(person.id);
-			if (known && known.name === person.name && known.kind === person.kind && known.ownerId === person.ownerId)
+		for (const seen of people) {
+			const known = byId.get(seen.id);
+			const email = seen.email ?? known?.email;
+			const person = email === undefined ? seen : { ...seen, email };
+			if (
+				known &&
+				known.name === person.name &&
+				known.kind === person.kind &&
+				known.ownerId === person.ownerId &&
+				known.email === person.email
+			)
 				continue;
 			byId.set(person.id, person);
 			changed = true;

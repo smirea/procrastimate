@@ -8,6 +8,7 @@ Signed out, both clients open on the sign-in screen: the ProcrastiMate sloth, wi
 - `signin-email` signs in or creates an account with email and password and opens the Inbox.
 - `signin-pending` relabels the submit button `Signing in…` or `Creating account…` while the server checks, on both clients. The web Google and Apple buttons read `Opening Google…` or `Opening Apple…` until the redirect.
 - `signin-methods` loads which providers the server enables (`GET /api/auth/methods`) only when the sign-in screen shows. A signed-in launch asks only `GET /api/sync/token`, which is also the session check.
+- `signin-closed`, temporary: production refuses every new account but `steven.mirea@gmail.com`, by email, Google, or Apple. The card shows `Not public yet, you know who to talk to for access`. The web reads it from `?error=REGISTRATION_CLOSED&error_description=…` after a refused Google or Apple redirect and then drops the query. Dev, tests, and `wrangler dev` stay open.
 - `signin-error` shows why sign-in failed. iOS DEBUG builds print the full detail (request, status, response body, or the underlying error) in small monospaced text under the message, and every iOS error goes to the unified log under category `errors`.
 
 ## How to get to it (user POV)

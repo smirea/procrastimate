@@ -12,7 +12,14 @@ import { actorKindSchema, clientStampSchema, roleSchema, savedPlaceSchema, share
 
 /** A Better Auth user as the clients name people: the server reads it from the `user` table. */
 export const personSchema = z
-	.object({ id: z.string(), name: z.string(), kind: actorKindSchema, ownerId: z.string().nullable() })
+	.object({
+		id: z.string(),
+		name: z.string(),
+		kind: actorKindSchema,
+		ownerId: z.string().nullable(),
+		/** A human's sign-in email, which only the people search carries, for the share sheet. */
+		email: z.string().optional(),
+	})
 	.meta({ id: 'Person', description: 'A human, or an AI account with the human who owns it.' });
 export type Person = z.infer<typeof personSchema>;
 
@@ -36,9 +43,15 @@ export type ShareAudience = z.infer<typeof shareAudienceSchema>;
 /** How people search matches a name, on the server and on each client's instant local pass. */
 export const namePrefixed = (name: string, q: string) => name.toLowerCase().startsWith(q.toLowerCase());
 
+/** How the share sheet matches a person: a name or email prefix, and everyone for an empty query. */
+const matches = (person: Person, q: string) =>
+	!q || namePrefixed(person.name, q) || (person.email !== undefined && namePrefixed(person.email, q));
+
 /**
- * Who the share sheet offers for `q`: people the space has already met match at once, and the server's answer for the
- * same query joins them once it lands. Neither offers this user or anyone the list is already shared with.
+ * Who the share sheet offers for `q`, everyone for an empty one: people the space has already met match at once, and
+ * the server's answer for the same query joins them once it lands, its copy winning since it carries the email.
+ * Neither offers this user, anyone the list is already shared with, or someone else's AI account, which the server
+ * names for bylines but never lets anyone else share with.
  */
 export function shareSuggestions({
 	q,
@@ -53,9 +66,9 @@ export function shareSuggestions({
 	found: { q: string; people: readonly Person[] } | null;
 	granted: readonly string[];
 }): Person[] {
-	if (!q) return [];
-	const local = known.filter(p => p.id !== me && namePrefixed(p.name, q));
-	const remote = found?.q === q ? found.people : [];
+	const offered = (p: Person) => p.id !== me && (p.kind !== 'ai' || p.ownerId === me);
+	const remote = found?.q === q ? found.people.filter(offered) : [];
+	const local = known.filter(p => offered(p) && matches(p, q)).map(p => remote.find(r => r.id === p.id) ?? p);
 	const all = [...local, ...remote.filter(p => !local.some(k => k.id === p.id))];
 	return all.filter(p => !granted.includes(p.id));
 }

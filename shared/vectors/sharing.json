@@ -207,25 +207,148 @@
 		},
 		{
 			"fn": "shareSuggestions",
-			"test": "shareSuggestions › the server’s answer for the same query joins them once, and people with access already drop out",
+			"test": "shareSuggestions › someone else’s AI account is never offered, the caller’s own is",
 			"input": [
 				{
 					"found": {
 						"people": [
 							{
+								"id": "bot",
+								"kind": "ai",
+								"name": "Bot",
+								"ownerId": "ann"
+							},
+							{
 								"id": "robo",
 								"kind": "ai",
 								"name": "Robo",
 								"ownerId": "me"
+							}
+						],
+						"q": ""
+					},
+					"granted": [],
+					"known": [
+						{
+							"id": "bot",
+							"kind": "ai",
+							"name": "Bot",
+							"ownerId": "ann"
+						}
+					],
+					"me": "me",
+					"q": ""
+				}
+			],
+			"output": [
+				{
+					"id": "robo",
+					"kind": "ai",
+					"name": "Robo",
+					"ownerId": "me"
+				}
+			]
+		},
+		{
+			"fn": "shareSuggestions",
+			"test": "shareSuggestions › an empty query offers everyone, an email prefix matches, and the server’s copy brings the email",
+			"input": [
+				{
+					"found": {
+						"people": [
+							{
+								"email": "ann@example.com",
+								"id": "ann",
+								"kind": "human",
+								"name": "Ann",
+								"ownerId": null
 							},
 							{
-								"id": "ron",
+								"id": "me",
 								"kind": "human",
-								"name": "Ron",
+								"name": "Rosa",
+								"ownerId": null
+							},
+							{
+								"id": "zed",
+								"kind": "human",
+								"name": "Zed",
 								"ownerId": null
 							}
 						],
-						"q": "Ro"
+						"q": ""
+					},
+					"granted": [
+						"zed"
+					],
+					"known": [
+						{
+							"id": "me",
+							"kind": "human",
+							"name": "Rosa",
+							"ownerId": null
+						},
+						{
+							"id": "robo",
+							"kind": "ai",
+							"name": "Robo",
+							"ownerId": "me"
+						},
+						{
+							"id": "ann",
+							"kind": "human",
+							"name": "Ann",
+							"ownerId": null
+						}
+					],
+					"me": "me",
+					"q": ""
+				}
+			],
+			"output": [
+				{
+					"id": "robo",
+					"kind": "ai",
+					"name": "Robo",
+					"ownerId": "me"
+				},
+				{
+					"email": "ann@example.com",
+					"id": "ann",
+					"kind": "human",
+					"name": "Ann",
+					"ownerId": null
+				}
+			]
+		},
+		{
+			"fn": "shareSuggestions",
+			"test": "shareSuggestions › an empty query offers everyone, an email prefix matches, and the server’s copy brings the email",
+			"input": [
+				{
+					"found": {
+						"people": [
+							{
+								"email": "ann@example.com",
+								"id": "ann",
+								"kind": "human",
+								"name": "Ann",
+								"ownerId": null
+							},
+							{
+								"id": "me",
+								"kind": "human",
+								"name": "Rosa",
+								"ownerId": null
+							},
+							{
+								"id": "zed",
+								"kind": "human",
+								"name": "Zed",
+								"ownerId": null
+							}
+						],
+						"q": ""
 					},
 					"granted": [],
 					"known": [
@@ -252,7 +375,57 @@
 					"q": ""
 				}
 			],
-			"output": []
+			"output": [
+				{
+					"id": "robo",
+					"kind": "ai",
+					"name": "Robo",
+					"ownerId": "me"
+				},
+				{
+					"email": "ann@example.com",
+					"id": "ann",
+					"kind": "human",
+					"name": "Ann",
+					"ownerId": null
+				},
+				{
+					"id": "zed",
+					"kind": "human",
+					"name": "Zed",
+					"ownerId": null
+				}
+			]
+		},
+		{
+			"fn": "shareSuggestions",
+			"test": "shareSuggestions › an empty query offers everyone, an email prefix matches, and the server’s copy brings the email",
+			"input": [
+				{
+					"found": null,
+					"granted": [],
+					"known": [
+						{
+							"email": "ann@example.com",
+							"id": "ann",
+							"kind": "human",
+							"name": "Ann",
+							"ownerId": null
+						}
+					],
+					"me": "me",
+					"q": "ann@"
+				}
+			],
+			"output": [
+				{
+					"email": "ann@example.com",
+					"id": "ann",
+					"kind": "human",
+					"name": "Ann",
+					"ownerId": null
+				}
+			]
 		}
 	]
 }
