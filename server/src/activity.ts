@@ -24,16 +24,11 @@ export const COALESCE_WINDOW = 5 * 60_000;
 type Fields = Record<string, unknown>;
 type LogRow = typeof log.$inferSelect;
 
-/** Bookkeeping fields, the server's stamps, and the ones each action already says. */
-const SILENT = new Set([
-	'order',
-	'createdAt',
-	'sourceKey',
-	'createdBy',
-	'completedBy',
-	'completedAt',
-	'lastCompletedAt',
-]);
+/**
+ * Bookkeeping fields, the server's stamps, and the ones each action already says. `createdBy` speaks: a patch carries
+ * it only when the owner or a manager credits the task to someone else, since the server drops it from every other.
+ */
+const SILENT = new Set(['order', 'createdAt', 'sourceKey', 'completedBy', 'completedAt', 'lastCompletedAt']);
 
 const UNDOES: Partial<Record<ActivityAction, ActivityAction>> = { reopened: 'completed', restored: 'deleted' };
 
@@ -71,8 +66,11 @@ function changedFields(row: Fields, prev: Fields): string[] {
 	return Object.keys(row).filter(name => !SILENT.has(name) && !sameValue(prev[name], row[name]));
 }
 
-/** The task's rows and the first row of each of its comments still there: a deleted comment is no longer quoted. */
-async function rowsOn(db: Db, owner: string, taskId: string): Promise<LogRow[]> {
+/**
+ * The task's rows and the first row of each of its comments still there, with each comment's body as it reads now:
+ * a deleted comment is no longer quoted, and an edited one is quoted as edited.
+ */
+async function rowsOn(db: Db, owner: string, taskId: string): Promise<{ rows: LogRow[]; bodies: Map<string, string> }> {
 	const [rows, live] = await Promise.all([
 		db
 			.select()
@@ -88,15 +86,15 @@ async function rowsOn(db: Db, owner: string, taskId: string): Promise<LogRow[]> 
 			)
 			.orderBy(asc(log.seq)),
 		db
-			.select({ id: comments.id })
+			.select({ id: comments.id, body: comments.body })
 			.from(comments)
 			.where(and(eq(comments.userId, owner), eq(comments.taskId, taskId))),
 	]);
-	const kept = new Set(live.map(comment => comment.id));
-	return rows.filter(row => row.kind !== 'comment' || kept.has(row.id));
+	const bodies = new Map(live.map(comment => [comment.id, comment.body]));
+	return { rows: rows.filter(row => row.kind !== 'comment' || bodies.has(row.id)), bodies };
 }
 
-function foldActivity(rows: readonly LogRow[]): Draft[] {
+function foldActivity(rows: readonly LogRow[], bodies: ReadonlyMap<string, string>): Draft[] {
 	const drafts: Draft[] = [];
 	const commented = new Set<string>();
 	let data: Fields = {};
@@ -113,7 +111,7 @@ function foldActivity(rows: readonly LogRow[]): Draft[] {
 				actor: row.actor,
 				action: 'commented',
 				before: {},
-				after: { body: fields.body },
+				after: { body: bodies.get(row.id) ?? fields.body },
 				state: data,
 			});
 			continue;
@@ -172,7 +170,12 @@ const NAMED = {
 type Named = keyof typeof NAMED;
 
 /** The tasks, projects, sections, and labels the summaries name, read by id once the drafts say which. */
-async function namesFor(db: Db, owner: string, sight: Sight, drafts: readonly Draft[]): Promise<NameOf> {
+async function namesFor(
+	db: Db,
+	owner: string,
+	sight: Sight,
+	drafts: readonly Draft[],
+): Promise<(kind: Named, id: string) => string | null> {
 	const wanted: Record<Named, Set<string>> = {
 		task: new Set(),
 		project: new Set(),
@@ -206,14 +209,14 @@ async function namesFor(db: Db, owner: string, sight: Sight, drafts: readonly Dr
 
 /** The task's entries, naming only the projects, sections, labels, and parents `sight` sees. */
 export async function taskActivity(db: Db, owner: string, sight: Sight, taskId: string): Promise<ActivityEntry[]> {
-	const drafts = foldActivity(await rowsOn(db, owner, taskId));
-	const [people, nameOf] = await Promise.all([
-		peopleById(
-			db,
-			drafts.map(draft => draft.actor),
-		),
+	const { rows, bodies } = await rowsOn(db, owner, taskId);
+	const drafts = foldActivity(rows, bodies);
+	const credited = drafts.flatMap(draft => (typeof draft.after.createdBy === 'string' ? [draft.after.createdBy] : []));
+	const [people, names] = await Promise.all([
+		peopleById(db, [...drafts.map(draft => draft.actor), ...credited]),
 		namesFor(db, owner, sight, drafts),
 	]);
+	const nameOf: NameOf = (kind, id) => (kind === 'person' ? (people.get(id)?.name ?? null) : names(kind, id));
 	return drafts.flatMap(draft => {
 		const summary = summarize(draft, nameOf);
 		if (!summary) return [];
@@ -222,7 +225,7 @@ export async function taskActivity(db: Db, owner: string, sight: Sight, taskId: 
 	});
 }
 
-type NameOf = (kind: Named, id: string) => string | null;
+type NameOf = (kind: Named | 'person', id: string) => string | null;
 
 const ACTION_SUMMARIES: Record<Exclude<ActivityAction, 'edited' | 'commented'>, string> = {
 	created: 'added this task',
@@ -321,6 +324,8 @@ function describeField(
 			const parent = nameOf('task', String(after));
 			return parent ? `made it a subtask of ${quoted(parent)}` : 'made it a subtask';
 		}
+		case 'createdBy':
+			return `credited it to ${nameOf('person', String(after)) || 'someone else'}`;
 		case 'reminders':
 			return (after as unknown[]).length ? 'changed the reminders' : 'removed the reminders';
 		case 'location': {
