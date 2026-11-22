@@ -98,7 +98,7 @@ class Session {
 			method: 'POST',
 			credentials: 'include',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ provider, callbackURL: '/inbox' }),
+			body: JSON.stringify({ provider, callbackURL: '/inbox', errorCallbackURL: '/inbox' }),
 		}).catch(() => null);
 		const body = (await response?.json().catch(() => null)) as { url?: string } | null;
 		if (!response?.ok || !body?.url) {

@@ -14,12 +14,12 @@ const SETTINGS = {
 	ELEVENLABS_API_KEY: 'secret',
 	/** Ramble's smart parse. */
 	GEMINI_API_KEY: 'secret',
-	/** Reads GitHub issues and pull requests, private ones included. Without it public ones are read signed out. */
+	/** Reads GitHub issues and pull requests for `OWNER_USER_ID`, private ones included. Others read public ones signed out. */
 	GITHUB_TOKEN: 'secret',
 	/** Files the Feedback editor's posts as issues in this repository; the `smirea-ai` account's `gh` token, which can write. */
 	FEEDBACK_GITHUB_TOKEN: 'secret',
-	/** The one user whose feedback becomes GitHub issues: Stefan's Better Auth id. */
-	FEEDBACK_GITHUB_USER_ID: 'secret',
+	/** Stefan's Better Auth id: the one user both GitHub tokens act for. */
+	OWNER_USER_ID: 'secret',
 	GOOGLE_CLIENT_ID: 'secret',
 	GOOGLE_CLIENT_SECRET: 'secret',
 	GOOGLE_IOS_CLIENT_ID: 'secret',
@@ -92,10 +92,12 @@ export type Config = {
 	ramble: { kind: 'cassette' } | { kind: 'elevenlabs'; apiKey: string } | null;
 	/** Ramble's smart parse. Null answers 503, and clients keep the grammar's tasks. */
 	gemini: { apiKey: string } | null;
-	/** A token for GitHub's API. Null reads public repos signed out, and private ones not at all. */
+	/** Stefan's user id. The server's own GitHub tokens act for this account alone, since anyone can sign up. */
+	ownerId: string | null;
+	/** A token for GitHub's API, for `ownerId`. Everyone else reads public repos signed out, and private ones not at all. */
 	githubToken: string | null;
-	/** Feedback filed as GitHub issues (`feedback-issues.ts`), for `userId` alone. Null turns the Share entry off. */
-	feedbackGithub: { token: string; userId: string } | null;
+	/** Feedback filed as GitHub issues (`feedback-issues.ts`), for `ownerId` alone. Null turns the Share entry off. */
+	feedbackGithubToken: string | null;
 	/** Reporting to `procrastimate-worker`, on only where the deploy passes `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`. */
 	sentry: SentryTarget | null;
 };
@@ -142,7 +144,10 @@ export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Co
 	const vapidKeys = group(['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY'], true);
 	if (vapidKeys) problems.push(...vapidProblems(vapidKeys.VAPID_PUBLIC_KEY, vapidKeys.VAPID_PRIVATE_KEY));
 
-	const feedbackGithub = group(['FEEDBACK_GITHUB_TOKEN', 'FEEDBACK_GITHUB_USER_ID'], false);
+	const ownerId = read('OWNER_USER_ID');
+	for (const key of ['GITHUB_TOKEN', 'FEEDBACK_GITHUB_TOKEN'] as const) {
+		if (read(key) && !ownerId) problems.push(`${key} needs OWNER_USER_ID, the one account it acts for`);
+	}
 
 	const googleWeb = group(['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'], false);
 
@@ -191,11 +196,9 @@ export function parseConfig(env: Env, sentryDsn: string = SENTRY_DSN.worker): Co
 					? { kind: 'elevenlabs', apiKey: elevenLabsKey }
 					: null,
 		gemini: geminiKey ? { apiKey: geminiKey } : null,
+		ownerId,
 		githubToken: read('GITHUB_TOKEN'),
-		feedbackGithub: feedbackGithub && {
-			token: feedbackGithub.FEEDBACK_GITHUB_TOKEN,
-			userId: feedbackGithub.FEEDBACK_GITHUB_USER_ID,
-		},
+		feedbackGithubToken: read('FEEDBACK_GITHUB_TOKEN'),
 		sentry: sentry.target,
 	};
 }

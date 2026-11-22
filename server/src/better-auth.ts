@@ -179,7 +179,13 @@ export async function createAuth(config: Config, store: Store): Promise<Auth> {
 			cookieCache: { enabled: true, maxAge: COOKIE_CACHE_SECONDS },
 		},
 		plugins: [bearer()],
-		advanced: { trustedProxyHeaders: true, cookiePrefix: 'procrastimate' },
+		// Cloudflare sets `cf-connecting-ip` to the client and a client cannot forge it; Better Auth's default, the
+		// `x-forwarded-for` a client can prefill, sends anyone whose chain is not exactly one address to one shared bucket.
+		advanced: {
+			trustedProxyHeaders: true,
+			cookiePrefix: 'procrastimate',
+			ipAddress: { ipAddressHeaders: ['cf-connecting-ip'] },
+		},
 		// Counters in the database, so every Worker isolate enforces the same limits.
 		rateLimit: config.authRateLimit ? { enabled: true, storage: 'database' as const } : { enabled: false },
 		telemetry: { enabled: false },

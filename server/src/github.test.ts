@@ -4,8 +4,9 @@ import { type Session, signUp, testApp, type TestApp } from './test-app';
 let app: TestApp;
 let owner: Session;
 beforeAll(async () => {
-	app = await testApp({ env: { GITHUB_TOKEN: 'ghp_test' } });
+	app = await testApp({ env: { GITHUB_TOKEN: 'ghp_test', OWNER_USER_ID: 'set-below' } });
 	owner = await signUp(app, 'Owner');
+	app.config.ownerId = owner.person.id;
 });
 
 const realFetch = globalThis.fetch;
@@ -71,6 +72,17 @@ describe('GET /api/github', () => {
 	test('answers nulls when neither can be read, as for a private repo without a token', async () => {
 		github({});
 		expect(await (await read(`${PAGE}/issues/3`)).json()).toEqual({ title: null, state: null, kind: 'issue' });
+	});
+
+	test('reads for the owner alone, so another account never reaches private repos', async () => {
+		const asked = github({ [`${API}/309`]: () => Response.json({ title: 'Public', state: 'open' }) });
+		const stranger = await signUp(app, 'Stranger');
+		expect(await (await read(`${PAGE}/issues/309`, stranger)).json()).toEqual({
+			title: 'Public',
+			state: 'open',
+			kind: 'issue',
+		});
+		expect(asked).toEqual([{ url: `${API}/309`, auth: null }]);
 	});
 
 	test('refuses what is not an issue or pull request, and needs a session', async () => {
