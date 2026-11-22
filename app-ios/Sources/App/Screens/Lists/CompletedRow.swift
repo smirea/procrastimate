@@ -28,6 +28,7 @@ struct CompletedRow: View {
                     .strikethrough(!reopening, color: .faint)
                     .lineLimit(1)
                 details
+                credit
             }
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -58,6 +59,12 @@ struct CompletedRow: View {
         return store.person(id) ?? Person(id: id, name: "Someone", kind: .human)
     }
 
+    /// Someone else made it, so the row names them first and then who finished it, the user as "you".
+    private var createdBy: Person? {
+        guard let id = task.createdBy, id != store.me else { return nil }
+        return store.person(id) ?? Person(id: id, name: "Someone", kind: .human)
+    }
+
     /// The fill clears on the first frame, then the row leaves once it has played.
     private func reopen() {
         guard canReopen, !reopening else { return }
@@ -66,6 +73,37 @@ struct CompletedRow: View {
             try? await Task.sleep(for: reduceMotion ? .zero : Checkbox.play)
             actions.reopen(task)
             reopening = false
+        }
+    }
+
+    /// Its own line under the time, since the pair rarely fits beside it on a phone.
+    @ViewBuilder private var credit: some View {
+        if let createdBy {
+            HStack(spacing: 3) {
+                Text("by")
+                if task.completedBy == nil {
+                    PersonName(person: createdBy).foregroundStyle(.ink)
+                } else {
+                    HStack(spacing: 0) {
+                        PersonName(person: createdBy).foregroundStyle(.ink)
+                        Text(",")
+                    }
+                    Text("completed by")
+                    if let completedBy {
+                        PersonName(person: completedBy).foregroundStyle(.ink)
+                    } else {
+                        Text("you").foregroundStyle(.ink)
+                    }
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.muted)
+            .lineLimit(1)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(
+                "Created by \(createdBy.name)"
+                    + (task.completedBy == nil ? "" : ", completed by \(completedBy?.name ?? "you")")
+            )
         }
     }
 
@@ -79,7 +117,7 @@ struct CompletedRow: View {
                     .foregroundStyle(.toneRepeat)
                     .accessibilityLabel("Repeats")
             }
-            if let completedBy {
+            if createdBy == nil, let completedBy {
                 HStack(spacing: 3) {
                     Text("by")
                     PersonName(person: completedBy).foregroundStyle(.ink)

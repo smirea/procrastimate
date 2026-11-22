@@ -83,6 +83,27 @@ describe('GET /api/activity', () => {
 		expect(await activity(id)).toEqual(['Owner created: added this task', 'Owner commented: commented “Booked”']);
 	});
 
+	test('an edited comment is quoted as it reads now, and crediting the task to someone names them', async () => {
+		const id = crypto.randomUUID();
+		await upload(app, owner, [{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Credit') }]);
+		const comment = crypto.randomUUID();
+		const values = { id: comment, user_id: owner.person.id, task_id: id, body: 'Cannot do it', created_at: 1 };
+		await upload(app, owner, [{ op: 'put', table: 'comments', id: comment, values }]);
+		await upload(app, owner, [{ op: 'patch', table: 'comments', id: comment, values: { body: 'Done it' } }]);
+		later(COALESCE_WINDOW + 60_000);
+		const patched = await app.fetch(`/api/tasks?id=${id}`, {
+			method: 'PATCH',
+			headers: owner.headers,
+			body: JSON.stringify({ createdBy: guest.person.id }),
+		});
+		expect(patched.status).toBe(200);
+		expect(await activity(id)).toEqual([
+			'Owner created: added this task',
+			'Owner commented: commented “Done it”',
+			'Owner edited: credited it to Guest',
+		]);
+	});
+
 	test('a completion undone at once by the same actor shows neither, and a re-upload of the same values shows nothing', async () => {
 		const id = crypto.randomUUID();
 		await upload(app, owner, [{ op: 'put', table: 'tasks', id, values: taskRow(id, owner.person.id, 'Flip') }]);
