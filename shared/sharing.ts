@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { apiTokensRowSchema, sharesRowSchema } from './db/generated/zod.ts';
 import { commentSchema, labelSchema, projectSchema, sectionSchema, taskSchema } from './model.ts';
 import { labelColorSchema } from './label-colors.ts';
+import { reactionEmojiSchema, reactionGroupSchema } from './reactions.ts';
 import { actorKindSchema, clientStampSchema, roleSchema, savedPlaceSchema, shareTargetKindSchema } from './values.ts';
 
 /**
@@ -198,8 +199,16 @@ export const taskClientsSchema = z
 export type TaskClients = z.infer<typeof taskClientsSchema>;
 
 export const agentTaskSchema = taskSchema
-	.extend({ clients: taskClientsSchema })
-	.meta({ id: 'AgentTask', description: 'A task with the apps that created and last changed it, for the agent API.' });
+	.extend({
+		clients: taskClientsSchema,
+		reactions: z
+			.array(reactionGroupSchema)
+			.meta({ description: 'Its emoji reactions in the picker’s order, each with who reacted, oldest first.' }),
+	})
+	.meta({
+		id: 'AgentTask',
+		description: 'A task with the apps that created and last changed it and its reactions, for the agent API.',
+	});
 export type AgentTask = z.infer<typeof agentTaskSchema>;
 
 export const spaceViewSchema = z
@@ -223,6 +232,15 @@ export const newCommentSchema = z
 	.object({ taskId: commentSchema.shape.taskId, body: commentSchema.shape.body })
 	.meta({ id: 'NewComment', description: 'A comment the agent command API adds. A blank body is refused.' });
 export type NewComment = z.infer<typeof newCommentSchema>;
+
+export const reactionChoiceSchema = z
+	.object({
+		emoji: reactionEmojiSchema
+			.nullable()
+			.meta({ description: 'The caller’s reaction, replacing any earlier one, or null to take it back.' }),
+	})
+	.meta({ id: 'ReactionChoice', description: 'The caller’s one reaction to a task, for the agent command API.' });
+export type ReactionChoice = z.infer<typeof reactionChoiceSchema>;
 
 export const newProjectSchema = z
 	.object({ name: projectSchema.shape.name })

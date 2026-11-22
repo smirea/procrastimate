@@ -3,7 +3,8 @@ import { and, eq, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import type { Actor } from '../../shared/auth';
 import { addComment, commentsOn, deleteComment, editComment } from '../../shared/comments';
-import { comments as commentTable, log, tasks as taskTable } from '../../shared/db/schema';
+import { comments as commentTable, log, reactions as reactionTable, tasks as taskTable } from '../../shared/db/schema';
+import { react, reactionGroups, reactionOf, type ReactionEmoji, type ReactionGroup } from '../../shared/reactions';
 import { newId } from '../../shared/id';
 import type { Entities } from '../../shared/dangling';
 import {
@@ -11,6 +12,7 @@ import {
 	type Comment,
 	type Label,
 	type Project,
+	type Reaction,
 	type Section,
 	type Snapshot,
 	type Task,
@@ -128,10 +130,25 @@ function clientsOf(db: Db, owner: string, only?: string): Map<string, TaskClient
 	return new Map(rows.map(row => [row.id, { created: stamp(row.created), edited: stamp(row.edited) }]));
 }
 
+function reactionsOf(db: Db, owner: string, taskId?: string): Reaction[] {
+	return db
+		.select()
+		.from(reactionTable)
+		.where(and(eq(reactionTable.userId, owner), taskId === undefined ? undefined : eq(reactionTable.taskId, taskId)))
+		.all()
+		.map(entity);
+}
+
 function withClients(db: Db, owner: string, tasks: readonly Task[]): AgentTask[] {
 	if (!tasks.length) return [];
-	const clients = clientsOf(db, owner, tasks.length === 1 ? tasks[0]!.id : undefined);
-	return tasks.map(task => ({ ...task, clients: clients.get(task.id) ?? NO_CLIENTS }));
+	const only = tasks.length === 1 ? tasks[0]!.id : undefined;
+	const clients = clientsOf(db, owner, only);
+	const reactions = reactionGroups(reactionsOf(db, owner, only));
+	return tasks.map(task => ({
+		...task,
+		clients: clients.get(task.id) ?? NO_CLIENTS,
+		reactions: reactions[task.id] ?? [],
+	}));
 }
 
 export async function view({ db, owner, actor }: Command): Promise<SpaceView> {
@@ -140,11 +157,14 @@ export async function view({ db, owner, actor }: Command): Promise<SpaceView> {
 	return { ...visible, tasks: withClients(db, owner, visible.tasks) };
 }
 
+/** The one comment a comment command names, or the one task whose reactions a reaction command changes. */
+type Reads = { comment?: string; reactionsOn?: string };
+
 /**
- * The rows a store rule reads: the tree, the one comment a comment command names, and the time zone. No agent
- * command changes read markers or settings, so neither is loaded and the diff writes neither.
+ * The rows a store rule reads: the tree, what `reads` names, and the time zone. No agent command changes read
+ * markers or settings, so neither is loaded and the diff writes neither.
  */
-function loadSnapshot(db: Db, owner: string, comment: string | undefined) {
+function loadSnapshot(db: Db, owner: string, { comment, reactionsOn }: Reads) {
 	const tree = loadTree(db, owner);
 	const commentRows = comment
 		? db
@@ -157,22 +177,22 @@ function loadSnapshot(db: Db, owner: string, comment: string | undefined) {
 	const snapshot: Snapshot = {
 		...tree,
 		comments: commentRows.map(entity),
-		reactions: [],
+		reactions: reactionsOn === undefined ? [] : reactionsOf(db, owner, reactionsOn),
 		reads: [],
 		settings: DEFAULT_SETTINGS,
 	};
 	return { snapshot, zone };
 }
 
-/** A guest's write outside their share is refused. `comment` names the stored comment the change reads, if any. */
+/** A guest's write outside their share is refused. */
 async function run(
 	command: Command,
 	change: (data: StoreData, visible: Visible, zone: string, access: Access) => StoreData,
-	comment?: string,
+	reads: Reads = {},
 ): Promise<Snapshot> {
 	const { db, store, owner, actor, client, now } = command;
 	const access = requireAccess(db, owner, actor);
-	const { snapshot, zone } = loadSnapshot(db, owner, comment);
+	const { snapshot, zone } = loadSnapshot(db, owner, reads);
 	const visible = visibleOf(snapshot, access);
 	const { settings: _, ...data } = snapshot;
 	const after = { ...snapshot, ...change(data, visible, zone, access) };
@@ -362,7 +382,7 @@ export async function updateComment(command: Command, id: string, body: string):
 			ownComment(data, visible, id, command.actor.id, 'patch');
 			return editComment(data, id, body, command.actor.id, command.now);
 		},
-		id,
+		{ comment: id },
 	);
 	return commentAfter(command, snapshot, id);
 }
@@ -374,8 +394,31 @@ export async function removeComment(command: Command, id: string): Promise<void>
 			ownComment(data, visible, id, command.actor.id, 'delete');
 			return deleteComment(data, id, command.actor.id);
 		},
-		id,
+		{ comment: id },
 	);
+}
+
+/**
+ * Sets the caller's one reaction to a task, or takes it back with null. Unlike the apps' `react`, sending the emoji
+ * the caller already has keeps it, so an agent's retry never toggles it off.
+ */
+export async function setReaction(
+	command: Command,
+	taskId: string,
+	emoji: ReactionEmoji | null,
+): Promise<ReactionGroup[]> {
+	const me = command.actor.id;
+	const snapshot = await run(
+		command,
+		(data, visible) => {
+			visibleTask(visible, taskId);
+			const current = reactionOf(data.reactions, taskId, me)?.emoji ?? null;
+			if (current === emoji) return data;
+			return react(data, taskId, emoji ?? current!, me, command.now);
+		},
+		{ reactionsOn: taskId },
+	);
+	return reactionGroups(snapshot.reactions)[taskId] ?? [];
 }
 
 /**

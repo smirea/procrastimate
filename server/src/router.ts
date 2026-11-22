@@ -18,6 +18,7 @@ import {
 	finishTask,
 	listComments,
 	removeComment,
+	setReaction,
 	removeLabel,
 	removeProject,
 	removeSection,
@@ -344,6 +345,11 @@ export const router = os.router({
 			await removeComment(await command(context, input.query.space), input.query.id);
 			return ok;
 		}),
+	},
+	reactions: {
+		set: os.reactions.set.handler(async ({ input, context }) => ({
+			reactions: await setReaction(await command(context, input.query.space), input.query.id, input.body.emoji),
+		})),
 	},
 	projects: {
 		create: os.projects.create.handler(async ({ input, context }) =>
