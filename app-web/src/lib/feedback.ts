@@ -12,8 +12,8 @@ let engine: FeedbackEngine | undefined;
 
 /**
  * Feedback in every build, as on iOS: Alt+Meta+click opens the editor on what was clicked, and on a phone the
- * package's own three-finger hold does. Its ProcrastiMate entry and GitHub Issue webhook post to this origin's own API with the session
- * cookie, so they need no token or proxy.
+ * package's own three-finger hold does. Its ProcrastiMate entry opens `/feedback` on this origin, and its GitHub Issue
+ * webhook posts to this origin's API with the session cookie, so neither needs a token or proxy.
  */
 export function startFeedback(): () => void {
 	let sync: SyncStatus | undefined;
@@ -23,7 +23,7 @@ export function startFeedback(): () => void {
 	engine = setupFeedbackEngine({
 		app: 'ProcrastiMate',
 		version: __APP_VERSION__,
-		procrastimate: { url: '', app: location.origin, projects: ['app'] },
+		procrastimate: { app: location.origin, projects: ['app'] },
 		webhooks,
 		pinned: ['ProcrastiMate'],
 	});
