@@ -7,13 +7,19 @@ extension API.Snapshot {
     public static var empty: Snapshot { Snapshot(settings: API.Settings()) }
 
     public var data: StoreData {
-        get { StoreData(tasks: tasks, projects: projects, sections: sections, labels: labels, comments: comments, reads: reads) }
+        get {
+            StoreData(
+                tasks: tasks, projects: projects, sections: sections, labels: labels, comments: comments,
+                reactions: reactions, reads: reads
+            )
+        }
         set {
             tasks = newValue.tasks
             projects = newValue.projects
             sections = newValue.sections
             labels = newValue.labels
             comments = newValue.comments
+            reactions = newValue.reactions
             reads = newValue.reads
         }
     }

@@ -19,6 +19,7 @@ const eventTasks = recorded('views', views.eventTasks);
 const completedRange = recorded('views', views.completedRange);
 const completedTasks = recorded('views', views.completedTasks);
 const completedDays = recorded('views', views.completedDays);
+const byCompletedDay = recorded('views', views.byCompletedDay);
 const projectCompleted = recorded('views', views.projectCompleted);
 const pendingCount = recorded('views', views.pendingCount);
 const sectionBadge = recorded('views', views.sectionBadge);
@@ -356,6 +357,9 @@ describe('completed', () => {
 			['2026-10-11', ['sweep']],
 			['2026-10-10', ['book']],
 		]);
+		expect(
+			byCompletedDay(completedTasks(list, completedRange('today', today))).map(g => [g.date, ids(g.tasks)]),
+		).toEqual([['2026-10-14', ['call', 'paid rent', 'tie']]]);
 	});
 });
 

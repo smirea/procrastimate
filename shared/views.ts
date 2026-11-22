@@ -315,8 +315,13 @@ export function completedTasks(tasks: readonly Task[], range: CompletedRange): T
 }
 
 export function completedDays(tasks: readonly Task[], range: CompletedRange): DayGroup[] {
+	return byCompletedDay(completedTasks(tasks, range));
+}
+
+/** Done tasks, newest first as `completedTasks` gives them, under the local day each was completed. */
+export function byCompletedDay(done: readonly Task[]): DayGroup[] {
 	const groups = new Map<DateKey, Task[]>();
-	for (const task of completedTasks(tasks, range)) {
+	for (const task of done) {
 		const day = toDateKey(new Date(completedMoment(task)!));
 		groups.set(day, [...(groups.get(day) ?? []), task]);
 	}

@@ -4,7 +4,7 @@
 	"cases": [
 		{
 			"fn": "rowActions",
-			"test": "rowActions › an open task offers Complete, Postpone, and Delete",
+			"test": "rowActions › an open task offers Complete, Postpone, Delete, and React",
 			"input": [
 				{
 					"attachments": [],
@@ -35,12 +35,13 @@
 			"output": {
 				"delete": true,
 				"postpone": true,
+				"react": true,
 				"toggle": "complete"
 			}
 		},
 		{
 			"fn": "rowActions",
-			"test": "rowActions › a completed task offers Reopen and Delete, with nothing to postpone",
+			"test": "rowActions › a completed task offers Reopen, Delete, and React, with nothing to postpone",
 			"input": [
 				{
 					"attachments": [],
@@ -71,6 +72,7 @@
 			"output": {
 				"delete": true,
 				"postpone": false,
+				"react": true,
 				"toggle": "reopen"
 			}
 		},
@@ -121,6 +123,7 @@
 			"output": {
 				"delete": true,
 				"postpone": false,
+				"react": true,
 				"toggle": "complete"
 			}
 		},
@@ -157,6 +160,7 @@
 			"output": {
 				"delete": false,
 				"postpone": false,
+				"react": false,
 				"toggle": null
 			}
 		},
@@ -193,6 +197,7 @@
 			"output": {
 				"delete": false,
 				"postpone": false,
+				"react": false,
 				"toggle": null
 			}
 		},
@@ -236,6 +241,7 @@
 			"output": {
 				"delete": false,
 				"postpone": false,
+				"react": false,
 				"toggle": null
 			}
 		}

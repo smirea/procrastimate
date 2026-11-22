@@ -24,6 +24,7 @@ public struct RowsRead: Sendable {
     public var sections: TableRead<Owned<ProjectSection>>?
     public var labels: TableRead<Owned<Label>>?
     public var comments: TableRead<Owned<Comment>>?
+    public var reactions: TableRead<Owned<Reaction>>?
     public var reads: TableRead<Owned<CommentRead>>?
     public var settings: TableRead<Owned<API.Settings>>?
     public var access: TableRead<Access>?
@@ -36,6 +37,7 @@ public struct RowsRead: Sendable {
         sections = TableRead(ids: .all, rows: rows.sections)
         labels = TableRead(ids: .all, rows: rows.labels)
         comments = TableRead(ids: .all, rows: rows.comments)
+        reactions = TableRead(ids: .all, rows: rows.reactions)
         reads = TableRead(ids: .all, rows: rows.reads)
         settings = TableRead(ids: .all, rows: rows.settings)
         access = TableRead(ids: .all, rows: rows.access)
@@ -57,19 +59,21 @@ public final class LocalRows {
         var sections: [String: ProjectSection] = [:]
         var labels: [String: Label] = [:]
         var comments: [String: Comment] = [:]
+        var reactions: [String: Reaction] = [:]
         var reads: [String: CommentRead] = [:]
         var settings: [String: API.Settings] = [:]
         var access: [String: Access] = [:]
 
         var isEmpty: Bool {
-            tasks.isEmpty && projects.isEmpty && sections.isEmpty && labels.isEmpty && comments.isEmpty && reads.isEmpty
-                && settings.isEmpty && access.isEmpty
+            tasks.isEmpty && projects.isEmpty && sections.isEmpty && labels.isEmpty && comments.isEmpty && reactions.isEmpty
+                && reads.isEmpty && settings.isEmpty && access.isEmpty
         }
 
         func snapshot(own: Bool) -> Snapshot {
             Spaces.sorted(Snapshot(
                 tasks: Array(tasks.values), projects: Array(projects.values), sections: Array(sections.values),
-                labels: Array(labels.values), comments: Array(comments.values), reads: own ? Array(reads.values) : [],
+                labels: Array(labels.values), comments: Array(comments.values), reactions: Array(reactions.values),
+                reads: own ? Array(reads.values) : [],
                 settings: settings[Rows.settingsID] ?? API.Settings()
             ))
         }
@@ -96,6 +100,7 @@ public final class LocalRows {
         merge(read.sections, \.sections, "sections", id: \.id, &touched)
         merge(read.labels, \.labels, "labels", id: \.id, &touched)
         merge(read.comments, \.comments, "comments", id: \.id, &touched)
+        merge(read.reactions, \.reactions, "reactions", id: \.id, &touched)
         merge(read.reads, \.reads, "reads", id: \.id, ownOnly: true, &touched)
         merge(read.settings, \.settings, "settings", id: { _ in Rows.settingsID }, ownOnly: true, &touched)
         let access = read.access.map { TableRead(ids: $0.ids, rows: $0.rows.map { Owned(owner: $0.owner, value: $0) }) }

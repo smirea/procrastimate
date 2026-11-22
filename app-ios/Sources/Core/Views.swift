@@ -256,8 +256,13 @@ public enum Views {
 
     /// Completed tasks in `range` under the local day each was completed, newest day first.
     public static func completedDays(_ tasks: [TaskItem], _ range: CompletedRange, in zone: TimeZone) -> [DayGroup] {
+        byCompletedDay(completedTasks(tasks, range, in: zone), in: zone)
+    }
+
+    /// Done tasks, newest first as `completedTasks` gives them, under the local day each was completed.
+    public static func byCompletedDay(_ done: [TaskItem], in zone: TimeZone) -> [DayGroup] {
         var groups: [DayGroup] = []
-        for task in completedTasks(tasks, range, in: zone) {
+        for task in done {
             let day = Dates.toDateKey(Date(epochMilliseconds: completedMoment(task)!), in: zone)
             if groups.last?.date == day {
                 groups[groups.count - 1].tasks.append(task)

@@ -15,7 +15,8 @@ import { attachmentSchema, type SavedPlace, type SectionCounter, type TaskLocati
  */
 export const storeDataSchema = snapshotSchema.omit({ settings: true }).meta({
 	id: 'StoreData',
-	description: 'Everything the store holds that syncs: tasks, projects, sections, labels, comments, and read markers.',
+	description:
+		'Everything the store holds that syncs: tasks, projects, sections, labels, comments, reactions, and read markers.',
 });
 export type StoreData = z.infer<typeof storeDataSchema>;
 

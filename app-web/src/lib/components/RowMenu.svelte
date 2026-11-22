@@ -9,6 +9,9 @@
 	import Copy from 'phosphor-svelte/lib/Copy';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import { rowActions } from 'shared/row-actions.ts';
+	import { reactionOf } from 'shared/reactions.ts';
+	import ReactionPicker from './ReactionPicker.svelte';
+	import { session } from '../session.svelte.ts';
 	import type { Task } from 'shared/task.ts';
 	import { completeTask, deleteTask, reopenTask } from '../completion.ts';
 	import { copyMarkdown } from '../copy.ts';
@@ -137,6 +140,15 @@
 		oncontextmenu={(e) => e.preventDefault()}
 		{onkeydown}
 	>
+		{#if offered.react}
+			<div class="mb-1 flex justify-center border-b border-ink/[0.07] pb-1">
+				<ReactionPicker
+					menu
+					mine={reactionOf(store.reactions, task.id, session.userId ?? '')?.emoji}
+					onpick={(emoji) => run((target) => store.react(target.id, emoji))}
+				/>
+			</div>
+		{/if}
 		{#if offered.toggle}
 			<button type="button" role="menuitem" class="menu-item" onclick={() => run(toggle)}>
 				{#if offered.toggle === 'complete'}

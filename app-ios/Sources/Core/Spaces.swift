@@ -32,6 +32,7 @@ public struct StoredRows: Hashable, Sendable {
     public var sections: [Owned<ProjectSection>] = []
     public var labels: [Owned<Label>] = []
     public var comments: [Owned<Comment>] = []
+    public var reactions: [Owned<Reaction>] = []
     public var reads: [Owned<CommentRead>] = []
     public var settings: [Owned<API.Settings>] = []
     public var access: [Access] = []
@@ -69,6 +70,7 @@ public struct Spaces: Hashable, Sendable {
         sorted.sections = sorted.sections.stableSorted(by: byCreation)
         sorted.labels = sorted.labels.stableSorted(by: byCreation)
         sorted.comments = sorted.comments.stableSorted(by: byCreation)
+        sorted.reactions = sorted.reactions.sorted { $0.id < $1.id }
         sorted.reads = sorted.reads.sorted { $0.id < $1.id }
         return sorted
     }

@@ -46,7 +46,7 @@ export function sameValue(a: unknown, b: unknown): boolean {
 	return aKeys.length === bKeys.length && aKeys.every(k => sameValue((a as Fields)[k], (b as Fields)[k]));
 }
 
-/** Projects, sections, and labels come before the tasks that point at them, and tasks before their comments. */
+/** Projects, sections, and labels come before the tasks that point at them, and tasks before their comments and reactions. */
 export function rowWrites(before: Snapshot, after: Snapshot): RowWrite[] {
 	const writes: RowWrite[] = [];
 	for (const kind of KINDS) {

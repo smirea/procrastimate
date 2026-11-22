@@ -23,7 +23,7 @@
 	import { canAddHere } from '#lib/screen.ts';
 	import { projectCompleted, projectGroups } from 'shared/views.ts';
 	import type { Task } from 'shared/task.ts';
-	import CompletedList from '#lib/components/CompletedList.svelte';
+	import CompletedDays from '#lib/components/CompletedDays.svelte';
 	import { filterKey } from 'shared/list-filters.ts';
 	import { listHeader } from 'shared/list-header.ts';
 	import { watchedByWebhook } from '#lib/webhooks.svelte.ts';
@@ -106,7 +106,7 @@
 		{/snippet}
 		<TaskList tasks={loose} label={`${project.name} tasks`} />
 		{#if doneIn(null).length}
-			<CompletedList tasks={doneIn(null)} label={`Completed ${project.name} tasks`} />
+			<CompletedDays tasks={doneIn(null)} label={`Completed ${project.name} tasks`} />
 		{/if}
 		{#if canAdd}
 			<AddTaskButton />

@@ -2,7 +2,7 @@ import { and, eq, gt, inArray, lte, max, min } from 'drizzle-orm';
 import { integer, sqliteTable, text, type SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { drizzleSyncDatabase, openSyncDatabase, type WebDatabase } from 'sync-engine/client-web';
 import workerUrl from './sync/worker.ts?worker&url';
-import { access, comments, labels, projects, reads, sections, settings, tasks } from 'shared/db/schema.ts';
+import { access, comments, labels, projects, reactions, reads, sections, settings, tasks } from 'shared/db/schema.ts';
 import { CHANGE_LOG, changeLogStatements } from 'shared/local-database.ts';
 import type { RowsRead, StoredRow, TableRead } from 'shared/local-rows.ts';
 import type { Kind } from 'shared/model.ts';
@@ -49,7 +49,7 @@ export const localDatabase: WebDatabase = {
 };
 const db = drizzleSyncDatabase(localDatabase);
 
-const localTables = { tasks, projects, sections, labels, comments, reads, settings, access } as const;
+const localTables = { tasks, projects, sections, labels, comments, reactions, reads, settings, access } as const;
 type AccessRow = typeof access.$inferSelect;
 
 /**

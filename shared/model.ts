@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
 	accessRowSchema,
 	commentsRowSchema,
+	reactionsRowSchema,
 	labelsRowSchema,
 	projectsRowSchema,
 	readsRowSchema,
@@ -26,6 +27,7 @@ export const projectFieldsSchema = projectsRowSchema.omit(NOT_FIELDS);
 export const sectionFieldsSchema = sectionsRowSchema.omit(NOT_FIELDS);
 export const labelFieldsSchema = labelsRowSchema.omit(NOT_FIELDS);
 export const commentFieldsSchema = commentsRowSchema.omit(NOT_FIELDS);
+export const reactionFieldsSchema = reactionsRowSchema.omit(NOT_FIELDS);
 export const readFieldsSchema = readsRowSchema.omit(NOT_FIELDS);
 export const settingsFieldsSchema = settingsRowSchema.omit(NOT_FIELDS);
 
@@ -43,6 +45,7 @@ export const FIELDS_SCHEMAS = {
 	section: sectionFieldsSchema,
 	label: labelFieldsSchema,
 	comment: commentFieldsSchema,
+	reaction: reactionFieldsSchema,
 	read: readFieldsSchema,
 	settings: settingsFieldsSchema,
 } as const satisfies Record<Kind, z.ZodObject>;
@@ -64,6 +67,9 @@ export const sectionSchema = sectionsRowSchema
 	.meta({ id: 'ProjectSection', 'x-table': 'sections' });
 export const labelSchema = labelsRowSchema.omit({ userId: true }).meta({ id: 'Label', 'x-table': 'labels' });
 export const commentSchema = commentsRowSchema.omit({ userId: true }).meta({ id: 'Comment', 'x-table': 'comments' });
+export const reactionSchema = reactionsRowSchema
+	.omit({ userId: true })
+	.meta({ id: 'Reaction', 'x-table': 'reactions' });
 export const readSchema = readsRowSchema.omit({ userId: true }).meta({ id: 'CommentRead', 'x-table': 'reads' });
 export const settingsSchema = settingsFieldsSchema.meta({ id: 'Settings', 'x-table': 'settings' });
 
@@ -75,6 +81,7 @@ export type Project = z.infer<typeof projectSchema>;
 export type Section = z.infer<typeof sectionSchema>;
 export type Label = z.infer<typeof labelSchema>;
 export type Comment = z.infer<typeof commentSchema>;
+export type Reaction = z.infer<typeof reactionSchema>;
 export type CommentRead = z.infer<typeof readSchema>;
 
 /** One space's data: everything a store rule reads, plus the owner's settings. */
@@ -85,6 +92,7 @@ export const snapshotSchema = z
 		sections: z.array(sectionSchema),
 		labels: z.array(labelSchema),
 		comments: z.array(commentSchema),
+		reactions: z.array(reactionSchema),
 		reads: z.array(readSchema),
 		settings: settingsSchema,
 	})

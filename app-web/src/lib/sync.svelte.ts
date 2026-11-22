@@ -60,6 +60,7 @@ const viewOf = () => ({
 	sections: store.sections,
 	labels: store.labels,
 	comments: store.comments,
+	reactions: store.reactions,
 });
 
 /** An empty search lists every human, with their email, and the AI accounts the user knows. */
@@ -109,14 +110,15 @@ export function startSync(userId: string): () => void {
 	});
 	const asked = new Set<string>();
 	const stopEffects = $effect.root(() => {
-		// A space's owner, or whoever made or finished a task, names a byline, so someone this device has not met yet
-		// sends it to ask.
+		// A space's owner, whoever made or finished a task, or reacted to one, names a byline, so someone this device
+		// has not met yet sends it to ask.
 		$effect(() => {
 			const ids = new Set(Object.keys(store.spaces));
 			for (const task of store.tasks) {
 				if (task.createdBy) ids.add(task.createdBy);
 				if (task.completedBy) ids.add(task.completedBy);
 			}
+			for (const reaction of store.reactions) ids.add(reaction.authorId);
 			const unknown = [...ids].filter(id => !store.person(id) && !asked.has(id));
 			if (!unknown.length) return;
 			for (const id of unknown) asked.add(id);

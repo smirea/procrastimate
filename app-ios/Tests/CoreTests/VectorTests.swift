@@ -126,6 +126,7 @@ let handlers: [String: Handler] = [
     "links": linksVector,
     "rows": rowsVector,
     "comments": commentsVector,
+    "reactions": reactionsVector,
     "row-actions": rowActionsVector,
     "dangling": danglingVector,
     "local-rows": localRowsVector,
@@ -220,6 +221,7 @@ private struct Occurrence: Decodable {
     case "completedRange": return try json(Views.completedRange(a(0), a(1)))
     case "completedTasks": return try json(Views.completedTasks(a(0), a(1), in: a.zone))
     case "completedDays": return try json(Views.completedDays(a(0), a(1), in: a.zone))
+    case "byCompletedDay": return try json(Views.byCompletedDay(a(0), in: a.zone))
     case "projectCompleted": return try json(Views.projectCompleted(a(0), a(1), a(2), in: a.zone))
     case "pendingCount": return try json(Views.pendingCount(a(0)))
     case "sectionBadge": return try json(Views.sectionBadge(a(0), a(1), in: a.zone))
@@ -801,6 +803,7 @@ private struct RejectedInput: Decodable {
             "toggle": offered.toggle.map { .string($0.rawValue) } ?? .null,
             "postpone": .bool(offered.postpone),
             "delete": .bool(offered.delete),
+            "react": .bool(offered.react),
         ])
     default: throw unknown(fn)
     }
@@ -855,6 +858,7 @@ private func rowsRead(_ value: JSONValue) throws -> RowsRead {
     read.sections = try tableRead(tables["section"], ownedRow)
     read.labels = try tableRead(tables["label"], ownedRow)
     read.comments = try tableRead(tables["comment"], ownedRow)
+    read.reactions = try tableRead(tables["reaction"], ownedRow)
     read.reads = try tableRead(tables["read"], ownedRow)
     read.settings = try tableRead(tables["settings"], ownedRow)
     read.access = try tableRead(tables["access"]) { try? decode($0) as Access }
@@ -865,7 +869,8 @@ private func storeData(_ snapshot: Snapshot) throws -> JSONValue {
     object([
         "tasks": try json(snapshot.tasks), "projects": try json(snapshot.projects),
         "sections": try json(snapshot.sections), "labels": try json(snapshot.labels),
-        "comments": try json(snapshot.comments), "reads": try json(snapshot.reads),
+        "comments": try json(snapshot.comments), "reactions": try json(snapshot.reactions),
+        "reads": try json(snapshot.reads),
     ])
 }
 
@@ -1124,6 +1129,14 @@ private struct SuggestionsInput: Decodable {
     switch fn {
     case "sharedGroups": return try json(SharedLink.groups(a(0), in: a.zone))
     case "sharedTitle": return try json(SharedLink.title(a(0)))
+    default: throw unknown(fn)
+    }
+}
+
+@Sendable func reactionsVector(_ fn: String, _ a: Args) throws -> JSONValue {
+    switch fn {
+    case "react": return try json(Reactions.react(a(0), a(1), a(2), a(3), a(4)))
+    case "reactionGroups": return try json(Reactions.reactionGroups(a(0)))
     default: throw unknown(fn)
     }
 }

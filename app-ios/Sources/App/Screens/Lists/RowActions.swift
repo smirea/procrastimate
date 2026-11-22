@@ -28,8 +28,8 @@ extension RowActions.Toggle {
 }
 
 extension View {
-    /// A row's actions, from `RowActions`: Complete or Reopen from the leading swipe, Postpone from the trailing one, and
-    /// the same in the context menu. Postpone opens quick add's date chooser on the row, with the postpone options as
+    /// A row's actions, from `RowActions`: Complete or Reopen from the leading swipe, Postpone and React from the
+    /// trailing one, and the same in the context menu. Postpone opens quick add's date chooser on the row, with the postpone options as
     /// its presets.
     func taskActions(_ task: TaskItem, _ offered: RowActions, toggle: @escaping () -> Void) -> some View {
         modifier(TaskActionsModifier(task: task, offered: offered, toggle: toggle))
@@ -47,6 +47,7 @@ private struct TaskActionsModifier: ViewModifier {
 
     /// The date the chooser opened on, which its one toast offers to put back.
     @State private var postponing: Due??
+    @State private var reacting = false
 
     func body(content: Content) -> some View {
         content
@@ -56,9 +57,18 @@ private struct TaskActionsModifier: ViewModifier {
                         .tint(action == .complete ? .toneSoon : .accent)
                 }
             }
-            .swipeActions(edge: .trailing, when: offered.postpone) {
-                Button("Postpone", systemImage: "calendar.badge.clock", action: postpone)
-                    .tint(.toneWeek)
+            .swipeActions(edge: .trailing, when: offered.postpone || offered.react) {
+                if offered.postpone {
+                    Button("Postpone", systemImage: "calendar.badge.clock", action: postpone)
+                        .tint(.toneWeek)
+                }
+                if offered.react {
+                    Button("React", systemImage: "face.smiling") { reacting = true }
+                        .tint(.accent)
+                }
+            }
+            .confirmationDialog("React", isPresented: $reacting, titleVisibility: .visible) {
+                ReactionButtons(task: task)
             }
             .contextMenu { menu }
             .popover(isPresented: Binding(get: { postponing != nil }, set: { if !$0 { finish() } })) {
@@ -77,6 +87,9 @@ private struct TaskActionsModifier: ViewModifier {
     }
 
     @ViewBuilder private var menu: some View {
+        if offered.react {
+            Menu("React", systemImage: "face.smiling") { ReactionButtons(task: task, toggles: true) }
+        }
         if let action = offered.toggle {
             Button(action.label, systemImage: action.menuImage, action: toggle)
         }

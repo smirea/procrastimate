@@ -13,6 +13,7 @@
 	import Checkbox from './Checkbox.svelte';
 	import LinkedText from './LinkedText.svelte';
 	import PersonName from './PersonName.svelte';
+	import ReactionChips from './ReactionChips.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import { useLookup } from '../lookup.ts';
 	import { PRIORITIES } from '../priorities.ts';
@@ -37,6 +38,7 @@
 	const parent = $derived(task.parentId ? lookup.task(task.parentId) : undefined);
 	const progress = $derived(progressOf(lookup.subtasks(task.id), !rolled));
 	const tone = $derived(PRIORITIES[task.priority].tone);
+	const reactionGroups = $derived(lookup.reactions(task.id));
 
 	function reopen() {
 		if (reopening) return;
@@ -100,6 +102,9 @@
 			</div>
 		</div>
 	</div>
+	{#if reactionGroups}
+		<ReactionChips taskId={task.id} groups={reactionGroups} {editable} />
+	{/if}
 	{#if editable}
 		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<button type="button" class="hit-area relative grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5" aria-label={`Delete ${task.title}`} onclick={() => deleteTask(task)}>

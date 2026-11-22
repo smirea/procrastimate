@@ -3,7 +3,7 @@
 	import { slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import type { Task } from 'shared/task.ts';
-	import CompletedList from './CompletedList.svelte';
+	import CompletedDays from './CompletedDays.svelte';
 	import { completed, type ShownList } from '../completed.svelte.ts';
 	import { motion } from '../motion.ts';
 
@@ -18,7 +18,7 @@
 			{#if tasks.length}<span class="text-[12px] text-faint">{tasks.length}</span>{/if}
 		</div>
 		{#if tasks.length}
-			<CompletedList {tasks} {showProject} label="Completed tasks" />
+			<CompletedDays {tasks} {showProject} label="Completed tasks" />
 		{:else}
 			<p class="px-2 py-3 text-[13px] text-faint">Nothing completed yet.</p>
 		{/if}

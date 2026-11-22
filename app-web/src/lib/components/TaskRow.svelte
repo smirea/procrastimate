@@ -44,6 +44,7 @@
 	import ArrowElbowDownRight from 'phosphor-svelte/lib/ArrowElbowDownRight';
 	import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus';
 	import CloudArrowUp from 'phosphor-svelte/lib/CloudArrowUp';
+	import Smiley from 'phosphor-svelte/lib/Smiley';
 	import type { Snippet } from 'svelte';
 	import type { Task } from 'shared/task.ts';
 	import Checkbox from './Checkbox.svelte';
@@ -51,6 +52,8 @@
 	import TitleFlow from './TitleFlow.svelte';
 	import SubtaskProgress from './SubtaskProgress.svelte';
 	import PersonName from './PersonName.svelte';
+	import ReactionChips from './ReactionChips.svelte';
+	import ReactionPicker from './ReactionPicker.svelte';
 	import { useLookup } from '../lookup.ts';
 	import { session } from '../session.svelte.ts';
 	import { clock } from '../clock.svelte.ts';
@@ -110,6 +113,8 @@
 	const event = $derived(task.event ? eventLabel(task.event, clock.today) : null);
 	const fromMemo = $derived(parseMemoSource(task.sourceKey) !== null);
 	const commentBadge = $derived(lookup.commentBadge(task.id));
+	const reactionGroups = $derived(lookup.reactions(task.id));
+	const myReaction = $derived(reactionGroups?.find((group) => group.authorIds.includes(session.userId ?? ''))?.emoji);
 	const unsynced = $derived(lookup.unsynced(task.id));
 	/** Null `createdBy` is a task the user made before the server stamped it, or an import, so it names no one. */
 	const other = $derived(task.createdBy !== null && task.createdBy !== session.userId);
@@ -269,6 +274,9 @@
 			{/if}
 		</div>
 	</div>
+	{#if reactionGroups && !card}
+		<ReactionChips taskId={task.id} groups={reactionGroups} {editable} />
+	{/if}
 	{#if unsynced}
 		<span
 			class="shrink-0 pt-3 text-faint touch:pt-3.5"
@@ -282,6 +290,19 @@
 	{/if}
 	{#if showAdded}
 		<span class="shrink-0 pt-3 text-[12px] leading-5 text-faint touch:pt-3.5">{addedAgo(toDateKey(new Date(task.createdAt)), clock.today)}</span>
+	{/if}
+	{#if !card && lookup.menus && editable}
+		<!-- Touch has no hover, so it reacts from the row's long-press menu instead. -->
+		<div class="react relative mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:hidden">
+			<button type="button" class="hit-area relative grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5" aria-label={`React to ${task.title}`}>
+				<Smiley size={16} />
+			</button>
+			<div class="picker absolute right-0 bottom-full z-30 pb-1">
+				<div class="glass-strong rounded-full p-1">
+					<ReactionPicker mine={myReaction} onpick={(emoji) => store.react(task.id, emoji)} />
+				</div>
+			</div>
+		</div>
 	{/if}
 	{#if !card && !task.event && editable && !done}
 		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
@@ -310,6 +331,26 @@
 
 	.text:global([data-inline]) .project {
 		margin-left: 0;
+	}
+
+	.picker {
+		visibility: hidden;
+		opacity: 0;
+		translate: 0 4px;
+		transition:
+			opacity 140ms,
+			translate 140ms,
+			visibility 0s 140ms;
+	}
+
+	.react:hover .picker,
+	.react:focus-within .picker {
+		visibility: visible;
+		opacity: 1;
+		translate: 0 0;
+		transition:
+			opacity 140ms,
+			translate 140ms;
 	}
 
 	.revealed {

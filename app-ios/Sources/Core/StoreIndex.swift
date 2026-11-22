@@ -9,6 +9,8 @@ struct StoreIndex {
     private(set) var children: [String: [TaskItem]] = [:]
     /// Each task's comments, oldest first.
     private(set) var comments: [String: [Comment]] = [:]
+    /// Each reacted task's reactions, in the picker's order.
+    private(set) var reactions: [String: [ReactionGroup]] = [:]
     private(set) var spaces: [String: SpaceKey] = [:]
     /// Every shared entity's owner, for `SpaceRouting`.
     private(set) var homes: SpaceRouting.Homes = [:]
@@ -20,6 +22,7 @@ struct StoreIndex {
     private(set) var allLabels: [Label] = []
     private(set) var allSections: [ProjectSection] = []
     private(set) var allComments: [Comment] = []
+    private(set) var allReactions: [Reaction] = []
 
     init() {}
 
@@ -31,6 +34,7 @@ struct StoreIndex {
         }
         children = Subtasks.groupChildren(allTasks)
         comments = Dictionary(grouping: allComments, by: \.taskId).mapValues { Comments.commentsOn($0, $0[0].taskId) }
+        reactions = Reactions.reactionGroups(allReactions)
     }
 
     private mutating func add(_ data: Snapshot, in space: SpaceKey) {
@@ -60,5 +64,6 @@ struct StoreIndex {
         allLabels += data.labels
         allSections += data.sections
         allComments += data.comments
+        allReactions += data.reactions
     }
 }

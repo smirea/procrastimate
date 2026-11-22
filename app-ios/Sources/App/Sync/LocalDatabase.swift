@@ -91,6 +91,7 @@ final class LocalDatabase: Sendable {
         changes.sections = try changed(db, ProjectSection.self, ids, me: me)
         changes.labels = try changed(db, Label.self, ids, me: me)
         changes.comments = try changed(db, Comment.self, ids, me: me)
+        changes.reactions = try changed(db, Reaction.self, ids, me: me)
         changes.reads = try changed(db, CommentRead.self, ids, me: me)
         changes.settings = try changed(db, API.Settings.self, ids, me: me)
         changes.access = try ids[Access.layout.table].map { ids in
@@ -114,6 +115,7 @@ final class LocalDatabase: Sendable {
         rows.sections = try owned(db, ProjectSection.self)
         rows.labels = try owned(db, Label.self)
         rows.comments = try owned(db, Comment.self)
+        rows.reactions = try owned(db, Reaction.self)
         rows.reads = try owned(db, CommentRead.self)
         rows.settings = try owned(db, API.Settings.self)
         rows.access = try decoded(db, Access.self).map(\.value)

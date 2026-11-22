@@ -1,6 +1,6 @@
 /**
  * Every synced kind and its table, which is also its list in a snapshot. Projects and labels come before the tasks
- * that point at them, and tasks before their comments.
+ * that point at them, and tasks before their comments and reactions.
  */
 export const TABLE_OF = {
 	project: 'projects',
@@ -8,6 +8,7 @@ export const TABLE_OF = {
 	label: 'labels',
 	task: 'tasks',
 	comment: 'comments',
+	reaction: 'reactions',
 	read: 'reads',
 	settings: 'settings',
 } as const;

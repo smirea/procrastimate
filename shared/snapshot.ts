@@ -23,6 +23,7 @@ export function sortSnapshot(snapshot: Snapshot): Snapshot {
 		sections: snapshot.sections.toSorted(byCreation),
 		labels: snapshot.labels.toSorted(byCreation),
 		comments: snapshot.comments.toSorted(byCreation),
+		reactions: snapshot.reactions.toSorted(byId),
 		reads: snapshot.reads.toSorted(byId),
 		settings: snapshot.settings,
 	};

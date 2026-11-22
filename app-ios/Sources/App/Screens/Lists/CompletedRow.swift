@@ -37,6 +37,9 @@ struct CompletedRow: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier("completed-\(task.title)")
             .accessibilityAction { navigator.sheet = .details(taskID: task.id) }
+            if let groups = store.reactions(on: task.id) {
+                ReactionChips(task: task, groups: groups)
+            }
         }
         .taskActions(task, offered, toggle: { actions.reopen(task) })
         .feedback(self)
@@ -122,9 +125,31 @@ struct CompletedSection: View {
                     .foregroundStyle(.faint)
                     .padding(.vertical, 8)
             }
-            ForEach(tasks) { CompletedRow(task: $0, showProject: showProject) }
+            CompletedDays(tasks: tasks, showProject: showProject)
         } header: {
             ListHeading(text: "Completed", tone: .muted, tasks: tasks, counted: false)
+        }
+    }
+}
+
+/// Done tasks, newest first, each day's under a small heading: `Today`, `Yesterday`, then `Mon, Oct 12`.
+struct CompletedDays: View {
+    @Environment(Store.self) private var store
+    @Environment(\.today) private var today
+    let tasks: [TaskItem]
+    var showProject = false
+
+    var body: some View {
+        ForEach(Views.byCompletedDay(tasks, in: store.timeZone), id: \.date) { day in
+            Text(Format.completedHeading(day.date, today))
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.faint)
+                .padding(.top, 8)
+                .listRowSeparator(.hidden)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("completed-day-\(day.date)")
+                .feedback(self)
+            ForEach(day.tasks) { CompletedRow(task: $0, showProject: showProject) }
         }
     }
 }
