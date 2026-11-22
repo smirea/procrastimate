@@ -50,7 +50,8 @@ const matches = (person: Person, q: string) =>
 /**
  * Who the share sheet offers for `q`, everyone for an empty one: people the space has already met match at once, and
  * the server's answer for the same query joins them once it lands, its copy winning since it carries the email.
- * Neither offers this user or anyone the list is already shared with.
+ * Neither offers this user, anyone the list is already shared with, or someone else's AI account, which the server
+ * names for bylines but never lets anyone else share with.
  */
 export function shareSuggestions({
 	q,
@@ -65,8 +66,9 @@ export function shareSuggestions({
 	found: { q: string; people: readonly Person[] } | null;
 	granted: readonly string[];
 }): Person[] {
-	const remote = found?.q === q ? found.people.filter(p => p.id !== me) : [];
-	const local = known.filter(p => p.id !== me && matches(p, q)).map(p => remote.find(r => r.id === p.id) ?? p);
+	const offered = (p: Person) => p.id !== me && (p.kind !== 'ai' || p.ownerId === me);
+	const remote = found?.q === q ? found.people.filter(offered) : [];
+	const local = known.filter(p => offered(p) && matches(p, q)).map(p => remote.find(r => r.id === p.id) ?? p);
 	const all = [...local, ...remote.filter(p => !local.some(k => k.id === p.id))];
 	return all.filter(p => !granted.includes(p.id));
 }

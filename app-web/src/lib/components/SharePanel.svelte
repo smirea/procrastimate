@@ -56,17 +56,23 @@
 		store.rememberPeople(people.map((row) => row.value.grantee));
 	});
 
-	/** An empty query lists everyone, asked at once so the sheet opens with them. */
+	/** An empty query lists everyone, asked at once so the sheet opens with them. An answer for an older query is dropped. */
 	$effect(() => {
 		const q = query.trim();
+		let stale = false;
 		const timer = setTimeout(
 			async () => {
 				const result = await api.people.search({ query: { q } }).catch(() => null);
+				if (stale) return;
+				if (result) store.rememberPeople(result.people);
 				found = { q, people: result?.people ?? [] };
 			},
 			q ? SEARCH_DELAY : 0,
 		);
-		return () => clearTimeout(timer);
+		return () => {
+			stale = true;
+			clearTimeout(timer);
+		};
 	});
 
 	/** The server shares only what it holds, so a project made a moment ago has to arrive before its share. */
@@ -192,7 +198,7 @@
 					</button>
 				</li>
 			{:else}
-				<li class="px-2 py-1.5 text-[13px] text-muted">{searching ? 'Looking…' : 'No one found. Try their full email.'}</li>
+				<li class="px-2 py-1.5 text-[13px] text-muted">{searching ? 'Looking…' : 'No one by that name or email uses ProcrastiMate yet.'}</li>
 			{/each}
 		</ul>
 	{/if}

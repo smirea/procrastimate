@@ -232,6 +232,7 @@ struct ShareSheet: View {
         guard !Task.isCancelled,
               let people = try? await APIClient.send(API.Endpoints.PeopleSearch.self, NoInput(), query: ["q": q]),
               !Task.isCancelled else { return }
+        store.rememberPeople(people.people)
         found = people.people
         searched = q
     }

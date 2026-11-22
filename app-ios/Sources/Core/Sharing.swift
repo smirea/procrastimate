@@ -4,7 +4,8 @@ import Foundation
 public enum Sharing {
     /// Who the share sheet offers for `q`, everyone for an empty one: people the space has already met match at once,
     /// and the server's answer for the same query joins them once it lands, its copy winning since it carries the
-    /// email. Neither offers this user or anyone the list is already shared with.
+    /// email. Neither offers this user, anyone the list is already shared with, or someone else's AI account, which the
+    /// server names for bylines but never lets anyone else share with.
     public static func suggestions(
         q: String,
         me: String?,
@@ -12,9 +13,10 @@ public enum Sharing {
         found: (q: String, people: [Person])?,
         granted: [String]
     ) -> [Person] {
-        let remote = found?.q == q ? found!.people.filter { $0.id != me } : []
+        let offered = { (person: Person) in person.id != me && (person.kind != .ai || person.ownerId == me) }
+        let remote = found?.q == q ? found!.people.filter(offered) : []
         let local = known
-            .filter { $0.id != me && matches($0, q) }
+            .filter { offered($0) && matches($0, q) }
             .map { person in remote.first { $0.id == person.id } ?? person }
         let all = local + remote.filter { person in !local.contains { $0.id == person.id } }
         return all.filter { !granted.contains($0.id) }

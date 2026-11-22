@@ -207,6 +207,50 @@
 		},
 		{
 			"fn": "shareSuggestions",
+			"test": "shareSuggestions › someone else’s AI account is never offered, the caller’s own is",
+			"input": [
+				{
+					"found": {
+						"people": [
+							{
+								"id": "bot",
+								"kind": "ai",
+								"name": "Bot",
+								"ownerId": "ann"
+							},
+							{
+								"id": "robo",
+								"kind": "ai",
+								"name": "Robo",
+								"ownerId": "me"
+							}
+						],
+						"q": ""
+					},
+					"granted": [],
+					"known": [
+						{
+							"id": "bot",
+							"kind": "ai",
+							"name": "Bot",
+							"ownerId": "ann"
+						}
+					],
+					"me": "me",
+					"q": ""
+				}
+			],
+			"output": [
+				{
+					"id": "robo",
+					"kind": "ai",
+					"name": "Robo",
+					"ownerId": "me"
+				}
+			]
+		},
+		{
+			"fn": "shareSuggestions",
 			"test": "shareSuggestions › an empty query offers everyone, an email prefix matches, and the server’s copy brings the email",
 			"input": [
 				{
