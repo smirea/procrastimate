@@ -34,45 +34,45 @@ export async function personOf(db: Db, id: string): Promise<Person> {
 	return (await personById(db, id)) ?? unknownPerson(id);
 }
 
+type PersonRow = { id: string; name: string; kind: 'human' | 'ai'; ownerId: string | null; email: string };
+
+/** A human with the email the share sheet shows. An AI account's email is a placeholder nobody reads, so it has none. */
+const withEmail = ({ email, ...row }: PersonRow): Person => (row.kind === 'human' ? { ...row, email } : asPerson(row));
+
 /**
- * The people `me` knows: everyone they shared with, the owners of the spaces shared with them, their AI accounts, and
- * whoever made or finished a task `me` sees (its own, or one its `access` rows name), each filtered on a name prefix of
- * `query`; and, when `query` is an email, its user first. Link shares have no grantee, so the joins drop them. The
- * task authors are how a guest names a co-guest, and the owner a guest whose share is gone, without learning who acts
- * only on tasks it cannot see. One select per source, in that order: a Durable Object's SQLite refuses a `UNION ALL`
- * of this many terms.
+ * Every human but `me`, with their email, and the AI accounts `me` knows: its own, those it shared with, and those
+ * that made or finished a task `me` sees (its own, or one its `access` rows name), so a guest names a co-guest's bot.
+ * Each matches a name or email prefix of `query`, and an empty one lists them all. Anyone can list every user: the
+ * share sheet offers them all, and sign-up is closed, so they are people Stefan let in. Link shares have no grantee,
+ * so the join drops them. One select per source: a Durable Object's SQLite refuses a `UNION ALL` of this many terms.
  */
 export function searchPeople(db: Db, me: string, query: string): Person[] {
 	const q = query.trim();
-	const person = { id: user.id, name: user.name, kind: user.kind, ownerId: user.ownerId };
-	const sources = [
-		...(q.includes('@')
-			? [{ exact: true, rows: db.select(person).from(user).where(eq(user.email, q.toLowerCase())).all() }]
-			: []),
-		...[
-			db.select(person).from(shares).innerJoin(user, eq(user.id, shares.grantee)).where(eq(shares.userId, me)),
-			db.select(person).from(shares).innerJoin(user, eq(user.id, shares.userId)).where(eq(shares.grantee, me)),
+	const person = { id: user.id, name: user.name, kind: user.kind, ownerId: user.ownerId, email: user.email };
+	const sources: PersonRow[][] = [
+		db.select(person).from(user).where(eq(user.kind, 'human')).orderBy(user.name).all(),
+		db.select(person).from(shares).innerJoin(user, eq(user.id, shares.grantee)).where(eq(shares.userId, me)).all(),
+		db
+			.select(person)
+			.from(user)
+			.where(and(eq(user.ownerId, me), eq(user.kind, 'ai')))
+			.all(),
+		...[tasks.createdBy, tasks.completedBy].flatMap(column => [
+			db.selectDistinct(person).from(tasks).innerJoin(user, eq(user.id, column)).where(eq(tasks.userId, me)).all(),
 			db
-				.select(person)
-				.from(user)
-				.where(and(eq(user.ownerId, me), eq(user.kind, 'ai'))),
-			...[tasks.createdBy, tasks.completedBy].flatMap(column => [
-				db.selectDistinct(person).from(tasks).innerJoin(user, eq(user.id, column)).where(eq(tasks.userId, me)),
-				db
-					.selectDistinct(person)
-					.from(access)
-					.innerJoin(tasks, and(eq(access.kind, 'task'), eq(tasks.id, access.entityId)))
-					.innerJoin(user, eq(user.id, column))
-					.where(eq(access.grantee, me)),
-			]),
-		].map(select => ({ exact: false, rows: select.all() })),
+				.selectDistinct(person)
+				.from(access)
+				.innerJoin(tasks, and(eq(access.kind, 'task'), eq(tasks.id, access.entityId)))
+				.innerJoin(user, eq(user.id, column))
+				.where(eq(access.grantee, me))
+				.all(),
+		]),
 	];
 	const found = new Map<string, Person>();
-	for (const { exact, rows } of sources) {
-		for (const row of rows) {
-			if (row.id === me || found.has(row.id)) continue;
-			if (exact || !q || namePrefixed(row.name, q)) found.set(row.id, asPerson(row));
-		}
+	for (const row of sources.flat()) {
+		if (row.id === me || found.has(row.id)) continue;
+		if (!q || namePrefixed(row.name, q) || (row.kind === 'human' && namePrefixed(row.email, q)))
+			found.set(row.id, withEmail(row));
 	}
 	return [...found.values()];
 }

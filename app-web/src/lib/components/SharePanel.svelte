@@ -56,13 +56,16 @@
 		store.rememberPeople(people.map((row) => row.value.grantee));
 	});
 
+	/** An empty query lists everyone, asked at once so the sheet opens with them. */
 	$effect(() => {
 		const q = query.trim();
-		if (!q) return;
-		const timer = setTimeout(async () => {
-			const result = await api.people.search({ query: { q } }).catch(() => null);
-			found = { q, people: result?.people ?? [] };
-		}, SEARCH_DELAY);
+		const timer = setTimeout(
+			async () => {
+				const result = await api.people.search({ query: { q } }).catch(() => null);
+				found = { q, people: result?.people ?? [] };
+			},
+			q ? SEARCH_DELAY : 0,
+		);
 		return () => clearTimeout(timer);
 	});
 
@@ -108,6 +111,9 @@
 		copied = true;
 		setTimeout(() => (copied = false), 1600);
 	}
+
+	/** A grantee comes without an email; the people the search returned carry theirs. */
+	const emailOf = (person: Person) => person.email ?? store.people.find((known) => known.id === person.id)?.email;
 
 	function add(person: Person) {
 		query = '';
@@ -172,13 +178,16 @@
 			{/each}
 		</div>
 	</div>
-	{#if query.trim()}
-		<ul class="flex flex-col" aria-label="People found" transition:slide={motion({ duration: 160, easing: cubicOut })}>
+	{#if query.trim() || suggestions.length}
+		<ul class="flex max-h-60 flex-col overflow-y-auto" aria-label="People found" transition:slide={motion({ duration: 160, easing: cubicOut })}>
 			{#each suggestions as person (person.id)}
 				<li>
-					<button type="button" class="menu-item" onclick={() => add(person)}>
+					<button type="button" class="menu-item h-auto min-h-8 py-1.5 touch:min-h-11" onclick={() => add(person)}>
 						<UserPlus size={15} class="shrink-0 text-muted" />
-						<PersonName {person} class="flex-1" />
+						<span class="flex min-w-0 flex-1 flex-col items-start leading-tight">
+							<PersonName {person} class="max-w-full" />
+							{#if emailOf(person)}<span class="max-w-full truncate text-[12px] text-faint">{emailOf(person)}</span>{/if}
+						</span>
 						<span class="text-[12px] text-faint">Add</span>
 					</button>
 				</li>
@@ -196,7 +205,10 @@
 			{#each people as row (row.key)}
 				{@const share = row.value}
 				<li class="flex items-center gap-2 rounded-xl px-1.5 py-1" animate:flip={motion({ duration: 200 })} transition:slide={motion({ duration: 180, easing: cubicOut })}>
-					<PersonName person={share.grantee} class="flex-1 text-[14px]" />
+					<span class="flex min-w-0 flex-1 flex-col">
+						<PersonName person={share.grantee} class="text-[14px]" />
+						{#if emailOf(share.grantee)}<span class="truncate text-[12px] text-faint">{emailOf(share.grantee)}</span>{/if}
+					</span>
 					<span class="text-[12px] text-faint">{share.role === 'edit' ? 'Can edit' : 'Can view'}</span>
 					<button type="button" class="icon-btn size-8 touch:size-11" aria-label={`Remove ${share.grantee.name}`} onclick={() => remove(row)}>
 						<X size={14} />

@@ -356,44 +356,6 @@ describe('sharing a task', () => {
 		expect(seen.tasks.map(task => task.id)).not.toContain(id);
 	});
 
-	test('a guest names whoever made or finished a task it sees, and nobody acting only elsewhere', async () => {
-		const coGuest = await signUp(app, 'Coguest');
-		const elsewhere = await signUp(app, 'Elsewhere');
-		const id = await newTask('Party');
-		const other = await newTask('Unrelated');
-		await share({ kind: 'task', id }, guest, 'view');
-		const coShare = await share({ kind: 'task', id }, coGuest, 'edit');
-		await share({ kind: 'task', id: other }, elsewhere, 'edit');
-		const sub = crypto.randomUUID();
-		const hidden = crypto.randomUUID();
-		expect(
-			await upload(app, coGuest, [
-				{ op: 'put', table: 'tasks', id: sub, values: taskRow(sub, owner.person.id, 'Cake', { parentId: id }) },
-			]),
-		).toEqual([]);
-		expect(
-			await upload(app, elsewhere, [
-				{
-					op: 'put',
-					table: 'tasks',
-					id: hidden,
-					values: taskRow(hidden, owner.person.id, 'Hidden', { parentId: other }),
-				},
-				{ op: 'patch', table: 'tasks', id: other, values: { completedAt: 1 } },
-			]),
-		).toEqual([]);
-		const names = async (session: Session) =>
-			(await json<{ people: Person[] }>(call(session, 'GET', '/api/people?q='))).people.map(person => person.name);
-		expect(await names(guest)).toContain('Coguest');
-		expect(await names(guest)).not.toContain('Elsewhere');
-		expect(await json<{ people: Person[] }>(call(guest, 'GET', '/api/people?q=co'))).toEqual({
-			people: [{ id: coGuest.person.id, name: 'Coguest', kind: 'human', ownerId: null }],
-		});
-
-		expect((await call(owner, 'DELETE', `/api/shares?id=${coShare.id}`)).status).toBe(200);
-		expect(await names(owner)).toContain('Coguest');
-	});
-
 	test('a guest’s delete that fully landed, retried, logs nothing more in either space', async () => {
 		const helper = await signUp(app, 'Helper');
 		const id = await newTask('Lend the ladder');
@@ -763,7 +725,7 @@ describe('AI accounts', () => {
 });
 
 describe('people search', () => {
-	test('an exact email finds anyone, a name prefix only people the caller knows, and never the caller', async () => {
+	test('a name or email prefix finds every human with their email, an empty one lists them all, never the caller', async () => {
 		const email = `stranger-${crypto.randomUUID()}@procrastimate.test`;
 		const signedUp = await app.fetch('/api/auth/sign-up/email', {
 			method: 'POST',
@@ -771,18 +733,21 @@ describe('people search', () => {
 			body: JSON.stringify({ email, password: 'test-password-1', name: 'Stranger' }),
 		});
 		expect(signedUp.status).toBe(200);
+		const stranger = (await signedUp.json()) as { user: { id: string } };
 		await aiAccount(app, owner, 'Scout');
-		await share({ kind: 'task', id: await newTask('Known') }, guest, 'view');
+		await aiAccount(app, guest, 'Elsewhere bot');
 		const search = async (q: string) =>
-			(await json<{ people: Person[] }>(call(owner, 'GET', `/api/people?q=${encodeURIComponent(q)}`))).people.map(
-				person => person.name,
-			);
-		expect(await search(email.toUpperCase())).toEqual(['Stranger']);
-		expect(await search('Stra')).toEqual([]);
-		const known = await search('');
-		expect(known).toContain('Guest');
-		expect(known).toContain('Scout');
-		expect(known).not.toContain('Owner');
-		expect(known).not.toContain('Stranger');
+			(await json<{ people: Person[] }>(call(owner, 'GET', `/api/people?q=${encodeURIComponent(q)}`))).people;
+		const strangerFound: Person = { id: stranger.user.id, name: 'Stranger', kind: 'human', ownerId: null, email };
+		expect(await search(email.toUpperCase())).toEqual([strangerFound]);
+		expect(await search('Stra')).toEqual([strangerFound]);
+		expect(await search(email.slice(0, 12))).toEqual([strangerFound]);
+		const everyone = (await search('')).map(person => person.name);
+		expect(everyone).toContain('Guest');
+		expect(everyone).toContain('Stranger');
+		expect(everyone).toContain('Scout');
+		expect(everyone).not.toContain('Owner');
+		expect(everyone).not.toContain('Elsewhere bot');
+		expect((await search('Scout'))[0]?.email).toBeUndefined();
 	});
 });

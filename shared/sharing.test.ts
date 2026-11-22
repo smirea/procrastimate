@@ -22,6 +22,13 @@ describe('shareSuggestions', () => {
 		const found = { q: 'Ro', people: [robo, person('ron', 'Ron')] };
 		expect(names(shareSuggestions({ q: 'Ro', me: 'me', known, found, granted: [] }))).toEqual(['Robo', 'Ron']);
 		expect(names(shareSuggestions({ q: 'Ro', me: 'me', known, found, granted: ['robo'] }))).toEqual(['Ron']);
-		expect(shareSuggestions({ q: '', me: 'me', known, found, granted: [] })).toEqual([]);
+	});
+
+	test('an empty query offers everyone, an email prefix matches, and the server’s copy brings the email', () => {
+		const ann = { ...person('ann', 'Ann'), email: 'ann@example.com' };
+		const found = { q: '', people: [ann, person('me', 'Rosa'), person('zed', 'Zed')] };
+		expect(names(shareSuggestions({ q: '', me: 'me', known, found, granted: ['zed'] }))).toEqual(['Robo', 'Ann']);
+		expect(shareSuggestions({ q: '', me: 'me', known, found, granted: [] })[1]).toEqual(ann);
+		expect(names(shareSuggestions({ q: 'ann@', me: 'me', known: [ann], found: null, granted: [] }))).toEqual(['Ann']);
 	});
 });

@@ -21,6 +21,26 @@ struct ShareButton: View {
     }
 }
 
+/// A person's name over their email, where the search gave one.
+private struct PersonLine: View {
+    let person: Person
+    let email: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            PersonName(person: person)
+            if let email {
+                Text(email)
+                    .font(.caption)
+                    .foregroundStyle(.muted)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
 struct ShareSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
@@ -43,7 +63,7 @@ struct ShareSheet: View {
     private var link: Row? { shares.rows.first { $0.value.grantee == nil } }
     private var people: [Row] { shares.rows.filter { $0.value.grantee != nil } }
 
-    /// The people this space has met match at once; the server adds exact email matches when it answers.
+    /// Everyone, before anything is typed; the people this space has met match at once and the server's answer joins them.
     private var suggestions: [Person] {
         Sharing.suggestions(
             q: trimmedQuery,
@@ -138,7 +158,7 @@ struct ShareSheet: View {
                     add(person)
                 } label: {
                     HStack {
-                        PersonName(person: person).foregroundStyle(.ink)
+                        PersonLine(person: person, email: email(of: person)).foregroundStyle(.ink)
                         Spacer()
                         Image(systemName: "plus.circle.fill").foregroundStyle(.accent)
                     }
@@ -148,8 +168,8 @@ struct ShareSheet: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Add \(person.name)")
             }
-            if suggestions.isEmpty, searched.contains("@"), searched == trimmedQuery {
-                Text("No one with that email uses ProcrastiMate yet.")
+            if suggestions.isEmpty, !trimmedQuery.isEmpty, searched == trimmedQuery {
+                Text("No one by that name or email uses ProcrastiMate yet.")
                     .font(.footnote)
                     .foregroundStyle(.muted)
             }
@@ -164,7 +184,7 @@ struct ShareSheet: View {
             ForEach(people) { row in
                 if let person = row.value.grantee {
                     HStack {
-                        PersonName(person: person)
+                        PersonLine(person: person, email: email(of: person))
                         Spacer()
                         Text(row.value.role == .edit ? "Can edit" : "Can view")
                             .font(.subheadline)
@@ -185,6 +205,11 @@ struct ShareSheet: View {
         }
     }
 
+    /// A grantee comes without an email; the people the search returned carry theirs.
+    private func email(of person: Person) -> String? {
+        person.email ?? store.person(person.id)?.email
+    }
+
     private var trimmedQuery: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     private func load() async {
@@ -202,12 +227,8 @@ struct ShareSheet: View {
 
     private func search() async {
         let q = trimmedQuery
-        guard !q.isEmpty else {
-            found = []
-            searched = ""
-            return
-        }
-        try? await Task.sleep(for: .milliseconds(250))
+        // An empty query lists everyone, asked at once so the sheet opens with them.
+        if !q.isEmpty { try? await Task.sleep(for: .milliseconds(250)) }
         guard !Task.isCancelled,
               let people = try? await APIClient.send(API.Endpoints.PeopleSearch.self, NoInput(), query: ["q": q]),
               !Task.isCancelled else { return }
