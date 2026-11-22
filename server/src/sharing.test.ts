@@ -623,6 +623,23 @@ describe('AI accounts', () => {
 		expect((await app.fetch('/api/view', { headers })).status).toBe(401);
 	});
 
+	test('the agent API sets a reaction instead of toggling it, so a retry never takes it back', async () => {
+		const { person: ai, token } = await aiAccount(app, owner, 'Reactor');
+		const headers = tokenHeaders(token);
+		const task = await newTask('Wire the porch light');
+		const set = (emoji: string | null) =>
+			json<{ reactions: { emoji: string; authorIds: string[] }[] }>(
+				app.fetch(`/api/reactions?id=${task}`, { method: 'PUT', headers, body: JSON.stringify({ emoji }) }),
+			);
+		expect((await set('👀')).reactions).toEqual([{ emoji: '👀', authorIds: [ai.id] }]);
+		expect((await set('👀')).reactions).toEqual([{ emoji: '👀', authorIds: [ai.id] }]);
+		expect((await set('❓')).reactions).toEqual([{ emoji: '❓', authorIds: [ai.id] }]);
+		const view = await json<{ tasks: { id: string; reactions: unknown }[] }>(app.fetch('/api/view', { headers }));
+		expect(view.tasks.find(t => t.id === task)?.reactions).toEqual([{ emoji: '❓', authorIds: [ai.id] }]);
+		expect((await set(null)).reactions).toEqual([]);
+		expect((await set(null)).reactions).toEqual([]);
+	});
+
 	test('an explicit title that holds a phrase saves literal, so editing it in the apps never applies the phrase', async () => {
 		const { token } = await aiAccount(app, owner, 'Planner');
 		const headers = tokenHeaders(token);

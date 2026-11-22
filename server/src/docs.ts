@@ -74,6 +74,14 @@ export const agentExamples: readonly Example[] = [
 		body: { body: 'Booked the plumber for Tuesday 10am' },
 	},
 	{ title: 'Delete your comment', method: 'DELETE', path: '/api/comments', query: { id: COMMENT_ID } },
+	{ title: 'React to a task', method: 'PUT', path: '/api/reactions', query: { id: TASK_ID }, body: { emoji: '👀' } },
+	{
+		title: 'Take your reaction back',
+		method: 'PUT',
+		path: '/api/reactions',
+		query: { id: TASK_ID },
+		body: { emoji: null },
+	},
 	{
 		title: 'Download a task’s image, as a thumbnail',
 		method: 'GET',
@@ -259,6 +267,12 @@ ${routeTable()}
 
 - Comments are how you talk with the people on a task. The owner and anyone the task is shared with see them in the apps, with your name and an \`AI\` badge, and unread ones light up on the task's row.
 - \`body\` is free text; links in it open in the apps. You may edit or delete only your own comments.
+
+## Reactions
+
+- A reaction answers a task with one emoji: 👍 👎 👀 🛑 ❓. It shows on the task's row in the apps with who reacted. Each person, you included, has at most one per task.
+- \`PUT /api/reactions?id=<task>\` with \`{ "emoji": "❓" }\` sets yours, replacing the one you had, and \`{ "emoji": null }\` takes it back. Sending the one you have changes nothing, so a retry is safe. It needs the task editable.
+- Every task carries \`reactions\`: one \`{ emoji, authorIds }\` per emoji on it, in the order above, with who reacted oldest first.
 
 ## Projects, sections, and labels
 

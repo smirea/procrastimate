@@ -18,6 +18,7 @@ import {
 	projectEditSchema,
 	newSectionSchema,
 	personSchema,
+	reactionChoiceSchema,
 	shareAudienceSchema,
 	sharedViewSchema,
 	shareTargetSchema,
@@ -31,6 +32,7 @@ import { createdWebhookSchema, newWebhookSchema, webhookSchema } from '../webhoo
 import { byteKeySchema } from '../images.ts';
 import { githubItemSchema } from '../github.ts';
 import { labelSchema, projectSchema, sectionSchema } from '../model.ts';
+import { reactionGroupSchema } from '../reactions.ts';
 import { rambleOutlineInputSchema, rambleOutlineSchema } from '../ramble/outline.ts';
 
 /**
@@ -126,6 +128,7 @@ export const newApiTokenSchema = z
 	.object({ aiUserId: apiTokenSchema.shape.aiUserId, name: apiTokenSchema.shape.name })
 	.meta({ id: 'NewApiToken' });
 export const taskCommentsSchema = z.object({ comments: z.array(taskCommentSchema) }).meta({ id: 'TaskComments' });
+export const taskReactionsSchema = z.object({ reactions: z.array(reactionGroupSchema) }).meta({ id: 'TaskReactions' });
 export const activitySchema = z.object({ entries: z.array(activityEntrySchema) }).meta({ id: 'Activity' });
 export const linkPreviewSchema = z.object({ title: z.string().nullable() }).meta({ id: 'LinkPreview' });
 export const linksSchema = z.object({ links: z.array(shareViewSchema) }).meta({ id: 'Links' });
@@ -133,7 +136,7 @@ export const webhooksSchema = z.object({ webhooks: z.array(webhookSchema) }).met
 
 /**
  * What an AI account, or a guest of a space, may call: view, the task, project, section, label, and link commands,
- * comments, and activity. Projects, sections, labels, and links are only the owner's and an AI account's, which holds
+ * comments, reactions, and activity. Projects, sections, labels, and links are only the owner's and an AI account's, which holds
  * a whole-space edit share. Everything else is the human owner's. The agent docs and their OpenAPI subset are generated from it, so each `summary` and
  * `description` here is what an agent reads.
  */
@@ -276,6 +279,21 @@ export const agentContract = {
 			)
 			.input(z.object({ query: taskQuery }))
 			.output(okSchema),
+	},
+	reactions: {
+		set: found
+			.meta(
+				openapi({
+					method: 'PUT',
+					path: '/api/reactions',
+					inputStructure: 'detailed',
+					summary: 'Set your reaction to a task',
+					description:
+						'`id` is the task’s. One of 👍 👎 👀 🛑 ❓; each person has at most one per task, so this replaces yours, and `null` takes it back. Sending the one you have changes nothing. Needs the task editable. Answers the task’s reactions after.',
+				}),
+			)
+			.input(z.object({ query: taskQuery, body: reactionChoiceSchema }))
+			.output(taskReactionsSchema),
 	},
 	projects: {
 		create: found

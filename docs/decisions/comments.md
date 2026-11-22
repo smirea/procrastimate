@@ -34,7 +34,8 @@ Web and iOS build the same behavior.
 - **The server stamps the author and owns the id rule.** A put sets `authorId` to the sender, and a reaction whose id is not `<task>:<sender>` is refused, so nobody reacts as someone else. Only the author changes or deletes one (`Only the author can delete a reaction`), the owner included. A guest needs an editable task, like commenting, so a view guest sees reactions but adds none, and a public link shows none. Guests pull a task's reactions with it.
 - **Rows.** Each emoji on the task is a chip at the end of the row, in the picker's order, with a count only when more than one person picked it; the user's own is outlined in the accent color. The chip names who reacted, oldest first, with `You` for the user: a tooltip on the web, the menu a tap opens on iOS. Clicking a chip picks or takes back that emoji where the user may edit the task. Unknown reactors are fetched like unknown task authors, so a name never stays `Someone` while online.
 - **Picking.** `React` is a row action (`rowActions`), offered wherever the task is editable. The web shows a smiley beside Postpone on hover, whose picker opens on hover, and the row's long-press or right-click menu leads with the five emoji, which is how touch reacts. iOS puts `React` on the trailing swipe beside Postpone, opening a dialog of the five, and a `React` submenu in the context menu.
-- **Not yet:** reactions in activity, webhooks, or the agent API.
+- **The agent API sets one, never toggles it.** `PUT /api/reactions` sets the caller's reaction or takes it back with `null`, and sending the one it has keeps it, so a retried call never undoes itself. Every `AgentTask` carries its `reactions` groups. The task orchestrator marks its work with them: 👀 while a worker has the task, ❓ when it needs Stefan, 🛑 when it is blocked.
+- **Not yet:** reactions in activity or webhooks.
 
 ## Not built yet
 

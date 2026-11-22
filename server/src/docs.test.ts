@@ -62,6 +62,7 @@ describe('agent docs', () => {
 			'POST /api/comments',
 			'PATCH /api/comments',
 			'DELETE /api/comments',
+			'PUT /api/reactions',
 			'POST /api/projects',
 			'PATCH /api/projects',
 			'DELETE /api/projects',
@@ -86,7 +87,7 @@ describe('agent docs', () => {
 		const text = await guide.text();
 		const tableRows = text
 			.split('\n')
-			.filter(line => /^\| (GET|POST|PATCH|DELETE) \|/.test(line))
+			.filter(line => /^\| (GET|POST|PUT|PATCH|DELETE) \|/.test(line))
 			.map(line => line.split(' | ').slice(0, 2).join(' ').replace(/^\| /, '').replaceAll('`', ''));
 		expect(tableRows).toEqual(routes);
 		expect(text).toContain('| POST | `/api/tasks` | Add a task. `text` reads like the app’s quick add');
