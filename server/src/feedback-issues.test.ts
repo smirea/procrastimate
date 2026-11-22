@@ -9,10 +9,10 @@ let guest: Session;
 let aiToken: string;
 
 beforeAll(async () => {
-	app = await testApp({ env: { FEEDBACK_GITHUB_TOKEN: 'gho_feedback', FEEDBACK_GITHUB_USER_ID: 'set-below' } });
+	app = await testApp({ env: { FEEDBACK_GITHUB_TOKEN: 'gho_feedback', OWNER_USER_ID: 'set-below' } });
 	stefan = await signUp(app, 'Stefan');
 	guest = await signUp(app, 'Guest');
-	app.config.feedbackGithub = { token: 'gho_feedback', userId: stefan.person.id };
+	app.config.ownerId = stefan.person.id;
 	const ai = await json<Person>(
 		app.fetch('/api/ai', { method: 'POST', headers: stefan.headers, body: JSON.stringify({ name: 'Butler' }) }),
 	);

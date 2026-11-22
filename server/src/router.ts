@@ -46,7 +46,7 @@ import {
 	sharedView,
 } from './sharing';
 import { linkTitle } from './link-preview';
-import { githubItem } from './github';
+import { githubItem, ownersGithubToken } from './github';
 import { fileFeedbackIssue } from './feedback-issues';
 import { parseGithubRef } from '../../shared/github';
 import { personById, searchPeople } from './people';
@@ -223,31 +223,31 @@ export const router = os.router({
 		throw new ORPCError('NOT_FOUND', { message: 'Icon requests never reach the router' });
 	}),
 	linkPreview: os.linkPreview.handler(async ({ input, context }) => {
-		await requireHuman(context.request, context.app);
+		const actor = await requireHuman(context.request, context.app);
 		const ref = parseGithubRef(input.query.url);
-		const token = context.app.config.githubToken;
+		const token = ownersGithubToken(context.app.config, actor.id);
 		return { title: ref ? (await githubItem(ref, token)).title : await linkTitle(input.query.url) };
 	}),
 	github: os.github.handler(async ({ input, context, errors }) => {
-		await requireHuman(context.request, context.app);
+		const actor = await requireHuman(context.request, context.app);
 		const ref = parseGithubRef(input.query.url);
 		if (!ref) throw errors.BAD_REQUEST({ message: 'Needs a GitHub issue or pull request' });
-		return githubItem(ref, context.app.config.githubToken);
+		return githubItem(ref, ownersGithubToken(context.app.config, actor.id));
 	}),
 	feedback: {
 		github: os.feedback.github.handler(async ({ context }) => {
 			const actor = await requireHuman(context.request, context.app);
-			return { enabled: context.app.config.feedbackGithub?.userId === actor.id };
+			const { feedbackGithubToken, ownerId } = context.app.config;
+			return { enabled: feedbackGithubToken !== null && ownerId === actor.id };
 		}),
 		issue: os.feedback.issue.handler(async ({ input, context, errors }) => {
 			const actor = await requireHuman(context.request, context.app);
-			const github = context.app.config.feedbackGithub;
-			if (!github)
-				throw errors.SERVICE_UNAVAILABLE({ message: 'This server has no GitHub token for feedback issues.' });
-			if (actor.id !== github.userId)
+			const { feedbackGithubToken: token, ownerId } = context.app.config;
+			if (!token) throw errors.SERVICE_UNAVAILABLE({ message: 'This server has no GitHub token for feedback issues.' });
+			if (actor.id !== ownerId)
 				throw errors.FORBIDDEN({ message: 'GitHub issues are filed from Stefan’s account only.' });
 			try {
-				return { url: await fileFeedbackIssue(github.token, input) };
+				return { url: await fileFeedbackIssue(token, input) };
 			} catch (error) {
 				throw errors.BAD_GATEWAY({ message: (error as Error).message });
 			}

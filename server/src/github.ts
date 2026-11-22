@@ -1,4 +1,5 @@
 import { githubUrl, type GithubItem, type GithubRef, type GithubState } from '../../shared/github';
+import type { Config } from './config';
 import { linkTitle } from './link-preview';
 
 const API = 'https://api.github.com';
@@ -45,4 +46,9 @@ async function readGithub(ref: GithubRef, token: string | null): Promise<GithubI
 /** From the API, else the title on its page with no state, which still reads a public one past the rate limit. */
 export async function githubItem(ref: GithubRef, token: string | null): Promise<GithubItem> {
 	return (await readGithub(ref, token)) ?? { title: await linkTitle(githubUrl(ref)), state: null, kind: ref.kind };
+}
+
+/** The token reads Stefan's private repos, and anyone can sign up, so it reads for him alone. */
+export function ownersGithubToken({ githubToken, ownerId }: Config, actorId: string): string | null {
+	return actorId === ownerId ? githubToken : null;
 }

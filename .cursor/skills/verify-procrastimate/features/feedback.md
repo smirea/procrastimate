@@ -40,7 +40,7 @@ Preconditions:
 
 ## Filing a GitHub issue (both clients)
 
-A local run has no entry until the server names the signed-in account. Sign up, then restart the server with `FEEDBACK_GITHUB_TOKEN="$(gh auth token --user smirea-ai)" FEEDBACK_GITHUB_USER_ID=<the account's id from the sign-up response> bun src/index.ts` in `server/`. Share then lists `GitHub Issue` after `ProcrastiMate`; choosing it shows `Sent to GitHub Issue` and a real issue lands in `smirea/procrastimate`, so close it afterwards. A second account signed in to the same server lists no `GitHub Issue`. `server/src/feedback-issues.test.ts` covers the gate and the issue's body against a fake GitHub.
+A local run has no entry until the server names the signed-in account. Sign up, then restart the server with `FEEDBACK_GITHUB_TOKEN="$(gh auth token --user smirea-ai)" OWNER_USER_ID=<the account's id from the sign-up response> bun src/index.ts` in `server/`. Share then lists `GitHub Issue` after `ProcrastiMate`; choosing it shows `Sent to GitHub Issue` and a real issue lands in `smirea/procrastimate`, so close it afterwards. A second account signed in to the same server lists no `GitHub Issue`. `server/src/feedback-issues.test.ts` covers the gate and the issue's body against a fake GitHub.
 
 ## Gotchas
 

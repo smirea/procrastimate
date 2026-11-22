@@ -574,7 +574,7 @@ export const contract = {
 		.input(z.object({ query: z.object({ url: z.string() }) }))
 		.output(githubItemSchema),
 	/**
-	 * The Feedback editor's GitHub Issue entry, for one account alone: the server's `FEEDBACK_GITHUB_USER_ID`, Stefan's.
+	 * The Feedback editor's GitHub Issue entry, for one account alone: the server's `OWNER_USER_ID`, Stefan's.
 	 * See `docs/decisions/feedback.md`.
 	 */
 	feedback: {
