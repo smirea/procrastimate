@@ -22,6 +22,7 @@ export const DEVICE_KEYS = {
 	showCompleted: 'procrastimate.showCompleted',
 	noDateOldestFirst: 'procrastimate.noDateOldestFirst',
 	listFilters: 'procrastimate.listFilters',
+	feedbackLastProject: 'procrastimate.feedbackLastProject',
 } as const;
 
 const peopleSchema = z.array(personSchema);

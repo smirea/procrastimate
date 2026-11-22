@@ -23,7 +23,7 @@ export function startFeedback(): () => void {
 	engine = setupFeedbackEngine({
 		app: 'ProcrastiMate',
 		version: __APP_VERSION__,
-		procrastimate: { url: '', app: location.origin },
+		procrastimate: { url: '', app: location.origin, projects: ['app'] },
 		webhooks,
 		pinned: ['ProcrastiMate'],
 	});

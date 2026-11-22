@@ -92,13 +92,13 @@ class Session {
 		await this.#submit('/api/auth/sign-up/email', { email, password, name });
 	}
 
-	async social(provider: 'google' | 'apple') {
+	async social(provider: 'google' | 'apple', callbackURL = '/inbox') {
 		this.error = '';
 		const response = await fetch('/api/auth/sign-in/social', {
 			method: 'POST',
 			credentials: 'include',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ provider, callbackURL: '/inbox', errorCallbackURL: '/inbox' }),
+			body: JSON.stringify({ provider, callbackURL, errorCallbackURL: callbackURL }),
 		}).catch(() => null);
 		const body = (await response?.json().catch(() => null)) as { url?: string } | null;
 		if (!response?.ok || !body?.url) {

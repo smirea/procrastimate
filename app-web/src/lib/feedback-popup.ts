@@ -1,0 +1,270 @@
+import type { FeedbackProject } from 'shared/api/contract.ts';
+import { FILE_PART_BYTES, FILE_TYPE, IMAGES_PATH } from 'shared/images.ts';
+import { newId } from 'shared/id.ts';
+import { api } from './api.ts';
+import { DEVICE_KEYS } from './device.ts';
+
+/**
+ * The popup handoff from `@stefan.inc/feedback-engine` (`window.open` + `postMessage`) to `/feedback`. The popup runs
+ * on ProcrastiMate's own origin, so every upload and task creation uses the signed-in browser session cookie with no
+ * token ever leaving ProcrastiMate.
+ */
+
+export type FeedbackDraft = {
+	title: string;
+	app?: string;
+	project?: string;
+	projects: string[];
+	space?: string;
+	image: { full: Blob; thumb: Blob; width: number; height: number };
+	report: string;
+};
+
+export type FeedbackPlace = { projectId?: string; sectionId?: string };
+
+export const FEEDBACK_READY = 'feedback:ready';
+export const FEEDBACK_DRAFT = 'feedback:draft';
+export const FEEDBACK_POSTED = 'feedback:posted';
+export const FEEDBACK_CANCELLED = 'feedback:cancelled';
+
+const nonEmptyString = (value: unknown): string | undefined =>
+	typeof value === 'string' && value.trim() ? value : undefined;
+
+const positiveInt = (value: unknown): number | undefined =>
+	typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : undefined;
+
+/** Validates the `feedback:draft` payload sent by the opener for this popup's `nonce`. */
+export function parseDraftMessage(data: unknown, expectedNonce: string): FeedbackDraft | null {
+	if (!expectedNonce || !data || typeof data !== 'object') return null;
+	const record = data as Record<string, unknown>;
+	if (record.type !== FEEDBACK_DRAFT || record.nonce !== expectedNonce) return null;
+	if (typeof record.title !== 'string' || typeof record.report !== 'string') return null;
+	const image = record.image;
+	if (!image || typeof image !== 'object') return null;
+	const img = image as Record<string, unknown>;
+	const width = positiveInt(img.width);
+	const height = positiveInt(img.height);
+	if (!(img.full instanceof Blob) || !(img.thumb instanceof Blob) || !width || !height) return null;
+	if (!Array.isArray(record.projects) || !record.projects.every(item => typeof item === 'string')) return null;
+	const projects = record.projects.map(item => item.trim()).filter(Boolean);
+	if (!projects.length) return null;
+	return {
+		title: record.title,
+		app: nonEmptyString(record.app),
+		project: nonEmptyString(record.project),
+		projects,
+		space: nonEmptyString(record.space),
+		image: { full: img.full, thumb: img.thumb, width, height },
+		report: record.report,
+	};
+}
+
+/** Matches a project by id or by name ignoring case. Own projects precede shared ones in `projects`. */
+export function namedFeedbackProject(projects: readonly FeedbackProject[], name: string): FeedbackProject | undefined {
+	const lower = name.toLowerCase();
+	return (
+		projects.find(project => project.id === name) ?? projects.find(project => project.name.toLowerCase() === lower)
+	);
+}
+
+/**
+ * The projects the popup picker offers: scoped to `space` when named, then narrowed to the host app's required
+ * `projects` whitelist in its order. The Inbox is never offered.
+ */
+export function pickFeedbackProjects(
+	all: readonly FeedbackProject[],
+	userId: string,
+	options: { space?: string; projects: readonly string[] },
+): { projects: FeedbackProject[]; missing: string[] } {
+	const inSpace = options.space ? all.filter(project => (project.owner?.id ?? userId) === options.space) : [...all];
+	const projects: FeedbackProject[] = [];
+	const missing: string[] = [];
+	for (const name of options.projects) {
+		const match = namedFeedbackProject(inSpace, name);
+		if (!match) missing.push(name);
+		else if (!projects.includes(match)) projects.push(match);
+	}
+	return { projects, missing };
+}
+
+/**
+ * The project the picker opens on: the one the host app names, else the user's last posted project if offered, else
+ * the first offered project. `undefined` only when none of the whitelisted projects exist for this user.
+ */
+export function startingFeedbackProject(
+	listed: readonly FeedbackProject[],
+	options: { project?: string },
+	lastId: string | undefined,
+): string | undefined {
+	if (options.project) return namedFeedbackProject(listed, options.project)?.id;
+	if (lastId && listed.some(project => project.id === lastId)) return lastId;
+	return listed[0]?.id;
+}
+
+type StoredLast = Record<string, string | null>;
+
+function readStoredLast(): StoredLast {
+	try {
+		const raw = localStorage.getItem(DEVICE_KEYS.feedbackLastProject);
+		const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+		return parsed && typeof parsed === 'object' ? (parsed as StoredLast) : {};
+	} catch {
+		return {};
+	}
+}
+
+export function loadLastFeedbackProject(userId: string): string | undefined {
+	const value = readStoredLast()[userId];
+	return typeof value === 'string' && value ? value : undefined;
+}
+
+export function saveLastFeedbackProject(userId: string, projectId: string | undefined): void {
+	try {
+		const next = { ...readStoredLast(), [userId]: projectId ?? null };
+		localStorage.setItem(DEVICE_KEYS.feedbackLastProject, JSON.stringify(next));
+	} catch {
+		// Private browsing may refuse storage; picking still works without remembering.
+	}
+}
+
+/**
+ * Uploads the image, thumbnail, and `feedback.json` to ProcrastiMate's own origin with the session cookie, then creates
+ * the task with all attachments in one write. Uses the chosen project's space so posting to a shared project credits
+ * the signed-in human guest.
+ */
+export async function postFeedbackTask(
+	draft: FeedbackDraft,
+	title: string,
+	place: FeedbackPlace,
+	project: FeedbackProject | undefined,
+	step: (text: string) => void,
+): Promise<{ id: string; url: string; destination: string }> {
+	const reportBytes = new TextEncoder().encode(draft.report);
+	if (reportBytes.byteLength > FILE_PART_BYTES) {
+		throw new Error('The JSON report is over the 16 MB ProcrastiMate takes in one upload.');
+	}
+	if (!project || !place.projectId) {
+		throw new Error('Choose one of the listed projects to post feedback into.');
+	}
+	const space = project.owner?.id;
+	const imageId = newId();
+	const reportId = newId();
+	const taskId = newId();
+
+	async function put(query: Record<string, string>, body: BodyInit, type: string) {
+		const search = new URLSearchParams({ ...(space ? { space } : {}), ...query });
+		const response = await fetch(`${IMAGES_PATH}?${search}`, {
+			method: 'PUT',
+			credentials: 'include',
+			headers: { 'Content-Type': type },
+			body,
+		});
+		if (response.ok) return;
+		const text = await response.text().catch(() => '');
+		let message: string | undefined;
+		try {
+			message = (JSON.parse(text) as { message?: string }).message;
+		} catch {
+			// Plain-text or proxy error body.
+		}
+		throw new Error(message ? `ProcrastiMate: ${message}` : `ProcrastiMate answered ${response.status}.`);
+	}
+
+	step('Uploading the image');
+	await put({ id: imageId, size: 'full' }, draft.image.full, draft.image.full.type || 'image/jpeg');
+	step('Uploading the thumbnail');
+	await put({ id: imageId, size: 'thumb' }, draft.image.thumb, draft.image.thumb.type || 'image/jpeg');
+	step('Uploading feedback.json');
+	await put({ id: reportId, size: 'file', name: 'feedback.json', type: 'application/json' }, reportBytes, FILE_TYPE);
+	step('Creating the task');
+	await api.tasks.create({
+		query: space ? { space } : {},
+		body: {
+			id: taskId,
+			title,
+			projectId: place.projectId ?? null,
+			sectionId: place.sectionId ?? null,
+			attachments: [
+				{ id: imageId, width: draft.image.width, height: draft.image.height },
+				{ id: reportId, name: 'feedback.json', type: 'application/json', bytes: reportBytes.byteLength },
+			],
+		},
+	});
+	const section = project?.sections.find(candidate => candidate.id === place.sectionId);
+	const destination = [project?.name ?? 'Inbox', section?.name].filter(Boolean).join(' / ');
+	const url = `${location.origin}/inbox?task=${encodeURIComponent(taskId)}`;
+	return { id: taskId, url, destination };
+}
+
+/**
+ * Stashes a received draft in IndexedDB when the signed-out user chooses Google or Apple sign-in, which navigates away
+ * from `/feedback` and back. Stashed drafts expire after 15 minutes so nothing lingers.
+ */
+const STASH_DB = 'procrastimate-feedback-drafts';
+const STASH_STORE = 'drafts';
+const STASH_TTL_MS = 15 * 60_000;
+
+type StashedEntry = { nonce: string; draft: FeedbackDraft; openerOrigin: string | null; at: number };
+
+function openStash(): Promise<IDBDatabase> {
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.open(STASH_DB, 1);
+		request.onupgradeneeded = () => {
+			if (!request.result.objectStoreNames.contains(STASH_STORE)) {
+				request.result.createObjectStore(STASH_STORE, { keyPath: 'nonce' });
+			}
+		};
+		request.onsuccess = () => resolve(request.result);
+		request.onerror = () => reject(request.error);
+	});
+}
+
+export async function stashDraft(nonce: string, draft: FeedbackDraft, openerOrigin: string | null): Promise<void> {
+	if (typeof indexedDB === 'undefined') return;
+	try {
+		const db = await openStash();
+		await new Promise<void>((resolve, reject) => {
+			const tx = db.transaction(STASH_STORE, 'readwrite');
+			const store = tx.objectStore(STASH_STORE);
+			const cutoff = Date.now() - STASH_TTL_MS;
+			const cursor = store.openCursor();
+			cursor.onsuccess = () => {
+				const row = cursor.result;
+				if (!row) return;
+				if ((row.value as StashedEntry).at < cutoff) row.delete();
+				row.continue();
+			};
+			store.put({ nonce, draft, openerOrigin, at: Date.now() } satisfies StashedEntry);
+			tx.oncomplete = () => resolve();
+			tx.onerror = () => reject(tx.error);
+		});
+		db.close();
+	} catch {
+		// IndexedDB may be disabled in private browsing; email sign-in stays in-place without it.
+	}
+}
+
+export async function takeStashedDraft(
+	nonce: string,
+): Promise<{ draft: FeedbackDraft; openerOrigin: string | null } | null> {
+	if (typeof indexedDB === 'undefined' || !nonce) return null;
+	try {
+		const db = await openStash();
+		const entry = await new Promise<StashedEntry | undefined>((resolve, reject) => {
+			const tx = db.transaction(STASH_STORE, 'readwrite');
+			const store = tx.objectStore(STASH_STORE);
+			const get = store.get(nonce);
+			get.onsuccess = () => {
+				const found = get.result as StashedEntry | undefined;
+				if (found) store.delete(nonce);
+				resolve(found);
+			};
+			get.onerror = () => reject(get.error);
+		});
+		db.close();
+		if (!entry || Date.now() - entry.at > STASH_TTL_MS) return null;
+		return { draft: entry.draft, openerOrigin: entry.openerOrigin };
+	} catch {
+		return null;
+	}
+}

@@ -74,6 +74,26 @@ export const feedbackGithubSchema = z.object({ enabled: z.boolean() }).meta({ id
 const feedbackPostSchema = z.object({ id: z.string(), title: z.string().min(1), image: z.file(), report: z.file() });
 export type FeedbackPost = z.infer<typeof feedbackPostSchema>;
 export const feedbackIssueSchema = z.object({ url: z.url() }).meta({ id: 'FeedbackIssue' });
+export const feedbackSectionSchema = z.object({ id: z.string(), name: z.string() }).meta({ id: 'FeedbackSection' });
+export type FeedbackSection = z.infer<typeof feedbackSectionSchema>;
+export const feedbackProjectSchema = z
+	.object({
+		id: z.string(),
+		name: z.string(),
+		icon: projectSchema.shape.icon,
+		/** Null for the caller's own project; the space's owner for a shared project the caller may add to. */
+		owner: personSchema.nullable(),
+		sections: z.array(feedbackSectionSchema),
+	})
+	.meta({ id: 'FeedbackProject' });
+export type FeedbackProject = z.infer<typeof feedbackProjectSchema>;
+export const feedbackProjectsSchema = z
+	.object({
+		user: personSchema,
+		projects: z.array(feedbackProjectSchema),
+	})
+	.meta({ id: 'FeedbackProjects' });
+export type FeedbackProjects = z.infer<typeof feedbackProjectsSchema>;
 
 const signedIn = oc.errors({ UNAUTHORIZED: {}, SERVICE_UNAVAILABLE: {} });
 /** `FORBIDDEN` when the caller may not reach the space, or is an AI account on a human-only route. */
@@ -578,6 +598,11 @@ export const contract = {
 	 * See `docs/decisions/feedback.md`.
 	 */
 	feedback: {
+		/** The signed-in human and every project they may post feedback into: their own and their edit-shared ones. */
+		projects: allowed
+			.meta(openapi({ method: 'GET', path: '/api/feedback/projects', inputStructure: 'detailed' }))
+			.input(z.object({ query: spaceQuery }))
+			.output(feedbackProjectsSchema),
 		/** Whether the caller gets the entry: true only for that account on a server with the token. */
 		github: allowed.meta(openapi({ method: 'GET', path: '/api/feedback/github' })).output(feedbackGithubSchema),
 		/**

@@ -39,8 +39,8 @@
 	let { children }: { children: Snippet } = $props();
 	let menuOpen = $state(false);
 
-	/** A public link renders for anyone, signed in or not, outside the app's chrome. */
-	const isPublic = $derived(page.route.id === '/s/[token]');
+	/** Public links and the cross-origin feedback popup render outside the app's chrome, sync worker, and feedback overlay. */
+	const isStandalone = $derived(page.route.id === '/s/[token]' || page.route.id === '/feedback');
 	const openTask = $derived(sheets.current.kind === 'task' ? store.task(sheets.current.id) : undefined);
 	$effect(() => {
 		if (sheets.current.kind === 'task' && store.loaded && !openTask) untrack(() => sheets.close());
@@ -89,7 +89,7 @@
 			: event.key === '/';
 
 	function onkeydown(event: KeyboardEvent) {
-		if (isPublic || isTyping(event.target)) return;
+		if (isStandalone || isTyping(event.target)) return;
 		if (isSearchShortcut(event) && sheets.current.kind !== 'search') {
 			event.preventDefault();
 			openSearch();
@@ -110,10 +110,13 @@
 	$effect(() => clock.start());
 	$effect(() => trackKeyboardInset());
 	$effect(() => keepCaretInView());
-	$effect(() => untrack(() => void session.start().then(runSentrySmoke)));
+	$effect(() => {
+		if (isStandalone) return;
+		untrack(() => void session.start().then(runSentrySmoke));
+	});
 	$effect(() => {
 		const userId = session.userId;
-		if (session.state !== 'in' || !session.confirmed || !userId) return;
+		if (isStandalone || session.state !== 'in' || !session.confirmed || !userId) return;
 		void keepStorage().catch(() => {});
 		const stopPush = untrack(() => push.start());
 		const stopSync = untrack(() => startSync(userId));
@@ -125,17 +128,17 @@
 
 	// Signed in only, since its ProcrastiMate entry posts with the session and a public link's visitor has none.
 	$effect(() => {
-		if (session.state === 'in' && !isPublic) return untrack(startFeedback);
+		if (session.state === 'in' && !isStandalone) return untrack(startFeedback);
 	});
 
 	$effect(() => {
-		if (session.state === 'in' && session.confirmed && store.loaded) untrack(openTaskFromUrl);
+		if (!isStandalone && session.state === 'in' && session.confirmed && store.loaded) untrack(openTaskFromUrl);
 	});
 
 	// Only once the local database is read, or the check would pass every reminder that came up while closed.
 	$effect(() => {
 		const now = clock.now;
-		if (store.loaded) untrack(() => notifyDueReminders(now));
+		if (!isStandalone && store.loaded) untrack(() => notifyDueReminders(now));
 	});
 
 	$effect(() => {
@@ -147,7 +150,7 @@
 	// code, on the second: 65 ms and 34 ms on a Mac, several times that on a phone, which landed on whatever tap parsed
 	// first, such as opening a task's details with its empty subtask field. Two idle parses take both.
 	$effect(() => {
-		if (!store.loaded) return;
+		if (isStandalone || !store.loaded) return;
 		const idle = (run: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(run, { timeout: 3000 }) : setTimeout(run, 500));
 		const warm = () => void parseQuickAdd('warm up tomorrow 5pm p1', { now: new Date() });
 		idle(() => {
@@ -160,7 +163,7 @@
 
 <svelte:window {onkeydown} />
 
-{#if isPublic}
+{#if isStandalone}
 	{@render children()}
 {:else if session.state === 'out'}
 	<SignIn />

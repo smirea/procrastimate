@@ -3,6 +3,16 @@
 	import { untrack } from 'svelte';
 	import { session } from '../session.svelte.ts';
 
+	let {
+		callbackURL = '/inbox',
+		note,
+		onbeforeoauth,
+	}: {
+		callbackURL?: string;
+		note?: string;
+		onbeforeoauth?: () => void | Promise<void>;
+	} = $props();
+
 	let email = $state('');
 	let password = $state('');
 	let creating = $state(false);
@@ -18,7 +28,8 @@
 	/** The provider's page loads next, so the button says so until the redirect, or until it fails. */
 	async function social(provider: 'google' | 'apple') {
 		opening = provider;
-		await session.social(provider);
+		await onbeforeoauth?.();
+		await session.social(provider, callbackURL);
 		if (session.error) opening = null;
 	}
 
@@ -43,6 +54,9 @@
 	<img src="/icons/logo.png" alt="" width="160" height="160" class="-mb-3 size-40" />
 	<form class="glass-strong flex w-full max-w-sm flex-col gap-3 rounded-3xl p-6" aria-label="Sign in" {onsubmit}>
 		<h1 class="text-[22px] font-semibold tracking-tight text-ink">ProcrastiMate</h1>
+		{#if note}
+			<p class="-mt-1 text-[14px] text-muted">{note}</p>
+		{/if}
 
 		{#if session.methods.email}
 			<label class="flex flex-col gap-1 text-[13px] text-muted">

@@ -48,6 +48,7 @@ import {
 import { linkTitle } from './link-preview';
 import { githubItem, ownersGithubToken } from './github';
 import { fileFeedbackIssue } from './feedback-issues';
+import { feedbackProjects } from './feedback-projects';
 import { parseGithubRef } from '../../shared/github';
 import { personById, searchPeople } from './people';
 import { OUTLINE_TIMEOUT_MS, outlineRamble, RAMBLE_GEMINI } from './ramble-outline';
@@ -235,6 +236,10 @@ export const router = os.router({
 		return githubItem(ref, ownersGithubToken(context.app.config, actor.id));
 	}),
 	feedback: {
+		projects: os.feedback.projects.handler(async ({ input, context }) => {
+			const actor = await requireHuman(context.request, context.app);
+			return feedbackProjects(context.app.db, actor, input.query.space);
+		}),
 		github: os.feedback.github.handler(async ({ context }) => {
 			const actor = await requireHuman(context.request, context.app);
 			const { feedbackGithubToken, ownerId } = context.app.config;
