@@ -23,6 +23,7 @@ import { authorOnly, filterTree, managesSpace, scopeOf } from './scope';
 import type {
 	AgentNewTask,
 	AgentTask,
+	AgentTaskEdit,
 	LabelEdit,
 	NewComment,
 	NewLabel,
@@ -57,7 +58,6 @@ import {
 	updateTask,
 	type Creation,
 	type StoreData,
-	type TaskPatch,
 	sameName,
 } from '../../shared/store';
 import { applyPickedLabels, isSavedPlace } from '../../shared/triggers';
@@ -66,7 +66,7 @@ import { wallDate, zonedDateKey } from '../../shared/zoned-time';
 import type { Access } from './space';
 import type { Db } from './db/sqlite';
 import type { Store } from './db/store';
-import { peopleById, personOf, unknownPerson } from './people';
+import { peopleById, personOf, searchPeople, unknownPerson } from './people';
 import { accessIn, entity, loadTree, seesTask, sightOf, storedZone } from './space';
 import { serverWrite, syncContext } from './writes';
 
@@ -184,11 +184,12 @@ function loadSnapshot(db: Db, owner: string, { comment, reactionsOn }: Reads) {
 	return { snapshot, zone };
 }
 
-/** A guest's write outside their share is refused. */
+/** A guest's write outside their share is refused. `creators` names the tasks whose creator the command reassigns. */
 async function run(
 	command: Command,
 	change: (data: StoreData, visible: Visible, zone: string, access: Access) => StoreData,
 	reads: Reads = {},
+	creators?: ReadonlyMap<string, string>,
 ): Promise<Snapshot> {
 	const { db, store, owner, actor, client, now } = command;
 	const access = requireAccess(db, owner, actor);
@@ -199,7 +200,8 @@ async function run(
 	const writes = rowWrites(snapshot, after).map(write => serverWrite(write, owner));
 	if (!writes.length) return after;
 	const manages = access.role === 'guest' && managesSpace(access.shares) ? [owner] : [];
-	const { rejected } = store.space.write(writes, syncContext(actor, client, { now, manages }), { atomic: true });
+	const context = syncContext(actor, client, { now, manages, creators });
+	const { rejected } = store.space.write(writes, context, { atomic: true });
 	if (rejected.length) throw new ORPCError('FORBIDDEN', { message: rejected[0]!.reason });
 	return after;
 }
@@ -284,23 +286,45 @@ export async function createTask(command: Command, input: AgentNewTask): Promise
 /**
  * A saved place in `labelIds` becomes the task's place, as in the apps. Ids without one leave its place alone. A
  * subtask follows its root's project, so a project on one is refused rather than written and then ignored.
+ * `createdBy` credits the task to someone the space knows; only its owner and a manager may, since a guest
+ * reassigning credit would put words in another person's mouth.
  */
-export async function editTask(command: Command, id: string, patch: TaskPatch): Promise<AgentTask> {
-	await run(command, (data, visible) => {
-		const task = visibleTask(visible, id);
-		if (task.parentId && patch.projectId !== undefined) {
-			throw new ORPCError('BAD_REQUEST', { message: 'A subtask follows its parent’s project' });
-		}
-		if ((patch.due || patch.recurrence) && (patch.event ?? task.event)) {
-			throw new ORPCError('BAD_REQUEST', { message: 'An event stands in for the date and the repeat' });
-		}
-		const ids = patch.labelIds ?? [];
-		const placed = visible.labels.some(l => isSavedPlace(l) && ids.includes(l.id))
-			? applyPickedLabels(visible.labels, ids, patch.location ?? task.location)
-			: {};
-		return updateTask(data, id, { ...patch, ...placed });
-	});
+export async function editTask(command: Command, id: string, edit: AgentTaskEdit): Promise<AgentTask> {
+	const { createdBy, ...patch } = edit;
+	const creators = createdBy === undefined ? undefined : new Map([[id, creatorFor(command, createdBy)]]);
+	await run(
+		command,
+		(data, visible) => {
+			const task = visibleTask(visible, id);
+			if (task.parentId && patch.projectId !== undefined) {
+				throw new ORPCError('BAD_REQUEST', { message: 'A subtask follows its parent’s project' });
+			}
+			if ((patch.due || patch.recurrence) && (patch.event ?? task.event)) {
+				throw new ORPCError('BAD_REQUEST', { message: 'An event stands in for the date and the repeat' });
+			}
+			const ids = patch.labelIds ?? [];
+			const placed = visible.labels.some(l => isSavedPlace(l) && ids.includes(l.id))
+				? applyPickedLabels(visible.labels, ids, patch.location ?? task.location)
+				: {};
+			const updated = updateTask(data, id, { ...patch, ...placed });
+			if (createdBy === undefined || task.createdBy === createdBy) return updated;
+			return { ...updated, tasks: updated.tasks.map(t => (t.id === id ? { ...t, createdBy } : t)) };
+		},
+		{},
+		creators,
+	);
 	return taskAfter(command, id);
+}
+
+function creatorFor({ db, owner, actor }: Command, createdBy: string): string {
+	const access = requireAccess(db, owner, actor);
+	if (access.role !== 'owner' && !managesSpace(access.shares)) {
+		throw new ORPCError('FORBIDDEN', { message: 'Only the owner can change who created a task' });
+	}
+	if (createdBy !== owner && !searchPeople(db, owner, '').some(person => person.id === createdBy)) {
+		throw new ORPCError('BAD_REQUEST', { message: 'No such person' });
+	}
+	return createdBy;
 }
 
 export async function finishTask(command: Command, id: string): Promise<AgentTask> {

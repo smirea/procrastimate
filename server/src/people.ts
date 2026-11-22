@@ -40,13 +40,13 @@ type PersonRow = { id: string; name: string; kind: 'human' | 'ai'; ownerId: stri
 const withEmail = ({ email, ...row }: PersonRow): Person => (row.kind === 'human' ? { ...row, email } : asPerson(row));
 
 /**
- * Every human but `me`, with their email, and the AI accounts `me` knows: its own, those it shared with, and those
+ * Every human but `exclude`, with their email, and the AI accounts `me` knows: its own, those it shared with, and those
  * that made or finished a task `me` sees (its own, or one its `access` rows name), so a guest names a co-guest's bot.
  * Each matches a name or email prefix of `query`, and an empty one lists them all. Anyone can list every user: the
  * share sheet offers them all, and sign-up is closed, so they are people Stefan let in. Link shares have no grantee,
  * so the join drops them. One select per source: a Durable Object's SQLite refuses a `UNION ALL` of this many terms.
  */
-export function searchPeople(db: Db, me: string, query: string): Person[] {
+export function searchPeople(db: Db, me: string, query: string, exclude: string | null = me): Person[] {
 	const q = query.trim();
 	const person = { id: user.id, name: user.name, kind: user.kind, ownerId: user.ownerId, email: user.email };
 	const sources: PersonRow[][] = [
@@ -70,7 +70,7 @@ export function searchPeople(db: Db, me: string, query: string): Person[] {
 	];
 	const found = new Map<string, Person>();
 	for (const row of sources.flat()) {
-		if (row.id === me || found.has(row.id)) continue;
+		if (row.id === exclude || found.has(row.id)) continue;
 		if (!q || namePrefixed(row.name, q) || (row.kind === 'human' && namePrefixed(row.email, q)))
 			found.set(row.id, withEmail(row));
 	}

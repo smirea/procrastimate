@@ -10,6 +10,7 @@ import {
 	LABEL_ID,
 	LINK_ID,
 	PLACE_ID,
+	PERSON_ID,
 	PROJECT_ID,
 	SECTION_ID,
 	TASK_ID,
@@ -51,6 +52,7 @@ describe('agent docs', () => {
 
 	test('the reference covers exactly the routes an AI token may call', async () => {
 		const routes = [
+			'GET /api/people',
 			'GET /api/view',
 			'POST /api/tasks',
 			'PATCH /api/tasks',
@@ -138,7 +140,8 @@ describe('agent docs', () => {
 				.replaceAll(LABEL_ID, labelId)
 				.replaceAll(PLACE_ID, placeId)
 				.replaceAll(LINK_ID, linkId)
-				.replaceAll(WEBHOOK_ID, webhookId);
+				.replaceAll(WEBHOOK_ID, webhookId)
+				.replaceAll(PERSON_ID, owner.person.id);
 		const fill = (value: unknown) => JSON.parse(ids(JSON.stringify(value ?? null)));
 		const statuses = [];
 		for (const example of agentExamples) {

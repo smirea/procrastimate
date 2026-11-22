@@ -3,6 +3,7 @@ import { apiTokensRowSchema, sharesRowSchema } from './db/generated/zod.ts';
 import { commentSchema, labelSchema, projectSchema, sectionSchema, taskSchema } from './model.ts';
 import { labelColorSchema } from './label-colors.ts';
 import { reactionEmojiSchema, reactionGroupSchema } from './reactions.ts';
+import { eventOrDate, taskEditFields } from './store.ts';
 import { actorKindSchema, clientStampSchema, roleSchema, savedPlaceSchema, shareTargetKindSchema } from './values.ts';
 
 /**
@@ -183,6 +184,21 @@ export const agentNewTaskSchema = z
 	})
 	.meta({ id: 'AgentNewTask', description: 'A task the agent command API adds. It needs `text` or `title`.' });
 export type AgentNewTask = z.infer<typeof agentNewTaskSchema>;
+
+export const agentTaskEditSchema = taskEditFields
+	.extend({
+		createdBy: z.string().optional().meta({
+			description:
+				'Credits the task to another person, by a user id from `GET /api/people` or the owner’s. Only the owner and an AI account that manages the space may change it.',
+		}),
+	})
+	.refine(...eventOrDate)
+	.meta({
+		id: 'AgentTaskEdit',
+		description:
+			'The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value. A section moves the task into its project, and a new project without one leaves the task in no section.',
+	});
+export type AgentTaskEdit = z.infer<typeof agentTaskEditSchema>;
 
 export const taskClientsSchema = z
 	.object({
