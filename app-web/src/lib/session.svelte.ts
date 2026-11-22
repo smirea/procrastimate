@@ -139,7 +139,13 @@ class Session {
 			return;
 		}
 		if (!response.ok) {
-			this.error = response.status === 401 ? 'Wrong email or password' : 'Could not sign in';
+			const failure = (await response.json().catch(() => null)) as { code?: string; message?: string } | null;
+			this.error =
+				failure?.code === 'REGISTRATION_CLOSED' && failure.message
+					? failure.message
+					: response.status === 401
+						? 'Wrong email or password'
+						: 'Could not sign in';
 			return;
 		}
 		const payload = (await response.json().catch(() => null)) as { user?: Partial<SentryUser> } | null;
