@@ -137,12 +137,16 @@ export const router = os.router({
 	people: {
 		/**
 		 * The people the caller knows: everyone they shared with, the owners of the spaces shared with them, their AI
-		 * accounts, and whoever made or finished a task they see, all read from Better Auth's users. An empty query lists them all, which is how a guest's device
-		 * learns an owner's name; a query filters on a name prefix and adds an exact email match over every user.
+		 * accounts, and whoever made or finished a task they see, all read from Better Auth's users. An AI account asks
+		 * as its owner, whom it may credit a task to, so the owner stays in its list.
 		 */
 		search: os.people.search.handler(async ({ input, context }) => {
-			const actor = await requireHuman(context.request, context.app);
-			return { people: await searchPeople(context.app.db, actor.id, input.query.q) };
+			const actor = await requireActor(context.request, context.app);
+			const people =
+				actor.kind === 'ai' && actor.ownerId
+					? searchPeople(context.app.db, actor.ownerId, input.query.q, null)
+					: searchPeople(context.app.db, actor.id, input.query.q);
+			return { people };
 		}),
 	},
 	me: os.me.handler(({ context }) => requireHuman(context.request, context.app)),

@@ -605,6 +605,35 @@ describe('AI accounts', () => {
 		expect((await app.fetch('/api/view', { headers })).status).toBe(401);
 	});
 
+	test('only the owner or a managing AI account credits a task to someone else, and only to a person the space knows', async () => {
+		const { token } = await aiAccount(app, owner, 'Archivist');
+		const asAi = (method: string, path: string, body?: unknown) =>
+			app.fetch(path, {
+				method,
+				headers: tokenHeaders(token),
+				body: body === undefined ? undefined : JSON.stringify(body),
+			});
+		const people = (await json<{ people: Person[] }>(asAi('GET', '/api/people?q='))).people.map(person => person.id);
+		expect(people).toContain(owner.person.id);
+		expect(people).toContain(guest.person.id);
+
+		const id = await newTask('Filed for the guest');
+		const credited = await json<{ createdBy: string; title: string }>(
+			asAi('PATCH', `/api/tasks?id=${id}`, { createdBy: guest.person.id }),
+		);
+		expect(credited).toMatchObject({ createdBy: guest.person.id, title: 'Filed for the guest' });
+		expect((await asAi('PATCH', `/api/tasks?id=${id}`, { createdBy: 'nobody' })).status).toBe(400);
+		expect((await call(owner, 'PATCH', `/api/tasks?id=${id}`, { createdBy: owner.person.id })).status).toBe(200);
+
+		await share({ kind: 'task', id }, guest, 'edit');
+		const space = `space=${owner.person.id}`;
+		expect((await call(guest, 'PATCH', `/api/tasks?${space}&id=${id}`, { createdBy: guest.person.id })).status).toBe(
+			403,
+		);
+		const [row] = await app.db.select().from(tasks).where(eq(tasks.id, id));
+		expect(row?.createdBy).toBe(owner.person.id);
+	});
+
 	test('a personal token acts as its owner until it is deleted, and is only ever the owner’s', async () => {
 		const made = await json<{ id: string; token: string }>(
 			call(owner, 'POST', '/api/ai-tokens', { aiUserId: owner.person.id, name: 'Tinycast' }),

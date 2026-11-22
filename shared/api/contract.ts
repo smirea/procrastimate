@@ -7,6 +7,7 @@ import { pushSubscriptionSchema, subscribeRequestSchema } from '../push.ts';
 import {
 	activityEntrySchema,
 	agentNewTaskSchema,
+	agentTaskEditSchema,
 	agentTaskSchema,
 	apiTokenSchema,
 	createdApiTokenSchema,
@@ -27,7 +28,6 @@ import {
 	spaceViewSchema,
 	taskCommentSchema,
 } from '../sharing.ts';
-import { taskEditSchema } from '../store.ts';
 import { createdWebhookSchema, newWebhookSchema, webhookSchema } from '../webhooks.ts';
 import { byteKeySchema } from '../images.ts';
 import { githubItemSchema } from '../github.ts';
@@ -141,6 +141,21 @@ export const webhooksSchema = z.object({ webhooks: z.array(webhookSchema) }).met
  * `description` here is what an agent reads.
  */
 export const agentContract = {
+	people: {
+		search: allowed
+			.meta(
+				openapi({
+					method: 'GET',
+					path: '/api/people',
+					inputStructure: 'detailed',
+					summary: 'The people you can name',
+					description:
+						'Every person with an account, with their email, and the AI accounts the space knows, matched on a name or email prefix of `q`. An empty `q` lists them all. A task’s `createdBy`, `completedBy`, and comment authors are these ids.',
+				}),
+			)
+			.input(z.object({ query: z.object({ q: z.string() }) }))
+			.output(peopleSchema),
+	},
 	view: allowed
 		.meta(
 			openapi({
@@ -176,10 +191,11 @@ export const agentContract = {
 					path: '/api/tasks',
 					inputStructure: 'detailed',
 					summary: 'Edit a task',
-					description: 'Only the fields sent change; `null` clears a nullable field.',
+					description:
+						'Only the fields sent change; `null` clears a nullable field. `createdBy` credits the task to someone else, the owner’s and a managing AI account’s call only.',
 				}),
 			)
-			.input(z.object({ query: taskQuery, body: taskEditSchema }))
+			.input(z.object({ query: taskQuery, body: agentTaskEditSchema }))
 			.output(agentTaskSchema),
 		complete: found
 			.meta(
@@ -535,16 +551,6 @@ export const contract = {
 		unsubscribe: allowed.meta(openapi({ method: 'DELETE', path: '/api/push/subscription' })).output(okSchema),
 		/** What the server will deliver to this device, soonest first. For inspecting a run, not a user path. */
 		schedule: allowed.meta(openapi({ method: 'GET', path: '/api/push/schedule' })).output(pushScheduleResponseSchema),
-	},
-	people: {
-		/**
-		 * Every human but the caller, with their email, and the AI accounts the caller knows, matched on a name or email
-		 * prefix. An empty `q` lists them all.
-		 */
-		search: allowed
-			.meta(openapi({ method: 'GET', path: '/api/people', inputStructure: 'detailed' }))
-			.input(z.object({ query: z.object({ q: z.string() }) }))
-			.output(peopleSchema),
 	},
 	me: allowed.meta(openapi({ method: 'GET', path: '/api/me' })).output(personSchema),
 	ai: {

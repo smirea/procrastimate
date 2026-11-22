@@ -46,7 +46,7 @@ export const newTaskSchema = z
 	.meta({ id: 'NewTask' });
 export type NewTask = z.input<typeof newTaskSchema>;
 
-export const taskEditSchema = taskSchema
+export const taskEditFields = taskSchema
 	.pick({
 		title: true,
 		titleMode: true,
@@ -63,15 +63,19 @@ export const taskEditSchema = taskSchema
 		attachments: true,
 		github: true,
 	})
-	.partial()
-	.refine(patch => !(patch.event && (patch.due || patch.recurrence)), {
-		message: 'An event stands in for the date and the repeat',
-	})
-	.meta({
-		id: 'TaskEdit',
-		description:
-			'The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value. A section moves the task into its project, and a new project without one leaves the task in no section.',
-	});
+	.partial();
+
+export const eventOrDate = [
+	(patch: Pick<z.infer<typeof taskEditFields>, 'event' | 'due' | 'recurrence'>) =>
+		!(patch.event && (patch.due || patch.recurrence)),
+	{ message: 'An event stands in for the date and the repeat' },
+] as const;
+
+export const taskEditSchema = taskEditFields.refine(...eventOrDate).meta({
+	id: 'TaskEdit',
+	description:
+		'The editable fields of a task. A missing field is left alone; for nullable fields, `null` clears the value. A section moves the task into its project, and a new project without one leaves the task in no section.',
+});
 export type TaskPatch = z.infer<typeof taskEditSchema>;
 
 export const completionStateSchema = z

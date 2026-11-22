@@ -33,6 +33,7 @@ export const LABEL_ID = '<label-id>';
 export const PLACE_ID = '<place-id>';
 export const LINK_ID = '<link-id>';
 export const WEBHOOK_ID = '<webhook-id>';
+export const PERSON_ID = '<user-id>';
 
 /** One per agent route at least. The docs test runs every one against a real space with an AI token. */
 export const agentExamples: readonly Example[] = [
@@ -55,6 +56,14 @@ export const agentExamples: readonly Example[] = [
 		path: '/api/tasks',
 		query: { id: TASK_ID },
 		body: { title: 'Call the plumber about the sink', due: { date: '2026-10-20', time: '09:00' }, priority: 4 },
+	},
+	{ title: 'Find a person by name or email', method: 'GET', path: '/api/people', query: { q: 'Owner' } },
+	{
+		title: 'Credit a task to the person who asked for it',
+		method: 'PATCH',
+		path: '/api/tasks',
+		query: { id: TASK_ID },
+		body: { createdBy: PERSON_ID },
 	},
 	{ title: 'Complete a task', method: 'POST', path: '/api/tasks/complete', query: { id: TASK_ID } },
 	{ title: 'Reopen it', method: 'POST', path: '/api/tasks/reopen', query: { id: TASK_ID } },
@@ -262,6 +271,11 @@ ${routeTable()}
 - \`github\` lists the GitHub issues and pull requests attached to the task, as \`{ repo: "owner/name", number, kind: "issue" | "pull" }\`. The apps show each with its live title and state. Attach or detach them by sending the whole list to \`PATCH /api/tasks\`.
 - \`text\` on \`POST /api/tasks\` reads like the app's quick add, for example \`Water the plants every 2 weeks p2\` or \`Email Sam fri 10am remind me 30m before\`. Phrases it recognizes are removed from the title. Explicit fields such as \`title\` or \`priority\` win over what it parsed.
 - \`clients\` says which app created the task (\`created\`) and which wrote to it last (\`edited\`, the creation until anything else changes it), so you know where and how it was captured. Each is \`{ kind, version, device, os, timeZone, at }\`: \`kind\` is \`web\`, \`ios\`, or \`api\` (this API, scripts, and integrations), \`device\` is a model such as \`iPhone17,1\`, a browser such as \`Chrome\`, or an \`api\` caller's \`User-Agent\`, \`timeZone\` is the device's, and \`at\` is when the server took the write, in epoch milliseconds. Unknown parts are \`null\`, and \`created\` or \`edited\` is \`null\` for writes from before the server recorded apps. It is read only and never shown in the apps. \`GET /api/view\` and every route that returns a task include it.
+
+## People
+
+- \`GET /api/people?q=\` lists everyone with an account, with their email, and the space's AI accounts, matched on a name or email prefix; an empty \`q\` lists them all. A task's \`createdBy\` and \`completedBy\`, and a comment's author, are these ids.
+- The apps show a task's \`createdBy\` as who made it. When you file a task for someone, such as a request they sent you, send \`createdBy\` with their id to \`PATCH /api/tasks\` so the apps credit them. It needs your owner's whole space, and the id must be someone \`GET /api/people\` lists or the owner. History keeps naming you as the one who wrote the task.
 
 ## Comments
 

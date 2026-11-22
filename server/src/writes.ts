@@ -46,6 +46,8 @@ export type SyncContext = {
 	clientId: string | null;
 	/** Spaces whose owner's rights the actor holds: an AI account that manages them through the agent API. */
 	manages: ReadonlySet<string>;
+	/** Task ids whose creator the command reassigns, which only the agent API's owner or manager may ask for. */
+	creators: ReadonlyMap<string, string>;
 	/** What `admit` learned about each write it let through, by `table:id:seq`, for `landed`. */
 	landing: Map<string, Landing>;
 	/** The actor's `access` rows per space it wrote to as a guest, grown by the tasks a batch adds. */
@@ -58,7 +60,12 @@ type Landing = { owner: string; kind: Kind; fields: Fields };
 export function syncContext(
 	actor: Actor,
 	client: Client,
-	options: { now?: number; clientId?: string | null; manages?: Iterable<string> } = {},
+	options: {
+		now?: number;
+		clientId?: string | null;
+		manages?: Iterable<string>;
+		creators?: ReadonlyMap<string, string>;
+	} = {},
 ): SyncContext {
 	return {
 		actor,
@@ -66,6 +73,7 @@ export function syncContext(
 		now: options.now ?? Date.now(),
 		clientId: options.clientId ?? null,
 		manages: new Set(options.manages ?? []),
+		creators: options.creators ?? new Map(),
 		landing: new Map(),
 		guestRows: new Map(),
 	};
@@ -182,6 +190,8 @@ function admitEntity(db: Db, ctx: SyncContext, kind: Kind, write: Write, fields:
 			};
 		} else if (write.op === 'patch') {
 			next = without(next, 'createdBy', 'completedBy');
+			const creator = ctx.creators.get(write.id);
+			if (creator) next.createdBy = creator;
 			if ('completedAt' in next || 'lastCompletedAt' in next) next.completedBy = completedBy(actor, next, before);
 		}
 	}
