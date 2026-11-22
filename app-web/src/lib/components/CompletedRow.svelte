@@ -34,6 +34,10 @@
 	/** Null `completedBy` is a completion from before the server stamped them, or one not synced yet, so it names no one. */
 	const other = $derived(task.completedBy !== null && task.completedBy !== session.userId);
 	const by = $derived(other ? store.person(task.completedBy) : undefined);
+	/** Someone else made it, so the row names them first and then who finished it, the user as "you". */
+	const credited = $derived(task.createdBy !== null && task.createdBy !== session.userId);
+	const creator = $derived(credited ? store.person(task.createdBy) : undefined);
+	const finisher = $derived(task.completedBy === null ? null : other ? (by?.name ?? 'someone else') : 'you');
 	const project = $derived(lookup.project(task.projectId));
 	const parent = $derived(task.parentId ? lookup.task(task.parentId) : undefined);
 	const progress = $derived(progressOf(lookup.subtasks(task.id), !rolled));
@@ -81,7 +85,21 @@
 						<Repeat size={12} weight="bold" />
 					</span>
 				{/if}
-				{#if other}
+				{#if credited}
+					<span
+						class="flex min-w-0 items-center gap-1"
+						aria-label={`Created by ${creator?.name ?? 'someone else'}${finisher ? `, completed by ${finisher}` : ''}`}
+					>
+						by
+						{#if finisher}
+							<span class="flex min-w-0 items-center"><PersonName person={creator} class="text-ink" />,</span>
+							completed by
+							{#if other}<PersonName person={by} class="text-ink" />{:else}<span class="text-ink">you</span>{/if}
+						{:else}
+							<PersonName person={creator} class="text-ink" />
+						{/if}
+					</span>
+				{:else if other}
 					<span class="flex min-w-0 items-center gap-1" aria-label={`Completed by ${by?.name ?? 'someone else'}`}>
 						by <PersonName person={by} class="text-ink" />
 					</span>
