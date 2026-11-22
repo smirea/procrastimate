@@ -19,9 +19,6 @@ const SESSION_UPDATE_SECONDS = 60 * 60 * 24;
 /** How long a request trusts the signed session cookie before reading the session row again. */
 const COOKIE_CACHE_SECONDS = 60 * 5;
 const APPLE_BUNDLE_ID = 'com.stefan.procrastimate';
-/** Temporary: production takes no new accounts but Stefan's until the app opens up. */
-const REGISTRATION_EMAIL = 'steven.mirea@gmail.com';
-const REGISTRATION_CLOSED = 'Not public yet, you know who to talk to for access';
 const ALLOWED_HOSTS = [
 	'procrastimate.stf.lol',
 	'procrastimate.localhost:6120',
@@ -142,7 +139,6 @@ function cachedProviders(config: Config) {
  */
 export async function createAuth(config: Config, store: Store): Promise<Auth> {
 	const { db } = store;
-	const registrationClosed = config.sentry?.environment === 'production';
 	const options = {
 		appName: 'procrastimate',
 		secret: config.authSecret,
@@ -166,12 +162,6 @@ export async function createAuth(config: Config, store: Store): Promise<Auth> {
 		databaseHooks: {
 			user: {
 				create: {
-					// Runs for email sign-up and both social flows; AI accounts go through the raw adapter, which skips hooks.
-					before: async (user: { email: string }) => {
-						if (registrationClosed && user.email.toLowerCase() !== REGISTRATION_EMAIL) {
-							throw new APIError('FORBIDDEN', { code: 'REGISTRATION_CLOSED', message: REGISTRATION_CLOSED });
-						}
-					},
 					// Through the engine, so the row syncs to the user's devices like any other.
 					after: async (user: { id: string }) => {
 						store.space.change(server => {

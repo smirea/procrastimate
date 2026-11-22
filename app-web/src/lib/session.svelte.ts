@@ -98,7 +98,7 @@ class Session {
 			method: 'POST',
 			credentials: 'include',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ provider, callbackURL: '/inbox', errorCallbackURL: '/inbox' }),
+			body: JSON.stringify({ provider, callbackURL: '/inbox' }),
 		}).catch(() => null);
 		const body = (await response?.json().catch(() => null)) as { url?: string } | null;
 		if (!response?.ok || !body?.url) {
@@ -139,13 +139,7 @@ class Session {
 			return;
 		}
 		if (!response.ok) {
-			const failure = (await response.json().catch(() => null)) as { code?: string; message?: string } | null;
-			this.error =
-				failure?.code === 'REGISTRATION_CLOSED' && failure.message
-					? failure.message
-					: response.status === 401
-						? 'Wrong email or password'
-						: 'Could not sign in';
+			this.error = response.status === 401 ? 'Wrong email or password' : 'Could not sign in';
 			return;
 		}
 		const payload = (await response.json().catch(() => null)) as { user?: Partial<SentryUser> } | null;
