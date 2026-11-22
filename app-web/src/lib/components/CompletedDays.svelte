@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { feedback } from '@stefan.inc/feedback-engine/svelte';
 	import { slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import type { Task } from 'shared/task.ts';
@@ -16,7 +17,7 @@
 
 {#each days as day (day.date)}
 	{@const heading = completedHeading(day.date, clock.today)}
-	<div transition:slide={motion({ duration: 200, easing: cubicOut })}>
+	<div {@attach feedback()} transition:slide={motion({ duration: 200, easing: cubicOut })}>
 		<h3 class="px-2 pt-3 text-[12px] font-medium text-faint">{heading}</h3>
 		<CompletedList tasks={day.tasks} {showProject} label={`${label}, ${heading}`} />
 	</div>

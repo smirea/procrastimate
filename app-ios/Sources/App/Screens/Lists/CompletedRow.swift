@@ -148,6 +148,7 @@ struct CompletedDays: View {
                 .listRowSeparator(.hidden)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("completed-day-\(day.date)")
+                .feedback(self)
             ForEach(day.tasks) { CompletedRow(task: $0, showProject: showProject) }
         }
     }
