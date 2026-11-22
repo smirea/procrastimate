@@ -139,6 +139,23 @@ export const comments = sqliteTable(
 );
 
 /**
+ * A person's one reaction to a task, in the task's space. The row id is `<task>:<author>`, so two devices that react
+ * offline write the same row. The server stamps `authorId` and refuses a change from anyone but the author.
+ */
+export const reactions = sqliteTable(
+	'reactions',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id').notNull(),
+		taskId: text('task_id').notNull(),
+		emoji: text('emoji').$type<ColumnValue<'reactions', 'emoji'>>().notNull(),
+		authorId: text('author_id').notNull(),
+		createdAt: millis('created_at').notNull(),
+	},
+	table => [index('reactions_user_id').on(table.userId), index('reactions_task_id').on(table.taskId)],
+);
+
+/**
  * When this user last read a task's comments. It lives in the reader's own space, also for a task in a space shared
  * with them, so each user keeps their own read state and only the reader syncs it. Every user shares the one
  * database, so the row's id is `<reader>:<task>`; the domain keys a read by the task (`rowIdOf` in `shared/rows.ts`).
@@ -204,6 +221,7 @@ export const ENTITY_TABLES = {
 	label: labels,
 	task: tasks,
 	comment: comments,
+	reaction: reactions,
 	read: reads,
 	settings,
 } as const satisfies Record<Kind, unknown>;

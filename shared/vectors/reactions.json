@@ -1,0 +1,234 @@
+{
+	"module": "reactions",
+	"timeZone": "America/New_York",
+	"cases": [
+		{
+			"fn": "react",
+			"test": "reactions › each person has one reaction per task: another emoji replaces it, and the same one takes it back",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reactions": [],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"t",
+				"👍",
+				"ann",
+				1
+			],
+			"output": {
+				"comments": [],
+				"labels": [],
+				"projects": [],
+				"reactions": [
+					{
+						"authorId": "ann",
+						"createdAt": 1,
+						"emoji": "👍",
+						"id": "t:ann",
+						"taskId": "t"
+					}
+				],
+				"reads": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "react",
+			"test": "reactions › each person has one reaction per task: another emoji replaces it, and the same one takes it back",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reactions": [
+						{
+							"authorId": "ann",
+							"createdAt": 1,
+							"emoji": "👍",
+							"id": "t:ann",
+							"taskId": "t"
+						}
+					],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"t",
+				"👀",
+				"ann",
+				2
+			],
+			"output": {
+				"comments": [],
+				"labels": [],
+				"projects": [],
+				"reactions": [
+					{
+						"authorId": "ann",
+						"createdAt": 2,
+						"emoji": "👀",
+						"id": "t:ann",
+						"taskId": "t"
+					}
+				],
+				"reads": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "react",
+			"test": "reactions › each person has one reaction per task: another emoji replaces it, and the same one takes it back",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reactions": [
+						{
+							"authorId": "ann",
+							"createdAt": 2,
+							"emoji": "👀",
+							"id": "t:ann",
+							"taskId": "t"
+						}
+					],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"t",
+				"👀",
+				"ann",
+				3
+			],
+			"output": {
+				"comments": [],
+				"labels": [],
+				"projects": [],
+				"reactions": [],
+				"reads": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "react",
+			"test": "reactions › each person has one reaction per task: another emoji replaces it, and the same one takes it back",
+			"input": [
+				{
+					"comments": [],
+					"labels": [],
+					"projects": [],
+					"reactions": [
+						{
+							"authorId": "ann",
+							"createdAt": 2,
+							"emoji": "👀",
+							"id": "t:ann",
+							"taskId": "t"
+						}
+					],
+					"reads": [],
+					"sections": [],
+					"tasks": []
+				},
+				"t",
+				"👀",
+				"bob",
+				3
+			],
+			"output": {
+				"comments": [],
+				"labels": [],
+				"projects": [],
+				"reactions": [
+					{
+						"authorId": "ann",
+						"createdAt": 2,
+						"emoji": "👀",
+						"id": "t:ann",
+						"taskId": "t"
+					},
+					{
+						"authorId": "bob",
+						"createdAt": 3,
+						"emoji": "👀",
+						"id": "t:bob",
+						"taskId": "t"
+					}
+				],
+				"reads": [],
+				"sections": [],
+				"tasks": []
+			}
+		},
+		{
+			"fn": "reactionGroups",
+			"test": "reactions › a task groups its reactions in the picker order, with who reacted oldest first",
+			"input": [
+				[
+					{
+						"authorId": "cat",
+						"createdAt": 4,
+						"emoji": "❓",
+						"id": "t:cat",
+						"taskId": "t"
+					},
+					{
+						"authorId": "bob",
+						"createdAt": 3,
+						"emoji": "👍",
+						"id": "t:bob",
+						"taskId": "t"
+					},
+					{
+						"authorId": "ann",
+						"createdAt": 1,
+						"emoji": "👎",
+						"id": "u:ann",
+						"taskId": "u"
+					},
+					{
+						"authorId": "ann",
+						"createdAt": 2,
+						"emoji": "👍",
+						"id": "t:ann",
+						"taskId": "t"
+					}
+				]
+			],
+			"output": {
+				"t": [
+					{
+						"authorIds": [
+							"ann",
+							"bob"
+						],
+						"emoji": "👍"
+					},
+					{
+						"authorIds": [
+							"cat"
+						],
+						"emoji": "❓"
+					}
+				],
+				"u": [
+					{
+						"authorIds": [
+							"ann"
+						],
+						"emoji": "👎"
+					}
+				]
+			}
+		}
+	]
+}

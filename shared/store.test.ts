@@ -68,6 +68,7 @@ const data = (): StoreData => ({
 		{ id: 'phone', name: 'Phone', color: 'gray', place: null, createdAt: 2 },
 	],
 	comments: [],
+	reactions: [],
 	reads: [],
 });
 
@@ -231,6 +232,7 @@ describe('exploding subtasks', () => {
 		sections: [],
 		labels: [],
 		comments: [],
+		reactions: [],
 		reads: [],
 	});
 	const shape = (next: StoreData) =>
@@ -642,6 +644,7 @@ describe('labels', () => {
 			sections: [],
 			labels: [],
 			comments: [],
+			reactions: [],
 			reads: [],
 		};
 		const { data: next, completion } = completeTask(before, 'jan', today, NOW)!;

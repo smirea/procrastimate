@@ -58,6 +58,9 @@ struct TaskRow<Trailing: View>: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier(isCard ? "added-\(task.title)" : isSubtask ? "subtask-\(task.title)" : "task-\(task.title)")
             .accessibilityAction { open() }
+            if !isCard, let groups = store.reactions(on: task.id) {
+                ReactionChips(task: task, groups: groups)
+            }
             if let added {
                 Text(added)
                     .font(.caption)

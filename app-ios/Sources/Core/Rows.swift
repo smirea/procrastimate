@@ -23,8 +23,9 @@ public struct RowWrite: Hashable, Sendable {
 /// The port of `shared/rows.ts`: the bridge between the in-memory store and the local database. Every store rule stays
 /// a function from one snapshot to the next, and `rowWrites` turns the before and after into the rows to write.
 public enum Rows {
-    /// Projects, sections, and labels come before the tasks that point at them, and tasks before their comments.
-    public static let kinds: [EntityKind] = [.project, .section, .label, .task, .comment, .read, .settings]
+    /// Projects, sections, and labels come before the tasks that point at them, and tasks before their comments and
+    /// reactions.
+    public static let kinds: [EntityKind] = [.project, .section, .label, .task, .comment, .reaction, .read, .settings]
 
     public static let settingsID = "settings"
 
@@ -55,6 +56,7 @@ public enum Rows {
         case .section: "sections"
         case .label: "labels"
         case .comment: "comments"
+        case .reaction: "reactions"
         case .read: "reads"
         case .settings: "settings"
         }
@@ -70,6 +72,7 @@ public enum Rows {
             case .label: diff(kind, before.labels, after.labels)
             case .task: diff(kind, before.tasks, after.tasks)
             case .comment: diff(kind, before.comments, after.comments)
+            case .reaction: diff(kind, before.reactions, after.reactions)
             case .read: diff(kind, before.reads, after.reads)
             case .settings:
                 before.settings == after.settings ? [] : patch(kind, settingsID, fields(before.settings), fields(after.settings))

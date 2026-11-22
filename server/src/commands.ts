@@ -154,7 +154,13 @@ function loadSnapshot(db: Db, owner: string, comment: string | undefined) {
 				.all()
 		: [];
 	const zone = storedZone(db, owner);
-	const snapshot: Snapshot = { ...tree, comments: commentRows.map(entity), reads: [], settings: DEFAULT_SETTINGS };
+	const snapshot: Snapshot = {
+		...tree,
+		comments: commentRows.map(entity),
+		reactions: [],
+		reads: [],
+		settings: DEFAULT_SETTINGS,
+	};
 	return { snapshot, zone };
 }
 

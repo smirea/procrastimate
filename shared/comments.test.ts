@@ -26,6 +26,7 @@ const data = (fields: Partial<StoreData> = {}): StoreData => ({
 	sections: [],
 	labels: [],
 	comments: [],
+	reactions: [],
 	reads: [],
 	...fields,
 });

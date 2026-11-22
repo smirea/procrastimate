@@ -1,6 +1,6 @@
-# Comments
+# Comments and reactions
 
-Comments let the people on a task talk about it: the owner, guests who can edit it, and AI accounts. Any task takes comments, but they matter most in shared spaces. The rules are in `shared/comments.ts`, ported to Swift as `Comments` in `app-ios/Sources/Core/Comments.swift`.
+Comments let the people on a task talk about it, and reactions let them answer with one emoji: the owner, guests who can edit it, and AI accounts. Any task takes comments, but they matter most in shared spaces. The rules are in `shared/comments.ts`, ported to Swift as `Comments` in `app-ios/Sources/Core/Comments.swift`.
 
 ## Data
 
@@ -27,7 +27,16 @@ Web and iOS build the same behavior.
 - **Task details.** A `Comments` section sits under the subtasks: each comment with its author, time, `edited` when changed, and its text with links rendered like titles and notes. The user's own comments can be edited and deleted, and a delete has an undo toast. On iOS edit and delete are in the comment's context menu. Anyone who may edit the task gets the `Add a comment` field. Enter sends on the web and Shift+Enter breaks the line.
 - **Authors offline.** Names come from the people cache. When a comment's author is unknown, the details call `GET /api/comments` once while online and remember the authors.
 
+## Reactions
+
+- **One reaction per person per task, from five emoji.** 👍 👎 👀 🛑 ❓ (`REACTIONS` in `shared/reactions.ts`, ported as `Reactions` in Swift). Picking another emoji replaces the person's reaction and picking the same one takes it back (`react`). There are no custom reactions yet; the column's validator refuses anything else.
+- **A synced kind like comments.** `reactions` has `taskId`, `emoji`, `authorId`, and `createdAt`, lives in its task's space, and outlives a deleted task for undo, so the purge of an emptied space deletes it too. Its row id is `<task>:<author>`, so two devices that react offline write one row and the one-per-person rule holds by construction.
+- **The server stamps the author and owns the id rule.** A put sets `authorId` to the sender, and a reaction whose id is not `<task>:<sender>` is refused, so nobody reacts as someone else. Only the author changes or deletes one (`Only the author can delete a reaction`), the owner included. A guest needs an editable task, like commenting, so a view guest sees reactions but adds none, and a public link shows none. Guests pull a task's reactions with it.
+- **Rows.** Each emoji on the task is a chip at the end of the row, in the picker's order, with a count only when more than one person picked it; the user's own is outlined in the accent color. The chip names who reacted, oldest first, with `You` for the user: a tooltip on the web, the menu a tap opens on iOS. Clicking a chip picks or takes back that emoji where the user may edit the task. Unknown reactors are fetched like unknown task authors, so a name never stays `Someone` while online.
+- **Picking.** `React` is a row action (`rowActions`), offered wherever the task is editable. The web shows a smiley beside Postpone on hover, whose picker opens on hover, and the row's long-press or right-click menu leads with the five emoji, which is how touch reacts. iOS puts `React` on the trailing swipe beside Postpone, opening a dialog of the five, and a `React` submenu in the context menu.
+- **Not yet:** reactions in activity, webhooks, or the agent API.
+
 ## Not built yet
 
 - **Push for comments.** Web Push today is an alarm-driven reminder schedule for the owner's web devices, and iOS has no APNs, only local notifications from synced state. A comment push would need an immediate send path, a per-recipient fan-out to guests' own spaces, and APNs for iOS. That is not cheap, so comments notify no person yet. An agent can hear about them through a webhook (see [Integrations](integrations.md)).
-- Mentions, reactions, attachments, and owners moderating other people's comments.
+- Mentions, attachments, and owners moderating other people's comments.

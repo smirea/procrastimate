@@ -43,20 +43,30 @@ const standup: TaskEvent = {
 };
 
 describe('rowActions', () => {
-	test('an open task offers Complete, Postpone, and Delete', () => {
-		expect(rowActions(task(), false)).toEqual({ toggle: 'complete', postpone: true, delete: true });
+	test('an open task offers Complete, Postpone, Delete, and React', () => {
+		expect(rowActions(task(), false)).toEqual({ toggle: 'complete', postpone: true, delete: true, react: true });
 	});
 
-	test('a completed task offers Reopen and Delete, with nothing to postpone', () => {
-		expect(rowActions(task({ completedAt: 2 }), false)).toEqual({ toggle: 'reopen', postpone: false, delete: true });
+	test('a completed task offers Reopen, Delete, and React, with nothing to postpone', () => {
+		expect(rowActions(task({ completedAt: 2 }), false)).toEqual({
+			toggle: 'reopen',
+			postpone: false,
+			delete: true,
+			react: true,
+		});
 	});
 
 	test('a task on an event follows the event, so it never postpones', () => {
-		expect(rowActions(task({ event: standup }), false)).toEqual({ toggle: 'complete', postpone: false, delete: true });
+		expect(rowActions(task({ event: standup }), false)).toEqual({
+			toggle: 'complete',
+			postpone: false,
+			delete: true,
+			react: true,
+		});
 	});
 
 	test('a task the user may only view offers only Copy', () => {
-		const none = { toggle: null, postpone: false, delete: false };
+		const none = { toggle: null, postpone: false, delete: false, react: false };
 		expect(rowActions(task(), true)).toEqual(none);
 		expect(rowActions(task({ completedAt: 2 }), true)).toEqual(none);
 	});
@@ -67,6 +77,6 @@ describe('rowActions', () => {
 			recurrence: { unit: 'day', interval: 1 },
 			lastCompletedAt: 2,
 		});
-		expect(rowActions(roll, false, true)).toEqual({ toggle: null, postpone: false, delete: false });
+		expect(rowActions(roll, false, true)).toEqual({ toggle: null, postpone: false, delete: false, react: false });
 	});
 });

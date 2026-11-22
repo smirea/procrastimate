@@ -6,6 +6,7 @@ import { projectIconSchema } from '../project-icons.ts';
 import { quickAddButtonSchema } from '../quick-add-buttons.ts';
 import { scheduledNotificationSchema } from '../notifications.ts';
 import { pushSubscriptionSchema } from '../push.ts';
+import { reactionEmojiSchema } from '../reactions.ts';
 import {
 	attachmentSchema,
 	clientSchema,
@@ -44,6 +45,7 @@ export const COLUMN_VALUES = {
 	projects: { icon: projectIconSchema },
 	sections: { counter: sectionCounterSchema },
 	labels: { color: labelColorSchema, place: savedPlaceSchema },
+	reactions: { emoji: reactionEmojiSchema },
 	settings: {
 		dictation: dictationChoiceSchema,
 		rambleMode: rambleModeSchema,

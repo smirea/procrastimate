@@ -180,9 +180,11 @@ final class SyncClient {
         spaces.access += demoAccess
         #endif
         store.reload(spaces)
-        // A space's owner, or whoever made or finished a task, names a byline, so someone this device has not met yet
-        // sends it to ask.
-        let named = Set(store.spaces.keys).union(store.allTasks.flatMap { [$0.createdBy, $0.completedBy].compactMap(\.self) })
+        // A space's owner, whoever made or finished a task, or reacted to one, names a byline, so someone this device
+        // has not met yet sends it to ask.
+        let named = Set(store.spaces.keys)
+            .union(store.allTasks.flatMap { [$0.createdBy, $0.completedBy].compactMap(\.self) })
+            .union(store.allReactions.map(\.authorId))
         let unknown = named.subtracting(store.people.map(\.id)).subtracting(askedForPeople)
         if !unknown.isEmpty {
             askedForPeople.formUnion(unknown)

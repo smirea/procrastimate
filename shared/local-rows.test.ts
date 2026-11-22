@@ -27,7 +27,7 @@ const everything = (fields: Partial<Record<(typeof KINDS)[number], unknown[]>>) 
 const changed = <R extends { id: string }>(ids: string[], rows: R[]) => ({ ids, rows });
 const view = (id: string, owner = 'ann') =>
 	({ id: `me:task:${id}`, grantee: 'me', owner, kind: 'task', entityId: id, role: 'view' }) as const;
-const empty = { tasks: [], projects: [], sections: [], labels: [], comments: [], reads: [] };
+const empty = { tasks: [], projects: [], sections: [], labels: [], comments: [], reactions: [], reads: [] };
 
 describe('LocalRows', () => {
 	test('splits rows by owner and sorts them by creation, keeping read markers only for the user', () => {

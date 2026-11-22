@@ -303,11 +303,12 @@ public final class Store {
         writer?(RowBatch(version: version, owner: space.query ?? me, writes: writes))
     }
 
-    /// Deletes every row of the user's own space. Settings stay, since every user has them, and so do the comments
-    /// others wrote: the server refuses their deletion, and its purge removes them once the space is empty.
+    /// Deletes every row of the user's own space. Settings stay, since every user has them, and so do the comments and
+    /// reactions others wrote: the server refuses their deletion, and its purge removes them once the space is empty.
     public func deleteAll() {
         var empty = StoreData()
         empty.comments = snapshot.data.comments.filter { $0.authorId != nil && $0.authorId != me }
+        empty.reactions = snapshot.data.reactions.filter { $0.authorId != me }
         commit(empty)
     }
 
@@ -566,6 +567,8 @@ public final class Store {
 
     public var allComments: [Comment] { index.allComments }
 
+    public var allReactions: [Reaction] { index.allReactions }
+
     /// One task's comments, oldest first.
     public func comments(on taskID: String) -> [Comment] { index.comments[taskID] ?? [] }
 
@@ -606,6 +609,15 @@ public final class Store {
             next.comments.append(comment)
             return next
         }
+    }
+
+    /// A task's reactions in the picker's order, or nil without any.
+    public func reactions(on taskID: String) -> [ReactionGroup]? { index.reactions[taskID] }
+
+    /// A reaction is written in the task's space, so only someone who may edit the task can react to it.
+    public func react(_ taskID: String, _ emoji: ReactionEmoji, by me: String) {
+        let now = clock.now.epochMilliseconds
+        edit(taskID) { Reactions.react($0, taskID, emoji, me, now) }
     }
 
     /// The marker goes into the user's own space, whichever space holds the task.

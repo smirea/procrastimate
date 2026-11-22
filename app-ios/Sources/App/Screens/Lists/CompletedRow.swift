@@ -37,6 +37,9 @@ struct CompletedRow: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier("completed-\(task.title)")
             .accessibilityAction { navigator.sheet = .details(taskID: task.id) }
+            if let groups = store.reactions(on: task.id) {
+                ReactionChips(task: task, groups: groups)
+            }
         }
         .taskActions(task, offered, toggle: { actions.reopen(task) })
         .feedback(self)

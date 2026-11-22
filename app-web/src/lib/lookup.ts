@@ -1,10 +1,12 @@
 import { getContext, setContext } from 'svelte';
 import type { CommentBadge } from 'shared/comments.ts';
+import type { ReactionGroup } from 'shared/reactions.ts';
 import { groupChildren } from 'shared/subtasks.ts';
 import { completedAtIn } from 'shared/triggers.ts';
 import type { StoreData } from 'shared/store.ts';
 import type { Label, Project, Section, Task } from 'shared/task.ts';
 import { comments } from './comments.svelte.ts';
+import { reactions } from './reactions.svelte.ts';
 import { store } from './store.svelte.ts';
 import { sheets, type Arrival } from './sheets.svelte.ts';
 import { unsynced } from './unsynced.svelte.ts';
@@ -25,6 +27,8 @@ type Lookup = {
 	canEdit: (id: string) => boolean;
 	/** Undefined for a task without comments. */
 	commentBadge: (id: string) => CommentBadge | undefined;
+	/** Undefined for a task without reactions. */
+	reactions: (id: string) => ReactionGroup[] | undefined;
 	/** A change to the task waits in this device's upload queue. */
 	unsynced: (id: string) => boolean;
 	open: (id: string, arrival?: Arrival) => void;
@@ -43,6 +47,7 @@ const storeLookup: Lookup = {
 	subtasks: id => store.children(id),
 	canEdit: id => store.canEdit(id),
 	commentBadge: id => comments.badge(id),
+	reactions: id => reactions.of(id),
 	unsynced: id => unsynced.has(id),
 	open: (id, arrival) => sheets.openTask(id, arrival),
 	menus: true,
@@ -50,7 +55,7 @@ const storeLookup: Lookup = {
 
 export const useLookup = (): Lookup => getContext<Lookup | undefined>(KEY) ?? storeLookup;
 
-/** A public link carries no comments, so its rows show none. `open` shows the page's own read-only details. */
+/** A public link carries no comments or reactions, so its rows show none. `open` shows the page's own read-only details. */
 export function provideReadOnlyLookup(
 	data: () => Pick<StoreData, 'tasks' | 'projects' | 'sections' | 'labels'>,
 	open: Lookup['open'],
@@ -90,6 +95,7 @@ export function provideReadOnlyLookup(
 		subtasks: id => index().children.get(id) ?? [],
 		canEdit: () => false,
 		commentBadge: () => undefined,
+		reactions: () => undefined,
 		unsynced: () => false,
 		open,
 		menus: false,

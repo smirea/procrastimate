@@ -54,6 +54,7 @@ Keep implementation details out of the map. Name only user paths, stable handles
 
 - [Add a task](./add-task.md) covers quick add from each client, inline natural-language parsing and shorthands, recurrence, the chip row, defaults, and cancel.
 - [Complete a task](./complete-task.md) covers completion, undo, the completion animation, the Completed view with its range filter, the completed toggle in project and label views, and reopening.
+- [Reactions](./reactions.md) covers reacting to a task with one of five emoji, one per person, the row chips and their counts, who reacted, and reactions on shared tasks.
 - [Edit a task](./edit-task.md) covers title, notes, due date, priority, natural language in the title, and delete.
 - [Task attachments](./task-images.md) covers attaching images and any other file by picker, paste, drop, photo library, camera, or the Files app, thumbnails and file tiles with kind icons in details, opening files, the row count, the full-screen viewer, delete with undo, offline adds, and attachments on shared tasks.
 - [Subtasks](./subtasks.md) covers adding, checking, reordering, and nesting subtasks, parent progress, and how completing or repeating a parent treats them.

@@ -99,9 +99,11 @@ export type GuestRows = readonly Pick<AccessRow, 'kind' | 'entityId' | 'role'>[]
 export type TaskFields = Partial<FieldsByKind['task']>;
 export type CommentFields = Partial<FieldsByKind['comment']>;
 
-/** Why someone else's comment is refused: only its author edits or deletes it. */
-export const authorOnly = (op: RowWrite['op']) =>
-	op === 'delete' ? 'Only the author can delete a comment' : 'Only the author can edit a comment';
+export type ReactionFields = Partial<FieldsByKind['reaction']>;
+
+/** Why someone else's comment or reaction is refused: only its author edits or deletes it. */
+export const authorOnly = (op: RowWrite['op'], noun: 'comment' | 'reaction' = 'comment') =>
+	op === 'delete' ? `Only the author can delete a ${noun}` : `Only the author can edit a ${noun}`;
 
 const roleOf = (rows: GuestRows, kind: AccessRow['kind'], id: string) =>
 	rows.find(row => row.kind === kind && row.entityId === id)?.role;
@@ -148,7 +150,7 @@ function clearsPlace(fields: TaskFields, stored: StoredRow | undefined): boolean
  * write names, and they decide everything: a task the space holds needs an `edit` row, whatever the op, and keeps its
  * project and parent, a new task a place the guest may add to, and every project, section, label, and parent the
  * write names must be among the rows.
- * A comment needs an editable task, and only its author edits or deletes it. Projects, sections, labels, read
+ * A comment or a reaction needs an editable task, and only its author edits or deletes it. Projects, sections, labels, read
  * markers, and settings are never a guest's to write: managers are AI accounts, which act through the agent API with
  * the owner's own rights.
  */
@@ -172,6 +174,16 @@ export function guestRefusal(rows: GuestRows, write: RowWrite, actor: string, st
 			return roleOf(rows, 'task', taskId) === 'edit' ? null : NOT_EDITABLE;
 		}
 		if (stored.authorId !== actor) return authorOnly(write.op);
+		if (roleOf(rows, 'task', stored.taskId) !== 'edit') return NOT_EDITABLE;
+		return taskId === undefined || taskId === stored.taskId ? null : NOT_EDITABLE;
+	}
+	if (write.kind === 'reaction') {
+		const { taskId } = (write.values ?? {}) as ReactionFields;
+		if (!stored?.taskId) {
+			if (write.op !== 'put' || !taskId) return NOT_EDITABLE;
+			return roleOf(rows, 'task', taskId) === 'edit' ? null : NOT_EDITABLE;
+		}
+		if (stored.authorId !== actor) return authorOnly(write.op, 'reaction');
 		if (roleOf(rows, 'task', stored.taskId) !== 'edit') return NOT_EDITABLE;
 		return taskId === undefined || taskId === stored.taskId ? null : NOT_EDITABLE;
 	}

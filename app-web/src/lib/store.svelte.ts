@@ -2,13 +2,14 @@ import type { LabelColor } from 'shared/label-colors.ts';
 import type { ProjectIcon } from 'shared/project-icons.ts';
 import type { DateKey, Label, Project, Section, Task } from 'shared/task.ts';
 import type { SavedPlace, SectionCounter } from 'shared/values.ts';
-import { DEFAULT_SETTINGS, type Comment, type Settings, type Snapshot } from 'shared/model.ts';
+import { DEFAULT_SETTINGS, type Comment, type Reaction, type Settings, type Snapshot } from 'shared/model.ts';
 import { rowWrites, sameValue } from 'shared/rows.ts';
 import { groupChildren, progressOf } from 'shared/subtasks.ts';
 import { completedAtIn } from 'shared/triggers.ts';
 import { newId } from 'shared/id.ts';
 import type { Person } from 'shared/sharing.ts';
 import * as comments from 'shared/comments.ts';
+import * as reactions from 'shared/reactions.ts';
 import * as rules from 'shared/store.ts';
 import { mergeBackup, type ImportSummary, type TodoistBackup } from 'shared/todoist.ts';
 import {
@@ -109,6 +110,7 @@ class Store {
 	#labels = $derived(this.#view.labels);
 	#sections = $derived(this.#view.sections);
 	#comments = $derived(this.#view.comments);
+	#reactions = $derived(this.#view.reactions);
 	#ownProjectRows = $derived(this.own.projects);
 	#ownProjects = $derived(rules.projectsInOrder(this.#ownProjectRows));
 	#projects = $derived([
@@ -150,6 +152,10 @@ class Store {
 
 	get comments(): Comment[] {
 		return this.#comments;
+	}
+
+	get reactions(): Reaction[] {
+		return this.#reactions;
 	}
 
 	constructor() {
@@ -340,10 +346,14 @@ class Store {
 		return this.#writing > 0;
 	}
 
-	/** Keeps the comments others wrote: the server refuses their deletion, and its purge removes them once the space is empty. */
+	/**
+	 * Keeps the comments and reactions others wrote: the server refuses their deletion, and its purge removes them once
+	 * the space is empty.
+	 */
 	deleteAll() {
 		const theirs = this.own.comments.filter(comment => comment.authorId !== null && comment.authorId !== this.#owner);
-		this.#apply({ ...emptyLists(), comments: theirs });
+		const reacted = this.own.reactions.filter(reaction => reaction.authorId !== this.#owner);
+		this.#apply({ ...emptyLists(), comments: theirs, reactions: reacted });
 	}
 
 	setSettings(patch: Partial<Settings>) {
@@ -648,6 +658,12 @@ class Store {
 		this.#onTask(comment.taskId, data =>
 			data.comments.some(c => c.id === comment.id) ? data : { ...data, comments: [...data.comments, comment] },
 		);
+	}
+
+	/** A reaction is written in the task's space, so only someone who may edit the task can react to it. */
+	react(taskId: string, emoji: reactions.ReactionEmoji) {
+		const me = this.#owner;
+		if (me) this.#onTask(taskId, data => reactions.react(data, taskId, emoji, me, Date.now()));
 	}
 
 	/** The marker goes into the user's own space, whichever space holds the task. */

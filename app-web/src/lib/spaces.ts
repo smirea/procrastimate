@@ -36,6 +36,7 @@ export function merged(own: StoreData, spaces: Spaces): StoreData {
 		sections: [...own.sections, ...shared.flatMap(s => s.sections)],
 		labels: [...own.labels, ...shared.flatMap(s => s.labels)],
 		comments: [...own.comments, ...shared.flatMap(s => s.comments)],
+		reactions: [...own.reactions, ...shared.flatMap(s => s.reactions)],
 		reads: own.reads,
 	};
 }

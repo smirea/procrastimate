@@ -2,7 +2,7 @@ import Core
 import Foundation
 
 /// DEBUG-only. `PROCRASTIMATE_DEMO=sharing` seeds a space Ann Lee shared straight into the local database, with
-/// two tasks Claude and Ann completed and a view-only Recipes project, plus an own project to share, so the sharing
+/// two tasks Claude and Ann completed, reactions from both, and a view-only Recipes project, plus an own project to share, so the sharing
 /// screens can be driven without a second account. Release builds omit it.
 enum SharingDemo {
     @MainActor
@@ -35,6 +35,11 @@ enum SharingDemo {
             ],
             projects: [Project(id: "garden", name: "Garden", createdAt: 1), Project(id: "recipes", name: "Recipes", createdAt: 2)],
             comments: demoComments(me: me),
+            reactions: [
+                Reaction(id: "tulips:ann", taskId: "tulips", emoji: .thumbsUp, authorId: "ann", createdAt: 1),
+                Reaction(id: "tulips:claude", taskId: "tulips", emoji: .thumbsUp, authorId: "claude", createdAt: 2),
+                Reaction(id: "hose:ann", taskId: "hose", emoji: .question, authorId: "ann", createdAt: 3),
+            ],
             settings: API.Settings()
         )
         let viewOnly: Set<String> = ["fence", "shakshuka"]

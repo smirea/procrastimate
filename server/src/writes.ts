@@ -11,12 +11,13 @@ import type {
 	Write,
 } from 'sync-engine/core';
 import type { Actor } from '../../shared/auth';
-import { access, comments, ENTITY_TABLES, log, settings } from '../../shared/db/schema';
+import { access, comments, ENTITY_TABLES, log, reactions, settings } from '../../shared/db/schema';
 import { syncSchema } from '../../shared/db/sync';
 import { fromWire, toWire } from '../../shared/db/wire';
 import { newId } from '../../shared/id';
 import type { Kind } from '../../shared/model';
 import { KIND_OF, TABLE_OF, type SyncedTable } from '../../shared/kinds';
+import { reactionIdOf } from '../../shared/reactions';
 import { rowIdOf, type RowWrite } from '../../shared/rows';
 import { authorOnly, guestRefusal, type GuestRows, type StoredRow } from './scope';
 import type { Fields } from '../../shared/snapshot';
@@ -164,6 +165,13 @@ function admitEntity(db: Db, ctx: SyncContext, kind: Kind, write: Write, fields:
 			next = without(next, 'authorId', 'taskId', 'createdAt');
 		}
 	}
+	if (kind === 'reaction') {
+		if (before && before.authorId !== actor) return authorOnly(write.op, 'reaction');
+		const taskId = String(before?.taskId ?? next.taskId);
+		// The id names the task and the author, so a person holds one reaction per task.
+		if (write.id !== reactionIdOf(taskId, actor)) return 'A reaction’s id names its task and author';
+		next = write.op === 'put' ? { ...next, authorId: actor, taskId } : without(next, 'authorId', 'taskId');
+	}
 	if (kind === 'task') {
 		if (write.op === 'put') {
 			const completed = next.completedAt != null || next.lastCompletedAt != null;
@@ -239,8 +247,9 @@ function landed(db: Db, writes: readonly Write[], ctx: SyncContext, server: Serv
 }
 
 /**
- * What a reader pulls: their own rows, their `access` rows, and what those name in other spaces, comments through
- * their task. A delta that adds an `access` row of theirs brings the row it opens, with a task's comments, and one
+ * What a reader pulls: their own rows, their `access` rows, and what those name in other spaces, comments and
+ * reactions through their task. A delta that adds an `access` row of theirs brings the row it opens, with a task's
+ * comments and reactions, and one
  * that removes it tombstones them.
  */
 function view(db: Db, driver: SqlDriver, ctx: SyncContext): View {
@@ -258,7 +267,7 @@ function view(db: Db, driver: SqlDriver, ctx: SyncContext): View {
 		const owner = values.user_id;
 		if (owner === me) return true;
 		if (table === 'reads' || table === 'settings') return false;
-		if (table === 'comments') return granted.has(`${owner}:task:${values.task_id}`);
+		if (table === 'comments' || table === 'reactions') return granted.has(`${owner}:task:${values.task_id}`);
 		const kind = KIND_OF[table as SyncedTable];
 		return granted.has(`${owner}:${kind}:${values.id}`);
 	};
@@ -277,13 +286,14 @@ function view(db: Db, driver: SqlDriver, ctx: SyncContext): View {
 				const opened = row.deleted ? null : current(table, entityId);
 				added.push(opened ?? { table, id: entityId, deleted: 1 });
 				if (kind !== 'task') continue;
-				for (const comment of db
-					.select({ id: comments.id })
-					.from(comments)
-					.where(eq(comments.taskId, entityId))
-					.all()) {
-					const found = row.deleted ? null : current('comments', comment.id);
-					added.push(found ?? { table: 'comments', id: comment.id, deleted: 1 });
+				for (const [name, table] of [
+					['comments', comments],
+					['reactions', reactions],
+				] as const) {
+					for (const { id } of db.select({ id: table.id }).from(table).where(eq(table.taskId, entityId)).all()) {
+						const found = row.deleted ? null : current(name, id);
+						added.push(found ?? { table: name, id, deleted: 1 });
+					}
 				}
 			}
 			return added;

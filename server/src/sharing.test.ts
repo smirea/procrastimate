@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { eq, inArray } from 'drizzle-orm';
-import { access, comments, log, tasks } from '../../shared/db/schema';
+import { access, comments, log, reactions, tasks } from '../../shared/db/schema';
 import type { Person, SharedView, ShareView, SpaceView } from '../../shared/sharing';
 import {
 	aiAccount,
@@ -340,6 +340,55 @@ describe('sharing a task', () => {
 			]),
 		).toEqual([{ table: 'comments', id: theirs, reason: 'Only the author can delete a comment' }]);
 		expect((await app.db.select().from(comments).where(eq(comments.taskId, id))).map(c => c.id)).toEqual([theirs]);
+	});
+
+	test('a guest with edit access holds one reaction per task under its own id, and only its author changes it', async () => {
+		const id = await newTask('React to me');
+		await share({ kind: 'task', id }, guest, 'edit');
+		const row = (author: string, emoji: string) => ({
+			id: `${id}:${author}`,
+			user_id: owner.person.id,
+			task_id: id,
+			emoji,
+			author_id: 'liar',
+			created_at: 1,
+		});
+		const put = (author: string, emoji = '👍') => ({
+			op: 'put' as const,
+			table: 'reactions',
+			id: `${id}:${author}`,
+			values: row(author, emoji),
+		});
+		expect(await upload(app, guest, [put(guest.person.id)])).toEqual([]);
+		expect(await upload(app, guest, [put(owner.person.id)])).toEqual([
+			{ table: 'reactions', id: `${id}:${owner.person.id}`, reason: 'A reaction’s id names its task and author' },
+		]);
+		expect(await upload(app, owner, [put(owner.person.id, '👀')])).toEqual([]);
+		expect(await upload(app, owner, [{ op: 'delete', table: 'reactions', id: `${id}:${guest.person.id}` }])).toEqual([
+			{ table: 'reactions', id: `${id}:${guest.person.id}`, reason: 'Only the author can delete a reaction' },
+		]);
+		expect(await upload(app, guest, [put(guest.person.id, '🛑')])).toEqual([]);
+		const stored = await app.db.select().from(reactions).where(eq(reactions.taskId, id));
+		expect(stored.map(r => [r.authorId, r.emoji]).toSorted()).toEqual(
+			[
+				[guest.person.id, '🛑'],
+				[owner.person.id, '👀'],
+			].toSorted(),
+		);
+
+		const viewed = await newTask('Look only');
+		await share({ kind: 'task', id: viewed }, guest, 'view');
+		const reaction = `${viewed}:${guest.person.id}`;
+		expect(
+			await upload(app, guest, [
+				{
+					op: 'put',
+					table: 'reactions',
+					id: reaction,
+					values: { ...row(guest.person.id, '👍'), id: reaction, task_id: viewed },
+				},
+			]),
+		).toEqual([{ table: 'reactions', id: reaction, reason: 'Not editable in this share' }]);
 	});
 
 	test('revoking the share removes the access rows, and the guest sees nothing', async () => {
