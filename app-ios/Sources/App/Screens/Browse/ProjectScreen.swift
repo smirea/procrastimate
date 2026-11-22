@@ -55,11 +55,11 @@ struct ProjectScreen: View {
                 unfiltered: allGroups.flatMap(\.tasks)
             ) {
                 ForEach(groups.first?.tasks ?? []) { TaskRow(task: $0) }
-                ForEach(doneIn(nil)) { CompletedRow(task: $0) }
+                CompletedDays(tasks: doneIn(nil))
                 ForEach(Array(sections.enumerated()), id: \.element.section.id) { index, entry in
                     Section {
                         ForEach(entry.tasks) { TaskRow(task: $0) }
-                        ForEach(doneIn(entry.section.id)) { CompletedRow(task: $0) }
+                        CompletedDays(tasks: doneIn(entry.section.id))
                     } header: {
                         SectionHeading(
                             section: entry.section,

@@ -6,7 +6,7 @@
 	import NumberCircleOne from 'phosphor-svelte/lib/NumberCircleOne';
 	import { sectionTasks } from 'shared/store.ts';
 	import type { Section, Task } from 'shared/task.ts';
-	import CompletedList from './CompletedList.svelte';
+	import CompletedDays from './CompletedDays.svelte';
 	import InlineEdit from './InlineEdit.svelte';
 	import SectionMenu from './SectionMenu.svelte';
 	import SectionHeading from './SectionHeading.svelte';
@@ -79,6 +79,6 @@
 	</SectionHeading>
 	<TaskList {tasks} label={`${section.name} tasks`} />
 	{#if done.length}
-		<CompletedList tasks={done} label={`Completed ${section.name} tasks`} />
+		<CompletedDays tasks={done} label={`Completed ${section.name} tasks`} />
 	{/if}
 </section>
