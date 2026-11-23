@@ -19,6 +19,7 @@
 	import PostponePanel from '#lib/components/PostponePanel.svelte';
 	import RowMenu from '#lib/components/RowMenu.svelte';
 	import ImageViewer from '#lib/components/ImageViewer.svelte';
+	import Tooltip from '#lib/components/Tooltip.svelte';
 	import { store } from '#lib/store.svelte.ts';
 	import { forgetAdded, quickAddDefaults } from '#lib/screen.ts';
 	import { clock } from '#lib/clock.svelte.ts';
@@ -162,6 +163,7 @@
 </script>
 
 <svelte:window {onkeydown} />
+<Tooltip />
 
 {#if isStandalone}
 	{@render children()}

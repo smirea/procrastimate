@@ -25,7 +25,7 @@
 	}
 </script>
 
-<button type="button" class="icon-btn {className}" aria-label={label} title={label} onclick={copy}>
+<button type="button" class="icon-btn {className}" aria-label={label} onclick={copy}>
 	{#key copied}
 		<span class="col-start-1 row-start-1 grid place-items-center" class:text-accent={copied} in:scale={motion({ start: 0.5, duration: 180, easing: cubicOut })} out:scale={motion({ start: 0.5, duration: 120 })}>
 			{#if copied}<Check {size} weight="bold" />{:else}<Copy {size} />{/if}

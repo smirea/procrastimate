@@ -128,7 +128,7 @@
 				class="tile press"
 				style:--tone={tone}
 				data-current={due?.date === preset.date}
-				title={shortDay(preset.date)}
+				data-tooltip={shortDay(preset.date)}
 				aria-label={preset.label}
 				onclick={() => {
 					pickDate(preset.date);

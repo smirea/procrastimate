@@ -126,7 +126,6 @@
 					role="radio"
 					aria-checked={checked}
 					aria-label={option ? projectIconName(option) : 'No icon'}
-					title={option ? projectIconName(option) : 'No icon'}
 					class="glyph press"
 					onclick={() => icon.set(option)}
 				>

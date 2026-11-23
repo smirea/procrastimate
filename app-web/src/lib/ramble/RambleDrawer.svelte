@@ -403,7 +403,7 @@
 			class="mode hit-area relative justify-self-end"
 			data-mode={mode}
 			aria-label={mode === 'smart' ? 'Smart parsing. Switch to spoken commands' : 'Spoken commands. Switch to smart parsing'}
-			title={mode === 'smart' ? 'Smart: Gemini reads the ramble' : 'Commands: only spoken cues structure it'}
+			data-tooltip={mode === 'smart' ? 'Smart: Gemini reads the ramble' : 'Commands: only spoken cues structure it'}
 			disabled={phase === 'structuring'}
 			onclick={() => setMode(mode === 'smart' ? 'commands' : 'smart')}
 		>

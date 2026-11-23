@@ -71,6 +71,7 @@ Keep implementation details out of the map. Name only user paths, stable handles
 - [Search](./search.md) covers the `/` and Cmd-K shortcuts, matching and ranking across titles, notes, and projects, highlights, keyboard navigation, and completed tasks in results.
 - [Settings](./settings.md) covers the settings popover on desktop and the settings sheet on a phone.
 - [Todoist import](./todoist-import.md) covers importing a Todoist backup zip, the summary and warnings, and safe re-imports.
+- [Tooltips](./tooltips.md) covers the web's tooltip on every icon-only control, its hint text, keyboard focus, dismissal, and that touch and iOS show none.
 - [Theme](./theme.md) covers the System, Light, and Dark themes, persistence, first paint, and contrast.
 - [Places and events](./places-and-events.md) covers places and calendar events on tasks, set on the iPhone: the Maps search and Arrive, Leave, or During, the calendar event picker, rows, the Browse sections, notifications, the Live Activity, and moved events.
 - [GitHub on tasks](./github.md) covers attaching GitHub issues and pull requests to a task, their live title and state in details, opening them on GitHub, the row's `#number`, and pasted GitHub links titled through GitHub's API.

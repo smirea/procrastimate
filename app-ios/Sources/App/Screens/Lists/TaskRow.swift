@@ -58,9 +58,6 @@ struct TaskRow<Trailing: View>: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier(isCard ? "added-\(task.title)" : isSubtask ? "subtask-\(task.title)" : "task-\(task.title)")
             .accessibilityAction { open() }
-            if !isCard, let groups = store.reactions(on: task.id) {
-                ReactionChips(task: task, groups: groups)
-            }
             if let added {
                 Text(added)
                     .font(.caption)
@@ -78,6 +75,9 @@ struct TaskRow<Trailing: View>: View {
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
                     .accessibilityLabel("Not synced yet")
                     .accessibilityIdentifier("unsynced-\(task.title)")
+            }
+            if !isCard, let groups = store.reactions(on: task.id) {
+                ReactionChips(task: task, groups: groups)
             }
         }
         .animation(.snappy(duration: 0.18), value: sync.isUnsynced(task.id))

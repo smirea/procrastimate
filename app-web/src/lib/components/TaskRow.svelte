@@ -274,9 +274,6 @@
 			{/if}
 		</div>
 	</div>
-	{#if reactionGroups && !card}
-		<ReactionChips taskId={task.id} groups={reactionGroups} {editable} />
-	{/if}
 	{#if unsynced}
 		<span
 			class="shrink-0 pt-3 text-faint touch:pt-3.5"
@@ -315,6 +312,9 @@
 				<CalendarPlus size={16} />
 			</button>
 		</div>
+	{/if}
+	{#if reactionGroups && !card}
+		<ReactionChips taskId={task.id} groups={reactionGroups} {editable} />
 	{/if}
 	{@render trailing?.()}
 </div>

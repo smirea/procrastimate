@@ -38,7 +38,7 @@
 			{#if copied === 'token'}<span class="flex items-center gap-1" in:fly={motion({ y: 3, duration: 140 })}><Check size={13} weight="bold" />Copied</span>{:else}<Copy size={13} />Copy{/if}
 		</button>
 	</div>
-	<button type="button" class="btn btn-quiet h-8 self-start px-3 text-[12px] touch:h-11" title="Copies the token with where to find the API docs" disabled={made === null} onclick={() => copy('prompt')}>
+	<button type="button" class="btn btn-quiet h-8 self-start px-3 text-[12px] touch:h-11" data-tooltip="Copies the token with where to find the API docs" disabled={made === null} onclick={() => copy('prompt')}>
 		{#if copied === 'prompt'}<span class="flex items-center gap-1" in:fly={motion({ y: 3, duration: 140 })}><Check size={13} weight="bold" />Copied</span>{:else}<Robot size={13} />Copy prompt for your AI{/if}
 	</button>
 </div>

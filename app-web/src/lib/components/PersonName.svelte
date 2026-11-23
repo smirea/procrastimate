@@ -11,7 +11,7 @@
 <span class="inline-flex min-w-0 items-center gap-1 {className}">
 	<span class="truncate">{name}</span>
 	{#if person?.kind === 'ai'}
-		<span class="ai-badge" title="AI account">AI</span>
+		<span class="ai-badge" data-tooltip="AI account">AI</span>
 	{/if}
 </span>
 

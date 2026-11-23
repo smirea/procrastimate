@@ -10,7 +10,7 @@
 	class="grid size-8 shrink-0 place-items-center rounded-full transition-colors touch:size-11 {on ? 'text-accent' : 'text-faint hover:text-ink'} disabled:opacity-40"
 	aria-label="Plain text subtask"
 	aria-pressed={on}
-	title="Plain text: keep this subtask's dates, times, and tags in its title"
+	data-tooltip="Plain text: keep this subtask's dates, times, and tags in its title"
 	{disabled}
 	onmousedown={(e) => e.preventDefault()}
 	onclick={toggle}
