@@ -1,6 +1,6 @@
 import type { FeedbackProject } from 'shared/api/contract.ts';
 import { titleSuggestionSchema, type TitleSuggestion } from 'shared/sharing.ts';
-import { FILE_PART_BYTES, FILE_TYPE, IMAGES_PATH } from 'shared/images.ts';
+import { FILE_MAX_BYTES, FILE_PART_BYTES, FILE_TYPE, filePartCount, IMAGES_PATH } from 'shared/images.ts';
 import { newId } from 'shared/id.ts';
 import { api } from './api.ts';
 import { DEVICE_KEYS } from './device.ts';
@@ -22,6 +22,8 @@ export type FeedbackDraft = {
 	space?: string;
 	image: { full: Blob; thumb: Blob; width: number; height: number };
 	report: string;
+	/** The app's own files, such as its saved state, attached beside `feedback.json`. Packages before 1.12 send none. */
+	files: File[];
 };
 
 export type FeedbackPlace = { projectId?: string; sectionId?: string };
@@ -52,6 +54,8 @@ export function parseDraftMessage(data: unknown, expectedNonce: string): Feedbac
 	if (!Array.isArray(record.projects) || !record.projects.every(item => typeof item === 'string')) return null;
 	const projects = record.projects.map(item => item.trim()).filter(Boolean);
 	if (!projects.length) return null;
+	const files = record.files ?? [];
+	if (!Array.isArray(files) || !files.every(file => file instanceof File && file.name)) return null;
 	const suggestion = titleSuggestionSchema.safeParse(record.titleSuggestion);
 	return {
 		title: record.title,
@@ -62,6 +66,7 @@ export function parseDraftMessage(data: unknown, expectedNonce: string): Feedbac
 		space: nonEmptyString(record.space),
 		image: { full: img.full, thumb: img.thumb, width, height },
 		report: record.report,
+		files,
 	};
 }
 
@@ -133,11 +138,59 @@ export function saveLastFeedbackProject(userId: string, projectId: string | unde
 	}
 }
 
+/** The server's answer as an error, with its `message` when it has one. */
+async function failure(response: Response): Promise<Error> {
+	const text = await response.text().catch(() => '');
+	let message: string | undefined;
+	try {
+		message = (JSON.parse(text) as { message?: string }).message;
+	} catch {
+		// Plain-text or proxy error body.
+	}
+	return new Error(message ? `ProcrastiMate: ${message}` : `ProcrastiMate answered ${response.status}.`);
+}
+
+async function request(url: string, init: RequestInit): Promise<Response> {
+	const response = await fetch(url, { ...init, credentials: 'include' });
+	if (!response.ok) throw await failure(response);
+	return response;
+}
+
 /**
- * Uploads the image, thumbnail, and `feedback.json` to ProcrastiMate's own origin with the session cookie, then creates
- * the task with all attachments in one write. Uses the chosen project's space so posting to a shared project credits
- * the signed-in human guest. A `title` still equal to the generated one carries the draft's suggestion, so the server
- * names the task once it exists; an edited one is posted as typed.
+ * Uploads one file of the draft under `id`: whole when it fits one request, else as a multipart upload, as the
+ * attachment queue does, so an app's saved state of any size reaches the task.
+ */
+async function uploadFile(space: string | undefined, id: string, file: Blob, name: string, type: string) {
+	const url = (extra: Record<string, string> = {}) =>
+		`${IMAGES_PATH}?${new URLSearchParams({ ...(space ? { space } : {}), id, size: 'file', name, type, ...extra })}`;
+	const octets = { 'Content-Type': FILE_TYPE };
+	if (file.size <= FILE_PART_BYTES) {
+		await request(url(), { method: 'PUT', headers: octets, body: file });
+		return;
+	}
+	const begun = (await (await request(url(), { method: 'POST' })).json()) as { upload: string | null };
+	if (begun.upload === null) return;
+	const etags: string[] = [];
+	for (let index = 0; index < filePartCount(file.size); index++) {
+		const part = await request(url({ upload: begun.upload, part: String(index + 1) }), {
+			method: 'PUT',
+			headers: octets,
+			body: file.slice(index * FILE_PART_BYTES, (index + 1) * FILE_PART_BYTES),
+		});
+		etags.push(((await part.json()) as { etag: string }).etag);
+	}
+	await request(url({ upload: begun.upload }), {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ parts: etags }),
+	});
+}
+
+/**
+ * Uploads the image, thumbnail, `feedback.json`, and the app's own files to ProcrastiMate's own origin with the session
+ * cookie, then creates the task with all attachments in one write. Uses the chosen project's space so posting to a
+ * shared project credits the signed-in human guest. A `title` still equal to the generated one carries the draft's
+ * suggestion, so the server names the task once it exists; an edited one is posted as typed.
  */
 export async function postFeedbackTask(
 	draft: FeedbackDraft,
@@ -146,43 +199,40 @@ export async function postFeedbackTask(
 	project: FeedbackProject | undefined,
 	step: (text: string) => void,
 ): Promise<{ id: string; url: string; destination: string }> {
-	const reportBytes = new TextEncoder().encode(draft.report);
-	if (reportBytes.byteLength > FILE_PART_BYTES) {
-		throw new Error('The JSON report is over the 16 MB ProcrastiMate takes in one upload.');
-	}
 	if (!project || !place.projectId) {
 		throw new Error('Choose one of the listed projects to post feedback into.');
 	}
 	const space = project.owner?.id;
 	const imageId = newId();
-	const reportId = newId();
 	const taskId = newId();
-
-	async function put(query: Record<string, string>, body: BodyInit, type: string) {
-		const search = new URLSearchParams({ ...(space ? { space } : {}), ...query });
-		const response = await fetch(`${IMAGES_PATH}?${search}`, {
-			method: 'PUT',
-			credentials: 'include',
-			headers: { 'Content-Type': type },
-			body,
-		});
-		if (response.ok) return;
-		const text = await response.text().catch(() => '');
-		let message: string | undefined;
-		try {
-			message = (JSON.parse(text) as { message?: string }).message;
-		} catch {
-			// Plain-text or proxy error body.
-		}
-		throw new Error(message ? `ProcrastiMate: ${message}` : `ProcrastiMate answered ${response.status}.`);
+	// A task's file attachment has bytes, so an empty file of the app's has nothing to attach.
+	const files = [new File([draft.report], 'feedback.json', { type: 'application/json' }), ...draft.files]
+		.filter(file => file.size > 0)
+		.map(file => ({ id: newId(), file, type: file.type || FILE_TYPE }));
+	const tooLarge = files.find(({ file }) => file.size > FILE_MAX_BYTES);
+	if (tooLarge) {
+		throw new Error(
+			`${tooLarge.file.name} is over the ${FILE_MAX_BYTES / 1e9} GB ProcrastiMate keeps as one attachment.`,
+		);
 	}
 
+	const putImage = async (size: 'full' | 'thumb', blob: Blob) => {
+		const query = new URLSearchParams({ ...(space ? { space } : {}), id: imageId, size });
+		await request(`${IMAGES_PATH}?${query}`, {
+			method: 'PUT',
+			headers: { 'Content-Type': blob.type || 'image/jpeg' },
+			body: blob,
+		});
+	};
+
 	step('Uploading the image');
-	await put({ id: imageId, size: 'full' }, draft.image.full, draft.image.full.type || 'image/jpeg');
+	await putImage('full', draft.image.full);
 	step('Uploading the thumbnail');
-	await put({ id: imageId, size: 'thumb' }, draft.image.thumb, draft.image.thumb.type || 'image/jpeg');
-	step('Uploading feedback.json');
-	await put({ id: reportId, size: 'file', name: 'feedback.json', type: 'application/json' }, reportBytes, FILE_TYPE);
+	await putImage('thumb', draft.image.thumb);
+	for (const { id, file, type } of files) {
+		step(`Uploading ${file.name}`);
+		await uploadFile(space, id, file, file.name, type);
+	}
 	step('Creating the task');
 	await api.tasks.create({
 		query: space ? { space } : {},
@@ -194,7 +244,7 @@ export async function postFeedbackTask(
 			sectionId: place.sectionId ?? null,
 			attachments: [
 				{ id: imageId, width: draft.image.width, height: draft.image.height },
-				{ id: reportId, name: 'feedback.json', type: 'application/json', bytes: reportBytes.byteLength },
+				...files.map(({ id, file, type }) => ({ id, name: file.name, type, bytes: file.size })),
 			],
 		},
 	});
