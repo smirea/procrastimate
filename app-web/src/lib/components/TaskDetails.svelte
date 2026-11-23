@@ -249,14 +249,14 @@
 			data-active={literal}
 			aria-pressed={literal}
 			aria-label="Plain text"
-			title="Plain text: editing the title never applies its dates, times, or tags"
+			data-tooltip="Plain text: editing the title never applies its dates, times, or tags"
 			onmousedown={(e) => e.preventDefault()}
 			onclick={() => update({ titleMode: literal ? 'parse' : 'literal' })}
 		>
 			<TextT size={15} weight={literal ? 'bold' : 'regular'} />
 		</button>
 		{#if task.event}
-			<span class="chip" data-active="true" title="Set on iPhone">
+			<span class="chip" data-active="true" data-tooltip="Set on iPhone">
 				<CalendarStar size={15} weight="fill" />
 				{formatEvent(task.event)}{eventDue ? ` · ${formatDue(eventDue, clock.today)}` : ''}
 			</span>
@@ -278,7 +278,7 @@
 			onchange={(reminders) => update({ reminders })}
 		/>
 		{#if draft.location}
-			<span class="chip" data-active="true" title={`${draft.location.address ?? draft.location.name} · Set on iPhone or as a saved place`}>
+			<span class="chip" data-active="true" data-tooltip={`${draft.location.address ?? draft.location.name} · Set on iPhone or as a saved place`}>
 				<MapPin size={15} weight="fill" />
 				{formatLocation(draft.location)}
 				<span class="text-muted">{formatRadius(draft.location.radius)}</span>
@@ -317,7 +317,7 @@
 		{/if}
 		{#if parseMemoSource(task.sourceKey)}
 			<!-- A browser cannot open the phone app, so the line is not a link. -->
-			<p class="flex items-center gap-1.5 text-[13px] text-muted" title="Opens on iPhone">
+			<p class="flex items-center gap-1.5 text-[13px] text-muted" data-tooltip="Opens on iPhone">
 				<Waveform size={14} />Notouroboros
 			</p>
 		{/if}

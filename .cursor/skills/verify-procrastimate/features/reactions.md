@@ -1,12 +1,12 @@
 # Reactions
 
-People on a task react to it with one of five emoji: 👍 👎 👀 🛑 ❓. Each person holds at most one reaction per task, so picking another emoji replaces theirs and picking the same one takes it back. Reactions show at the right end of the row, one chip per emoji with a count when more than one person picked it, and the chip names who reacted. There are no custom reactions yet. See `docs/decisions/comments.md`.
+People on a task react to it with one of five emoji: 👍 👎 👀 🛑 ❓. Each person holds at most one reaction per task, so picking another emoji replaces theirs and picking the same one takes it back. Reactions are the last thing in the row, one large emoji per pick with no fill behind it, as tall as the row, with a count when more than one person picked it, and each names who reacted. There are no custom reactions yet. See `docs/decisions/comments.md`.
 
 ## Sub-features
 
 - `reactions-pick` reacts from the row: on the web, hover the row and then its smiley button for the picker; on touch, the row's long-press menu leads with the five emoji; on iOS, swipe the row left and tap `React`, or long-press and open `React`.
 - `reactions-replace` picking another emoji replaces the user's reaction, and picking the current one takes it back.
-- `reactions-chips` shows each emoji used on the task at the end of its row, with a count only above one, and the user's own chip outlined in the accent color. Completed rows show them too.
+- `reactions-chips` shows each emoji used on the task as the last thing in its row, after React and Postpone, with no fill and as tall as the row, with a count only above one, and the user's own chip outlined in the accent color. Completed rows show them too.
 - `reactions-names` names who reacted, oldest first, with `You` for the user: a web tooltip on hovering a chip, or on iOS the menu a chip tap opens, which also picks or takes back that emoji.
 - `reactions-shared` syncs reactions between the owner and guests in real time. An edit guest reacts, a view guest only sees them, and a public link shows none.
 

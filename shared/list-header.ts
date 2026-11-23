@@ -1,19 +1,7 @@
 import { z } from 'zod';
 
 export const headerItemSchema = z
-	.enum([
-		'share',
-		'copy',
-		'show-completed',
-		'sort',
-		'add-section',
-		'rename',
-		'color',
-		'icon',
-		'edit-place',
-		'save-place',
-		'delete',
-	])
+	.enum(['share', 'copy', 'sort', 'add-section', 'rename', 'color', 'icon', 'edit-place', 'save-place', 'delete'])
 	.meta({ id: 'HeaderItem', description: 'An entry of a list’s `…` menu.' });
 export type HeaderItem = z.infer<typeof headerItemSchema>;
 
@@ -29,11 +17,16 @@ export type HeaderList =
 	| { kind: 'place'; saveable: boolean };
 
 export const listHeaderSchema = z
-	.object({ filters: z.boolean(), common: z.array(headerItemSchema), specific: z.array(headerItemSchema) })
+	.object({
+		filters: z.boolean(),
+		showCompleted: z.boolean(),
+		common: z.array(headerItemSchema),
+		specific: z.array(headerItemSchema),
+	})
 	.meta({
 		id: 'ListHeader',
 		description:
-			'One header for every list: the filter menu at the top left when the list has one, and the `…` menu at the top right. The menu leads with what every list shares, in one order, then the list’s own entries after a separator, with delete last.',
+			'One header for every list: the filter menu at the top left when the list has one, a `Show completed` toggle just left of the `…` menu where the list shows completed tasks, and the `…` menu at the top right. The menu leads with what every list shares, in one order, then the list’s own entries after a separator, with delete last.',
 	});
 export type ListHeader = z.infer<typeof listHeaderSchema>;
 
@@ -43,27 +36,33 @@ export function listHeader(list: HeaderList): ListHeader {
 		case 'tomorrow':
 		case 'this-week':
 		case 'event':
-			return { filters: true, common: ['copy'], specific: [] };
+			return { filters: true, showCompleted: false, common: ['copy'], specific: [] };
 		case 'no-date':
-			return { filters: true, common: ['copy'], specific: ['sort'] };
+			return { filters: true, showCompleted: false, common: ['copy'], specific: ['sort'] };
 		case 'completed':
-			return { filters: false, common: ['copy'], specific: [] };
+			return { filters: false, showCompleted: false, common: ['copy'], specific: [] };
 		case 'project':
 			return list.own
 				? {
 						filters: true,
-						common: ['share', 'copy', 'show-completed'],
+						showCompleted: true,
+						common: ['share', 'copy'],
 						specific: ['add-section', 'rename', 'icon', 'delete'],
 					}
-				: { filters: true, common: ['copy', 'show-completed'], specific: [] };
+				: { filters: true, showCompleted: true, common: ['copy'], specific: [] };
 		case 'label':
-			if (!list.own) return { filters: true, common: ['copy', 'show-completed'], specific: [] };
+			if (!list.own) return { filters: true, showCompleted: true, common: ['copy'], specific: [] };
 			// Sharing goes by the tasks carrying a label, and a saved place's tasks carry none.
 			return list.place
-				? { filters: true, common: ['copy', 'show-completed'], specific: ['rename', 'color', 'edit-place', 'delete'] }
-				: { filters: true, common: ['share', 'copy', 'show-completed'], specific: ['rename', 'color', 'delete'] };
+				? {
+						filters: true,
+						showCompleted: true,
+						common: ['copy'],
+						specific: ['rename', 'color', 'edit-place', 'delete'],
+					}
+				: { filters: true, showCompleted: true, common: ['share', 'copy'], specific: ['rename', 'color', 'delete'] };
 		case 'place':
-			return { filters: true, common: ['copy'], specific: list.saveable ? ['save-place'] : [] };
+			return { filters: true, showCompleted: false, common: ['copy'], specific: list.saveable ? ['save-place'] : [] };
 		default: {
 			const never: never = list;
 			return never;

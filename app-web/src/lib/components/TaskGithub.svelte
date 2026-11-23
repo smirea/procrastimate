@@ -41,7 +41,7 @@
 					target="_blank"
 					rel="noopener noreferrer"
 					class="flex h-full min-w-0 items-center gap-1.5 pl-3 {editable ? 'pr-1' : 'pr-3'}"
-					title={`${attached.repo}#${attached.number}${item?.state ? ` · ${STATES[item.state]}` : ''}`}
+					data-tooltip={`${attached.repo}#${attached.number}${item?.state ? ` · ${STATES[item.state]}` : ''}`}
 					aria-label={`${kind === 'pull' ? 'Pull request' : 'Issue'} ${githubLabel(attached)}${item?.title ? `, ${item.title}` : ''}${item?.state ? `, ${STATES[item.state]}` : ''}`}
 				>
 					<GithubIcon {kind} state={item?.state} size={15} />

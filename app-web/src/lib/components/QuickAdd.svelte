@@ -391,7 +391,7 @@
 							class="flex h-14 max-w-40 items-center gap-1.5 rounded-xl bg-ink/5 pr-3 pl-2 ring-1 ring-ink/10"
 							role="img"
 							aria-label={`Attachment ${index + 1} of ${drafted.length}, ${file.name}`}
-							title={file.name}
+							data-tooltip={file.name}
 						>
 							<FileIcon name={file.name} type={file.type} size={22} />
 							<span class="truncate text-[12.5px] font-medium">{file.name}</span>
@@ -500,7 +500,7 @@
 				data-active={draft.literal}
 				aria-pressed={draft.literal}
 				aria-label="Plain text"
-				title="Plain text: keep dates, times, and tags in the title"
+				data-tooltip="Plain text: keep dates, times, and tags in the title"
 				onmousedown={(e) => e.preventDefault()}
 				onclick={() => (draft.literal = !draft.literal)}
 			>
@@ -548,7 +548,7 @@
 							class="chip"
 							data-active={drafted.length > 0}
 							aria-label={drafted.length ? `Add attachment, ${drafted.length} added` : 'Add attachment'}
-							title="Add images or files, or paste or drop them here"
+							data-tooltip="Add images or files, or paste or drop them here"
 							onmousedown={(e) => e.preventDefault()}
 							onclick={() => filePicker?.click()}
 						>
@@ -581,7 +581,6 @@
 				type="button"
 				class="icon-btn hit-area"
 				aria-label="Open in task details"
-				title="Open in task details"
 				onmousedown={(e) => e.preventDefault()}
 				onclick={expand}
 			>

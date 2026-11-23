@@ -120,15 +120,15 @@
 			</div>
 		</div>
 	</div>
-	{#if reactionGroups}
-		<ReactionChips taskId={task.id} groups={reactionGroups} {editable} />
-	{/if}
 	{#if editable}
 		<div class="mt-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 touch:opacity-100">
 			<button type="button" class="hit-area relative grid size-8 place-items-center rounded-full text-muted hover:bg-ink/5" aria-label={`Delete ${task.title}`} onclick={() => deleteTask(task)}>
 				<Trash size={16} />
 			</button>
 		</div>
+	{/if}
+	{#if reactionGroups}
+		<ReactionChips taskId={task.id} groups={reactionGroups} {editable} />
 	{/if}
 </div>
 

@@ -65,7 +65,7 @@
 							type="button"
 							class="tile file press"
 							aria-label={`Open ${attachment.name}, ${formatBytes(attachment.bytes)}`}
-							title={attachment.name}
+							data-tooltip={attachment.name}
 							aria-busy={attachments.opening[attachment.id] || adding || undefined}
 							onclick={() => !adding && void attachments.open(task.id, attachment)}
 						>
@@ -98,7 +98,7 @@
 			{/each}
 			{#if editable}
 				<li>
-					<button type="button" class="tile add press" aria-label="Add attachment" title="Add images or files, or paste or drop them here" onclick={() => picker?.click()}>
+					<button type="button" class="tile add press" aria-label="Add attachment" data-tooltip="Add images or files, or paste or drop them here" onclick={() => picker?.click()}>
 						<Paperclip size={20} />
 						<Plus size={11} weight="bold" class="absolute right-2.5 bottom-2.5" />
 					</button>

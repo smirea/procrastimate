@@ -68,7 +68,7 @@
 			</button>
 			<span class="flex-1"></span>
 			{#if ids.length}
-				<button type="button" class="icon-btn size-8 touch:size-11" aria-label="Revoke personal tokens" title="Revoke personal tokens" onclick={() => (confirming = true)} in:fly={motion({ x: 4, duration: 140 })}>
+				<button type="button" class="icon-btn size-8 touch:size-11" aria-label="Revoke personal tokens" onclick={() => (confirming = true)} in:fly={motion({ x: 4, duration: 140 })}>
 					<Trash size={14} />
 				</button>
 			{/if}

@@ -138,7 +138,7 @@
 								type="button"
 								data-handle
 								aria-label={`Reorder ${child.title}`}
-								title="Drag, or use the arrow keys, to reorder"
+								data-tooltip="Drag, or use the arrow keys, to reorder"
 								class="handle hit-area relative mt-1.5 grid size-8 shrink-0 cursor-grab touch-none place-items-center rounded-full text-faint transition-colors hover:text-muted"
 								onpointerdown={(e) => reorder.start(e, child.id, index)}
 								onkeydown={(e) => moveByKey(e, child.id, index)}

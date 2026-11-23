@@ -32,7 +32,7 @@
 			role="radio"
 			aria-checked={checked}
 			aria-label={swatch.name}
-			title={swatch.name}
+			data-tooltip={swatch.name}
 			tabindex={checked || (checkedIndex < 0 && i === 0) ? 0 : -1}
 			class="swatch"
 			style:--swatch={rgb(tokens.accent)}
@@ -46,7 +46,7 @@
 	<!-- The native color well, transparent over the swatch, so a click on it opens the system picker. -->
 	<label
 		class="swatch custom"
-		title={custom ? theme.accent.toUpperCase() : 'Custom'}
+		data-tooltip={custom ? theme.accent.toUpperCase() : 'Custom'}
 		style:--swatch={custom ? rgb(custom.accent) : undefined}
 		style:color={custom ? rgb(custom.onAccent) : undefined}
 		data-checked={custom ? 'true' : undefined}

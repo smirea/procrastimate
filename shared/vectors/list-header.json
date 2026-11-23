@@ -4,7 +4,7 @@
 	"cases": [
 		{
 			"fn": "listHeader",
-			"test": "listHeader › every menu leads with share, copy, and show completed, in that order",
+			"test": "listHeader › every menu leads with share, then copy, and projects and labels toggle completed beside it",
 			"input": [
 				{
 					"kind": "project",
@@ -14,10 +14,10 @@
 			"output": {
 				"common": [
 					"share",
-					"copy",
-					"show-completed"
+					"copy"
 				],
 				"filters": true,
+				"showCompleted": true,
 				"specific": [
 					"add-section",
 					"rename",
@@ -28,7 +28,7 @@
 		},
 		{
 			"fn": "listHeader",
-			"test": "listHeader › every menu leads with share, copy, and show completed, in that order",
+			"test": "listHeader › every menu leads with share, then copy, and projects and labels toggle completed beside it",
 			"input": [
 				{
 					"kind": "label",
@@ -39,10 +39,10 @@
 			"output": {
 				"common": [
 					"share",
-					"copy",
-					"show-completed"
+					"copy"
 				],
 				"filters": true,
+				"showCompleted": true,
 				"specific": [
 					"rename",
 					"color",
@@ -52,7 +52,7 @@
 		},
 		{
 			"fn": "listHeader",
-			"test": "listHeader › a shared project or label only copies and shows completed",
+			"test": "listHeader › a shared project or label only copies, and still toggles completed",
 			"input": [
 				{
 					"kind": "project",
@@ -61,16 +61,16 @@
 			],
 			"output": {
 				"common": [
-					"copy",
-					"show-completed"
+					"copy"
 				],
 				"filters": true,
+				"showCompleted": true,
 				"specific": []
 			}
 		},
 		{
 			"fn": "listHeader",
-			"test": "listHeader › a shared project or label only copies and shows completed",
+			"test": "listHeader › a shared project or label only copies, and still toggles completed",
 			"input": [
 				{
 					"kind": "label",
@@ -80,10 +80,10 @@
 			],
 			"output": {
 				"common": [
-					"copy",
-					"show-completed"
+					"copy"
 				],
 				"filters": true,
+				"showCompleted": true,
 				"specific": []
 			}
 		},
@@ -99,10 +99,10 @@
 			],
 			"output": {
 				"common": [
-					"copy",
-					"show-completed"
+					"copy"
 				],
 				"filters": true,
+				"showCompleted": true,
 				"specific": [
 					"rename",
 					"color",
@@ -125,6 +125,7 @@
 					"copy"
 				],
 				"filters": true,
+				"showCompleted": false,
 				"specific": [
 					"save-place"
 				]
@@ -144,6 +145,7 @@
 					"copy"
 				],
 				"filters": true,
+				"showCompleted": false,
 				"specific": []
 			}
 		},
@@ -160,6 +162,7 @@
 					"copy"
 				],
 				"filters": true,
+				"showCompleted": false,
 				"specific": []
 			}
 		},
@@ -176,6 +179,7 @@
 					"copy"
 				],
 				"filters": true,
+				"showCompleted": false,
 				"specific": []
 			}
 		},
@@ -192,6 +196,7 @@
 					"copy"
 				],
 				"filters": true,
+				"showCompleted": false,
 				"specific": []
 			}
 		},
@@ -208,6 +213,7 @@
 					"copy"
 				],
 				"filters": true,
+				"showCompleted": false,
 				"specific": []
 			}
 		},
@@ -224,6 +230,7 @@
 					"copy"
 				],
 				"filters": true,
+				"showCompleted": false,
 				"specific": [
 					"sort"
 				]
@@ -242,6 +249,7 @@
 					"copy"
 				],
 				"filters": false,
+				"showCompleted": false,
 				"specific": []
 			}
 		}

@@ -62,6 +62,7 @@ struct TaskListScreen<Content: View>: View {
                 HStack(spacing: 8) {
                     if header.filters, let filter { FilterMenu(filter: filter, tasks: unfiltered, floating: true) }
                     Spacer(minLength: 0)
+                    if header.showCompleted, let shown = actions.showCompleted { ShowCompletedToggle(shown: shown, floating: true) }
                     ListActionsMenu(header: header, actions: actions, dialog: $dialog, floating: true)
                 }
                 .padding(.horizontal, 16)
@@ -93,6 +94,10 @@ struct TaskListScreen<Content: View>: View {
             if !floats {
                 if header.filters, let filter {
                     ToolbarItem(placement: .topBarLeading) { FilterMenu(filter: filter, tasks: unfiltered) }
+                }
+                if header.showCompleted, let shown = actions.showCompleted {
+                    ToolbarItem(placement: .primaryAction) { ShowCompletedToggle(shown: shown) }
+                    ToolbarSpacer(.fixed, placement: .primaryAction)
                 }
                 ToolbarItem(placement: .primaryAction) { ListActionsMenu(header: header, actions: actions, dialog: $dialog) }
             }

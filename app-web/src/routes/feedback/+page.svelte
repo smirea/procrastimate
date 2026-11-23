@@ -241,7 +241,7 @@
 			target="_blank"
 			rel="noopener"
 			aria-label={`Open ${project.name} in ProcrastiMate`}
-			title="Open in ProcrastiMate"
+			data-tooltip="Open in ProcrastiMate"
 			class="grid w-11 shrink-0 place-items-center border-l border-ink/[0.07] text-muted transition hover:bg-ink/[0.04] hover:text-ink"
 		>
 			<ArrowSquareOut size={16} />

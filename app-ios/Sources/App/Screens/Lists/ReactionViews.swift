@@ -13,15 +13,16 @@ extension Store {
     }
 }
 
-/// A task's reactions at the end of its row: each emoji, with a count when more than one person picked it. Tapping one
-/// lists who reacted and, where the user may edit the task, picks or takes back that emoji.
+/// A task's reactions, the last thing in its row: each emoji as large as the row is tall, with no fill behind it, and a
+/// count when more than one person picked it. Tapping one lists who reacted and, where the user may edit the task, picks
+/// or takes back that emoji.
 struct ReactionChips: View {
     @Environment(Store.self) private var store
     let task: TaskItem
     let groups: [ReactionGroup]
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 0) {
             ForEach(groups, id: \.emoji) { group in
                 let mine = group.authorIds.contains(store.me)
                 let names = group.authorIds.map(store.reactorName)
@@ -35,19 +36,18 @@ struct ReactionChips: View {
                     }
                 } label: {
                     HStack(spacing: 3) {
-                        Text(group.emoji.rawValue).font(.subheadline)
+                        Text(group.emoji.rawValue).font(.title3)
                         if group.authorIds.count > 1 {
                             Text("\(group.authorIds.count)")
-                                .font(.caption.weight(.medium))
+                                .font(.footnote.weight(.medium))
                                 .foregroundStyle(.muted)
                                 .monospacedDigit()
                         }
                     }
-                    .padding(.horizontal, 7)
-                    .frame(minHeight: 28)
-                    .background(mine ? Color.accent.opacity(0.16) : Color.ink.opacity(0.05), in: .capsule)
-                    .overlay { if mine { Capsule().strokeBorder(Color.accent.opacity(0.4)) } }
-                    .contentShape(.capsule)
+                    .padding(.horizontal, 6)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .overlay { if mine { RoundedRectangle(cornerRadius: 12).strokeBorder(Color.accent.opacity(0.55), lineWidth: 1.5) } }
+                    .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(group.emoji.rawValue) \(names.joined(separator: ", "))")
@@ -56,7 +56,6 @@ struct ReactionChips: View {
                 .transition(.scale(scale: 0.6).combined(with: .opacity))
             }
         }
-        .padding(.top, 8)
         .animation(.snappy(duration: 0.18), value: groups)
         .feedback(self)
     }
