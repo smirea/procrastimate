@@ -41,6 +41,10 @@ describe('feedback popup protocol and project selection', () => {
 		).toBeNull();
 		expect(parseDraftMessage({ ...valid, projects: [] }, 'n-1')).toBeNull();
 		expect(parseDraftMessage({ ...valid, projects: undefined }, 'n-1')).toBeNull();
+		const save = new File(['{}'], 'save.json', { type: 'application/json' });
+		expect(parseDraftMessage({ ...valid, files: [save] }, 'n-1')?.files).toEqual([save]);
+		expect(parseDraftMessage(valid, 'n-1')?.files).toEqual([]);
+		expect(parseDraftMessage({ ...valid, files: ['save.json'] }, 'n-1')).toBeNull();
 	});
 
 	test('a draft keeps a well-formed title suggestion and still posts without a malformed one', () => {
