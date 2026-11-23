@@ -56,11 +56,19 @@ async function titleOf(id: string): Promise<string | undefined> {
 }
 
 describe('feedback task names', () => {
-	test('an untouched feedback task is renamed to the count, the subject, and the summary without its wrapping', async () => {
-		const prompts = stubGemini(async () => gemini('"Bigger info button, remove the share button."\n'));
+	test('an untouched feedback task is renamed to the count, the subject, and the summary without its wrapping, and synced clients hear of it', async () => {
+		let answer!: () => void;
+		const answered = new Promise<void>(resolve => (answer = resolve));
+		const prompts = stubGemini(async () => {
+			await answered;
+			return gemini('"Bigger info button, remove the share button."\n');
+		});
 		const task = await create({ title: placeholder, titleSuggestion: suggestion });
 		expect(task.title).toBe(placeholder);
+		const published = app.published.length;
+		answer();
 		await app.settled();
+		expect(app.published.length).toBe(published + 1);
 		expect(prompts).toEqual([suggestion.prompt]);
 		expect(await titleOf(task.id)).toBe('2 Groceries Feedback: Bigger info button, remove the share button');
 	});

@@ -15,7 +15,7 @@ export type App = {
 	store: Store;
 	auth: Auth;
 	live: Live;
-	/** Runs `work` after the response, such as naming a feedback task. It never rejects. */
+	/** Runs `work` after the response, such as naming a feedback task, and tells the sync sockets what it wrote. It never rejects. */
 	defer: (work: () => Promise<void>) => void;
 };
 
@@ -25,7 +25,15 @@ export async function createApp(
 	live: Live,
 	keepAlive: (work: Promise<void>) => void = () => {},
 ): Promise<App> {
-	const defer = (work: () => Promise<void>) => keepAlive(work().catch(error => void reportError(error)));
+	// `handle` publishes only what a request wrote before it answered, so deferred writes publish their own head.
+	const defer = (work: () => Promise<void>) => {
+		const before = store.space.head();
+		const run = work().then(() => {
+			const head = store.space.head();
+			if (head > before) live.publish(head);
+		});
+		keepAlive(run.catch(error => void reportError(error)));
+	};
 	return { config: settings, db: store.db, store, auth: await createAuth(settings, store), live, defer };
 }
 
