@@ -1,6 +1,6 @@
 import type { FeedbackProject } from 'shared/api/contract.ts';
 import { titleSuggestionSchema, type TitleSuggestion } from 'shared/sharing.ts';
-import { FILE_PART_BYTES, FILE_TYPE, filePartCount, IMAGES_PATH } from 'shared/images.ts';
+import { FILE_MAX_BYTES, FILE_PART_BYTES, FILE_TYPE, filePartCount, IMAGES_PATH } from 'shared/images.ts';
 import { newId } from 'shared/id.ts';
 import { api } from './api.ts';
 import { DEVICE_KEYS } from './device.ts';
@@ -209,6 +209,12 @@ export async function postFeedbackTask(
 	const files = [new File([draft.report], 'feedback.json', { type: 'application/json' }), ...draft.files]
 		.filter(file => file.size > 0)
 		.map(file => ({ id: newId(), file, type: file.type || FILE_TYPE }));
+	const tooLarge = files.find(({ file }) => file.size > FILE_MAX_BYTES);
+	if (tooLarge) {
+		throw new Error(
+			`${tooLarge.file.name} is over the ${FILE_MAX_BYTES / 1e9} GB ProcrastiMate keeps as one attachment.`,
+		);
+	}
 
 	const putImage = async (size: 'full' | 'thumb', blob: Blob) => {
 		const query = new URLSearchParams({ ...(space ? { space } : {}), id: imageId, size });
