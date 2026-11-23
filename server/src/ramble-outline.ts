@@ -6,21 +6,18 @@ import {
 	type RambleOutlineInput,
 	type RambleOutlineTask,
 } from '../../shared/ramble/outline';
+import { GeminiError, generateText, type GeminiModel } from './gemini';
 
 /**
  * Ramble's smart parse: Gemini reads the whole transcript, applies the speaker's corrections, and returns an outline
  * of tasks. It runs on the server so the key stays there. Clients resolve the outline's phrases and names locally.
  */
 
-export type GeminiThinking = 'minimal' | 'low' | 'medium' | 'high';
-export type GeminiModel = { model: string; thinking: GeminiThinking | null };
-
 export const RAMBLE_GEMINI: GeminiModel = { model: 'gemini-3.5-flash', thinking: 'minimal' };
 
 /** Past this the client has already fallen back to the grammar. */
 export const OUTLINE_TIMEOUT_MS = 10_000;
 
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const SUBTASK_DEPTH = 3;
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -97,41 +94,24 @@ function outlineJsonSchema(projects: readonly string[], labels: readonly string[
 	};
 }
 
-class RambleOutlineError extends Error {}
-
 export async function outlineRamble(
 	input: RambleOutlineInput,
 	apiKey: string,
 	model: GeminiModel = RAMBLE_GEMINI,
 	signal?: AbortSignal,
 ): Promise<RambleOutline> {
-	const response = await fetch(`${GEMINI_URL}/${model.model}:generateContent`, {
-		method: 'POST',
-		headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
+	const text = await generateText(
+		apiKey,
+		model,
+		{
+			instructions: rambleInstructions(input),
+			text: `Ramble: ${input.transcript}`,
+			json: outlineJsonSchema(input.projects, input.labels),
+		},
 		signal,
-		body: JSON.stringify({
-			systemInstruction: { parts: [{ text: rambleInstructions(input) }] },
-			contents: [{ role: 'user', parts: [{ text: `Ramble: ${input.transcript}` }] }],
-			generationConfig: {
-				temperature: 0,
-				responseMimeType: 'application/json',
-				responseJsonSchema: outlineJsonSchema(input.projects, input.labels),
-				...(model.thinking ? { thinkingConfig: { thinkingLevel: model.thinking } } : {}),
-			},
-		}),
-	});
-	const body = (await response.json().catch(() => null)) as {
-		candidates?: Array<{ content?: { parts?: Array<{ text?: string; thought?: boolean }> } }>;
-		error?: { message?: string };
-	} | null;
-	if (!response.ok) throw new RambleOutlineError(`Gemini ${response.status}: ${body?.error?.message ?? 'no body'}`);
-	const text = body?.candidates?.[0]?.content?.parts
-		?.filter(part => !part.thought)
-		.map(part => part.text ?? '')
-		.join('');
-	if (!text) throw new RambleOutlineError('Gemini returned no text');
+	);
 	const parsed = rambleOutlineSchema.safeParse(withDefaults(JSON.parse(text)));
-	if (!parsed.success) throw new RambleOutlineError(`Gemini returned an invalid outline: ${parsed.error.message}`);
+	if (!parsed.success) throw new GeminiError(`Gemini returned an invalid outline: ${parsed.error.message}`);
 	return spokenOnly(parsed.data, input.transcript);
 }
 

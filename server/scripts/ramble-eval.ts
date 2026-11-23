@@ -2,7 +2,8 @@ import { parseArgs } from 'node:util';
 import { basename } from 'node:path';
 import { parseRamble, resolveOutline, type RambleTask } from '../../shared/ramble';
 import type { Label, Project } from '../../shared/task';
-import { outlineRamble, type GeminiModel, type GeminiThinking } from '../src/ramble-outline';
+import type { GeminiModel, GeminiThinking } from '../src/gemini';
+import { outlineRamble } from '../src/ramble-outline';
 
 /**
  * Scores Ramble's parsers on labelled rambles: the grammar, and Gemini models through the production outline call.

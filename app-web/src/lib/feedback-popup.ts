@@ -1,4 +1,5 @@
 import type { FeedbackProject } from 'shared/api/contract.ts';
+import { titleSuggestionSchema, type TitleSuggestion } from 'shared/sharing.ts';
 import { FILE_PART_BYTES, FILE_TYPE, IMAGES_PATH } from 'shared/images.ts';
 import { newId } from 'shared/id.ts';
 import { api } from './api.ts';
@@ -11,7 +12,10 @@ import { DEVICE_KEYS } from './device.ts';
  */
 
 export type FeedbackDraft = {
+	/** The name the package generated. */
 	title: string;
+	/** What the server names the task from while it keeps `title`. Packages before 1.11 send none. */
+	titleSuggestion?: TitleSuggestion;
 	app?: string;
 	project?: string;
 	projects: string[];
@@ -48,8 +52,10 @@ export function parseDraftMessage(data: unknown, expectedNonce: string): Feedbac
 	if (!Array.isArray(record.projects) || !record.projects.every(item => typeof item === 'string')) return null;
 	const projects = record.projects.map(item => item.trim()).filter(Boolean);
 	if (!projects.length) return null;
+	const suggestion = titleSuggestionSchema.safeParse(record.titleSuggestion);
 	return {
 		title: record.title,
+		...(suggestion.success && { titleSuggestion: suggestion.data }),
 		app: nonEmptyString(record.app),
 		project: nonEmptyString(record.project),
 		projects,
@@ -130,7 +136,8 @@ export function saveLastFeedbackProject(userId: string, projectId: string | unde
 /**
  * Uploads the image, thumbnail, and `feedback.json` to ProcrastiMate's own origin with the session cookie, then creates
  * the task with all attachments in one write. Uses the chosen project's space so posting to a shared project credits
- * the signed-in human guest.
+ * the signed-in human guest. A `title` still equal to the generated one carries the draft's suggestion, so the server
+ * names the task once it exists; an edited one is posted as typed.
  */
 export async function postFeedbackTask(
 	draft: FeedbackDraft,
@@ -182,6 +189,7 @@ export async function postFeedbackTask(
 		body: {
 			id: taskId,
 			title,
+			...(title === draft.title && draft.titleSuggestion && { titleSuggestion: draft.titleSuggestion }),
 			projectId: place.projectId ?? null,
 			sectionId: place.sectionId ?? null,
 			attachments: [

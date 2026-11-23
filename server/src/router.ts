@@ -50,6 +50,7 @@ import { linkTitle } from './link-preview';
 import { githubItem, ownersGithubToken } from './github';
 import { fileFeedbackIssue } from './feedback-issues';
 import { feedbackProjects } from './feedback-projects';
+import { nameFeedbackTask } from './feedback-title';
 import { parseGithubRef } from '../../shared/github';
 import { personById, searchPeople } from './people';
 import { OUTLINE_TIMEOUT_MS, outlineRamble, RAMBLE_GEMINI } from './ramble-outline';
@@ -306,9 +307,17 @@ export const router = os.router({
 	},
 	view: os.view.handler(async ({ input, context }) => view(await command(context, input.query.space))),
 	tasks: {
-		create: os.tasks.create.handler(async ({ input, context }) =>
-			createTask(await command(context, input.query.space), input.body),
-		),
+		create: os.tasks.create.handler(async ({ input, context }) => {
+			const cmd = await command(context, input.query.space);
+			const task = await createTask(cmd, input.body);
+			const { titleSuggestion: suggestion } = input.body;
+			const gemini = context.app.config.gemini;
+			// A retry of a create that was already named answers the new title, so it is not named twice.
+			if (suggestion && gemini && task.title === input.body.title?.trim()) {
+				context.app.defer(() => nameFeedbackTask(cmd, task.id, task.title, suggestion, gemini.apiKey));
+			}
+			return task;
+		}),
 		update: os.tasks.update.handler(async ({ input, context }) =>
 			editTask(await command(context, input.query.space), input.query.id, input.body),
 		),

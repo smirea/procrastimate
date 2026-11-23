@@ -54,7 +54,7 @@ export class AppObject extends DurableObject<Env> {
 				}
 			},
 		};
-		this.app = createApp(config(env), store, live);
+		this.app = createApp(config(env), store, live, work => ctx.waitUntil(work));
 	}
 
 	override async fetch(request: Request): Promise<Response> {
