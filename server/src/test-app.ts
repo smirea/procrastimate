@@ -36,6 +36,8 @@ export type TestApp = App & {
 	statements: string[];
 	/** Every head the app published to its sync sockets. */
 	published: number[];
+	/** Settles once the work the app deferred so far is done. */
+	settled: () => Promise<void>;
 };
 
 /** A fresh database, migrated, with the app on top. Sockets are refused. */
@@ -48,7 +50,8 @@ export async function testApp(options: { env?: Partial<Env> } = {}): Promise<Tes
 		accept: () => errorResponse('NOT_IMPLEMENTED', 'No sockets in tests'),
 		publish: head => void published.push(head),
 	};
-	const app = await createApp(config(env), store, live);
+	const deferred: Promise<void>[] = [];
+	const app = await createApp(config(env), store, live, work => void deferred.push(work));
 	return {
 		...app,
 		fetch: (path, init) => {
@@ -57,6 +60,9 @@ export async function testApp(options: { env?: Partial<Env> } = {}): Promise<Tes
 		},
 		statements,
 		published,
+		settled: async () => {
+			while (deferred.length) await deferred.shift();
+		},
 	};
 }
 

@@ -158,6 +158,19 @@ export type CreatedApiToken = z.infer<typeof createdApiTokenSchema>;
 
 const taskShape = taskSchema.shape;
 
+export const titleSuggestionSchema = z
+	.object({
+		subject: z.string().trim().min(1).max(200),
+		count: z.int().positive().max(1000),
+		prompt: z.string().trim().min(1).max(20_000),
+	})
+	.meta({
+		id: 'TitleSuggestion',
+		description:
+			'Sent by Feedback (`@stefan.inc/feedback-engine`) while the task keeps the name it generated. After the task is created, the server asks Gemini to summarize `prompt`, the feedback items one per line, and renames the task `<count> <subject>: <summary>` if its title has not changed by then. Any failure keeps the title.',
+	});
+export type TitleSuggestion = z.infer<typeof titleSuggestionSchema>;
+
 export const agentNewTaskSchema = z
 	.object({
 		id: z.uuid().optional().meta({
@@ -181,6 +194,7 @@ export const agentNewTaskSchema = z
 			description:
 				"Upload each one's bytes to `/api/images` first, so the task never names bytes the server cannot serve.",
 		}),
+		titleSuggestion: titleSuggestionSchema.optional(),
 	})
 	.meta({ id: 'AgentNewTask', description: 'A task the agent command API adds. It needs `text` or `title`.' });
 export type AgentNewTask = z.infer<typeof agentNewTaskSchema>;

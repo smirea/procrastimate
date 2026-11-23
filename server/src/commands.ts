@@ -316,6 +316,13 @@ export async function editTask(command: Command, id: string, edit: AgentTaskEdit
 	return taskAfter(command, id);
 }
 
+/** Renames the task only while its title is still `from`, so a name someone typed in the meantime stays. */
+export async function renameUntouched(command: Command, id: string, from: string, to: string): Promise<void> {
+	await run(command, (data, visible) =>
+		visible.tasks.find(task => task.id === id)?.title === from ? updateTask(data, id, { title: to }) : data,
+	);
+}
+
 function creatorFor({ db, owner, actor }: Command, createdBy: string): string {
 	const access = requireAccess(db, owner, actor);
 	if (access.role !== 'owner' && !managesSpace(access.shares)) {

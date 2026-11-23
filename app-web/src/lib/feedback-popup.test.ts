@@ -43,6 +43,23 @@ describe('feedback popup protocol and project selection', () => {
 		expect(parseDraftMessage({ ...valid, projects: undefined }, 'n-1')).toBeNull();
 	});
 
+	test('a draft keeps a well-formed title suggestion and still posts without a malformed one', () => {
+		const image = { full: new Blob(['f']), thumb: new Blob(['t']), width: 1, height: 1 };
+		const base = {
+			type: FEEDBACK_DRAFT,
+			nonce: 'n-1',
+			title: 'Board Feedback: 1 change',
+			projects: ['P'],
+			image,
+			report: '{}',
+		};
+		const titleSuggestion = { subject: 'Board Feedback', count: 1, prompt: '- On Button "Info": Bigger' };
+		expect(parseDraftMessage({ ...base, titleSuggestion }, 'n-1')?.titleSuggestion).toEqual(titleSuggestion);
+		const malformed = parseDraftMessage({ ...base, titleSuggestion: { ...titleSuggestion, count: 0 } }, 'n-1');
+		expect(malformed?.title).toBe('Board Feedback: 1 change');
+		expect(malformed?.titleSuggestion).toBeUndefined();
+	});
+
 	test('whitelists projects in order across own and shared spaces and scopes to space when given', () => {
 		const scoped = pickFeedbackProjects(all, alice.id, {
 			space: stefan.id,
