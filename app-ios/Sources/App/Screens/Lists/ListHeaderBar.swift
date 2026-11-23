@@ -185,6 +185,34 @@ private struct FilterPanel: View {
     }
 }
 
+/// Shows or hides a project's or label's completed tasks, just left of the `…` menu. It fills in the accent color while on.
+struct ShowCompletedToggle: View {
+    @Binding var shown: Bool
+    var floating = false
+
+    var body: some View {
+        Button { withAnimation(.snappy) { shown.toggle() } } label: {
+            let icon = shown ? "checkmark.circle.fill" : "checkmark.circle"
+            if floating {
+                Image(systemName: icon)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(shown ? .accent : .ink)
+                    .frame(width: 44, height: 44)
+                    .contentShape(.circle)
+                    .glassEffect(.regular.interactive(), in: .circle)
+            } else {
+                SwiftUI.Label("Show completed", systemImage: icon).foregroundStyle(shown ? Color.accent : Color.ink)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Show completed")
+        .accessibilityValue(shown ? "On" : "Off")
+        .accessibilityAddTraits(shown ? .isSelected : [])
+        .accessibilityIdentifier("show-completed")
+        .sensoryFeedback(.selection, trigger: shown)
+    }
+}
+
 /// A list's `…` menu, laid out by its `ListHeader`: the entries every list shares, a divider, then the list's own.
 struct ListActionsMenu: View {
     let header: ListHeader
@@ -218,8 +246,6 @@ struct ListActionsMenu: View {
             if actions.share != nil { Button("Share", systemImage: "person.crop.circle.badge.plus") { dialog = .share } }
         case .copy:
             Button("Copy as Markdown", systemImage: "doc.on.doc", action: actions.copy)
-        case .showCompleted:
-            if let shown = actions.showCompleted { Toggle("Show completed", systemImage: "checkmark.circle", isOn: shown) }
         case .sort:
             if let newestFirst = actions.newestFirst {
                 Picker("Sort", selection: newestFirst) {

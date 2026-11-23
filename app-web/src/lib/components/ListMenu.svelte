@@ -24,7 +24,8 @@
 
 	/**
 	 * A list's `…` menu, laid out by `header`: the entries every list shares, a separator, then the list's own. Each
-	 * entry needs its handler; the web has none for `edit-place`, since places are edited on iPhone.
+	 * entry needs its handler; the web has none for `edit-place`, since places are edited on iPhone. Where the header
+	 * shows completed tasks, their toggle sits just left of the menu, since it changes what the list shows.
 	 */
 	let {
 		header,
@@ -70,13 +71,6 @@
 			close();
 			void copyMarkdown(markdown());
 		}}><Copy size={15} />Copy as Markdown</button>
-	{:else if entry === 'show-completed' && showCompleted}
-		{@const shown = completed.shown(showCompleted)}
-		<button type="button" role="menuitemcheckbox" aria-checked={shown} class="menu-item" onclick={() => completed.toggle(showCompleted)}>
-			<CheckCircle size={15} weight={shown ? 'fill' : 'regular'} class={shown ? 'text-accent' : ''} />
-			<span class="flex-1">Show completed</span>
-			{#if shown}<Check size={14} weight="bold" class="text-accent" />{/if}
-		</button>
 	{:else if entry === 'sort' && sort}
 		{#each [true, false] as newest (newest)}
 			<button type="button" role="menuitemradio" aria-checked={sort.newestFirst === newest} class="menu-item" onclick={() => {
@@ -140,6 +134,19 @@
 	{/if}
 {/snippet}
 
+{#if header.showCompleted && showCompleted}
+	{@const shown = completed.shown(showCompleted)}
+	<button
+		type="button"
+		class="icon-btn touch:size-11"
+		class:text-accent!={shown}
+		aria-label="Show completed"
+		aria-pressed={shown}
+		onclick={() => completed.toggle(showCompleted)}
+	>
+		<CheckCircle size={20} weight={shown ? 'fill' : 'regular'} />
+	</button>
+{/if}
 <Popover {@attach feedback()} {label} align="end">
 	{#snippet trigger({ toggle })}
 		<button
