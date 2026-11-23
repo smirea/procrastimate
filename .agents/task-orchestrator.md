@@ -12,7 +12,7 @@ Repo config for the global `task-orchestrator` skill (`~/code/ai-files/skills/ta
 - Decision docs: `docs/decisions/README.md` and the area files the tasks touch.
 - Clients a job can cover: iOS (app and widgets), web, server.
 - Every task that restructures the same screen or component goes in one job: one run had four jobs reshaping the list screens, and the last of them rebased six times.
-- iOS jobs run in parallel too: `./sim` holds a headless boot while the Mac's total CPU is above 70% or 4 simulators are booted, telling the child it waits. Schema changes don't need sequencing: they are additive.
+- iOS jobs need a simulator, so they count toward the skill's cap of 3 at once. `./sim` also holds a headless boot while the Mac's total CPU is above 70% or 4 simulators are booted, telling the child it waits. Schema changes don't need sequencing: they are additive.
 - The `app` project files bugs and features in its `Bugs` and `Features` sections.
 - Known shared failures: a simulator runtime that stopped booting.
 
