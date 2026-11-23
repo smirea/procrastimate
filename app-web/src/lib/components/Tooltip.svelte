@@ -69,9 +69,9 @@
 	function onpointerover(event: PointerEvent) {
 		if (event.pointerType !== 'mouse' || !(event.target instanceof Element)) return;
 		const found = tooltipFor(event.target);
+		if (found?.anchor !== pressed) pressed = null;
 		if (found?.anchor === anchor) return;
 		if (!found || found.anchor === pressed) return hide();
-		pressed = null;
 		schedule(found);
 	}
 
